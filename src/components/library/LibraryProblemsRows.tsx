@@ -122,6 +122,7 @@ export function LibraryProblemsProblemRow({
       showDeleteAction={false}
       tab="problems"
       tags={item.tags}
+      trailingActions={[<LibraryProblemsRetryAction key="retry" item={item} />]}
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
@@ -147,6 +148,43 @@ export function LibraryProblemsProblemRow({
     </LibraryItemRow>
   );
 }
+
+export function LibraryProblemsRetryAction({
+  item,
+}: {
+  item: LibraryProblemView;
+}) {
+  const tSaved = useTranslations("library.saved");
+  const canRetry =
+    item.canRetry &&
+    item.availabilityStatus === "available" &&
+    item.question_no !== null;
+
+  if (!canRetry) {
+    return (
+      <Button size="small" disabled aria-label={tSaved("retryUnavailable")}>
+        {tSaved("retryUnavailable")}
+      </Button>
+    );
+  }
+
+  return (
+    <Link
+      href={
+        writingProblemHref({
+          questionNo: item.question_no,
+          problemId: item.id,
+          fresh: true,
+        }) as never
+      }
+    >
+      <Button type="primary" size="small">
+        {tSaved("retry")}
+      </Button>
+    </Link>
+  );
+}
+
 export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
   const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSubmissions = useTranslations(
@@ -171,9 +209,7 @@ export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
         <div className="flex flex-wrap items-center gap-3">
           <LibraryProblemsQuestionNumber questionNo={item.question_no} />
           <Text strong>{clampTitle(title)}</Text>
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeDraft")}
-          </Tag>
+          <Tag data-testid="library-problems-type-badge">{t("typeDraft")}</Tag>
         </div>
         {item.answer_text ? (
           <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">

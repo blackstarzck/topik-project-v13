@@ -34,7 +34,7 @@ describe("PhoneNumberInput", () => {
     ).toContain("+82");
   });
 
-  it("normalizes pasted text to digits without composing the country code", () => {
+  it("normalizes pasted text to digits with the selected country code", () => {
     const handleChange = vi.fn();
     renderWithIntl(
       <PhoneNumberInput
@@ -51,6 +51,24 @@ describe("PhoneNumberInput", () => {
     });
 
     expect(handleChange).toHaveBeenCalledWith("82010123456789012345");
+  });
+
+  it("updates the stored digits when the selected country code changes", () => {
+    const handleChange = vi.fn();
+    renderWithIntl(
+      <PhoneNumberInput
+        ariaLabel="전화번호"
+        callingCodeAriaLabel="국가번호"
+        locale="ko"
+        value="821012345678"
+        onChange={handleChange}
+      />,
+    );
+
+    fireEvent.mouseDown(screen.getByRole("combobox", { name: "국가번호" }));
+    fireEvent.click(screen.getByText("+84"));
+
+    expect(handleChange).toHaveBeenCalledWith("841012345678");
   });
 
   it("blocks non-digit keyCode input while allowing digit keys", () => {

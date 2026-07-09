@@ -19,7 +19,10 @@ alter table public.profiles
   check (
     gender is null
     or gender in ('male', 'female')
-  );
+  ) not valid;
+
+alter table public.profiles
+  validate constraint profiles_gender_check;
 
 alter table public.profiles
   drop constraint if exists profiles_phone_number_e164_check;
@@ -32,13 +35,16 @@ alter table public.profiles
   check (
     phone_number is null
     or phone_number ~ '^[0-9]{1,20}$'
-  );
+  ) not valid;
+
+alter table public.profiles
+  validate constraint profiles_phone_number_digits_check;
 
 comment on column public.profiles.gender is
   'Optional self-reported profile gender collected at signup or auth completion. Allowed values: male, female.';
 
 comment on column public.profiles.phone_number is
-  'Optional self-reported local phone number digits. The country calling code is selected in the signup UI prefix.';
+  'Optional self-reported phone number digits, including the selected country calling code when provided.';
 
 create or replace function public.handle_new_user()
 returns trigger

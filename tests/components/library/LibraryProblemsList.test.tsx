@@ -213,9 +213,7 @@ describe("LibraryProblemsList", () => {
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
     expect(rows[1].getAttribute("data-library-kind")).toBe("submission");
 
-    const resultsColumn = screen.getByTestId(
-      "library-problems-results-column",
-    );
+    const resultsColumn = screen.getByTestId("library-problems-results-column");
     expect(
       within(resultsColumn).queryByTestId("library-problems-type-badge"),
     ).toBeNull();
@@ -229,14 +227,19 @@ describe("LibraryProblemsList", () => {
       within(resultsColumn).getAllByTestId("library-problems-question-number")
         .length,
     ).toBeGreaterThan(0);
-    expect(within(resultsColumn).getByText("휴대전화 진동 문장 완성")).toBeTruthy();
+    expect(
+      within(resultsColumn).getByText("휴대전화 진동 문장 완성"),
+    ).toBeTruthy();
     const list = screen.getByTestId("library-item-list");
     expect(within(list).queryAllByText(/2026-06-(29|30)/)).toHaveLength(0);
     expect(within(list).queryAllByText("252자")).toHaveLength(0);
 
-    expect(
-      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
-    ).toBeNull();
+    const problemRetryLink = screen.getByRole("link", {
+      name: koMessages.library.saved.retry,
+    });
+    expect(problemRetryLink.getAttribute("href")).toBe(
+      "/writing/answer-writing-52?problem=problem-52&fresh=1",
+    );
     expect(
       screen.queryByRole("button", {
         name: koMessages.library.saved.retryUnavailable,
@@ -410,7 +413,9 @@ describe("LibraryProblemsList", () => {
     renderList();
 
     await waitFor(() => {
-      expect(screen.getByText("분석 실패 답안은 메뉴를 숨깁니다.")).toBeTruthy();
+      expect(
+        screen.getByText("분석 실패 답안은 메뉴를 숨깁니다."),
+      ).toBeTruthy();
     });
     expect(
       screen.queryByRole("button", { name: actionMenuLabels.open }),
@@ -612,12 +617,12 @@ describe("LibraryProblemsList", () => {
 
     expect(screen.getByTestId("library-problems-toolbar")).toBeTruthy();
     expect(screen.queryByTestId("library-problems-result-count")).toBeNull();
-    expect(screen.getByTestId("library-problems-toolbar-controls")).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-toolbar-controls"),
+    ).toBeTruthy();
     expect(screen.getByTestId("library-problems-sort")).toBeTruthy();
 
-    const viewToggleShell = screen.getByTestId(
-      "library-problems-view-toggle",
-    );
+    const viewToggleShell = screen.getByTestId("library-problems-view-toggle");
     expect(viewToggleShell.className).toContain(
       "library-problems-view-toggle-shell",
     );
@@ -784,7 +789,9 @@ describe("LibraryProblemsList", () => {
       null,
     );
     expect(
-      within(cardGrid).queryByText(koMessages.library.submissions.statusComplete),
+      within(cardGrid).queryByText(
+        koMessages.library.submissions.statusComplete,
+      ),
     ).toBeNull();
     expect(within(cardGrid).queryByText(/No\.\s*5[1-4]/)).toBeNull();
     expect(
@@ -795,9 +802,12 @@ describe("LibraryProblemsList", () => {
     expect(within(cardGrid).queryAllByText("252자")).toHaveLength(0);
     // Card view keeps the mixed-row testid contract and submission-only menu.
     expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
-    expect(
-      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
-    ).toBeNull();
+    const problemRetryLink = screen.getByRole("link", {
+      name: koMessages.library.saved.retry,
+    });
+    expect(problemRetryLink.getAttribute("href")).toBe(
+      "/writing/answer-writing-52?problem=problem-52&fresh=1",
+    );
     expect(
       screen.queryByRole("button", {
         name: koMessages.library.saved.retryUnavailable,

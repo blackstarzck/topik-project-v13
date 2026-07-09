@@ -81,12 +81,10 @@ const DUPLICATE_EMAIL_MESSAGE_DURATION_SECONDS = 5;
 const { Text } = Typography;
 
 const STEP_NAME = 0;
-const STEP_GENDER = 1;
-const STEP_PHONE = 2;
-const STEP_COUNTRY_REGION = 3;
-const STEP_EMAIL = 4;
-const STEP_PASSWORD = 5;
-const STEP_TERMS = 6;
+const STEP_COUNTRY_REGION = 1;
+const STEP_EMAIL = 2;
+const STEP_PASSWORD = 3;
+const STEP_TERMS = 4;
 
 function normalizeFieldValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -99,16 +97,6 @@ function isDisplayNameReady(value: unknown) {
 
 function isCountryCodeReady(value: unknown) {
   return isSupportedCountryCode(value);
-}
-
-function isGenderReady(value: unknown) {
-  return normalizeOptionalProfileInput({ gender: value }).gender !== null;
-}
-
-function isPhoneNumberReady(value: unknown) {
-  return (
-    normalizeOptionalProfileInput({ phone_number: value }).phone_number !== null
-  );
 }
 
 function isEmailReady(value: unknown) {
@@ -204,8 +192,6 @@ export function SignUpForm({
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
   const displayNameValue = Form.useWatch("displayName", form);
-  const genderValue = Form.useWatch("gender", form);
-  const phoneNumberValue = Form.useWatch("phoneNumber", form);
   const nationalityCountryCodeValue = Form.useWatch(
     "nationalityCountryCode",
     form,
@@ -215,8 +201,6 @@ export function SignUpForm({
   const termsValue = Form.useWatch("terms", form);
   const isCoolingDown = signUpCooldown.remaining > 0;
   const hasValidName = isDisplayNameReady(displayNameValue);
-  const hasSelectedGender = isGenderReady(genderValue);
-  const hasValidPhoneNumber = isPhoneNumberReady(phoneNumberValue);
   const hasValidCountryRegion = isCountryCodeReady(nationalityCountryCodeValue);
   const hasValidEmail = isEmailReady(emailValue);
   const hasValidPassword = isPasswordPairReady(
@@ -232,54 +216,28 @@ export function SignUpForm({
   const autoVisibleStep = useMemo(() => {
     if (
       hasValidName &&
-      hasSelectedGender &&
-      hasValidPhoneNumber &&
       hasValidCountryRegion &&
       hasValidEmail &&
       hasValidPassword
     ) {
       return STEP_TERMS;
     }
-    if (
-      hasValidName &&
-      hasSelectedGender &&
-      hasValidPhoneNumber &&
-      hasValidCountryRegion &&
-      hasValidEmail
-    ) {
+    if (hasValidName && hasValidCountryRegion && hasValidEmail) {
       return STEP_PASSWORD;
     }
-    if (
-      hasValidName &&
-      hasSelectedGender &&
-      hasValidPhoneNumber &&
-      hasValidCountryRegion
-    ) {
+    if (hasValidName && hasValidCountryRegion) {
       return STEP_EMAIL;
     }
-    if (hasValidName && hasSelectedGender && hasValidPhoneNumber) {
-      return STEP_COUNTRY_REGION;
-    }
-    if (hasValidName && hasSelectedGender) {
-      return STEP_PHONE;
-    }
-    if (hasValidName) return STEP_GENDER;
+    if (hasValidName) return STEP_COUNTRY_REGION;
     return STEP_NAME;
-  }, [
-    hasSelectedGender,
-    hasValidCountryRegion,
-    hasValidEmail,
-    hasValidName,
-    hasValidPassword,
-    hasValidPhoneNumber,
-  ]);
+  }, [hasValidCountryRegion, hasValidEmail, hasValidName, hasValidPassword]);
   const currentVisibleStep = Math.max(visibleStep, autoVisibleStep);
-  const showGenderStep = currentVisibleStep >= STEP_GENDER;
-  const showPhoneStep = currentVisibleStep >= STEP_PHONE;
   const showCountryRegionStep = currentVisibleStep >= STEP_COUNTRY_REGION;
   const showEmailStep = currentVisibleStep >= STEP_EMAIL;
   const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
   const showTermsStep = currentVisibleStep >= STEP_TERMS;
+  const showGenderStep = showTermsStep;
+  const showPhoneStep = showTermsStep;
   const showSubmitButton = showTermsStep;
 
   useEffect(() => {
@@ -320,20 +278,6 @@ export function SignUpForm({
         : values.displayName;
 
     if (step === STEP_NAME && isDisplayNameReady(displayName)) {
-      revealStep(STEP_GENDER, "gender");
-      return;
-    }
-    if (step === STEP_GENDER && isGenderReady(values.gender)) {
-      revealStep(STEP_PHONE, "phoneNumber");
-      return;
-    }
-
-    const phoneNumber =
-      step === STEP_PHONE && typeof currentFieldValue === "string"
-        ? currentFieldValue
-        : values.phoneNumber;
-
-    if (step === STEP_PHONE && isPhoneNumberReady(phoneNumber)) {
       revealStep(STEP_COUNTRY_REGION, "nationalityCountryCode");
       return;
     }
@@ -505,7 +449,7 @@ export function SignUpForm({
         onFinish={handleSignUp}
         requiredMark={false}
       >
-        {/* description 3 input order: name, optional gender/phone, country, email, password */}
+        {/* description 3 input order: name, country, email, password, optional gender/phone, terms */}
         <Form.Item
           label={t("nameLabel")}
           name="displayName"
@@ -526,53 +470,6 @@ export function SignUpForm({
             onKeyDown={(event) => handleStepKeyDown(event, STEP_NAME)}
           />
         </Form.Item>
-
-        {showGenderStep && (
-          <div className="auth-progressive-step">
-            <Form.Item label={t("genderLabel")} name="gender">
-              <GenderRadioGroup
-                id="gender"
-                ariaLabel={t("genderLabel")}
-                femaleLabel={t("genderFemale")}
-                maleLabel={t("genderMale")}
-                onFocus={() => onTypingChange?.(true)}
-                onBlur={() => onTypingChange?.(false)}
-                onChange={(value) => {
-                  if (isGenderReady(value)) {
-                    revealStep(STEP_PHONE, "phoneNumber");
-                  }
-                }}
-              />
-            </Form.Item>
-          </div>
-        )}
-
-        {showPhoneStep && (
-          <div className="auth-progressive-step">
-            <Form.Item label={t("phoneNumberLabel")} name="phoneNumber">
-              <PhoneNumberInput
-                id="phoneNumber"
-                ariaLabel={t("phoneNumberLabel")}
-                callingCodeAriaLabel={t("phoneCountryCodeLabel")}
-                locale={locale}
-                placeholder={t("phoneNumberPlaceholder")}
-                onFocus={() => onTypingChange?.(true)}
-                onChange={(value) => {
-                  if (isPhoneNumberReady(value)) {
-                    revealStep(STEP_COUNTRY_REGION, "nationalityCountryCode");
-                  }
-                }}
-                onBlur={() => {
-                  onTypingChange?.(false);
-                  handleStepCompletion(
-                    STEP_PHONE,
-                    form.getFieldValue("phoneNumber"),
-                  );
-                }}
-              />
-            </Form.Item>
-          </div>
-        )}
 
         {showCountryRegionStep && (
           <div className="auth-progressive-step">
@@ -685,6 +582,37 @@ export function SignUpForm({
                   handleStepCompletion(STEP_PASSWORD);
                 }}
                 onKeyDown={(event) => handleStepKeyDown(event, STEP_PASSWORD)}
+              />
+            </Form.Item>
+          </div>
+        )}
+
+        {showGenderStep && (
+          <div className="auth-progressive-step">
+            <Form.Item label={t("genderLabel")} name="gender">
+              <GenderRadioGroup
+                id="gender"
+                ariaLabel={t("genderLabel")}
+                femaleLabel={t("genderFemale")}
+                maleLabel={t("genderMale")}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+              />
+            </Form.Item>
+          </div>
+        )}
+
+        {showPhoneStep && (
+          <div className="auth-progressive-step">
+            <Form.Item label={t("phoneNumberLabel")} name="phoneNumber">
+              <PhoneNumberInput
+                id="phoneNumber"
+                ariaLabel={t("phoneNumberLabel")}
+                callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+                locale={locale}
+                placeholder={t("phoneNumberPlaceholder")}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
               />
             </Form.Item>
           </div>

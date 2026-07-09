@@ -90,6 +90,25 @@ function normalizePhoneDigits(value: unknown) {
   return value.replace(/\D/g, "").slice(0, PHONE_NUMBER_INPUT_MAX_LENGTH);
 }
 
+function getCallingCodeDigits(countryCode: string) {
+  return normalizePhoneDigits(getCountryCallingCode(countryCode) ?? "");
+}
+
+function stripSelectedCallingCode(value: unknown, countryCode: string) {
+  const digits = normalizePhoneDigits(value ?? "");
+  const callingCode = getCallingCodeDigits(countryCode);
+  if (!callingCode || !digits.startsWith(callingCode)) return digits;
+  return digits.slice(callingCode.length);
+}
+
+function composePhoneNumber(countryCode: string, value: unknown) {
+  const digits = normalizePhoneDigits(value ?? "");
+  const callingCode = getCallingCodeDigits(countryCode);
+  if (!digits) return "";
+  if (!callingCode || digits.startsWith(callingCode)) return digits;
+  return `${callingCode}${digits}`.slice(0, PHONE_NUMBER_INPUT_MAX_LENGTH);
+}
+
 function isAllowedPhoneKey(event: KeyboardEvent<HTMLInputElement>) {
   if (event.ctrlKey || event.metaKey || event.altKey) return true;
 
@@ -124,7 +143,7 @@ export function PhoneNumberInput({
       ),
     [locale],
   );
-  const localNumber = normalizePhoneDigits(value ?? "");
+  const localNumber = stripSelectedCallingCode(value, phoneCountryCode);
 
   return (
     <div className="grid grid-cols-[minmax(104px,128px)_minmax(0,1fr)] gap-2">
@@ -148,7 +167,14 @@ export function PhoneNumberInput({
         onChange={(nextCountryCode) => {
           const normalizedCountryCode =
             getSupportedPhoneCountryCode(nextCountryCode);
+          const nextLocalNumber = stripSelectedCallingCode(
+            value,
+            phoneCountryCode,
+          );
           setPhoneCountryCode(normalizedCountryCode);
+          onChange?.(
+            composePhoneNumber(normalizedCountryCode, nextLocalNumber),
+          );
         }}
         onFocus={onFocus}
       />
@@ -165,7 +191,7 @@ export function PhoneNumberInput({
         value={localNumber}
         onBlur={onBlur}
         onChange={(event) => {
-          onChange?.(normalizePhoneDigits(event.target.value));
+          onChange?.(composePhoneNumber(phoneCountryCode, event.target.value));
         }}
         onFocus={onFocus}
         onKeyDown={(event) => {

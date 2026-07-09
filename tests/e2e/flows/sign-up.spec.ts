@@ -61,10 +61,10 @@ async function fillSignUpForm(
     displayName = VALID_NAME,
     countryRegionLabel = VALID_COUNTRY_REGION_LABEL,
     email = VALID_EMAIL,
-    genderLabel = VALID_GENDER_LABEL,
+    genderLabel,
     password = VALID_PASSWORD,
     passwordConfirm = VALID_PASSWORD,
-    phoneNumber = VALID_PHONE_NUMBER,
+    phoneNumber,
     agreeToTerms = true,
   }: {
     displayName?: string;
@@ -81,28 +81,6 @@ async function fillSignUpForm(
   await expect(displayNameInput).toBeVisible();
   await displayNameInput.fill(displayName);
   await displayNameInput.blur();
-
-  await expect(genderOption(page, "남성")).toBeVisible();
-  await expect(genderOption(page, "여성")).toBeVisible();
-  await expect(page.getByText("선택 안 함")).toHaveCount(0);
-  await expect(page.locator("#phoneNumber")).toHaveCount(0);
-  await expect(page.getByTestId("country-region-select")).toHaveCount(0);
-  await genderOption(page, genderLabel).click();
-
-  await expect(page.locator("#phoneNumber")).toBeVisible();
-  await expect(page.getByTestId("country-region-select")).toHaveCount(0);
-  await expect(page.getByTestId("phone-country-code-select")).toContainText(
-    "+82",
-  );
-  await expect(
-    page.getByText(
-      "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
-    ),
-  ).toHaveCount(0);
-  if (phoneNumber) {
-    await page.locator("#phoneNumber").fill(phoneNumber);
-    await page.locator("#phoneNumber").blur();
-  }
 
   const countryRegionSelect = page.getByTestId("country-region-select");
   await expect(countryRegionSelect).toBeVisible();
@@ -125,6 +103,26 @@ async function fillSignUpForm(
   await passwordInput.blur();
   await passwordConfirmInput.fill(passwordConfirm);
   await passwordConfirmInput.blur();
+
+  await expect(genderOption(page, "남성")).toBeVisible();
+  await expect(genderOption(page, "여성")).toBeVisible();
+  await expect(page.getByText("선택 안 함")).toHaveCount(0);
+  await expect(page.locator("#phoneNumber")).toBeVisible();
+  await expect(page.getByTestId("phone-country-code-select")).toContainText(
+    "+82",
+  );
+  await expect(
+    page.getByText(
+      "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
+    ),
+  ).toHaveCount(0);
+  if (genderLabel) {
+    await genderOption(page, genderLabel).click();
+  }
+  if (phoneNumber) {
+    await page.locator("#phoneNumber").fill(phoneNumber);
+    await page.locator("#phoneNumber").blur();
+  }
 
   if (agreeToTerms) {
     await expect(page.locator("#terms")).toBeVisible();
@@ -353,38 +351,23 @@ test.describe("A-01 sign-up functional flow", () => {
     ).toBeVisible();
 
     await page.locator("#displayName").fill(VALID_NAME);
-    await expect(page.locator("#displayName")).toBeFocused();
-    await expect(genderOption(page, "남성")).toBeVisible();
-    await expect(genderOption(page, "여성")).toBeVisible();
+    await page.locator("#displayName").blur();
+    await expect(page.getByTestId("country-region-select")).toBeVisible();
+    await expect(genderOption(page, "남성")).toHaveCount(0);
+    await expect(genderOption(page, "여성")).toHaveCount(0);
     await expect(page.getByText("선택 안 함")).toHaveCount(0);
     await expect(page.locator("#phoneNumber")).toHaveCount(0);
-    await expect(page.getByTestId("country-region-select")).toHaveCount(0);
-
-    await genderOption(page, VALID_GENDER_LABEL).click();
-    await expect(page.locator("#phoneNumber")).toBeVisible();
-    await expect(page.getByTestId("country-region-select")).toHaveCount(0);
-    await expect(
-      page.getByText(
-        "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
-      ),
-    ).toHaveCount(0);
-
-    await page.locator("#phoneNumber").fill(VALID_PHONE_NUMBER);
-    await page.locator("#phoneNumber").blur();
-    await expect(page.getByTestId("country-region-select")).toBeVisible();
 
     const displayNameBox = await page.locator("#displayName").boundingBox();
     const countryRegionBox = await page
       .getByTestId("country-region-select")
       .boundingBox();
-    const phoneNumberBox = await page.locator("#phoneNumber").boundingBox();
-    if (!displayNameBox || !countryRegionBox || !phoneNumberBox) {
+    if (!displayNameBox || !countryRegionBox) {
       throw new Error("Could not measure sign-up input heights");
     }
-    expect(phoneNumberBox.y).toBeGreaterThan(displayNameBox.y);
-    expect(countryRegionBox.y).toBeGreaterThan(phoneNumberBox.y);
+    expect(countryRegionBox.y).toBeGreaterThan(displayNameBox.y);
     expect(
-      Math.abs(phoneNumberBox.height - displayNameBox.height),
+      Math.abs(countryRegionBox.height - displayNameBox.height),
     ).toBeLessThanOrEqual(1);
     await expect(page.locator("#email")).toHaveCount(0);
 
@@ -393,9 +376,6 @@ test.describe("A-01 sign-up functional flow", () => {
       .locator(".ant-select-item-option")
       .filter({ hasText: VALID_COUNTRY_REGION_LABEL })
       .click();
-    await expect(page.getByTestId("phone-country-code-select")).toContainText(
-      "+82",
-    );
     const selectedCountryCenterDelta = await page
       .getByTestId("country-region-select")
       .evaluate((select) => {
@@ -419,22 +399,28 @@ test.describe("A-01 sign-up functional flow", () => {
     const passwordConfirmInput = page.locator("#passwordConfirm");
     await expect(emailInput).toBeVisible();
     await expect(emailInput).toBeFocused();
-    await expect(genderOption(page, "남성")).toBeVisible();
-    await expect(genderOption(page, "여성")).toBeVisible();
-    await expect(page.locator("#phoneNumber")).toBeVisible();
+    await expect(genderOption(page, "남성")).toHaveCount(0);
+    await expect(genderOption(page, "여성")).toHaveCount(0);
+    await expect(page.locator("#phoneNumber")).toHaveCount(0);
 
     await emailInput.fill(VALID_EMAIL);
     await expect(passwordInput).toBeVisible();
     await expect(passwordConfirmInput).toBeVisible();
     await expect(emailInput).toBeFocused();
-    await expect(genderOption(page, "남성")).toBeVisible();
-    await expect(genderOption(page, "여성")).toBeVisible();
-    await expect(page.locator("#phoneNumber")).toBeVisible();
+    await expect(genderOption(page, "남성")).toHaveCount(0);
+    await expect(genderOption(page, "여성")).toHaveCount(0);
+    await expect(page.locator("#phoneNumber")).toHaveCount(0);
 
     await expect(page.locator("#terms")).toHaveCount(0);
     await passwordInput.fill(VALID_PASSWORD);
     await expect(page.locator("#terms")).toHaveCount(0);
     await passwordConfirmInput.fill(VALID_PASSWORD);
+    await expect(genderOption(page, "남성")).toBeVisible();
+    await expect(genderOption(page, "여성")).toBeVisible();
+    await expect(page.locator("#phoneNumber")).toBeVisible();
+    await expect(page.getByTestId("phone-country-code-select")).toContainText(
+      "+82",
+    );
     await expect(page.locator("#terms")).toBeVisible();
     await expect(passwordConfirmInput).toBeFocused();
 
@@ -499,8 +485,8 @@ test.describe("A-01 sign-up functional flow", () => {
     await openSignUp(page);
     await fillSignUpForm(page, {
       email: "optional-profile@example.com",
-      genderLabel: "여성",
-      phoneNumber: "1012345678",
+      genderLabel: VALID_GENDER_LABEL,
+      phoneNumber: VALID_PHONE_NUMBER,
     });
     await clickSubmit(page);
 
@@ -514,7 +500,7 @@ test.describe("A-01 sign-up functional flow", () => {
         display_name: VALID_NAME,
         gender: "female",
         nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
-        phone_number: "1012345678",
+        phone_number: "821012345678",
       },
       email: "optional-profile@example.com",
       password: VALID_PASSWORD,
@@ -532,7 +518,6 @@ test.describe("A-01 sign-up functional flow", () => {
     await expect(page).toHaveURL(/\/auth\/institution-invite$/);
     await page.locator('a[href="/sign-up"]').click();
     await expect(page).toHaveURL(/\/sign-up$/);
-    await page.waitForLoadState("networkidle");
     await expect(page.locator("#displayName")).toBeVisible();
     await fillSignUpForm(page, { email: "aff-signup@example.com" });
     await clickSubmit(page);
