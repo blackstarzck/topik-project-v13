@@ -43,7 +43,7 @@ export async function getAuthCompletionStatusForSession(
   }
 
   const hasConsent = await hasCompletedRequiredConsent(session);
-  if (!hasConsent) return "pending-auth-completion";
+  if (!hasConsent) return "pending-consent";
 
   const hasGoal = await hasLearningGoal(session.user.id);
   return hasGoal ? "ready" : "pending-learning-goal";

@@ -1,6 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 test.use({
@@ -9,16 +7,29 @@ test.use({
   storageState: { cookies: [], origins: [] },
 });
 
-const EVIDENCE_DIR = path.join("docs", "qa", "reports", "auth-post-auth-gate");
-
 type TempAuthGateData = {
   admin: SupabaseClient;
-  docIds: string[];
+  documents: RequiredConsentDocument[];
   email: string;
   generatedNickname: string;
   password: string;
   userId: string;
 };
+
+type RequiredConsentDocument = {
+  id: string;
+  doc_type: "terms" | "privacy";
+  locale: string;
+  title: string;
+  version: string;
+  effective_at: string | null;
+  created_at: string;
+};
+
+const REQUIRED_DOC_TYPES: RequiredConsentDocument["doc_type"][] = [
+  "privacy",
+  "terms",
+];
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -48,7 +59,7 @@ async function waitForProfile(admin: SupabaseClient, userId: string) {
   throw new Error("profile row was not created in time");
 }
 
-async function createTempAuthGateData(): Promise<TempAuthGateData> {
+function createAdminClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) {
@@ -57,47 +68,96 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
     );
   }
 
-  const admin = createClient(url, serviceRoleKey, {
+  return createClient(url, serviceRoleKey, {
     auth: { persistSession: false },
   });
+}
+
+function rowTime(row: RequiredConsentDocument): number {
+  return Date.parse(row.effective_at ?? row.created_at);
+}
+
+function latestByDocType(
+  rows: RequiredConsentDocument[],
+): RequiredConsentDocument[] {
+  const latest = new Map<
+    RequiredConsentDocument["doc_type"],
+    RequiredConsentDocument
+  >();
+
+  for (const row of rows) {
+    const current = latest.get(row.doc_type);
+    if (!current || rowTime(row) > rowTime(current)) {
+      latest.set(row.doc_type, row);
+    }
+  }
+
+  return REQUIRED_DOC_TYPES.flatMap((docType) => {
+    const doc = latest.get(docType);
+    return doc ? [doc] : [];
+  });
+}
+
+function isStaleE2EDocument(row: RequiredConsentDocument): boolean {
+  return (
+    row.version.startsWith("e2e-auth-gate-") ||
+    row.title === "E2E Terms" ||
+    row.title === "E2E Privacy"
+  );
+}
+
+async function getCurrentRequiredDocuments(
+  admin: SupabaseClient,
+): Promise<RequiredConsentDocument[]> {
+  const { data, error } = await admin
+    .from("legal_documents")
+    .select("id, doc_type, locale, title, version, effective_at, created_at")
+    .eq("locale", "ko")
+    .eq("requires_consent", true)
+    .eq("status", "published");
+
+  if (error) throw error;
+
+  const currentDocuments = latestByDocType(
+    (data ?? []) as RequiredConsentDocument[],
+  );
+  const staleDocuments = currentDocuments.filter(isStaleE2EDocument);
+  if (staleDocuments.length > 0) {
+    throw new Error(
+      `Stale E2E legal documents are published as current required docs: ${staleDocuments
+        .map((doc) => `${doc.doc_type}:${doc.version}`)
+        .join(", ")}`,
+    );
+  }
+
+  return currentDocuments;
+}
+
+function skipIfRequiredDocumentsMissing(documents: RequiredConsentDocument[]) {
+  const presentDocTypes = new Set(documents.map((doc) => doc.doc_type));
+  const missingDocTypes = REQUIRED_DOC_TYPES.filter(
+    (docType) => !presentDocTypes.has(docType),
+  );
+  test.skip(
+    missingDocTypes.length > 0,
+    `Published required legal documents are missing for: ${missingDocTypes.join(
+      ", ",
+    )}`,
+  );
+}
+
+async function createTempAuthGateData({
+  completeProfile = false,
+}: {
+  completeProfile?: boolean;
+} = {}): Promise<TempAuthGateData> {
+  const admin = createAdminClient();
+  const documents = await getCurrentRequiredDocuments(admin);
+  skipIfRequiredDocumentsMissing(documents);
+
   const stamp = Date.now();
-  const version = `e2e-auth-gate-${stamp}`;
   const email = `auth-gate-e2e-${stamp}@example.com`;
   const password = `Gate-${stamp}!Aa1`;
-  const docIds: string[] = [];
-
-  const insertedDocs = await admin
-    .from("legal_documents")
-    .insert([
-      {
-        body: "<h2>E2E Terms Body</h2><p>Terms body from admin-published legal document.</p>",
-        doc_type: "terms",
-        effective_at: new Date().toISOString(),
-        is_placeholder: false,
-        locale: "ko",
-        requires_consent: true,
-        status: "published",
-        summary: "Terms summary from admin settings.",
-        title: "E2E Terms",
-        version,
-      },
-      {
-        body: "<h2>E2E Privacy Body</h2><p>Privacy body from admin-published legal document.</p>",
-        doc_type: "privacy",
-        effective_at: new Date().toISOString(),
-        is_placeholder: false,
-        locale: "ko",
-        requires_consent: true,
-        status: "published",
-        summary: "Privacy summary from admin settings.",
-        title: "E2E Privacy",
-        version,
-      },
-    ])
-    .select("id");
-
-  if (insertedDocs.error) throw insertedDocs.error;
-  docIds.push(...(insertedDocs.data ?? []).map((row) => row.id as string));
 
   const created = await admin.auth.admin.createUser({
     email,
@@ -117,8 +177,8 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
   const updated = await admin
     .from("profiles")
     .update({
-      display_name: null,
-      nationality_country_code: null,
+      display_name: completeProfile ? "Consent Guard User" : null,
+      nationality_country_code: completeProfile ? "KR" : null,
       nickname: profile.nickname,
     })
     .eq("id", userId);
@@ -126,7 +186,7 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
 
   return {
     admin,
-    docIds,
+    documents,
     email,
     generatedNickname: profile.nickname,
     password,
@@ -136,13 +196,6 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
 
 async function cleanupTempAuthGateData(data: TempAuthGateData) {
   await data.admin.auth.admin.deleteUser(data.userId);
-  if (data.docIds.length > 0) {
-    const deletedDocs = await data.admin
-      .from("legal_documents")
-      .delete()
-      .in("id", data.docIds);
-    if (deletedDocs.error) throw deletedDocs.error;
-  }
 }
 
 async function signInToAuthConsent(page: Page, tempData: TempAuthGateData) {
@@ -165,12 +218,41 @@ async function selectCountryRegion(page: Page, label: string) {
     .click();
 }
 
-async function saveEvidenceScreenshot(page: Page, name: string) {
-  await mkdir(EVIDENCE_DIR, { recursive: true });
-  await page.screenshot({
-    fullPage: true,
-    path: path.join(EVIDENCE_DIR, `${name}.png`),
+async function attachEvidenceScreenshot(
+  page: Page,
+  testInfo: TestInfo,
+  name: string,
+) {
+  await testInfo.attach(name, {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
   });
+}
+
+async function expectRequiredConsentDocuments(
+  page: Page,
+  documents: RequiredConsentDocument[],
+) {
+  await expect(page.getByTestId("auth-consent-document-card")).toHaveCount(
+    documents.length,
+  );
+  for (const doc of documents) {
+    await expect(page.getByText(doc.title, { exact: true })).toBeVisible();
+  }
+}
+
+async function expectNoCurrentRequiredConsents(data: TempAuthGateData) {
+  const { data: consents, error } = await data.admin
+    .from("user_consents")
+    .select("document_id")
+    .eq("user_id", data.userId)
+    .in(
+      "document_id",
+      data.documents.map((doc) => doc.id),
+    );
+  if (error) throw error;
+
+  expect(consents).toHaveLength(0);
 }
 
 async function expectAuthGateSaved(data: TempAuthGateData) {
@@ -189,14 +271,17 @@ async function expectAuthGateSaved(data: TempAuthGateData) {
     .from("user_consents")
     .select("document_id,source")
     .eq("user_id", data.userId)
-    .in("document_id", data.docIds);
+    .in(
+      "document_id",
+      data.documents.map((doc) => doc.id),
+    );
   if (consentError) throw consentError;
 
-  expect(consents).toHaveLength(data.docIds.length);
+  expect(consents).toHaveLength(data.documents.length);
   expect(consents?.every((row) => row.source === "signup")).toBe(true);
 }
 
-test("auth completion gate renders profile fields and admin-published consent documents in one card", async ({
+test("auth completion gate renders profile fields and current required consent documents in one card", async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -206,7 +291,7 @@ test("auth completion gate renders profile fields and admin-published consent do
   );
   test.skip(
     process.env.SUPABASE_ENV_LABEL === "prod",
-    "Auth completion e2e creates temporary users and legal documents; never run it against production.",
+    "Auth completion e2e creates temporary users; never run it against production.",
   );
 
   const errors = collectErrors(page);
@@ -216,20 +301,18 @@ test("auth completion gate renders profile fields and admin-published consent do
     await signInToAuthConsent(page, tempData);
 
     await expect(page.getByTestId("auth-consent-card")).toBeVisible();
-    await expect(page.getByTestId("auth-consent-document-card")).toHaveCount(2);
+    await expectRequiredConsentDocuments(page, tempData.documents);
     await expect(page.locator("form")).toHaveCount(1);
     await expect(page.locator('input[name="display_name"]')).toBeVisible();
     await expect(page.locator('input[name="nickname"]')).toHaveValue(
       /talkpik-/,
     );
     await expect(page.getByTestId("auth-consent-country-select")).toBeVisible();
-    await expect(page.getByText("E2E Terms", { exact: true })).toBeVisible();
-    await expect(page.getByText("E2E Privacy", { exact: true })).toBeVisible();
-    await expect(page.getByText("E2E Terms Body")).toBeVisible();
-    await expect(page.getByText("E2E Privacy Body")).toBeVisible();
     await expect(page.locator('input[name="accept"]')).toHaveCount(1);
-    await saveEvidenceScreenshot(
+    await expectNoCurrentRequiredConsents(tempData);
+    await attachEvidenceScreenshot(
       page,
+      testInfo,
       `consent-required-${testInfo.project.name}`,
     );
 
@@ -243,8 +326,9 @@ test("auth completion gate renders profile fields and admin-published consent do
       ),
     ).toBeVisible();
 
-    await saveEvidenceScreenshot(
+    await attachEvidenceScreenshot(
       page,
+      testInfo,
       `consent-required-error-${testInfo.project.name}`,
     );
 
@@ -264,7 +348,7 @@ test("auth completion gate saves missing profile fields and required consents be
   );
   test.skip(
     process.env.SUPABASE_ENV_LABEL === "prod",
-    "Auth completion e2e creates temporary users and legal documents; never run it against production.",
+    "Auth completion e2e creates temporary users; never run it against production.",
   );
 
   const errors = collectErrors(page);
@@ -272,6 +356,7 @@ test("auth completion gate saves missing profile fields and required consents be
 
   try {
     await signInToAuthConsent(page, tempData);
+    await expectNoCurrentRequiredConsents(tempData);
 
     await page.locator('input[name="display_name"]').fill("민준");
     await expect(page.locator('input[name="nickname"]')).toHaveValue(
@@ -292,12 +377,102 @@ test("auth completion gate saves missing profile fields and required consents be
       }),
     ).toBeVisible();
     await expect(page).not.toHaveURL(/\/auth\/consent\?.*error=save-failed/);
-    await saveEvidenceScreenshot(
+    await attachEvidenceScreenshot(
       page,
+      testInfo,
       `consent-completed-${testInfo.project.name}`,
     );
 
     await expectAuthGateSaved(tempData);
+    expect(errors).toEqual([]);
+  } finally {
+    await cleanupTempAuthGateData(tempData);
+  }
+});
+
+test("auth consent hard reload keeps users with missing required consent on the consent gate", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY,
+    "Supabase URL and service role key are required for this e2e flow.",
+  );
+  test.skip(
+    process.env.SUPABASE_ENV_LABEL === "prod",
+    "Auth completion e2e creates temporary users; never run it against production.",
+  );
+
+  const errors = collectErrors(page);
+  const tempData = await createTempAuthGateData({ completeProfile: true });
+
+  try {
+    await signInToAuthConsent(page, tempData);
+    await expect(page.getByTestId("auth-consent-card")).toBeVisible();
+    await expectRequiredConsentDocuments(page, tempData.documents);
+    await expectNoCurrentRequiredConsents(tempData);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/auth\/consent/);
+    await expect(page).not.toHaveURL(/\/dashboard/);
+    await expect(page.getByTestId("auth-consent-card")).toBeVisible();
+    await expectRequiredConsentDocuments(page, tempData.documents);
+    await attachEvidenceScreenshot(
+      page,
+      testInfo,
+      `consent-reload-guard-${testInfo.project.name}`,
+    );
+
+    expect(errors).toEqual([]);
+  } finally {
+    await cleanupTempAuthGateData(tempData);
+  }
+});
+
+test("dashboard direct reload is blocked until required consent is accepted", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY,
+    "Supabase URL and service role key are required for this e2e flow.",
+  );
+  test.skip(
+    process.env.SUPABASE_ENV_LABEL === "prod",
+    "Auth completion e2e creates temporary users; never run it against production.",
+  );
+
+  const errors = collectErrors(page);
+  const tempData = await createTempAuthGateData({ completeProfile: true });
+
+  try {
+    await signInToAuthConsent(page, tempData);
+    await expectNoCurrentRequiredConsents(tempData);
+
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/auth\/consent/, { timeout: 20_000 });
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/auth\/consent/);
+    await expect(page).not.toHaveURL(/\/dashboard/);
+    await expect(page.getByTestId("auth-consent-card")).toBeVisible();
+    await expectRequiredConsentDocuments(page, tempData.documents);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/auth\/consent/);
+    await expect(page).not.toHaveURL(/\/dashboard/);
+    await expect(page.getByTestId("auth-consent-card")).toBeVisible();
+    await expectRequiredConsentDocuments(page, tempData.documents);
+    await attachEvidenceScreenshot(
+      page,
+      testInfo,
+      `dashboard-direct-reload-guard-${testInfo.project.name}`,
+    );
+
     expect(errors).toEqual([]);
   } finally {
     await cleanupTempAuthGateData(tempData);
