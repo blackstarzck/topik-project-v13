@@ -55,15 +55,19 @@ async function fillSignUpForm(
     displayName = VALID_NAME,
     countryRegionLabel = VALID_COUNTRY_REGION_LABEL,
     email = VALID_EMAIL,
+    genderLabel,
     password = VALID_PASSWORD,
     passwordConfirm = VALID_PASSWORD,
+    phoneNumber,
     agreeToTerms = true,
   }: {
     displayName?: string;
     countryRegionLabel?: string;
     email?: string;
+    genderLabel?: string;
     password?: string;
     passwordConfirm?: string;
+    phoneNumber?: string;
     agreeToTerms?: boolean;
   } = {},
 ) {
@@ -93,6 +97,19 @@ async function fillSignUpForm(
   await passwordInput.blur();
   await passwordConfirmInput.fill(passwordConfirm);
   await passwordConfirmInput.blur();
+
+  await expect(page.getByRole("combobox", { name: /성별/ })).toBeVisible();
+  await expect(page.getByLabel(/전화번호/)).toBeVisible();
+  if (genderLabel) {
+    await page.getByRole("combobox", { name: /성별/ }).click();
+    await page.locator(".ant-select-item-option").filter({
+      hasText: genderLabel,
+    }).click();
+  }
+  if (phoneNumber) {
+    await page.getByLabel(/전화번호/).fill(phoneNumber);
+    await page.getByLabel(/전화번호/).blur();
+  }
 
   if (agreeToTerms) {
     await expect(page.locator("#terms")).toBeVisible();
@@ -363,17 +380,23 @@ test.describe("A-01 sign-up functional flow", () => {
     const passwordConfirmInput = page.locator("#passwordConfirm");
     await expect(emailInput).toBeVisible();
     await expect(emailInput).toBeFocused();
+    await expect(page.locator("#gender")).toHaveCount(0);
+    await expect(page.locator("#phoneNumber")).toHaveCount(0);
 
     await emailInput.fill(VALID_EMAIL);
     await expect(passwordInput).toBeVisible();
     await expect(passwordConfirmInput).toBeVisible();
     await expect(emailInput).toBeFocused();
+    await expect(page.locator("#gender")).toHaveCount(0);
+    await expect(page.locator("#phoneNumber")).toHaveCount(0);
 
     await expect(page.locator("#terms")).toHaveCount(0);
     await passwordInput.fill(VALID_PASSWORD);
     await expect(page.locator("#terms")).toHaveCount(0);
     await passwordConfirmInput.fill(VALID_PASSWORD);
     await expect(page.locator("#terms")).toBeVisible();
+    await expect(page.locator("#gender")).toBeVisible();
+    await expect(page.locator("#phoneNumber")).toBeVisible();
     await expect(passwordConfirmInput).toBeFocused();
 
     await page.reload({ waitUntil: "networkidle" });
@@ -425,6 +448,38 @@ test.describe("A-01 sign-up functional flow", () => {
     expect(redirectTo.searchParams.get("next")).toBe(
       "/auth/post-auth?intent=sign-up",
     );
+    expect(errors).toEqual([]);
+  });
+
+  test("valid email sign-up can include optional gender and phone metadata", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const signUpRequests = await mockSignUpSuccess(page);
+
+    await openSignUp(page);
+    await fillSignUpForm(page, {
+      email: "optional-profile@example.com",
+      genderLabel: "여성",
+      phoneNumber: "+821012345678",
+    });
+    await clickSubmit(page);
+
+    await page.waitForURL(
+      /\/auth\/verify-email\?email=optional-profile%40example\.com$/,
+    );
+
+    expect(signUpRequests).toHaveLength(1);
+    expect(signUpRequests[0].payload).toMatchObject({
+      data: {
+        display_name: VALID_NAME,
+        gender: "female",
+        nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
+        phone_number: "+821012345678",
+      },
+      email: "optional-profile@example.com",
+      password: VALID_PASSWORD,
+    });
     expect(errors).toEqual([]);
   });
 

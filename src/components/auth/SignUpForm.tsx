@@ -18,6 +18,7 @@ import {
   Divider,
   Form,
   Input,
+  Select,
   Typography,
 } from "antd";
 import { ArrowRight } from "@/components/shared/AppIcons";
@@ -46,6 +47,11 @@ import {
   DEFAULT_COOLDOWN_SECONDS,
   useEmailCooldown,
 } from "@/lib/auth/use-email-cooldown";
+import {
+  normalizeOptionalProfileInput,
+  PHONE_NUMBER_E164_PATTERN,
+  type ProfileGender,
+} from "@/lib/auth/profile-completion";
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
@@ -142,10 +148,12 @@ function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
 
 type SignUpFields = {
   email: string;
+  gender?: ProfileGender;
   password: string;
   passwordConfirm: string;
   displayName: string;
   nationalityCountryCode: string;
+  phoneNumber?: string;
   terms: boolean;
 };
 
@@ -325,15 +333,25 @@ export function SignUpForm({
     try {
       const supabase = createSupabaseBrowserClient();
       const affiliationMetadata = buildAffiliationMetadata();
+      const optionalProfileMetadata = normalizeOptionalProfileInput({
+        gender: values.gender,
+        phone_number: values.phoneNumber,
+      });
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           data: {
             display_name: values.displayName,
+            ...(optionalProfileMetadata.gender
+              ? { gender: optionalProfileMetadata.gender }
+              : {}),
             nationality_country_code: normalizeCountryCode(
               values.nationalityCountryCode,
             ),
+            ...(optionalProfileMetadata.phone_number
+              ? { phone_number: optionalProfileMetadata.phone_number }
+              : {}),
             ui_locale: locale,
             ui_locale_source: hasSupportedLocaleCookie() ? "manual" : "auto",
             ...affiliationMetadata,
@@ -571,6 +589,56 @@ export function SignUpForm({
 
         {showTermsStep && (
           <div className="auth-progressive-step">
+            <Form.Item label={t("genderLabel")} name="gender">
+              <Select<ProfileGender>
+                allowClear
+                aria-label={t("genderLabel")}
+                placeholder={t("genderPlaceholder")}
+                options={[
+                  {
+                    value: "female",
+                    label: t("genderFemale"),
+                  },
+                  {
+                    value: "male",
+                    label: t("genderMale"),
+                  },
+                  {
+                    value: "prefer_not_to_say",
+                    label: t("genderPreferNotToSay"),
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={t("phoneNumberLabel")}
+              name="phoneNumber"
+              extra={t("phoneNumberHelp")}
+              rules={[
+                {
+                  validator(_, value) {
+                    const phoneNumber = normalizeFieldValue(value);
+                    if (
+                      phoneNumber.length === 0 ||
+                      PHONE_NUMBER_E164_PATTERN.test(phoneNumber)
+                    ) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error(t("phoneNumberInvalid")));
+                  },
+                },
+              ]}
+            >
+              <Input
+                autoComplete="tel"
+                inputMode="tel"
+                placeholder={t("phoneNumberPlaceholder")}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+              />
+            </Form.Item>
+
             <Form.Item
               name="terms"
               valuePropName="checked"

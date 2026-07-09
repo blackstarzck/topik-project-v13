@@ -37,8 +37,10 @@ import { completeAuthGateAction } from "../../../src/app/auth/consent/actions";
 
 const completeProfile = {
   display_name: "Chan",
+  gender: null,
   nationality_country_code: "KR",
   nickname: "talkpik-abc123",
+  phone_number: null,
   status: "active",
   ui_locale: "ko",
   ui_locale_source: "manual",
@@ -188,8 +190,35 @@ describe("completeAuthGateAction", () => {
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
       p_display_name: "민준",
+      p_gender: null,
       p_nationality_country_code: "KR",
       p_nickname: "talkpik-min",
+      p_phone_number: null,
+    });
+  });
+
+  it("passes optional profile fields to the completion RPC when supplied", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
+    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([]);
+
+    await expect(
+      completeAuthGateAction(
+        makeForm({
+          gender: " female ",
+          next: "/dashboard",
+          phone_number: " +821012345678 ",
+        }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT:/dashboard");
+
+    expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
+      p_accept_required_consents: false,
+      p_display_name: null,
+      p_gender: "female",
+      p_nationality_country_code: null,
+      p_nickname: null,
+      p_phone_number: "+821012345678",
     });
   });
 
@@ -229,8 +258,10 @@ describe("completeAuthGateAction", () => {
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
       p_display_name: "Minji",
+      p_gender: null,
       p_nationality_country_code: "KR",
       p_nickname: "talkpik-minji",
+      p_phone_number: null,
     });
   });
 
@@ -263,8 +294,10 @@ describe("completeAuthGateAction", () => {
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: false,
       p_display_name: null,
+      p_gender: null,
       p_nationality_country_code: null,
       p_nickname: null,
+      p_phone_number: null,
       p_ui_locale: "vi",
       p_ui_locale_source: "auto",
     });
@@ -334,7 +367,7 @@ describe("completeAuthGateAction", () => {
         error: {
           code: "PGRST202",
           details:
-            "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_nationality_country_code, p_nickname",
+            "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_number",
           hint: "Try reloading the schema cache",
           message:
             "Could not find the function public.complete_auth_gate(...) in the schema cache",
@@ -372,7 +405,7 @@ describe("completeAuthGateAction", () => {
         category: "auth_completion_rpc_missing_or_stale",
         code: "PGRST202",
         details:
-          "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_nationality_country_code, p_nickname",
+          "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_number",
         hint: "Try reloading the schema cache",
         message:
           "Could not find the function public.complete_auth_gate(...) in the schema cache",

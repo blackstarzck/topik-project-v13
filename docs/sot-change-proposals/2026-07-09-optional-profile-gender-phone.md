@@ -1,0 +1,48 @@
+# 회원가입 선택 정보 수집 변경 제안
+
+작성일: 2026-07-09
+
+상태: 구현 동반 제안. active SOT 직접 수정 없이, 사용자 앱의 회원가입/인증 완료 흐름에서 선택 입력으로 수집하는 데이터 계약을 기록한다.
+
+## 요약
+
+회원가입 시 성별과 전화번호를 선택 입력으로 받을 수 있게 한다.
+
+- 성별과 전화번호는 필수값이 아니다.
+- 이메일 가입은 `/sign-up`에서 입력한 값을 Supabase Auth metadata로 전달하고, `handle_new_user()`가 `profiles`에 저장한다.
+- Google OAuth와 매직링크 가입은 기존 `/auth/consent` 게이트가 열리는 경우에만 같은 선택 필드를 표시하고 저장한다.
+- 선택 필드 누락만으로 `/auth/consent`에 강제 진입시키지 않는다.
+- Google People API 또는 추가 Google OAuth scope는 사용하지 않는다.
+
+## 데이터 계약
+
+`profiles`에 아래 nullable 컬럼을 추가한다.
+
+| column | type | nullable | validation |
+| --- | --- | --- | --- |
+| `gender` | `text` | yes | `male`, `female`, `prefer_not_to_say` 중 하나 또는 `null` |
+| `phone_number` | `text` | yes | E.164 형식 또는 `null` |
+
+전화번호는 사용자가 입력한 자기 신고 값이다. Google 계정의 전화번호를 자동 조회하지 않는다.
+
+## 화면 영향
+
+| 화면 | 변경 |
+| --- | --- |
+| `/sign-up` | 기존 단계형 필수 입력 흐름을 유지하고, 비밀번호 확인까지 유효해져 약관 단계가 열릴 때 성별 select와 전화번호 input을 함께 표시한다. 둘 다 선택 입력이며 다음 단계 노출 조건이 아니다. |
+| `/auth/consent` | 필수 프로필/필수 약관 완료 게이트가 열렸을 때 선택 정보 섹션을 함께 표시한다. 선택값이 비어 있어도 계속할 수 있다. |
+
+## 갱신이 필요한 active SOT
+
+아래 문서는 별도 SOT 확정 절차에서 갱신이 필요하다.
+
+- `docs/Wireframe/data-usage-index.md`: `profiles.gender`, `profiles.phone_number` 사용처와 수집 경로 추가.
+- 회원가입 관련 Wireframe 기능명세: `/sign-up`과 `/auth/consent` 선택 입력 표시 규칙 추가.
+- 개인정보 처리 관련 문서: 전화번호와 성별이 선택 수집 항목임을 반영.
+
+## 범위 밖
+
+- Google People API 연동.
+- Google OAuth scope에 `user.gender.read`, `user.phonenumbers.read` 추가.
+- 프로필 설정 화면에서 성별/전화번호를 수정하는 기능.
+- 기존 사용자에게 선택값 입력을 강제하는 리마인더 또는 게이트.

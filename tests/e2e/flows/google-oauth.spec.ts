@@ -56,6 +56,15 @@ async function expectGoogleOAuthStart({
   const url = new URL(request.url());
   expect(url.pathname).toBe("/auth/v1/authorize");
   expect(url.searchParams.get("provider")).toBe("google");
+  const requestedScopes = [
+    url.searchParams.get("scope"),
+    url.searchParams.get("scopes"),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  expect(requestedScopes).not.toMatch(
+    /user\.gender\.read|user\.phonenumbers\.read|phone|gender/i,
+  );
 
   const redirectTo = url.searchParams.get("redirect_to");
   expect(redirectTo).toBeTruthy();
@@ -116,6 +125,15 @@ test.describe("Google OAuth entry", () => {
     const url = new URL(request.url());
     expect(url.pathname).toBe("/auth/v1/authorize");
     expect(url.searchParams.get("provider")).toBe("google");
+    const requestedScopes = [
+      url.searchParams.get("scope"),
+      url.searchParams.get("scopes"),
+    ]
+      .filter(Boolean)
+      .join(" ");
+    expect(requestedScopes).not.toMatch(
+      /user\.gender\.read|user\.phonenumbers\.read|phone|gender/i,
+    );
 
     const redirectTo = url.searchParams.get("redirect_to");
     expect(redirectTo).toBeTruthy();

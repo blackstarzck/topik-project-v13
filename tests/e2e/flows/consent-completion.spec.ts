@@ -118,8 +118,10 @@ async function createTempAuthGateData(): Promise<TempAuthGateData> {
     .from("profiles")
     .update({
       display_name: null,
+      gender: null,
       nationality_country_code: null,
       nickname: profile.nickname,
+      phone_number: null,
     })
     .eq("id", userId);
   if (updated.error) throw updated.error;
@@ -165,6 +167,14 @@ async function selectCountryRegion(page: Page, label: string) {
     .click();
 }
 
+async function selectGender(page: Page, label: string) {
+  await page.getByRole("combobox", { name: /성별/ }).click();
+  await page
+    .locator(".ant-select-item-option")
+    .filter({ hasText: label })
+    .click();
+}
+
 async function saveEvidenceScreenshot(page: Page, name: string) {
   await mkdir(EVIDENCE_DIR, { recursive: true });
   await page.screenshot({
@@ -176,14 +186,16 @@ async function saveEvidenceScreenshot(page: Page, name: string) {
 async function expectAuthGateSaved(data: TempAuthGateData) {
   const { data: profile, error: profileError } = await data.admin
     .from("profiles")
-    .select("display_name,nationality_country_code,nickname")
+    .select("display_name,gender,nationality_country_code,nickname,phone_number")
     .eq("id", data.userId)
     .single();
   if (profileError) throw profileError;
 
   expect(profile?.display_name).toBe("민준");
+  expect(profile?.gender).toBe("female");
   expect(profile?.nationality_country_code).toBe("KR");
   expect(profile?.nickname).toBe(data.generatedNickname);
+  expect(profile?.phone_number).toBe("+821012345678");
 
   const { data: consents, error: consentError } = await data.admin
     .from("user_consents")
@@ -223,6 +235,8 @@ test("auth completion gate renders profile fields and admin-published consent do
       /talkpik-/,
     );
     await expect(page.getByTestId("auth-consent-country-select")).toBeVisible();
+    await expect(page.getByRole("combobox", { name: /성별/ })).toBeVisible();
+    await expect(page.getByLabel(/전화번호/)).toBeVisible();
     await expect(page.getByText("E2E Terms", { exact: true })).toBeVisible();
     await expect(page.getByText("E2E Privacy", { exact: true })).toBeVisible();
     await expect(page.getByText("E2E Terms Body")).toBeVisible();
@@ -278,6 +292,8 @@ test("auth completion gate saves missing profile fields and required consents be
       tempData.generatedNickname,
     );
     await selectCountryRegion(page, "대한민국");
+    await selectGender(page, "여성");
+    await page.getByLabel(/전화번호/).fill("+821012345678");
     await page.locator('input[name="accept"]').check();
     await page.locator('form button[type="submit"]').click();
 

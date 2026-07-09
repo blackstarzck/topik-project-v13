@@ -8,6 +8,7 @@ import {
   Flex,
   Form,
   Input,
+  Select,
   Typography,
 } from "antd";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,7 +23,9 @@ import { AppCard } from "@/components/shared/AppCard";
 import {
   DISPLAY_NAME_MAX_LENGTH,
   NICKNAME_MAX_LENGTH,
+  PHONE_NUMBER_E164_PATTERN,
   PROFILE_NAME_MIN_LENGTH,
+  type ProfileGender,
   type RequiredProfileField,
   type RequiredProfileShape,
 } from "@/lib/auth/profile-completion";
@@ -42,6 +45,7 @@ export type AuthConsentPanelDocument = {
 
 export type AuthConsentPanelError =
   | "required"
+  | "invalid-profile"
   | "nickname-taken"
   | "save-failed";
 
@@ -120,6 +124,10 @@ export function AuthConsentPanel({
     );
     return normalized.length > 0 ? normalized : null;
   });
+  const [gender, setGender] = useState<ProfileGender | null>(
+    profile.gender ?? null,
+  );
+  const [phoneNumber, setPhoneNumber] = useState(profile.phone_number ?? "");
   const [nicknameAvailability, setNicknameAvailability] =
     useState<NicknameAvailability>("idle");
   const nicknameCheckSeqRef = useRef(0);
@@ -150,11 +158,17 @@ export function AuthConsentPanel({
           : nicknameAvailability === "failed"
             ? tProfile("nicknameCheckFailed")
             : tProfile("nicknameHelp");
+  const normalizedPhoneNumber = phoneNumber.trim();
+  const phoneNumberInvalid =
+    normalizedPhoneNumber.length > 0 &&
+    !PHONE_NUMBER_E164_PATTERN.test(normalizedPhoneNumber);
   const errorTitle =
     error === "nickname-taken"
       ? tProfile("nicknameTaken")
       : error === "save-failed"
         ? t("saveFailedError")
+        : error === "invalid-profile"
+          ? t("invalidProfileError")
         : error === "required" || showRequiredError
           ? t("requiredError")
           : null;
@@ -208,6 +222,7 @@ export function AuthConsentPanel({
 
         <form action={action}>
           <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="gender" value={gender ?? ""} />
           <input
             type="hidden"
             name="nationality_country_code"
@@ -286,7 +301,73 @@ export function AuthConsentPanel({
               </section>
             ) : null}
 
-            {needsProfile && needsConsent ? <Divider className="!m-0" /> : null}
+            {needsProfile ? <Divider className="!m-0" /> : null}
+
+            <section className="flex flex-col gap-4">
+              <div>
+                <Text strong>{tProfile("optionalSectionTitle")}</Text>
+                <Paragraph type="secondary" className="!mb-0">
+                  {tProfile("optionalSectionDescription")}
+                </Paragraph>
+              </div>
+              <Form layout="vertical" component={false}>
+                <Form.Item
+                  className="!mb-4"
+                  label={tProfile("genderLabel")}
+                  extra={tProfile("genderHelp")}
+                >
+                  <Select<ProfileGender>
+                    allowClear
+                    aria-label={tProfile("genderLabel")}
+                    placeholder={tProfile("genderPlaceholder")}
+                    value={gender ?? undefined}
+                    onChange={(value) => setGender(value ?? null)}
+                    options={[
+                      {
+                        value: "female",
+                        label: tProfile("genderFemale"),
+                      },
+                      {
+                        value: "male",
+                        label: tProfile("genderMale"),
+                      },
+                      {
+                        value: "prefer_not_to_say",
+                        label: tProfile("genderPreferNotToSay"),
+                      },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  className="!mb-0"
+                  label={tProfile("phoneNumberLabel")}
+                  validateStatus={phoneNumberInvalid ? "error" : undefined}
+                  help={
+                    phoneNumberInvalid
+                      ? tProfile("phoneNumberInvalid")
+                      : undefined
+                  }
+                  extra={
+                    phoneNumberInvalid
+                      ? undefined
+                      : tProfile("phoneNumberHelp")
+                  }
+                >
+                  <Input
+                    name="phone_number"
+                    value={phoneNumber}
+                    onChange={(event) => setPhoneNumber(event.target.value)}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    placeholder={tProfile("phoneNumberPlaceholder")}
+                    aria-label={tProfile("phoneNumberLabel")}
+                  />
+                </Form.Item>
+              </Form>
+            </section>
+
+            {needsConsent ? <Divider className="!m-0" /> : null}
 
             {needsConsent ? (
               <section className="flex flex-col gap-4">
@@ -330,7 +411,8 @@ export function AuthConsentPanel({
               label={t("submit")}
               disabled={
                 nicknameAvailability === "checking" ||
-                nicknameAvailability === "taken"
+                nicknameAvailability === "taken" ||
+                phoneNumberInvalid
               }
             />
           </Flex>
