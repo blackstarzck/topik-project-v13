@@ -41,18 +41,23 @@ function collectErrors(page: Page): string[] {
 test("C-01 recommendations renders an honest empty state when there are zero recommendations", async ({
   page,
 }) => {
-  // Force the live recommendation tables to look empty, independent of DB seed
-  // state. A 200 means no query error is thrown; zero rows means items.length 0
-  // → the empty branch renders.
-  for (const table of ["recommendation_runs", "recommendation_items"]) {
-    await page.route(`**/rest/v1/${table}*`, (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: "[]",
+  // The bundle is now assembled server-side (stored items OR the rule-based
+  // computed fallback), so PostgREST interception can't force this state
+  // anymore — stub the API route itself. An empty computed bundle is exactly
+  // what the server returns when no eligible candidate problem exists.
+  await page.route("**/api/practice/recommendations*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        run: null,
+        items: [],
+        availableTypes: [],
+        source: "computed",
+        summaryCode: null,
       }),
-    );
-  }
+    }),
+  );
   // Keep the workspace shell's notification bell quiet so it can't add noise.
   await page.route("**/rest/v1/user_notifications?**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),

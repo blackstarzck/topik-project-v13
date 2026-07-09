@@ -957,10 +957,27 @@
       "subtitle": "Đề xuất phù hợp với lộ trình học hiện tại của bạn. Chọn một dạng để nhận đề xuất mới.",
       "reasonSummaryTitle": "Lý do chúng tôi đề xuất",
       "reasonSummaryLoading": "Đang tải lý do đề xuất.",
-      "reasonSummaryFallback": "Phân tích gần đây cho thấy bạn còn có thể cải thiện ngữ pháp và bố cục, nên chúng tôi đề xuất {type} trước.",
-      "reasonTagGrammar": "Cải thiện độ chính xác ngữ pháp",
-      "reasonTagStructure": "Tăng cường mạch bố cục",
-      "reasonTagExpression": "Luyện lại biểu đạt cốt lõi",
+      "reasonSummaryFallback": "Hiện tại, chúng tôi đề xuất bạn bắt đầu luyện tập với {type}.",
+      "reasonCode": {
+        "TYPE_ROTATION_NEXT": "Dạng bạn luyện tập ít hơn — được đề xuất theo thứ tự tiếp theo.",
+        "RECENT_TYPE_CONTINUATION": "Phù hợp để luyện tiếp dạng bạn vừa làm gần đây.",
+        "WEAK_AREA_TAG_MATCH": "Bài luyện cho phần có điểm nhận xét gần đây thấp.",
+        "GOAL_DIFFICULTY_MATCH": "Bài có cấp độ và độ khó gần với mục tiêu bạn đã đặt.",
+        "UNATTEMPTED_AVAILABLE": "Bài đã công khai mà bạn chưa làm."
+      },
+      "computedSummary": {
+        "history": "Được chọn theo quy tắc cố định dựa trên lịch sử học gần đây của bạn.",
+        "rotation": "Bạn chưa có nhiều lịch sử luyện tập nên đề được chọn theo vòng xoay dạng 51→54."
+      },
+      "dimension": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Độ bám đề",
+        "language": "Ngôn ngữ"
+      },
       "loadingTip": "Đang tải đề xuất",
       "loadErrorTitle": "Không thể tải đề xuất",
       "loadErrorDescription": "Yêu cầu đề xuất đang mất quá lâu. Hãy thử lại hoặc chọn một dạng bên dưới để bắt đầu trực tiếp.",

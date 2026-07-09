@@ -957,10 +957,27 @@
       "subtitle": "현재 학습 흐름에 맞춘 추천이에요. 유형을 골라 다시 추천을 받을 수 있어요.",
       "reasonSummaryTitle": "이렇게 추천했어요",
       "reasonSummaryLoading": "추천 이유를 불러오는 중이에요.",
-      "reasonSummaryFallback": "최근 분석 결과, 문법·구성에서 개선 여지가 보여 {type}을 최우선으로 추천했어요.",
-      "reasonTagGrammar": "문법 정확도 개선",
-      "reasonTagStructure": "구성 흐름 강화",
-      "reasonTagExpression": "핵심 표현 반복",
+      "reasonSummaryFallback": "지금은 {type} 유형부터 연습을 시작하도록 추천했어요.",
+      "reasonCode": {
+        "TYPE_ROTATION_NEXT": "아직 덜 연습한 유형이라 다음 순서로 추천해요.",
+        "RECENT_TYPE_CONTINUATION": "최근에 풀던 유형을 이어서 연습하기 좋아요.",
+        "WEAK_AREA_TAG_MATCH": "최근 첨삭 점수가 낮았던 영역의 연습 문제예요.",
+        "GOAL_DIFFICULTY_MATCH": "설정한 목표 수준과 난이도가 비슷한 문제예요.",
+        "UNATTEMPTED_AVAILABLE": "아직 풀지 않은 공개 문제예요."
+      },
+      "computedSummary": {
+        "history": "최근 학습 기록을 정해진 규칙에 따라 반영해 고른 문제예요.",
+        "rotation": "아직 풀이 기록이 적어 51→54 유형 순환 순서로 골랐어요."
+      },
+      "dimension": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합성",
+        "language": "언어"
+      },
       "loadingTip": "추천을 불러오는 중이에요",
       "loadErrorTitle": "추천을 불러오지 못했어요",
       "loadErrorDescription": "추천 요청이 지연되고 있어요. 다시 시도하거나 아래에서 유형을 직접 선택해 시작해 주세요.",
