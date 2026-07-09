@@ -2112,7 +2112,14 @@
       "emptyFiltered": "선택한 조건에 맞는 항목이 없어요",
       "emptyNoItems": "저장한 답안이나 문제가 아직 없어요",
       "emptySearch": "검색 결과가 없어요",
-      "resetSearch": "검색 초기화"
+      "resetSearch": "검색 초기화",
+      "actionMenu": {
+        "open": "문제 작업 메뉴 열기",
+        "exportPdf": "PDF 내보내기",
+        "nextProblem": "다음 문제 풀기",
+        "compareReport": "비교 리포트",
+        "retry": "다시 풀기"
+      }
     },
     "submissions": {
       "loadError": "저장한 답안을 불러오지 못했어요",

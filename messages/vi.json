@@ -2112,7 +2112,14 @@
       "emptyFiltered": "Không có mục nào khớp với bộ lọc đã chọn.",
       "emptyNoItems": "Chưa có bài làm hoặc câu hỏi nào được lưu.",
       "emptySearch": "Không có kết quả tìm kiếm.",
-      "resetSearch": "Đặt lại tìm kiếm"
+      "resetSearch": "Đặt lại tìm kiếm",
+      "actionMenu": {
+        "open": "Mở menu thao tác câu hỏi",
+        "exportPdf": "Xuất PDF",
+        "nextProblem": "Làm câu tiếp theo",
+        "compareReport": "Báo cáo so sánh",
+        "retry": "Làm lại"
+      }
     },
     "submissions": {
       "loadError": "Không thể tải bài làm đã lưu của bạn",

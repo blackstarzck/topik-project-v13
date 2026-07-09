@@ -2112,7 +2112,14 @@
       "emptyFiltered": "No items match the selected filters.",
       "emptyNoItems": "No saved answers or questions yet.",
       "emptySearch": "No search results.",
-      "resetSearch": "Reset search"
+      "resetSearch": "Reset search",
+      "actionMenu": {
+        "open": "Open question action menu",
+        "exportPdf": "Export PDF",
+        "nextProblem": "Solve next question",
+        "compareReport": "Comparison report",
+        "retry": "Solve again"
+      }
     },
     "submissions": {
       "loadError": "Could not load your saved answers",

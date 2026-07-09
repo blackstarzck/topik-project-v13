@@ -18,8 +18,8 @@ import {
 import { AppCard } from "@/components/shared/AppCard";
 import { writingFeedbackHref } from "@/lib/writing/routes";
 
+import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
-import { LibraryProblemsRetryAction } from "./LibraryProblemsRows";
 import {
   isAnalysisPendingStatus,
   problemTitle,
@@ -102,8 +102,11 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
               {tSubmissions("analysisPendingHint")}
             </Paragraph>
           ) : null}
-          <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-            <TagChips tags={item.tags} />
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
+            <span className="flex flex-wrap items-center gap-2">
+              <TagChips tags={item.tags} />
+            </span>
+            {analysisPending ? null : <LibraryProblemsActionMenu item={item} />}
           </div>
         </div>
       </AppCard>
@@ -138,11 +141,8 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             {item.availabilityReason ?? tSaved("unavailableDefaultReason")}
           </Text>
         ) : null}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
-          <span className="flex flex-wrap items-center gap-2">
-            <TagChips tags={item.tags} />
-          </span>
-          <LibraryProblemsRetryAction item={item} />
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+          <TagChips tags={item.tags} />
         </div>
       </div>
     </AppCard>

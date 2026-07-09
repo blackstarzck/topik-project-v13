@@ -2,20 +2,16 @@
 
 import { Alert, Button, Empty, Spin, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useState } from "react";
 
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryProblemView } from "@/lib/library/types";
-import { writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
-
-type SavedLibraryTranslator = ReturnType<typeof useTranslations>;
 
 type Props = {
   initialItems: LibraryProblemView[];
@@ -101,7 +97,6 @@ export function LibrarySavedProblemsTab({
               itemId={item.item_id}
               tab="problems"
               tags={item.tags}
-              trailingActions={[renderRetryAction(item, t)]}
             >
               <div className="flex w-full min-w-0 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -135,41 +130,5 @@ export function LibrarySavedProblemsTab({
         onChange={(p) => setPage(p)}
       />
     </div>
-  );
-}
-
-function renderRetryAction(
-  item: LibraryProblemView,
-  t: SavedLibraryTranslator,
-) {
-  const canRetry = item.canRetry && item.question_no !== null;
-  if (!canRetry) {
-    return (
-      <Button
-        key="retry"
-        type="primary"
-        size="small"
-        disabled
-        aria-label={t("retryUnavailable")}
-        title={t("retryUnavailable")}
-      >
-        {t("retry")}
-      </Button>
-    );
-  }
-  return (
-    <Link
-      key="retry"
-      href={
-        writingProblemHref({
-          questionNo: item.question_no,
-          problemId: item.id,
-        }) as never
-      }
-    >
-      <Button type="primary" size="small">
-        {t("retry")}
-      </Button>
-    </Link>
   );
 }

@@ -39,6 +39,7 @@ import {
   MessageCircle as IconsaxMessageCircle,
   MessageText,
   Monitor,
+  More as IconsaxMore,
   NoteText,
   NotificationBing,
   PenTool,
@@ -168,6 +169,7 @@ export const Menu = createIconsaxIcon(HambergerMenu);
 export const MessageCircle = createIconsaxIcon(IconsaxMessageCircle);
 export const MessageSquareText = createIconsaxIcon(MessageText);
 export const MonitorCheck = createIconsaxIcon(Monitor);
+export const More = createIconsaxIcon(IconsaxMore);
 export const PanelsTopLeft = createIconsaxIcon(AlignLeft);
 export const PenLine = createIconsaxIcon(PenTool);
 export const PencilLine = createIconsaxIcon(PenTool);

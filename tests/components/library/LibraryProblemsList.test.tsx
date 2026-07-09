@@ -18,8 +18,67 @@ import type {
 } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
+const exportPdfWithPrintFallbackMock = vi.hoisted(() => vi.fn());
+const routerPushMock = vi.hoisted(() => vi.fn());
+const compareMutateMock = vi.hoisted(() => vi.fn());
+const appApiMocks = vi.hoisted(() => ({
+  notification: {
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+  },
+  message: {
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+  },
+  modal: {},
+}));
+
+const actionMenuLabels = {
+  open: "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30",
+  exportPdf: "PDF \ub0b4\ubcf4\ub0b4\uae30",
+  nextProblem: "\ub2e4\uc74c \ubb38\uc81c \ud480\uae30",
+  compareReport: "\ube44\uad50 \ub9ac\ud3ec\ud2b8",
+  retry: "\ub2e4\uc2dc \ud480\uae30",
+};
+
 vi.mock("@/lib/library/queries", () => ({
   useLibraryItems: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: routerPushMock,
+  }),
+}));
+
+vi.mock("antd", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("antd")>();
+  return {
+    ...actual,
+    App: Object.assign(actual.App, {
+      useApp: () => appApiMocks,
+    }),
+  };
+});
+
+vi.mock("@/lib/export/pdf-export-client", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/export/pdf-export-client")>();
+  return {
+    ...actual,
+    exportPdfWithPrintFallback: exportPdfWithPrintFallbackMock,
+  };
+});
+
+vi.mock("@/lib/writing/mutations", () => ({
+  useCreateComparisonReport: () => ({
+    isPending: false,
+    mutate: compareMutateMock,
+  }),
 }));
 
 vi.mock("@/components/library/library-enrich-data", async (importOriginal) => {
@@ -160,10 +219,13 @@ describe("LibraryProblemsList", () => {
     expect(within(list).queryAllByText("252자")).toHaveLength(0);
 
     expect(
-      screen
-        .getByRole("link", { name: koMessages.library.saved.retry })
-        .getAttribute("href"),
-    ).toBe("/writing/answer-writing-52?problem=problem-52");
+      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }),
+    ).toBeNull();
 
     const feedbackLink = await screen.findByRole("link", {
       name: /문화 소비 다양화 영향/,
@@ -176,6 +238,142 @@ describe("LibraryProblemsList", () => {
       expect(screen.getByText("구조 보완이 필요합니다.")).toBeTruthy();
       expect(screen.getByText(/68\/100/)).toBeTruthy();
     });
+  });
+
+  it("shows the four-item action menu only for completed submissions", async () => {
+    exportPdfWithPrintFallbackMock.mockResolvedValue({
+      exportId: "export-1",
+      mode: "file",
+    });
+    compareMutateMock.mockImplementation(
+      (
+        _input: unknown,
+        options?: {
+          onSuccess?: (data: { reportId: string }) => void;
+        },
+      ) => {
+        options?.onSuccess?.({ reportId: "report-1" });
+      },
+    );
+
+    renderList();
+    await waitForEnrichment();
+
+    const rows = screen.getAllByTestId("library-problems-mixed-row");
+    const submissionRow = rows.find(
+      (row) => row.getAttribute("data-library-kind") === "submission",
+    );
+    const problemRow = rows.find(
+      (row) => row.getAttribute("data-library-kind") === "problem",
+    );
+    if (!submissionRow || !problemRow) {
+      throw new Error("expected submission and problem rows");
+    }
+
+    expect(
+      within(problemRow).queryByRole("button", {
+        name: actionMenuLabels.open,
+      }),
+    ).toBeNull();
+
+    const trigger = within(submissionRow).getByRole("button", {
+      name: actionMenuLabels.open,
+    });
+    expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
+
+    fireEvent.click(trigger);
+    let menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual([
+      actionMenuLabels.exportPdf,
+      actionMenuLabels.nextProblem,
+      actionMenuLabels.compareReport,
+      actionMenuLabels.retry,
+    ]);
+
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: actionMenuLabels.exportPdf,
+      }),
+    );
+    await waitFor(() => {
+      expect(exportPdfWithPrintFallbackMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceType: "submission",
+          sourceId: "sub-1",
+        }),
+      );
+    });
+    expect(appApiMocks.message.success).toHaveBeenCalledWith(
+      koMessages.feedback.actions.pdfDownloaded,
+    );
+    expect(appApiMocks.notification.success).not.toHaveBeenCalled();
+
+    fireEvent.click(trigger);
+    menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: actionMenuLabels.nextProblem,
+      }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith("/practice/next");
+
+    fireEvent.click(trigger);
+    menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: actionMenuLabels.compareReport,
+      }),
+    );
+    expect(compareMutateMock).toHaveBeenCalledWith(
+      { current_id: "sub-1" },
+      expect.objectContaining({
+        onError: expect.any(Function),
+        onSuccess: expect.any(Function),
+      }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/writing/reports/report-1/compare",
+    );
+
+    fireEvent.click(trigger);
+    menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", { name: actionMenuLabels.retry }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/writing/long-form-writing-53?problem=problem-53&fresh=1&retrySubmission=sub-1",
+    );
+  });
+
+  it("hides submission action menus while analysis is pending", async () => {
+    mockedFetchSubmissionEnrichment.mockResolvedValue(
+      new Map([
+        [
+          "sub-1",
+          {
+            feedbackStatus: "analyzing",
+            scoreTotal: null,
+            scoreMax: null,
+            summary: null,
+          },
+        ],
+      ]),
+    );
+
+    renderList();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(koMessages.library.submissions.analysisPendingHint),
+      ).toBeTruthy();
+    });
+    expect(
+      screen.queryByRole("button", { name: actionMenuLabels.open }),
+    ).toBeNull();
   });
 
   it("does not render delete buttons in the problems list rows", () => {
@@ -503,10 +701,18 @@ describe("LibraryProblemsList", () => {
     ).toBeGreaterThan(0);
     expect(within(cardGrid).queryAllByText(/2026-06-(29|30)/)).toHaveLength(0);
     expect(within(cardGrid).queryAllByText("252자")).toHaveLength(0);
-    // 카드 뷰에서도 행 testid 계약과 다시 풀기 액션이 유지된다.
+    // Card view keeps the mixed-row testid contract and submission-only menu.
     expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
     expect(
-      screen.getByRole("link", { name: koMessages.library.saved.retry }),
+      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }),
+    ).toBeNull();
+    expect(
+      within(cardGrid).getByRole("button", { name: actionMenuLabels.open }),
     ).toBeTruthy();
 
     fireEvent.click(
