@@ -205,7 +205,9 @@ export function LibraryProblemsList({
           item.id,
           item.question_no != null ? `${item.question_no}` : null,
           item.question_no != null ? `${item.question_no}번` : null,
+          item.answer_text,
           item.availabilityReason,
+          t("bookmarkTag"),
           t("typeProblem"),
           ...item.tags,
         ]);

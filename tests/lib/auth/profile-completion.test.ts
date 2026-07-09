@@ -12,6 +12,7 @@ const completeProfile = {
   nickname: "talkpik-abc123",
   nationality_country_code: "KR",
   gender: null,
+  phone_country_code: null,
   phone_number: null,
 };
 
@@ -60,6 +61,7 @@ describe("profile completion helpers", () => {
       gender: null,
       nickname: "talkpik-min",
       nationality_country_code: "KR",
+      phone_country_code: null,
       phone_number: null,
     });
   });
@@ -68,30 +70,36 @@ describe("profile completion helpers", () => {
     expect(
       normalizeOptionalProfileInput({
         gender: "  FEMALE  ",
+        phone_country_code: " kr ",
         phone_number: "  010-1234-5678  ",
       }),
     ).toEqual({
       gender: "female",
+      phone_country_code: "KR",
       phone_number: "01012345678",
     });
 
     expect(
       normalizeOptionalProfileInput({
         gender: "prefer_not_to_say",
+        phone_country_code: "vn",
         phone_number: "+82 10 1234 5678",
       }),
     ).toEqual({
       gender: null,
+      phone_country_code: "VN",
       phone_number: "821012345678",
     });
 
     expect(
       normalizeOptionalProfileInput({
         gender: "",
+        phone_country_code: "KR",
         phone_number: "",
       }),
     ).toEqual({
       gender: null,
+      phone_country_code: null,
       phone_number: null,
     });
   });

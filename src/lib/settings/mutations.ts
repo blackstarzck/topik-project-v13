@@ -94,6 +94,7 @@ export async function updateProfile(
     display_name?: string | null;
     nickname?: string | null;
     nationality_country_code?: string | null;
+    phone_country_code?: string | null;
     phone_number?: string | null;
     bio?: string | null;
   } = {};
@@ -108,6 +109,15 @@ export async function updateProfile(
   }
   if (Object.prototype.hasOwnProperty.call(input, "phone_number")) {
     patch.phone_number = input.phone_number ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(input, "phone_country_code")) {
+    patch.phone_country_code = input.phone_country_code ?? null;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(input, "phone_number") &&
+    input.phone_number === null
+  ) {
+    patch.phone_country_code = null;
   }
   // Phase 7-E Task 10 (P1-6) — bio mutation.
   if (Object.prototype.hasOwnProperty.call(input, "bio")) {

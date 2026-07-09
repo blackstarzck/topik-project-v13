@@ -20,8 +20,8 @@ import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
-import { LibraryProblemsDraftAction } from "./LibraryProblemsRows";
 import {
+  answerPreview,
   draftTitle,
   isAnalysisPendingStatus,
   problemTitle,
@@ -111,7 +111,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
               <TagChips tags={item.tags} />
             </span>
             {actionMenuAvailable ? (
-              <LibraryProblemsActionMenu item={item} />
+              <LibraryProblemsActionMenu kind="submission" item={item} />
             ) : null}
           </div>
         </div>
@@ -144,7 +144,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             </Paragraph>
           ) : null}
           <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-2">
-            <LibraryProblemsDraftAction item={item} />
+            <LibraryProblemsActionMenu kind="draft" item={item} />
           </div>
         </div>
       </AppCard>
@@ -154,6 +154,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
   const item = entry.item;
   const unavailable = item.availabilityStatus !== "available";
   const title = problemTitle(item.title, tSaved("unavailablePlaceholderTitle"));
+  const preview = unavailable ? null : answerPreview(item.answer_text);
 
   return (
     <AppCard className={unavailable ? "h-full opacity-40" : "h-full"}>
@@ -162,6 +163,9 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
           <LibraryProblemsQuestionNumber questionNo={item.question_no} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Tag data-testid="library-problems-type-badge">
+            {t("bookmarkTag")}
+          </Tag>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"
@@ -170,7 +174,12 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             </Tag>
           ) : null}
         </div>
-        <Text strong>{title}</Text>
+        <Text strong>{clampTitle(title)}</Text>
+        {preview ? (
+          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+            {preview}
+          </Paragraph>
+        ) : null}
         {unavailable ? (
           <Text
             data-testid="library-problem-unavailable-reason"
@@ -179,8 +188,8 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             {item.availabilityReason ?? tSaved("unavailableDefaultReason")}
           </Text>
         ) : null}
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-          <TagChips tags={item.tags} />
+        <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-2">
+          <LibraryProblemsActionMenu kind="problem" item={item} />
         </div>
       </div>
     </AppCard>

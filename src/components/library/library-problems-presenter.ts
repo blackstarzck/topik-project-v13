@@ -54,6 +54,10 @@ export function problemTitle(title: string | null, fallbackTitle: string) {
   return stripQuestionNumberPrefix(title ?? fallbackTitle);
 }
 
+export function answerPreview(answerText: string | null): string | null {
+  return answerText?.trim() ? answerText : null;
+}
+
 export function draftTitle(
   item: LibraryDraftView,
   fallbackTitle: string,

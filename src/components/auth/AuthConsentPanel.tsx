@@ -29,6 +29,7 @@ import {
   type RequiredProfileField,
   type RequiredProfileShape,
 } from "@/lib/auth/profile-completion";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import { renderLegalDocumentBodyHtml } from "@/lib/legal/html";
 import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import { checkNicknameAvailability } from "@/lib/settings/mutations";
@@ -128,6 +129,9 @@ export function AuthConsentPanel({
     profile.gender ?? null,
   );
   const [phoneNumber, setPhoneNumber] = useState(profile.phone_number ?? "");
+  const [phoneCountryCode, setPhoneCountryCode] = useState(
+    profile.phone_country_code ?? DEFAULT_PHONE_COUNTRY_CODE,
+  );
   const [nicknameAvailability, setNicknameAvailability] =
     useState<NicknameAvailability>("idle");
   const nicknameCheckSeqRef = useRef(0);
@@ -193,10 +197,12 @@ export function AuthConsentPanel({
           <PhoneNumberInput
             ariaLabel={tProfile("phoneNumberLabel")}
             callingCodeAriaLabel={tProfile("phoneCountryCodeLabel")}
+            countryCode={phoneCountryCode}
             locale={locale}
             value={phoneNumber}
             placeholder={tProfile("phoneNumberPlaceholder")}
             onChange={setPhoneNumber}
+            onCountryCodeChange={setPhoneCountryCode}
           />
         </Form.Item>
       </>
@@ -253,6 +259,11 @@ export function AuthConsentPanel({
         <form action={action}>
           <input type="hidden" name="next" value={next} />
           <input type="hidden" name="gender" value={gender ?? ""} />
+          <input
+            type="hidden"
+            name="phone_country_code"
+            value={phoneNumber ? phoneCountryCode : ""}
+          />
           <input type="hidden" name="phone_number" value={phoneNumber} />
           <input
             type="hidden"

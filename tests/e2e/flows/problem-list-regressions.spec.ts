@@ -40,6 +40,8 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 const REMOTE_FIXTURE_SYNC_TIMEOUT_MS = 60_000;
+const PROBLEMS_ACTION_MENU_OPEN =
+  "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30";
 
 type StudentUser = {
   id: string;
@@ -699,7 +701,12 @@ test("C-02 problem save appears in the F-01 saved problem filter", async ({
     await expect(savedRow).toBeVisible({ timeout: 15_000 });
     await expect(savedRow).toHaveAttribute("data-library-kind", "problem");
     await savedRow
-      .getByRole("button", { name: /다시 풀기|Solve again|Làm lại|Thử lại/ })
+      .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+      .click();
+    await page
+      .getByRole("menuitem", {
+        name: /다시 풀기|Solve again|Làm lại|Thử lại/,
+      })
       .click();
     await expect(page).toHaveURL(
       new RegExp(`/writing/short-answer-writing-51.*${fixture.problemId}`),

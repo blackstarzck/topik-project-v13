@@ -6,6 +6,8 @@ type RowShape = {
   display_name: string | null;
   nickname: string | null;
   nationality_country_code?: string | null;
+  phone_country_code?: string | null;
+  phone_number?: string | null;
   ui_locale: "ko" | "en" | "vi";
   ui_locale_source: "legacy" | "default" | "auto" | "manual";
   notification_prefs: unknown;
@@ -39,6 +41,7 @@ describe("getProfileSettings", () => {
     const row = {
       display_name: "Chan",
       nickname: "찬",
+      phone_country_code: "KR",
       phone_number: "01012345678",
       // Phase 7-E Task 10 — bio column.
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
@@ -53,6 +56,7 @@ describe("getProfileSettings", () => {
       display_name: "Chan",
       nickname: "찬",
       nationality_country_code: null,
+      phone_country_code: "KR",
       phone_number: "01012345678",
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko",
@@ -93,11 +97,12 @@ describe("getProfileSettings", () => {
     );
 
     expect(selectedColumns[0]).toContain("nationality_country_code");
+    expect(selectedColumns[0]).toContain("phone_country_code");
     expect(selectedColumns[0]).toContain("ui_locale_source");
     expect(result?.nationality_country_code).toBe("VN");
   });
 
-  it("falls back to legacy locale source when the remote schema lacks ui_locale_source", async () => {
+  it("falls back to legacy locale source when the remote schema lacks optional profile columns", async () => {
     const selectedColumns: string[] = [];
     const result = await getProfileSettings(
       "user-4",
@@ -110,12 +115,12 @@ describe("getProfileSettings", () => {
                 eq: () => ({
                   maybeSingle: () =>
                     Promise.resolve(
-                      columns.includes("ui_locale_source")
+                      columns.includes("phone_country_code")
                         ? {
                             data: null,
                             error: {
                               message:
-                                "column profiles.ui_locale_source does not exist",
+                                "column profiles.phone_country_code does not exist",
                             },
                           }
                         : {
@@ -139,9 +144,12 @@ describe("getProfileSettings", () => {
 
     expect(selectedColumns).toHaveLength(2);
     expect(selectedColumns[0]).toContain("ui_locale_source");
+    expect(selectedColumns[0]).toContain("phone_country_code");
     expect(selectedColumns[1]).not.toContain("ui_locale_source");
+    expect(selectedColumns[1]).not.toContain("phone_country_code");
     expect(result).toMatchObject({
       nationality_country_code: "KR",
+      phone_country_code: null,
       ui_locale: "ko",
       ui_locale_source: "legacy",
     });

@@ -36,6 +36,7 @@ export interface ProfileSettings {
   nationality_country_code: string | null;
   // Optional self-reported phone number (digits-only or null). Collected at
   // signup/auth completion; editable on /profile.
+  phone_country_code: string | null;
   phone_number: string | null;
   // Phase 7-E Task 10 (P1-6) — self-introduction up to 160 chars (nullable).
   bio: string | null;
@@ -54,6 +55,7 @@ export interface UpdateProfileInput {
   nickname?: string | null;
   nationality_country_code?: string | null;
   // Optional phone number. DB CHECK enforces digits-only or null.
+  phone_country_code?: string | null;
   phone_number?: string | null;
   // Phase 7-E Task 10 — bio mutation. DB CHECK char_length <= 160.
   bio?: string | null;

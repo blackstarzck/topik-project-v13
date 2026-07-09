@@ -39,6 +39,7 @@ const problem: LibraryProblemView = {
   id: "problem-52",
   title: "휴대전화 진동 문장 완성",
   question_no: 52,
+  answer_text: null,
   item_id: "library-problem-1",
   saved_at: "2026-06-30T10:00:00.000Z",
   tags: [],

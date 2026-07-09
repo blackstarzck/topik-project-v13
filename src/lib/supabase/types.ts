@@ -63,6 +63,7 @@ export interface Database {
           gender: "male" | "female" | null;
           nationality_country_code: string | null;
           nickname: string | null;
+          phone_country_code: string | null;
           phone_number: string | null;
           phone_number_prompt_dismissed_at: string | null;
           avatar_path: string | null;
@@ -94,6 +95,7 @@ export interface Database {
           gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
+          phone_country_code?: string | null;
           phone_number?: string | null;
           phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
@@ -121,6 +123,7 @@ export interface Database {
           gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
+          phone_country_code?: string | null;
           phone_number?: string | null;
           phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
@@ -1654,6 +1657,7 @@ export interface Database {
           p_gender: string | null;
           p_nickname: string | null;
           p_nationality_country_code: string | null;
+          p_phone_country_code: string | null;
           p_phone_number: string | null;
           p_accept_required_consents: boolean;
           p_ui_locale?: "ko" | "en" | "vi";
@@ -1691,6 +1695,7 @@ export interface Database {
           problem_id: string | null;
           title: string | null;
           question_no: number | null;
+          answer_text: string | null;
           tags: string[] | null;
           saved_at: string;
           availability_status: string;

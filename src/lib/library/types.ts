@@ -76,6 +76,7 @@ export type LibraryProblemView = {
   id: string;
   title: string | null;
   question_no: number | null;
+  answer_text: string | null;
   item_id: string;
   /** `library_items.saved_at` for mixed saved-item ordering. */
   saved_at: string;

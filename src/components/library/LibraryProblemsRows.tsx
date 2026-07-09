@@ -25,6 +25,7 @@ import { LibraryItemRow } from "./LibraryItemRow";
 import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
 import {
+  answerPreview,
   draftTitle,
   isAnalysisPendingStatus,
   problemTitle,
@@ -60,7 +61,13 @@ export function LibraryProblemsSubmissionRow({
       tags={item.tags}
       trailingActions={
         actionMenuAvailable
-          ? [<LibraryProblemsActionMenu key="actions" item={item} />]
+          ? [
+              <LibraryProblemsActionMenu
+                key="actions"
+                kind="submission"
+                item={item}
+              />,
+            ]
           : undefined
       }
     >
@@ -111,9 +118,11 @@ export function LibraryProblemsProblemRow({
 }: {
   item: LibraryProblemView;
 }) {
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSaved = useTranslations("library.saved");
   const unavailable = item.availabilityStatus !== "available";
   const title = problemTitle(item.title, tSaved("unavailablePlaceholderTitle"));
+  const preview = unavailable ? null : answerPreview(item.answer_text);
 
   return (
     <LibraryItemRow
@@ -121,12 +130,18 @@ export function LibraryProblemsProblemRow({
       itemId={item.item_id}
       showDeleteAction={false}
       tab="problems"
-      tags={item.tags}
+      tags={[]}
+      trailingActions={[
+        <LibraryProblemsActionMenu key="actions" kind="problem" item={item} />,
+      ]}
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
           <LibraryProblemsQuestionNumber questionNo={item.question_no} />
-          <Text strong>{title}</Text>
+          <Text strong>{clampTitle(title)}</Text>
+          <Tag data-testid="library-problems-type-badge">
+            {t("bookmarkTag")}
+          </Tag>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"
@@ -135,6 +150,11 @@ export function LibraryProblemsProblemRow({
             </Tag>
           ) : null}
         </div>
+        {preview ? (
+          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+            {preview}
+          </Paragraph>
+        ) : null}
         {unavailable ? (
           <Text
             data-testid="library-problem-unavailable-reason"
@@ -147,6 +167,45 @@ export function LibraryProblemsProblemRow({
     </LibraryItemRow>
   );
 }
+
+export function LibraryProblemsRetryAction({
+  item,
+}: {
+  item: LibraryProblemView;
+}) {
+  const tSaved = useTranslations("library.saved");
+  const canRetry = item.canRetry && item.question_no !== null;
+
+  if (!canRetry) {
+    return (
+      <Button
+        type="primary"
+        size="small"
+        disabled
+        aria-label={tSaved("retryUnavailable")}
+        title={tSaved("retryUnavailable")}
+      >
+        {tSaved("retry")}
+      </Button>
+    );
+  }
+
+  return (
+    <Link
+      href={
+        writingProblemHref({
+          questionNo: item.question_no,
+          problemId: item.id,
+        }) as never
+      }
+    >
+      <Button type="primary" size="small">
+        {tSaved("retry")}
+      </Button>
+    </Link>
+  );
+}
+
 export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
   const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSubmissions = useTranslations(
@@ -164,16 +223,14 @@ export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
       tab="drafts"
       tags={[]}
       trailingActions={[
-        <LibraryProblemsDraftAction key="continue" item={item} />,
+        <LibraryProblemsActionMenu key="actions" kind="draft" item={item} />,
       ]}
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
           <LibraryProblemsQuestionNumber questionNo={item.question_no} />
           <Text strong>{clampTitle(title)}</Text>
-          <Tag data-testid="library-problems-type-badge">
-            {t("typeDraft")}
-          </Tag>
+          <Tag data-testid="library-problems-type-badge">{t("typeDraft")}</Tag>
         </div>
         {item.answer_text ? (
           <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">

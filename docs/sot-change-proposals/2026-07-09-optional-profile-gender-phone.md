@@ -21,7 +21,8 @@
 | column | type | nullable | validation |
 | --- | --- | --- | --- |
 | `gender` | `text` | yes | `male`, `female` 중 하나 또는 `null` |
-| `phone_number` | `text` | yes | 숫자만 저장 또는 `null` |
+| `phone_country_code` | `text` | yes | ISO 3166-1 alpha-2 country code. `phone_number`가 `null`이면 함께 `null` |
+| `phone_number` | `text` | yes | 국가번호를 제외한 로컬 번호 숫자만 저장 또는 `null`. 예: `phone_country_code = KR`, `phone_number = 1012345678` |
 
 전화번호는 사용자가 입력한 자기 신고 값이다. Google 계정의 전화번호를 자동 조회하지 않는다.
 
@@ -36,7 +37,7 @@
 
 아래 문서는 별도 SOT 확정 절차에서 갱신이 필요하다.
 
-- `docs/Wireframe/data-usage-index.md`: `profiles.gender`, `profiles.phone_number` 사용처와 수집 경로 추가.
+- `docs/Wireframe/data-usage-index.md`: `profiles.gender`, `profiles.phone_country_code`, `profiles.phone_number` 사용처와 수집 경로 추가.
 - 회원가입 관련 Wireframe 기능명세: `/sign-up`과 `/auth/consent` 선택 입력 표시 규칙 추가.
 - 개인정보 처리 관련 문서: 전화번호와 성별이 선택 수집 항목임을 반영.
 

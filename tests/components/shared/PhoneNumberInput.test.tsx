@@ -53,6 +53,33 @@ describe("PhoneNumberInput", () => {
     expect(handleChange).toHaveBeenCalledWith("82010123456789012345");
   });
 
+  it("reports the selected country code separately from the local digits", async () => {
+    const handleCountryCodeChange = vi.fn();
+    renderWithIntl(
+      <PhoneNumberInput
+        ariaLabel="?꾪솕踰덊샇"
+        callingCodeAriaLabel="援??踰덊샇"
+        countryCode="KR"
+        locale="ko"
+        value=""
+        onChange={vi.fn()}
+        onCountryCodeChange={handleCountryCodeChange}
+      />,
+    );
+
+    fireEvent.mouseDown(screen.getByRole("combobox", { name: "援??踰덊샇" }));
+    const matches = await screen.findAllByText("+84");
+    const option = matches.find((node) =>
+      node.closest(".ant-select-item-option"),
+    );
+    if (!option) {
+      throw new Error("Vietnam phone country option not found");
+    }
+    fireEvent.click(option);
+
+    expect(handleCountryCodeChange).toHaveBeenCalledWith("VN");
+  });
+
   it("blocks non-digit keyCode input while allowing digit keys", () => {
     renderWithIntl(
       <PhoneNumberInput

@@ -50,6 +50,7 @@ import {
   normalizeOptionalProfileInput,
   type ProfileGender,
 } from "@/lib/auth/profile-completion";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
@@ -165,6 +166,7 @@ type SignUpFields = {
   passwordConfirm: string;
   displayName: string;
   nationalityCountryCode: string;
+  phoneCountryCode?: string;
   phoneNumber?: string;
   terms: boolean;
 };
@@ -204,19 +206,16 @@ export function SignUpForm({
   const [passwordValue, setPasswordValue] = useState("");
   const [form] = Form.useForm<SignUpFields>();
   const displayNameValue = Form.useWatch("displayName", form);
-  const genderValue = Form.useWatch("gender", form);
-  const phoneNumberValue = Form.useWatch("phoneNumber", form);
   const nationalityCountryCodeValue = Form.useWatch(
     "nationalityCountryCode",
     form,
   );
   const emailValue = Form.useWatch("email", form);
   const passwordConfirmValue = Form.useWatch("passwordConfirm", form);
+  const phoneCountryCodeValue = Form.useWatch("phoneCountryCode", form);
   const termsValue = Form.useWatch("terms", form);
   const isCoolingDown = signUpCooldown.remaining > 0;
   const hasValidName = isDisplayNameReady(displayNameValue);
-  const hasSelectedGender = isGenderReady(genderValue);
-  const hasValidPhoneNumber = isPhoneNumberReady(phoneNumberValue);
   const hasValidCountryRegion = isCountryCodeReady(nationalityCountryCodeValue);
   const hasValidEmail = isEmailReady(emailValue);
   const hasValidPassword = isPasswordPairReady(
@@ -232,50 +231,24 @@ export function SignUpForm({
   const autoVisibleStep = useMemo(() => {
     if (
       hasValidName &&
-      hasSelectedGender &&
-      hasValidPhoneNumber &&
       hasValidCountryRegion &&
       hasValidEmail &&
       hasValidPassword
     ) {
       return STEP_TERMS;
     }
-    if (
-      hasValidName &&
-      hasSelectedGender &&
-      hasValidPhoneNumber &&
-      hasValidCountryRegion &&
-      hasValidEmail
-    ) {
+    if (hasValidName && hasValidCountryRegion && hasValidEmail) {
       return STEP_PASSWORD;
     }
-    if (
-      hasValidName &&
-      hasSelectedGender &&
-      hasValidPhoneNumber &&
-      hasValidCountryRegion
-    ) {
+    if (hasValidName && hasValidCountryRegion) {
       return STEP_EMAIL;
     }
-    if (hasValidName && hasSelectedGender && hasValidPhoneNumber) {
-      return STEP_COUNTRY_REGION;
-    }
-    if (hasValidName && hasSelectedGender) {
-      return STEP_PHONE;
-    }
-    if (hasValidName) return STEP_GENDER;
+    if (hasValidName) return STEP_COUNTRY_REGION;
     return STEP_NAME;
-  }, [
-    hasSelectedGender,
-    hasValidCountryRegion,
-    hasValidEmail,
-    hasValidName,
-    hasValidPassword,
-    hasValidPhoneNumber,
-  ]);
+  }, [hasValidCountryRegion, hasValidEmail, hasValidName, hasValidPassword]);
   const currentVisibleStep = Math.max(visibleStep, autoVisibleStep);
-  const showGenderStep = currentVisibleStep >= STEP_GENDER;
-  const showPhoneStep = currentVisibleStep >= STEP_PHONE;
+  const showGenderStep = currentVisibleStep >= STEP_TERMS;
+  const showPhoneStep = currentVisibleStep >= STEP_TERMS;
   const showCountryRegionStep = currentVisibleStep >= STEP_COUNTRY_REGION;
   const showEmailStep = currentVisibleStep >= STEP_EMAIL;
   const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
@@ -320,7 +293,7 @@ export function SignUpForm({
         : values.displayName;
 
     if (step === STEP_NAME && isDisplayNameReady(displayName)) {
-      revealStep(STEP_GENDER, "gender");
+      revealStep(STEP_COUNTRY_REGION, "nationalityCountryCode");
       return;
     }
     if (step === STEP_GENDER && isGenderReady(values.gender)) {
@@ -391,6 +364,7 @@ export function SignUpForm({
       const affiliationMetadata = buildAffiliationMetadata();
       const optionalProfileMetadata = normalizeOptionalProfileInput({
         gender: values.gender,
+        phone_country_code: values.phoneCountryCode,
         phone_number: values.phoneNumber,
       });
       const { data, error } = await supabase.auth.signUp({
@@ -407,6 +381,9 @@ export function SignUpForm({
             ),
             ...(optionalProfileMetadata.phone_number
               ? { phone_number: optionalProfileMetadata.phone_number }
+              : {}),
+            ...(optionalProfileMetadata.phone_country_code
+              ? { phone_country_code: optionalProfileMetadata.phone_country_code }
               : {}),
             ui_locale: locale,
             ui_locale_source: hasSupportedLocaleCookie() ? "manual" : "auto",
@@ -501,10 +478,14 @@ export function SignUpForm({
       )}
       <Form
         form={form}
+        initialValues={{ phoneCountryCode: DEFAULT_PHONE_COUNTRY_CODE }}
         layout="vertical"
         onFinish={handleSignUp}
         requiredMark={false}
       >
+        <Form.Item hidden name="phoneCountryCode">
+          <Input type="hidden" />
+        </Form.Item>
         {/* description 3 input order: name, optional gender/phone, country, email, password */}
         <Form.Item
           label={t("nameLabel")}
@@ -554,8 +535,12 @@ export function SignUpForm({
                 id="phoneNumber"
                 ariaLabel={t("phoneNumberLabel")}
                 callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+                countryCode={phoneCountryCodeValue ?? DEFAULT_PHONE_COUNTRY_CODE}
                 locale={locale}
                 placeholder={t("phoneNumberPlaceholder")}
+                onCountryCodeChange={(value) => {
+                  form.setFieldValue("phoneCountryCode", value);
+                }}
                 onFocus={() => onTypingChange?.(true)}
                 onChange={(value) => {
                   if (isPhoneNumberReady(value)) {

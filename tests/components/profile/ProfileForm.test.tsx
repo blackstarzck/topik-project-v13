@@ -619,6 +619,7 @@ describe("ProfileForm", () => {
     });
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        phone_country_code: "KR",
         phone_number: "01012345678",
       });
     });
@@ -638,6 +639,7 @@ describe("ProfileForm", () => {
 
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        phone_country_code: "KR",
         phone_number: "01087654321",
       });
     });
@@ -664,6 +666,7 @@ describe("ProfileForm", () => {
 
     await waitFor(() => {
       expect(mutateAsyncMock).toHaveBeenCalledWith({
+        phone_country_code: null,
         phone_number: null,
       });
     });

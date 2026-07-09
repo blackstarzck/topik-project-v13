@@ -40,6 +40,7 @@ const completeProfile = {
   gender: null,
   nationality_country_code: "KR",
   nickname: "talkpik-abc123",
+  phone_country_code: null,
   phone_number: null,
   status: "active",
   ui_locale: "ko",
@@ -193,6 +194,7 @@ describe("completeAuthGateAction", () => {
       p_gender: null,
       p_nationality_country_code: "KR",
       p_nickname: "talkpik-min",
+      p_phone_country_code: null,
       p_phone_number: null,
     });
   });
@@ -207,6 +209,7 @@ describe("completeAuthGateAction", () => {
         makeForm({
           gender: " female ",
           next: "/dashboard",
+          phone_country_code: " vn ",
           phone_number: " 010-1234-5678 ",
         }),
       ),
@@ -218,6 +221,7 @@ describe("completeAuthGateAction", () => {
       p_gender: "female",
       p_nationality_country_code: null,
       p_nickname: null,
+      p_phone_country_code: "VN",
       p_phone_number: "01012345678",
     });
   });
@@ -261,6 +265,7 @@ describe("completeAuthGateAction", () => {
       p_gender: null,
       p_nationality_country_code: "KR",
       p_nickname: "talkpik-minji",
+      p_phone_country_code: null,
       p_phone_number: null,
     });
   });
@@ -297,6 +302,7 @@ describe("completeAuthGateAction", () => {
       p_gender: null,
       p_nationality_country_code: null,
       p_nickname: null,
+      p_phone_country_code: null,
       p_phone_number: null,
       p_ui_locale: "vi",
       p_ui_locale_source: "auto",
@@ -367,7 +373,7 @@ describe("completeAuthGateAction", () => {
         error: {
           code: "PGRST202",
           details:
-            "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_number",
+            "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_country_code, p_phone_number",
           hint: "Try reloading the schema cache",
           message:
             "Could not find the function public.complete_auth_gate(...) in the schema cache",
@@ -405,7 +411,7 @@ describe("completeAuthGateAction", () => {
         category: "auth_completion_rpc_missing_or_stale",
         code: "PGRST202",
         details:
-          "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_number",
+          "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_country_code, p_phone_number",
         hint: "Try reloading the schema cache",
         message:
           "Could not find the function public.complete_auth_gate(...) in the schema cache",

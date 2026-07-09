@@ -9,6 +9,7 @@ import type { LibraryItemView, LibraryProblemView } from "@/lib/library/types";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
+import { LibraryProblemsRetryAction } from "./LibraryProblemsRows";
 import { matchesLibrarySearch } from "./library-tab-url";
 
 const { Text } = Typography;
@@ -97,6 +98,9 @@ export function LibrarySavedProblemsTab({
               itemId={item.item_id}
               tab="problems"
               tags={item.tags}
+              trailingActions={[
+                <LibraryProblemsRetryAction key="retry" item={item} />,
+              ]}
             >
               <div className="flex w-full min-w-0 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">

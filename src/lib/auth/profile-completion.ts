@@ -2,6 +2,7 @@ import {
   isSupportedCountryCode,
   normalizeCountryCode,
 } from "@/lib/geo/country-codes";
+import { getCountryCallingCode } from "@/lib/geo/country-calling-codes";
 
 export const PROFILE_NAME_MIN_LENGTH = 2;
 export const DISPLAY_NAME_MAX_LENGTH = 30;
@@ -19,6 +20,7 @@ export type ProfileGender = (typeof PROFILE_GENDERS)[number];
 
 export type OptionalProfileShape = {
   gender?: ProfileGender | null;
+  phone_country_code?: string | null;
   phone_number?: string | null;
 };
 
@@ -33,6 +35,7 @@ export type AuthCompletionProfileInput = {
   nickname: string | null;
   nationality_country_code: string | null;
   gender: ProfileGender | null;
+  phone_country_code: string | null;
   phone_number: string | null;
 };
 
@@ -63,6 +66,13 @@ function normalizePhoneNumber(value: unknown): string | null {
     .replace(/\D/g, "")
     .slice(0, PHONE_NUMBER_MAX_LENGTH);
   return PHONE_NUMBER_DIGITS_PATTERN.test(digits) ? digits : null;
+}
+
+function normalizePhoneCountryCode(value: unknown): string | null {
+  const normalizedCountryCode = normalizeCountryCode(value);
+  return getCountryCallingCode(normalizedCountryCode)
+    ? normalizedCountryCode
+    : null;
 }
 
 function isValidDisplayName(value: unknown) {
@@ -114,6 +124,7 @@ export function normalizeAuthCompletionProfileInput(input: {
   nickname?: unknown;
   nationality_country_code?: unknown;
   gender?: unknown;
+  phone_country_code?: unknown;
   phone_number?: unknown;
 }): AuthCompletionProfileInput {
   return {
@@ -137,25 +148,37 @@ export function isRequiredProfileInputValid(
 
 export function normalizeOptionalProfileInput(input: {
   gender?: unknown;
+  phone_country_code?: unknown;
   phone_number?: unknown;
 }): {
   gender: ProfileGender | null;
+  phone_country_code: string | null;
   phone_number: string | null;
 } {
+  const phoneNumber = normalizePhoneNumber(input.phone_number);
   return {
     gender: normalizeGender(input.gender),
-    phone_number: normalizePhoneNumber(input.phone_number),
+    phone_country_code: phoneNumber
+      ? normalizePhoneCountryCode(input.phone_country_code)
+      : null,
+    phone_number: phoneNumber,
   };
 }
 
 export function isOptionalProfileInputValid(input: {
   gender?: unknown;
+  phone_country_code?: unknown;
   phone_number?: unknown;
 }) {
   const rawGender = normalizeText(input.gender);
   const rawPhoneNumber = normalizeText(input.phone_number);
+  const rawPhoneCountryCode = normalizeText(input.phone_country_code);
+  const phoneNumber = normalizePhoneNumber(rawPhoneNumber);
   return (
     (rawGender === null || normalizeGender(rawGender) !== null) &&
-    (rawPhoneNumber === null || normalizePhoneNumber(rawPhoneNumber) !== null)
+    (rawPhoneNumber === null || phoneNumber !== null) &&
+    (phoneNumber === null ||
+      rawPhoneCountryCode === null ||
+      normalizePhoneCountryCode(rawPhoneCountryCode) !== null)
   );
 }

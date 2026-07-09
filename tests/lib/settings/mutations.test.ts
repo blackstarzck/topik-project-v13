@@ -213,7 +213,18 @@ describe("updateProfile", () => {
     expect(calls[0].patch).toEqual({ phone_number: "01012345678" });
   });
 
-  it("preserves explicit null phone_number (clear)", async () => {
+  it("writes phone_country_code when provided", async () => {
+    const calls: UpdateCall[] = [];
+    await updateProfile(
+      "user-1",
+      { phone_country_code: "KR" },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
+    );
+    expect(calls[0].patch).toEqual({ phone_country_code: "KR" });
+  });
+
+  it("clears phone_country_code when phone_number is explicitly cleared", async () => {
     const calls: UpdateCall[] = [];
     await updateProfile(
       "user-1",
@@ -221,7 +232,10 @@ describe("updateProfile", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => makeClient({ onUpdate: (c) => calls.push(c) }) as any,
     );
-    expect(calls[0].patch).toEqual({ phone_number: null });
+    expect(calls[0].patch).toEqual({
+      phone_country_code: null,
+      phone_number: null,
+    });
   });
 
   it("no-ops when no keys provided", async () => {

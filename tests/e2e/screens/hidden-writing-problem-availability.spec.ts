@@ -230,7 +230,7 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   ).toHaveCount(2);
   await expect(
     page.getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }),
-  ).toHaveCount(0);
+  ).toHaveCount(2);
   await expect(
     page.getByRole("link", { name: SAVED_PROBLEM_RETRY }),
   ).toHaveCount(0);

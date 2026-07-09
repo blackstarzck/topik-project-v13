@@ -13,17 +13,33 @@ import {
 } from "@/lib/export/pdf-export-client";
 import { PDF_EXPORT_ERROR_CODES } from "@/lib/export/pdf-export-errors";
 import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
-import type { LibrarySubmissionView } from "@/lib/library/types";
+import type {
+  LibraryDraftView,
+  LibraryProblemView,
+  LibrarySubmissionView,
+} from "@/lib/library/types";
 import { APP_ROUTES } from "@/lib/routes";
 import { useCreateComparisonReport } from "@/lib/writing/mutations";
 import { writingProblemHref } from "@/lib/writing/routes";
 
-type Props = {
-  item: LibrarySubmissionView;
-};
+type Props =
+  | {
+      kind: "submission";
+      item: LibrarySubmissionView;
+    }
+  | {
+      kind: "problem";
+      item: LibraryProblemView;
+    }
+  | {
+      kind: "draft";
+      item: LibraryDraftView;
+    };
 
-export function LibraryProblemsActionMenu({ item }: Props) {
+export function LibraryProblemsActionMenu({ kind, item }: Props) {
   const t = useTranslations("library.problemsList.actionMenu");
+  const tList = useTranslations("library.problemsList");
+  const tSaved = useTranslations("library.saved");
   const tFeedback = useTranslations("feedback.actions");
   const router = useRouter();
   const { message, notification } = App.useApp();
@@ -76,10 +92,10 @@ export function LibraryProblemsActionMenu({ item }: Props) {
     }
   }
 
-  function onCompare() {
+  function onCompare(submission: LibrarySubmissionView) {
     if (compare.isPending) return;
     compare.mutate(
-      { current_id: item.id },
+      { current_id: submission.id },
       {
         onSuccess: ({ reportId }) => {
           router.push(`/writing/reports/${reportId}/compare`);
@@ -94,41 +110,83 @@ export function LibraryProblemsActionMenu({ item }: Props) {
     );
   }
 
-  const retryHref = writingProblemHref({
-    questionNo: item.question_no,
-    problemId: item.problem_id,
-    fresh: true,
-    retrySubmissionId: item.id,
-  });
+  function menuItems(): MenuProps["items"] {
+    if (kind === "problem") {
+      const canRetry = item.canRetry && item.question_no !== null;
+      return [
+        {
+          key: "retry",
+          label: tSaved("retry"),
+          disabled: !canRetry,
+          onClick: () => {
+            if (!canRetry) return;
+            router.push(
+              writingProblemHref({
+                questionNo: item.question_no,
+                problemId: item.id,
+              }),
+            );
+          },
+        },
+      ];
+    }
 
-  const items: MenuProps["items"] = [
-    {
-      key: "export-pdf",
-      label: t("exportPdf"),
-      disabled: pdfBusy,
-      onClick: () => void onPdf(),
-    },
-    {
-      key: "next-problem",
-      label: t("nextProblem"),
-      onClick: () => router.push(APP_ROUTES.practiceNext),
-    },
-    {
-      key: "compare-report",
-      label: t("compareReport"),
-      disabled: compare.isPending,
-      onClick: onCompare,
-    },
-    {
-      key: "retry",
-      label: t("retry"),
-      onClick: () => router.push(retryHref),
-    },
-  ];
+    if (kind === "draft") {
+      const canContinue = item.question_no !== null;
+      return [
+        {
+          key: "continue-draft",
+          label: tList("continueDraft"),
+          disabled: !canContinue,
+          onClick: () => {
+            if (!canContinue) return;
+            router.push(
+              writingProblemHref({
+                questionNo: item.question_no,
+                problemId: item.problem_id,
+              }),
+            );
+          },
+        },
+      ];
+    }
+
+    const retryHref = writingProblemHref({
+      questionNo: item.question_no,
+      problemId: item.problem_id,
+      fresh: true,
+      retrySubmissionId: item.id,
+    });
+
+    return [
+      {
+        key: "export-pdf",
+        label: t("exportPdf"),
+        disabled: pdfBusy,
+        onClick: () => void onPdf(),
+      },
+      {
+        key: "next-problem",
+        label: t("nextProblem"),
+        onClick: () => router.push(APP_ROUTES.practiceNext),
+      },
+      {
+        key: "compare-report",
+        label: t("compareReport"),
+        disabled: compare.isPending,
+        onClick: () => onCompare(item),
+      },
+      {
+        key: "retry",
+        label: t("retry"),
+        onClick: () => router.push(retryHref),
+      },
+    ];
+  }
 
   return (
     <Dropdown
-      menu={{ items }}
+      menu={{ items: menuItems() }}
       trigger={["click"]}
       placement="bottomRight"
       open={open}
