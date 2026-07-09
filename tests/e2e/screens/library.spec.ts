@@ -630,10 +630,22 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
   await expect(list).not.toContainText(/\d{4}-\d{2}-\d{2}/);
   await expect(list).not.toContainText(/\d+자/);
 
-  const submissionActionMenu = submissionRows
-    .first()
+  const completeSubmissionRow = submissionRows
+    .filter({ hasText: "F-01 dashboard fixture feedback summary." })
+    .first();
+  await expect(completeSubmissionRow).toBeVisible();
+  const submissionActionMenu = completeSubmissionRow
     .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN });
   await expect(submissionActionMenu).toBeVisible();
+  const failedSubmissionRow = submissionRows
+    .filter({ hasText: "F-01 dashboard fixture failed feedback." })
+    .first();
+  await expect(failedSubmissionRow).toBeVisible();
+  await expect(
+    failedSubmissionRow.getByRole("button", {
+      name: PROBLEMS_ACTION_MENU_OPEN,
+    }),
+  ).toHaveCount(0);
   await expect(
     problemRows.first().getByRole("button", {
       name: PROBLEMS_ACTION_MENU_OPEN,

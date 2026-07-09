@@ -30,7 +30,6 @@ export function LibraryProblemsActionMenu({ item }: Props) {
   const compare = useCreateComparisonReport();
   const [open, setOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const [compareBusy, setCompareBusy] = useState(false);
 
   async function onPdf() {
     if (pdfBusy) return;
@@ -78,8 +77,7 @@ export function LibraryProblemsActionMenu({ item }: Props) {
   }
 
   function onCompare() {
-    if (compareBusy || compare.isPending) return;
-    setCompareBusy(true);
+    if (compare.isPending) return;
     compare.mutate(
       { current_id: item.id },
       {
@@ -87,7 +85,6 @@ export function LibraryProblemsActionMenu({ item }: Props) {
           router.push(`/writing/reports/${reportId}/compare`);
         },
         onError: (e) => {
-          setCompareBusy(false);
           notification.error({
             title: tFeedback("compareFailedTitle"),
             description: e.message,
@@ -119,7 +116,7 @@ export function LibraryProblemsActionMenu({ item }: Props) {
     {
       key: "compare-report",
       label: t("compareReport"),
-      disabled: compareBusy || compare.isPending,
+      disabled: compare.isPending,
       onClick: onCompare,
     },
     {
