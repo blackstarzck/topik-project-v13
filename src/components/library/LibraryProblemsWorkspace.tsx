@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
@@ -10,11 +11,13 @@ import { LibraryProblemsList } from "./LibraryProblemsList";
 type Props = {
   initialSubmissions: LibrarySubmissionView[];
   initialProblems: LibraryProblemView[];
+  initialDrafts: LibraryDraftView[];
 };
 
 export function LibraryProblemsWorkspace({
   initialSubmissions,
   initialProblems,
+  initialDrafts,
 }: Props) {
   return (
     <div
@@ -28,6 +31,7 @@ export function LibraryProblemsWorkspace({
         <LibraryProblemsList
           initialSubmissions={initialSubmissions}
           initialProblems={initialProblems}
+          initialDrafts={initialDrafts}
         />
       </div>
     </div>

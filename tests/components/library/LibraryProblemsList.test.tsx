@@ -12,6 +12,7 @@ import type { ReactElement } from "react";
 
 import koMessages from "../../../messages/ko.json";
 import type {
+  LibraryDraftView,
   LibraryItemView,
   LibraryProblemView,
   LibrarySubmissionView,
@@ -122,6 +123,20 @@ const problem: LibraryProblemView = {
   canRetry: true,
 };
 
+const draft: LibraryDraftView = {
+  kind: "draft",
+  id: "draft-51",
+  problem_id: "problem-51",
+  problem_title: "No. 51 - Draft answer problem",
+  question_no: 51,
+  answer_text: "draft body",
+  char_count: 10,
+  autosave_status: "clean",
+  item_id: "draft:draft-51",
+  saved_at: "2026-07-01T10:00:00.000Z",
+  last_saved_at: "2026-07-01T10:00:00.000Z",
+};
+
 function configureQueries({
   submissions = undefined,
   problems = undefined,
@@ -149,6 +164,7 @@ function renderList(
     <LibraryProblemsList
       initialSubmissions={[submission]}
       initialProblems={[problem]}
+      initialDrafts={[]}
     />
   ),
 ) {
@@ -443,7 +459,11 @@ describe("LibraryProblemsList", () => {
     configureQueries({ submissions: [], problems: [] });
 
     renderList(
-      <LibraryProblemsList initialSubmissions={[]} initialProblems={[]} />,
+      <LibraryProblemsList
+        initialSubmissions={[]}
+        initialProblems={[]}
+        initialDrafts={[]}
+      />,
     );
 
     expect(
@@ -464,6 +484,7 @@ describe("LibraryProblemsList", () => {
       <LibraryProblemsList
         initialSubmissions={[]}
         initialProblems={problems}
+        initialDrafts={[]}
       />,
     );
 
@@ -503,6 +524,24 @@ describe("LibraryProblemsList", () => {
       screen.getByTestId("library-problems-filter-kind-problem-count")
         .textContent,
     ).toBe("1");
+    expect(
+      screen.getByTestId("library-problems-filter-kind-draft-count")
+        .textContent,
+    ).toBe("0");
+    const itemTypeGroup = screen.getByTestId(
+      "library-problems-filter-group-item-type",
+    );
+    expect(
+      within(itemTypeGroup).queryByTestId(
+        "library-problems-filter-availability-soft_unavailable",
+      ),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("library-problems-filter-group-submission-status"),
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-group-problem-availability"),
+    ).toBeTruthy();
     expect(
       screen.getByTestId("library-problems-filter-question-52-count")
         .textContent,
@@ -607,6 +646,34 @@ describe("LibraryProblemsList", () => {
     rows = screen.getAllByTestId("library-problems-mixed-row");
     expect(rows).toHaveLength(1);
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
+  });
+
+  it("filters temporary drafts separately from saved answers and bookmarked problems", () => {
+    renderList(
+      <LibraryProblemsList
+        initialSubmissions={[submission]}
+        initialProblems={[problem]}
+        initialDrafts={[draft]}
+      />,
+    );
+
+    expect(
+      screen.getByTestId("library-problems-filter-kind-draft-count")
+        .textContent,
+    ).toBe("1");
+
+    fireEvent.click(screen.getByTestId("library-problems-filter-kind-draft"));
+
+    const rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].getAttribute("data-library-kind")).toBe("draft");
+    expect(
+      screen
+        .getByRole("link", {
+          name: koMessages.library.problemsList.continueDraft,
+        })
+        .getAttribute("href"),
+    ).toBe("/writing/short-answer-writing-51?problem=problem-51");
   });
 
   it("combines the question type group with the kind group as AND", () => {
@@ -750,7 +817,11 @@ describe("LibraryProblemsList", () => {
     configureQueries({ submissions: [], problems: [] });
 
     renderList(
-      <LibraryProblemsList initialSubmissions={[]} initialProblems={[]} />,
+      <LibraryProblemsList
+        initialSubmissions={[]}
+        initialProblems={[]}
+        initialDrafts={[]}
+      />,
     );
 
     expect(

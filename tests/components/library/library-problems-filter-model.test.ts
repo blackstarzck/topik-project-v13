@@ -45,6 +45,20 @@ function problemEntry(
   };
 }
 
+function draftEntry(
+  overrides: Partial<{ question_no: number | null; saved_at: string }> = {},
+): LibraryProblemsFilterEntry {
+  return {
+    kind: "draft",
+    item: {
+      id: "draft-1",
+      question_no:
+        overrides.question_no === undefined ? 51 : overrides.question_no,
+      saved_at: overrides.saved_at ?? "2026-07-01T10:00:00.000Z",
+    },
+  };
+}
+
 function enrichment(
   feedbackStatus: SubmissionEnrichment["feedbackStatus"],
   score: { total: number; max: number } | null = null,
@@ -75,6 +89,7 @@ describe("항목 유형 트리 — 브랜치 합집합 truth table", () => {
   const pendingUnknown = submissionEntry("sub-unknown");
   const availableProblem = problemEntry("available");
   const softProblem = problemEntry("soft_unavailable");
+  const draft = draftEntry();
 
   it("모두 비활성이면 전체 통과", () => {
     const empty = state({});
@@ -131,6 +146,31 @@ describe("항목 유형 트리 — 브랜치 합집합 truth table", () => {
     const s = state({ statuses: new Set(["pending"]) });
     expect(matchesLibraryProblemsFilters(pendingUnknown, s, enrich)).toBe(true);
     expect(matchesLibraryProblemsFilters(complete, s, enrich)).toBe(false);
+  });
+
+  it("treats temporary drafts as their own item kind branch", () => {
+    const draftOnly = state({ kinds: new Set(["draft"]) });
+    expect(matchesLibraryProblemsFilters(draft, draftOnly, enrich)).toBe(true);
+    expect(matchesLibraryProblemsFilters(complete, draftOnly, enrich)).toBe(
+      false,
+    );
+    expect(
+      matchesLibraryProblemsFilters(availableProblem, draftOnly, enrich),
+    ).toBe(false);
+
+    const draftAndComplete = state({
+      kinds: new Set(["draft"]),
+      statuses: new Set(["complete"]),
+    });
+    expect(matchesLibraryProblemsFilters(draft, draftAndComplete, enrich)).toBe(
+      true,
+    );
+    expect(
+      matchesLibraryProblemsFilters(complete, draftAndComplete, enrich),
+    ).toBe(true);
+    expect(
+      matchesLibraryProblemsFilters(availableProblem, draftAndComplete, enrich),
+    ).toBe(false);
   });
 });
 
@@ -282,6 +322,7 @@ describe("applyLibraryProblemsFilters", () => {
     submissionEntry("sub-complete", { question_no: 51 }),
     submissionEntry("sub-failed", { question_no: 52 }),
     problemEntry("soft_unavailable", { question_no: 53 }),
+    draftEntry({ question_no: 51 }),
   ];
 
   it("빈 상태면 원본 배열 참조를 그대로 반환한다", () => {
@@ -315,13 +356,14 @@ describe("countLibraryProblemsFacets", () => {
         problemEntry("available", { question_no: 53 }),
         problemEntry("soft_unavailable", { question_no: 54 }),
         problemEntry("hard_unavailable", { question_no: 53 }),
+        draftEntry({ question_no: 51 }),
       ],
       enrich,
     );
 
     expect(counts).toEqual({
-      questionNos: { 51: 1, 52: 1, 53: 2, 54: 1 },
-      kinds: { submission: 3, problem: 3 },
+      questionNos: { 51: 2, 52: 1, 53: 2, 54: 1 },
+      kinds: { submission: 3, problem: 3, draft: 1 },
       statuses: { pending: 1, analyzing: 0, complete: 1, failed: 1 },
       availability: { soft_unavailable: 1, hard_unavailable: 1 },
     });
@@ -337,12 +379,12 @@ describe("countActiveLibraryProblemsFilters", () => {
       countActiveLibraryProblemsFilters(
         state({
           questionNos: new Set([51, 53] as const),
-          kinds: new Set(["submission"]),
+          kinds: new Set(["submission", "draft"]),
           date: { preset: "week", from: "2026-06-27T00:00:00.000Z", to: null },
           scoreRange: [0, 50],
         }),
       ),
-    ).toBe(5);
+    ).toBe(6);
   });
 
   it("from/to 모두 없는 date는 비활성으로 취급", () => {

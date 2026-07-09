@@ -42,6 +42,7 @@ export default async function LibraryProblemsPage() {
       <LibraryProblemsWorkspace
         initialSubmissions={data.initialSubmissions}
         initialProblems={data.initialProblems}
+        initialDrafts={data.initialDrafts}
       />
     </WorkspaceBody>
   );

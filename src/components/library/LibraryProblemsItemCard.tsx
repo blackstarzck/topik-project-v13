@@ -20,7 +20,9 @@ import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
+import { LibraryProblemsDraftAction } from "./LibraryProblemsRows";
 import {
+  draftTitle,
   isAnalysisPendingStatus,
   problemTitle,
   submissionTitle,
@@ -50,6 +52,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
   const tSubmissions = useTranslations(
     "library.submissions",
   ) as LibraryListTranslate;
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSaved = useTranslations("library.saved") as LibraryListTranslate;
 
   if (entry.kind === "submission") {
@@ -110,6 +113,38 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             {actionMenuAvailable ? (
               <LibraryProblemsActionMenu item={item} />
             ) : null}
+          </div>
+        </div>
+      </AppCard>
+    );
+  }
+
+  if (entry.kind === "draft") {
+    const item = entry.item;
+    const fallbackTitle = tSubmissions("problemTitle", {
+      id: item.problem_id.slice(0, 8),
+    });
+    const title = draftTitle(item, fallbackTitle);
+
+    return (
+      <AppCard className="h-full">
+        <div className="flex h-full flex-col gap-2">
+          <div className="flex justify-end">
+            <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tag data-testid="library-problems-type-badge">
+              {t("typeDraft")}
+            </Tag>
+          </div>
+          <Text strong>{clampTitle(title)}</Text>
+          {item.answer_text ? (
+            <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+              {item.answer_text}
+            </Paragraph>
+          ) : null}
+          <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-2">
+            <LibraryProblemsDraftAction item={item} />
           </div>
         </div>
       </AppCard>

@@ -64,12 +64,17 @@ function toggleSet<T>(set: ReadonlySet<T>, value: T): ReadonlySet<T> {
 function FilterGroup({
   label,
   children,
+  testId,
 }: {
   label: string;
   children: ReactNode;
+  testId?: string;
 }) {
   return (
-    <section className="flex flex-col gap-3 border-b border-border pb-5 last:border-b-0 last:pb-0">
+    <section
+      data-testid={testId}
+      className="flex flex-col gap-3 border-b border-border pb-5 last:border-b-0 last:pb-0"
+    >
       <Text strong>{label}</Text>
       {children}
     </section>
@@ -194,7 +199,10 @@ export function LibraryProblemsFilterPanel({
         </div>
       ) : null}
 
-      <FilterGroup label={t("groupQuestionType")}>
+      <FilterGroup
+        label={t("groupQuestionType")}
+        testId="library-problems-filter-group-question-type"
+      >
         <div className="flex flex-col gap-3">
           {LIBRARY_PROBLEMS_QUESTION_NOS.map((questionNo) => (
             <CheckboxRow
@@ -216,7 +224,10 @@ export function LibraryProblemsFilterPanel({
         </div>
       </FilterGroup>
 
-      <FilterGroup label={t("groupItemType")}>
+      <FilterGroup
+        label={t("groupItemType")}
+        testId="library-problems-filter-group-item-type"
+      >
         <div className="flex flex-col gap-3">
           <CheckboxRow
             checked={state.kinds.has("submission")}
@@ -228,20 +239,6 @@ export function LibraryProblemsFilterPanel({
             testId="library-problems-filter-kind-submission"
             onToggle={() => toggleKind("submission")}
           />
-          <div className="flex flex-col gap-3 pl-6">
-            {statusRows.map(({ status, label }) => (
-              <CheckboxRow
-                key={status}
-                checked={state.statuses.has(status)}
-                count={counts.statuses[status]}
-                label={label}
-                testId={`library-problems-filter-status-${status}`}
-                onToggle={() =>
-                  onChange({ statuses: toggleSet(state.statuses, status) })
-                }
-              />
-            ))}
-          </div>
           <CheckboxRow
             checked={state.kinds.has("problem")}
             indeterminate={
@@ -252,22 +249,55 @@ export function LibraryProblemsFilterPanel({
             testId="library-problems-filter-kind-problem"
             onToggle={() => toggleKind("problem")}
           />
-          <div className="flex flex-col gap-3 pl-6">
-            {availabilityRows.map(({ availability, label }) => (
-              <CheckboxRow
-                key={availability}
-                checked={state.availability.has(availability)}
-                count={counts.availability[availability]}
-                label={label}
-                testId={`library-problems-filter-availability-${availability}`}
-                onToggle={() =>
-                  onChange({
-                    availability: toggleSet(state.availability, availability),
-                  })
-                }
-              />
-            ))}
-          </div>
+          <CheckboxRow
+            checked={state.kinds.has("draft")}
+            count={counts.kinds.draft}
+            label={t("typeDraft")}
+            testId="library-problems-filter-kind-draft"
+            onToggle={() => toggleKind("draft")}
+          />
+        </div>
+      </FilterGroup>
+
+      <FilterGroup
+        label={t("groupSubmissionStatus")}
+        testId="library-problems-filter-group-submission-status"
+      >
+        <div className="flex flex-col gap-3">
+          {statusRows.map(({ status, label }) => (
+            <CheckboxRow
+              key={status}
+              checked={state.statuses.has(status)}
+              count={counts.statuses[status]}
+              label={label}
+              testId={`library-problems-filter-status-${status}`}
+              onToggle={() =>
+                onChange({ statuses: toggleSet(state.statuses, status) })
+              }
+            />
+          ))}
+        </div>
+      </FilterGroup>
+
+      <FilterGroup
+        label={t("groupProblemAvailability")}
+        testId="library-problems-filter-group-problem-availability"
+      >
+        <div className="flex flex-col gap-3">
+          {availabilityRows.map(({ availability, label }) => (
+            <CheckboxRow
+              key={availability}
+              checked={state.availability.has(availability)}
+              count={counts.availability[availability]}
+              label={label}
+              testId={`library-problems-filter-availability-${availability}`}
+              onToggle={() =>
+                onChange({
+                  availability: toggleSet(state.availability, availability),
+                })
+              }
+            />
+          ))}
         </div>
       </FilterGroup>
 
