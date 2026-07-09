@@ -74,18 +74,10 @@ async function selectCountryRegion(countryName = "베트남") {
 }
 
 async function selectGender(genderLabel = "여성") {
-  fireEvent.mouseDown(screen.getByRole("combobox", { name: /성별/ }));
-  const matches = await screen.findAllByText(genderLabel);
-  const option = matches.find((node) =>
-    node.closest(".ant-select-item-option"),
-  );
-  if (!option) {
-    throw new Error(`Gender option not found: ${genderLabel}`);
-  }
-  fireEvent.click(option);
+  fireEvent.click(screen.getByRole("radio", { name: genderLabel }));
 }
 
-async function fillOptionalPhoneNumber(phoneNumber = "+821012345678") {
+async function fillOptionalPhoneNumber(phoneNumber = "1012345678") {
   await fillAndBlur(/전화번호/, phoneNumber);
 }
 
@@ -183,29 +175,44 @@ describe("SignUpForm", () => {
     renderInApp(<SignUpForm />);
 
     await fillAndBlur("이름", "홍길동");
+    expect(await screen.findByRole("radio", { name: "남성" })).toBeTruthy();
+    expect(await screen.findByRole("radio", { name: "여성" })).toBeTruthy();
+    expect(screen.queryByText("선택 안 함")).toBeNull();
     expect(await screen.findByLabelText("국가/지역")).toBeTruthy();
+    expect(document.querySelector("#phoneNumber")).toBeTruthy();
+    expect(
+      screen.queryByText(
+        "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
+      ),
+    ).toBeNull();
+    expect(
+      screen.getByLabelText("국가/지역").compareDocumentPosition(
+        document.querySelector("#phoneNumber") as Element,
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.queryByLabelText("이메일")).toBeNull();
     expect(screen.queryByLabelText("비밀번호")).toBeNull();
 
     await selectCountryRegion();
     expect(await screen.findByLabelText("이메일")).toBeTruthy();
     expect(screen.queryByLabelText("비밀번호")).toBeNull();
-    expect(document.querySelector("#gender")).toBeNull();
-    expect(document.querySelector("#phoneNumber")).toBeNull();
+    expect(screen.getByRole("radio", { name: "남성" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "여성" })).toBeTruthy();
+    expect(document.querySelector("#phoneNumber")).toBeTruthy();
+    expect(screen.getByText("+84")).toBeTruthy();
 
     await fillAndBlur("이메일", "valid@example.com");
     expect(await screen.findByLabelText("비밀번호")).toBeTruthy();
     expect(await screen.findByLabelText("비밀번호 확인")).toBeTruthy();
     expect(screen.getByTestId("password-strength")).toBeTruthy();
-    expect(document.querySelector("#gender")).toBeNull();
-    expect(document.querySelector("#phoneNumber")).toBeNull();
+    expect(screen.getByRole("radio", { name: "남성" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "여성" })).toBeTruthy();
+    expect(document.querySelector("#phoneNumber")).toBeTruthy();
     expect(screen.queryByRole("checkbox")).toBeNull();
 
     await fillAndBlur("비밀번호", "password123");
     await fillAndBlur("비밀번호 확인", "password123");
     expect(await screen.findByRole("checkbox")).toBeTruthy();
-    expect(document.querySelector("#gender")).toBeTruthy();
-    expect(document.querySelector("#phoneNumber")).toBeTruthy();
     expect(submitButton().disabled).toBe(true);
   });
 
@@ -295,11 +302,11 @@ describe("SignUpForm", () => {
     renderInApp(<SignUpForm />);
 
     await fillValidName();
+    await selectGender("여성");
     await selectCountryRegion();
+    await fillOptionalPhoneNumber("1012345678");
     await fillValidEmail("optional-profile@example.com");
     await fillValidPassword();
-    await selectGender("여성");
-    await fillOptionalPhoneNumber("+821012345678");
     fireEvent.click(screen.getByRole("checkbox"));
     await waitFor(() => {
       expect(submitButton().disabled).toBe(false);
@@ -316,7 +323,7 @@ describe("SignUpForm", () => {
       display_name: "홍길동",
       gender: "female",
       nationality_country_code: "VN",
-      phone_number: "+821012345678",
+      phone_number: "+841012345678",
     });
   });
 

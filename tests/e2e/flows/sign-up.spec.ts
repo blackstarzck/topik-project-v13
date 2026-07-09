@@ -76,6 +76,13 @@ async function fillSignUpForm(
   await displayNameInput.fill(displayName);
   await displayNameInput.blur();
 
+  await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+  await expect(page.getByText("선택 안 함")).toHaveCount(0);
+  if (genderLabel) {
+    await page.getByRole("radio", { name: genderLabel }).check();
+  }
+
   const countryRegionSelect = page.getByTestId("country-region-select");
   await expect(countryRegionSelect).toBeVisible();
   await countryRegionSelect.click();
@@ -83,6 +90,20 @@ async function fillSignUpForm(
     .locator(".ant-select-item-option")
     .filter({ hasText: countryRegionLabel })
     .click();
+
+  await expect(page.getByTestId("phone-country-code-select")).toContainText(
+    "+84",
+  );
+  await expect(page.locator("#phoneNumber")).toBeVisible();
+  await expect(
+    page.getByText(
+      "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
+    ),
+  ).toHaveCount(0);
+  if (phoneNumber) {
+    await page.locator("#phoneNumber").fill(phoneNumber);
+    await page.locator("#phoneNumber").blur();
+  }
 
   const emailInput = page.locator("#email");
   await expect(emailInput).toBeVisible();
@@ -97,19 +118,6 @@ async function fillSignUpForm(
   await passwordInput.blur();
   await passwordConfirmInput.fill(passwordConfirm);
   await passwordConfirmInput.blur();
-
-  await expect(page.getByRole("combobox", { name: /성별/ })).toBeVisible();
-  await expect(page.getByLabel(/전화번호/)).toBeVisible();
-  if (genderLabel) {
-    await page.getByRole("combobox", { name: /성별/ }).click();
-    await page.locator(".ant-select-item-option").filter({
-      hasText: genderLabel,
-    }).click();
-  }
-  if (phoneNumber) {
-    await page.getByLabel(/전화번호/).fill(phoneNumber);
-    await page.getByLabel(/전화번호/).blur();
-  }
 
   if (agreeToTerms) {
     await expect(page.locator("#terms")).toBeVisible();
@@ -339,16 +347,27 @@ test.describe("A-01 sign-up functional flow", () => {
 
     await page.locator("#displayName").fill(VALID_NAME);
     await expect(page.locator("#displayName")).toBeFocused();
+    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(page.getByText("선택 안 함")).toHaveCount(0);
     await expect(page.getByTestId("country-region-select")).toBeVisible();
+    await expect(page.locator("#phoneNumber")).toBeVisible();
+    await expect(
+      page.getByText(
+        "선택 입력입니다. 입력하는 경우 국가번호를 포함한 국제 형식으로 적어 주세요.",
+      ),
+    ).toHaveCount(0);
     const displayNameBox = await page.locator("#displayName").boundingBox();
     const countryRegionBox = await page
       .getByTestId("country-region-select")
       .boundingBox();
-    if (!displayNameBox || !countryRegionBox) {
+    const phoneNumberBox = await page.locator("#phoneNumber").boundingBox();
+    if (!displayNameBox || !countryRegionBox || !phoneNumberBox) {
       throw new Error("Could not measure sign-up input heights");
     }
+    expect(phoneNumberBox.y).toBeGreaterThan(countryRegionBox.y);
     expect(
-      Math.abs(countryRegionBox.height - displayNameBox.height),
+      Math.abs(phoneNumberBox.height - displayNameBox.height),
     ).toBeLessThanOrEqual(1);
     await expect(page.locator("#email")).toHaveCount(0);
 
@@ -357,6 +376,9 @@ test.describe("A-01 sign-up functional flow", () => {
       .locator(".ant-select-item-option")
       .filter({ hasText: VALID_COUNTRY_REGION_LABEL })
       .click();
+    await expect(page.getByTestId("phone-country-code-select")).toContainText(
+      "+84",
+    );
     const selectedCountryCenterDelta = await page
       .getByTestId("country-region-select")
       .evaluate((select) => {
@@ -379,24 +401,24 @@ test.describe("A-01 sign-up functional flow", () => {
     const passwordInput = page.locator("#password");
     const passwordConfirmInput = page.locator("#passwordConfirm");
     await expect(emailInput).toBeVisible();
-    await expect(emailInput).toBeFocused();
-    await expect(page.locator("#gender")).toHaveCount(0);
-    await expect(page.locator("#phoneNumber")).toHaveCount(0);
+    await expect(page.locator("#phoneNumber")).toBeFocused();
+    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(page.locator("#phoneNumber")).toBeVisible();
 
     await emailInput.fill(VALID_EMAIL);
     await expect(passwordInput).toBeVisible();
     await expect(passwordConfirmInput).toBeVisible();
     await expect(emailInput).toBeFocused();
-    await expect(page.locator("#gender")).toHaveCount(0);
-    await expect(page.locator("#phoneNumber")).toHaveCount(0);
+    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(page.locator("#phoneNumber")).toBeVisible();
 
     await expect(page.locator("#terms")).toHaveCount(0);
     await passwordInput.fill(VALID_PASSWORD);
     await expect(page.locator("#terms")).toHaveCount(0);
     await passwordConfirmInput.fill(VALID_PASSWORD);
     await expect(page.locator("#terms")).toBeVisible();
-    await expect(page.locator("#gender")).toBeVisible();
-    await expect(page.locator("#phoneNumber")).toBeVisible();
     await expect(passwordConfirmInput).toBeFocused();
 
     await page.reload({ waitUntil: "networkidle" });
@@ -461,7 +483,7 @@ test.describe("A-01 sign-up functional flow", () => {
     await fillSignUpForm(page, {
       email: "optional-profile@example.com",
       genderLabel: "여성",
-      phoneNumber: "+821012345678",
+      phoneNumber: "1012345678",
     });
     await clickSubmit(page);
 
@@ -475,7 +497,7 @@ test.describe("A-01 sign-up functional flow", () => {
         display_name: VALID_NAME,
         gender: "female",
         nationality_country_code: VALID_NATIONALITY_COUNTRY_CODE,
-        phone_number: "+821012345678",
+        phone_number: "+841012345678",
       },
       email: "optional-profile@example.com",
       password: VALID_PASSWORD,

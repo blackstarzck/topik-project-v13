@@ -5,8 +5,8 @@ import { App, Button, Form, Input, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
-import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
+import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   DEFAULT_COOLDOWN_SECONDS,
@@ -109,34 +109,12 @@ export function PasswordResetRequestForm({
       const { error } = await supabase.auth.resetPasswordForEmail(
         values.email,
         {
-          redirectTo: buildAuthRedirectUrl("/password-reset/confirm"),
+          redirectTo: buildAuthCallbackUrl(APP_ROUTES.passwordResetConfirm),
         },
       );
       if (error) {
-        const code = mapSupabaseErrorCode(error.code);
-        const status =
-          "status" in error && typeof error.status === "number"
-            ? error.status
-            : null;
-        if (code === "user_not_found") {
-          cooldown.start();
-          setSentTo(values.email);
-          return;
-        }
-        if (
-          code === "over_email_send_rate_limit" ||
-          code === "over_request_rate_limit" ||
-          status === 429
-        ) {
-          cooldown.start();
-          message.error(t("rateLimited"));
-          return;
-        }
-        message.error(
-          t("sendFailed", {
-            message: te(`${code}.message` as Parameters<typeof te>[0]),
-          }),
-        );
+        cooldown.start();
+        setSentTo(values.email);
         return;
       }
       cooldown.start();

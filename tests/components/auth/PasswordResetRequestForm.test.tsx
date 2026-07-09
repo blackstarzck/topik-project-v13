@@ -29,6 +29,10 @@ vi.mock("@/lib/supabase/browser", () => ({
 // 구현은 실제 빌더와 같은 절대 URL을 돌려줘 기존 어서션을 그대로 유지한다.
 vi.mock("@/lib/auth/redirect-url", () => ({
   buildAuthRedirectUrl: (path: string) => buildAuthRedirectUrlMock(path),
+  buildAuthCallbackUrl: (nextPath: string) =>
+    buildAuthRedirectUrlMock(
+      `/auth/callback?next=${encodeURIComponent(nextPath)}`,
+    ),
 }));
 
 import { PasswordResetRequestForm } from "../../../src/components/auth/PasswordResetRequestForm";
@@ -98,7 +102,8 @@ describe("PasswordResetRequestForm", () => {
 
     await waitFor(() => {
       expect(resetPasswordForEmailMock).toHaveBeenCalledWith("u@example.com", {
-        redirectTo: "https://talkpik.example.com/password-reset/confirm",
+        redirectTo:
+          "https://talkpik.example.com/auth/callback?next=%2Fpassword-reset%2Fconfirm",
       });
     });
   });
@@ -139,6 +144,57 @@ describe("PasswordResetRequestForm", () => {
       expect(screen.getByText("이메일을 확인하세요")).toBeTruthy();
     });
     expect(screen.getByText("missing@example.com")).toBeTruthy();
+  });
+
+  it("shows the same confirmation message for rate-limited reset responses", async () => {
+    resetPasswordForEmailMock.mockResolvedValueOnce({
+      error: {
+        code: "over_email_send_rate_limit",
+        status: 429,
+        message: "provider raw rate limit detail",
+      },
+    });
+    renderInApp(<PasswordResetRequestForm />);
+
+    fireEvent.change(screen.getByLabelText("이메일"), {
+      target: { value: "limited@example.com" },
+    });
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "재설정 링크 보내기" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("password-reset-sent-state")).toBeTruthy();
+    });
+    expect(screen.getByText("limited@example.com")).toBeTruthy();
+    expect(screen.queryByText(/provider raw rate limit detail/)).toBeNull();
+  });
+
+  it("shows the same confirmation message for unexpected provider reset failures", async () => {
+    resetPasswordForEmailMock.mockResolvedValueOnce({
+      error: {
+        code: "unexpected_failure",
+        message: "provider raw reset failure",
+      },
+    });
+    renderInApp(<PasswordResetRequestForm />);
+
+    fireEvent.change(screen.getByLabelText("이메일"), {
+      target: { value: "provider-error@example.com" },
+    });
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "재설정 링크 보내기" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("password-reset-sent-state")).toBeTruthy();
+    });
+    expect(screen.getByText("provider-error@example.com")).toBeTruthy();
+    expect(screen.queryByText(/provider raw reset failure/)).toBeNull();
   });
 
   it("clears loading and shows an error when the redirect URL builder throws (D-2)", async () => {

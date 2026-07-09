@@ -1,4 +1,10 @@
-import { expect, test, type Page, type Route } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Page,
+  type Request,
+  type Route,
+} from "@playwright/test";
 
 test.use({
   storageState: { cookies: [], origins: [] },
@@ -33,6 +39,23 @@ async function fulfillRecover(route: Route) {
   });
 }
 
+function readRecoverRedirectTo(request: Request): string | null {
+  const urlValue = new URL(request.url()).searchParams.get("redirect_to");
+  if (urlValue) return urlValue;
+  let payload:
+    | { redirect_to?: unknown; redirectTo?: unknown }
+    | undefined;
+  try {
+    payload = request.postDataJSON() as
+      | { redirect_to?: unknown; redirectTo?: unknown }
+      | undefined;
+  } catch {
+    return null;
+  }
+  const bodyValue = payload?.redirect_to ?? payload?.redirectTo;
+  return typeof bodyValue === "string" ? bodyValue : null;
+}
+
 async function gotoPasswordReset(page: Page, email?: string) {
   const path = email
     ? `/password-reset?email=${encodeURIComponent(email)}`
@@ -63,8 +86,13 @@ test("X-06 password reset request renders prefilled email and confirms success",
   page,
 }) => {
   const errors = collectErrors(page);
+  const recoverRedirects: string[] = [];
 
-  await page.route(/\/auth\/v1\/recover(?:\?|$)/, fulfillRecover);
+  await page.route(/\/auth\/v1\/recover(?:\?|$)/, async (route, request) => {
+    const redirectTo = readRecoverRedirectTo(request);
+    if (redirectTo) recoverRedirects.push(redirectTo);
+    await fulfillRecover(route);
+  });
 
   await gotoPasswordReset(page, "member.audit@example.com");
   await expect(page).toHaveURL(/\/password-reset/);
@@ -83,7 +111,7 @@ test("X-06 password reset request renders prefilled email and confirms success",
   await expect(card.getByTestId("password-reset-request-form")).toBeVisible();
   const guidance = card.getByTestId("password-reset-guidance");
   await expect(guidance).toContainText(
-    "가입하신 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.",
+    "계정 이메일을 입력하세요. 이 주소로 비밀번호 메일을 받을 수 있으면 링크를 보내드립니다.",
   );
   await expect(guidance).toContainText("링크는 약 1시간 후 만료돼요");
   const guidanceLines = guidance.locator(".password-reset-guide__line");
@@ -92,7 +120,7 @@ test("X-06 password reset request renders prefilled email and confirms success",
     card.locator(".ant-form-item-extra").getByTestId("password-reset-guidance"),
   ).toBeVisible();
   await expect(guidanceLines.first()).toHaveText(
-    "가입하신 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.",
+    "계정 이메일을 입력하세요. 이 주소로 비밀번호 메일을 받을 수 있으면 링크를 보내드립니다.",
   );
   await expect(guidanceLines.nth(1)).toHaveText(
     "보안을 위해 링크는 약 1시간 후 만료돼요. 만료되면 이 화면에서 다시 보낼 수 있어요.",
@@ -150,6 +178,12 @@ test("X-06 password reset request renders prefilled email and confirms success",
   await expect(page.getByText("이메일을 확인하세요")).toBeVisible();
   await expect(page.getByText("member.audit@example.com")).toBeVisible();
   await expect(page.getByTestId("password-reset-countdown")).toBeVisible();
+  expect(recoverRedirects).toHaveLength(1);
+  const redirectUrl = new URL(recoverRedirects[0]);
+  expect(redirectUrl.pathname).toBe("/auth/callback");
+  expect(redirectUrl.searchParams.get("next")).toBe(
+    "/password-reset/confirm",
+  );
 
   expect(errors).toEqual([]);
 });
@@ -198,7 +232,7 @@ test("X-06 password reset keeps CTA pending while recover request is in flight",
   await expect(page.getByText("pending.audit@example.com")).toBeVisible();
 });
 
-test("X-06 password reset shows fail state for provider rate limit", async ({
+test("X-06 password reset shows neutral sent state for provider rate limit", async ({
   page,
 }) => {
   await page.route(/\/auth\/v1\/recover(?:\?|$)/, async (route) => {
@@ -224,13 +258,13 @@ test("X-06 password reset shows fail state for provider rate limit", async ({
 
   await expect(
     page.getByText("메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요."),
-  ).toBeVisible();
+  ).toHaveCount(0);
+  await expect(page.getByTestId("password-reset-sent-state")).toBeVisible();
+  await expect(page.getByText("limited.audit@example.com")).toBeVisible();
   await expect(page.getByTestId("password-reset-countdown")).toBeVisible();
-  await expect(submitButton).toBeDisabled();
-  await expect(page.getByTestId("password-reset-sent-state")).toHaveCount(0);
 });
 
-test("X-06 password reset shows fail state for provider send failure", async ({
+test("X-06 password reset shows neutral sent state for provider send failure", async ({
   page,
 }) => {
   await page.route(/\/auth\/v1\/recover(?:\?|$)/, async (route) => {
@@ -254,9 +288,9 @@ test("X-06 password reset shows fail state for provider send failure", async ({
   });
   await submitButton.click();
 
-  await expect(page.getByText(/전송 실패/)).toBeVisible();
-  await expect(submitButton).toBeEnabled();
-  await expect(page.getByTestId("password-reset-sent-state")).toHaveCount(0);
+  await expect(page.getByText(/전송 실패/)).toHaveCount(0);
+  await expect(page.getByTestId("password-reset-sent-state")).toBeVisible();
+  await expect(page.getByText("failed.audit@example.com")).toBeVisible();
 });
 
 test("X-06 password reset shows error state for invalid email without calling provider", async ({
