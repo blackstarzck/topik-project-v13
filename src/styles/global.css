@@ -6751,6 +6751,25 @@ body {
   font-size: 14px;
 }
 
+.institution-invitation-modal__description.ant-typography {
+  word-break: keep-all;
+}
+
+.institution-invitation-modal__code.ant-typography {
+  display: block;
+  width: 100%;
+  margin-block: 20px 18px;
+  background: var(--app-color-bg-layout);
+  padding: 12px 14px;
+  color: var(--app-color-text);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .dashboard-alerts-card .ant-card-head-title {
   font-size: 14px;
 }
