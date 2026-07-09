@@ -966,7 +966,7 @@
         "UNATTEMPTED_AVAILABLE": "아직 풀지 않은 공개 문제예요."
       },
       "computedSummary": {
-        "history": "최근 학습 기록을 정해진 규칙에 따라 반영해 고른 문제예요.",
+        "history": "학습 목표와 최근 기록 등 사용 가능한 신호를 정해진 규칙으로 반영해 고른 문제예요.",
         "rotation": "아직 풀이 기록이 적어 51→54 유형 순환 순서로 골랐어요."
       },
       "dimension": {

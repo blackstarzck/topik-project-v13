@@ -17,7 +17,7 @@ import { getWeakDimensions, type WeakDimensionSummary } from "./weakness";
  * docs/sot-change-proposals/2026-07-09-c01-rule-fallback-recommendations-implementation-brief.md).
  *
  * Runs ONLY when the user has zero stored recommendation_items. Candidates
- * are scored with fixed rule weights over the user's own signals (attempt
+ * are scored with fixed rule weights over the user's own signals (writing
  * history, weak feedback dimensions, learning goal) — no AI, no persistence.
  * Every item maps to a real published+visible problem; `itemId` stays null
  * because there is no recommendation row to consume.
@@ -38,8 +38,9 @@ export type RecommendationReasonCode =
 
 /**
  * Which honest run-level summary the UI should show for a computed bundle:
- * "history" when personal signals (attempts / weak dimensions) actually
- * influenced the scores, "rotation" when the pick is pure 51→54 rotation.
+ * "history" when personal signals (writing history / weak dimensions / goal)
+ * actually influenced the scores, "rotation" when the pick is pure 51→54
+ * rotation.
  */
 export type ComputedSummaryCode = "history" | "rotation";
 
@@ -132,7 +133,9 @@ export async function computeFallbackRecommendations(
   const summaryCode: ComputedSummaryCode | null =
     items.length === 0
       ? null
-      : signals.attemptedIds.size > 0 || signals.weakDimensions.length > 0
+      : signals.attemptedIds.size > 0 ||
+          signals.weakDimensions.length > 0 ||
+          signals.goal != null
         ? "history"
         : "rotation";
 
@@ -275,19 +278,19 @@ async function collectSignals(
   supabase: SupabaseServerClient,
   userId: string,
 ): Promise<FallbackSignals> {
-  // Attempt history is the core signal — its failure surfaces as a 500 (the
+  // Writing history is the core signal — its failure surfaces as a 500 (the
   // screen has an error+retry state). Weak dimensions and the learning goal
   // only tune scores, so their failures degrade to neutral instead of
   // breaking the screen.
-  const [attempts, weakDimensions, goal] = await Promise.all([
-    fetchAttemptSignals(supabase, userId),
+  const [history, weakDimensions, goal] = await Promise.all([
+    fetchWritingHistorySignals(supabase, userId),
     getWeakDimensions(userId, 5, async () => supabase).catch(
       () => [] as WeakDimensionSummary[],
     ),
     getLearningGoal(userId, async () => supabase).catch(() => null),
   ]);
   return {
-    ...attempts,
+    ...history,
     weakDimensions,
     goal: goal
       ? { topik_level: goal.topik_level, target_grade: goal.target_grade }
@@ -295,35 +298,57 @@ async function collectSignals(
   };
 }
 
-async function fetchAttemptSignals(
+async function fetchWritingHistorySignals(
   supabase: SupabaseServerClient,
   userId: string,
 ): Promise<Pick<FallbackSignals, "attemptedIds" | "latestQuestionNo">> {
-  const { data, error } = await supabase
-    .from("problem_attempts")
-    .select("problem_id, started_at, problems!inner(id, question_no)")
-    .eq("user_id", userId)
-    .order("started_at", { ascending: false });
-  if (error) {
-    throw new Error(`computeFallbackRecommendations(attempts): ${error.message}`);
+  const [submissions, drafts] = await Promise.all([
+    supabase
+      .from("writing_submissions")
+      .select("problem_id, question_no, submitted_at")
+      .eq("user_id", userId)
+      .order("submitted_at", { ascending: false }),
+    supabase
+      .from("writing_drafts")
+      .select("problem_id, question_no, updated_at, autosave_status")
+      .eq("user_id", userId)
+      .neq("autosave_status", "superseded")
+      .order("updated_at", { ascending: false }),
+  ]);
+  if (submissions.error) {
+    throw new Error(
+      `computeFallbackRecommendations(writing_submissions): ${submissions.error.message}`,
+    );
+  }
+  if (drafts.error) {
+    throw new Error(
+      `computeFallbackRecommendations(writing_drafts): ${drafts.error.message}`,
+    );
   }
 
   const attemptedIds = new Set<string>();
-  let latestQuestionNo: QuestionNo | null = null;
-  for (const row of data ?? []) {
+  const latestCandidates: Array<{ questionNo: QuestionNo; timestamp: string }> =
+    [];
+  for (const row of submissions.data ?? []) {
     attemptedIds.add(row.problem_id);
-    if (latestQuestionNo == null) {
-      const joined = pickOne(
-        (row as { problems: unknown }).problems as
-          | { question_no: number | null }
-          | { question_no: number | null }[]
-          | null,
-      );
-      if (joined && isWritingQuestionNo(joined.question_no)) {
-        latestQuestionNo = joined.question_no;
-      }
+    if (isWritingQuestionNo(row.question_no)) {
+      latestCandidates.push({
+        questionNo: row.question_no,
+        timestamp: row.submitted_at,
+      });
     }
   }
+  for (const row of drafts.data ?? []) {
+    attemptedIds.add(row.problem_id);
+    if (isWritingQuestionNo(row.question_no)) {
+      latestCandidates.push({
+        questionNo: row.question_no,
+        timestamp: row.updated_at,
+      });
+    }
+  }
+  latestCandidates.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  const latestQuestionNo = latestCandidates[0]?.questionNo ?? null;
   return { attemptedIds, latestQuestionNo };
 }
 
@@ -463,10 +488,4 @@ function isSeedFixtureProblem(row: {
     );
   }
   return false;
-}
-
-function pickOne<T>(raw: T | T[] | null | undefined): T | null {
-  if (raw == null) return null;
-  if (Array.isArray(raw)) return raw[0] ?? null;
-  return raw;
 }

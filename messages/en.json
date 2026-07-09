@@ -966,7 +966,7 @@
         "UNATTEMPTED_AVAILABLE": "A published problem you haven't tried yet."
       },
       "computedSummary": {
-        "history": "Picked by fixed rules based on your recent study history.",
+        "history": "Picked by fixed rules using your available goals and practice history.",
         "rotation": "You have little practice history yet, so problems follow the 51→54 type rotation."
       },
       "dimension": {

@@ -32,7 +32,7 @@ function makeClient(opts: {
   visibleProblemIds?: string[];
   /**
    * Candidate pool for the computed (Tier-2) path. When ABSENT, touching
-   * `problem_attempts` / `problems` throws — which is exactly how the
+   * writing history / `problems` throws — which is exactly how the
    * stored-precedence tests prove Tier-2 never runs.
    */
   fallbackProblems?: FallbackProblemRow[];
@@ -54,9 +54,17 @@ function makeClient(opts: {
     },
     from(table: string) {
       if (opts.fallbackProblems) {
-        if (table === "problem_attempts") {
+        if (table === "writing_submissions") {
           const chain = {
             eq: () => chain,
+            order: () => Promise.resolve({ data: [], error: null }),
+          };
+          return { select: () => chain };
+        }
+        if (table === "writing_drafts") {
+          const chain = {
+            eq: () => chain,
+            neq: () => chain,
             order: () => Promise.resolve({ data: [], error: null }),
           };
           return { select: () => chain };
@@ -176,7 +184,7 @@ describe("queryRecommendationBundleForUser", () => {
     expect(bundle.availableTypes).toEqual([52]);
     expect(bundle.run?.reasonSummary).toBeNull();
     // Stored items present → Tier-2 must not run. makeClient throws on any
-    // problem_attempts/problems access when fallbackProblems is absent, so
+    // writing history/problems access when fallbackProblems is absent, so
     // reaching this assertion IS the proof.
     expect(bundle.source).toBe("stored");
   });

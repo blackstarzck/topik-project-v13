@@ -46,7 +46,7 @@
 
 | 신호 | 원천 | 실패 처리 |
 | --- | --- | --- |
-| 풀이 이력 (attemptedIds, 최근 question_no) | `problem_attempts` | 핵심 — 오류 시 500 (기존 에러 UI가 처리) |
+| writing 풀이/진행 이력 (touchedIds, 최근 question_no) | `writing_submissions`, `writing_drafts` | 핵심 — 오류 시 500 (기존 에러 UI가 처리) |
 | 약점 차원 (bottom-2, 표본 ≥5 게이트) | `feedback_dimension_scores` via `getWeakDimensions` | 보조 — 오류 시 무약점으로 계속 |
 | 학습 목표 (topik_level, target_grade) | `learning_goals` via `getLearningGoal` | 보조 — 없거나 오류 시 목표 배점 생략 |
 | 후보 문제 | `problems` (published + lifecycle active + seed fixture 제외 + 미풀이) → visibility RPC | 핵심 — RPC 결측은 fail-closed(0건) |
@@ -64,7 +64,7 @@
 
 - item의 reason code = 발동 성분 중 최고 점수 성분. 동률 tie-breaker: rotation order → difficulty asc(null 최후) → title(ko locale) → id. 시간·난수 미사용(결정적).
 - 다양성: `?type` 없으면 rotation 순서로 유형별 최고점 1개씩 최대 4개 선점, 미달 시 전역 점수순 충원. 목표 개수 4(hero 1 + secondary 3).
-- `summaryCode`: 이력 또는 약점 신호가 있으면 `history`, 없으면 `rotation`. 사용자에게 계산 근거를 사실대로 고지하는 용도.
+- `summaryCode`: writing 이력, 약점, 목표 신호 중 하나라도 있으면 `history`, 없으면 `rotation`. 사용자에게 계산 근거를 사실대로 고지하는 용도.
 
 ### API/타입 변경 (additive)
 

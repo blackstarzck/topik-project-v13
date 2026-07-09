@@ -966,7 +966,7 @@
         "UNATTEMPTED_AVAILABLE": "Bài đã công khai mà bạn chưa làm."
       },
       "computedSummary": {
-        "history": "Được chọn theo quy tắc cố định dựa trên lịch sử học gần đây của bạn.",
+        "history": "Được chọn theo quy tắc cố định dựa trên mục tiêu và lịch sử luyện tập hiện có của bạn.",
         "rotation": "Bạn chưa có nhiều lịch sử luyện tập nên đề được chọn theo vòng xoay dạng 51→54."
       },
       "dimension": {

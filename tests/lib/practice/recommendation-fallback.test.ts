@@ -18,7 +18,18 @@ type ProblemRowFx = {
   materials: unknown;
 };
 
-type AttemptFx = { problem_id: string; question_no: number | null };
+type WritingSubmissionFx = {
+  problem_id: string;
+  question_no: number | null;
+  submitted_at?: string;
+};
+
+type WritingDraftFx = {
+  problem_id: string;
+  question_no: number | null;
+  updated_at?: string;
+  autosave_status?: "clean" | "dirty" | "syncing" | "failed" | "superseded";
+};
 
 type DimensionScoreFx = {
   dimension: string;
@@ -27,7 +38,8 @@ type DimensionScoreFx = {
 };
 
 type ClientOpts = {
-  attempts?: AttemptFx[];
+  submissions?: WritingSubmissionFx[];
+  drafts?: WritingDraftFx[];
   problems?: ProblemRowFx[];
   visibleProblemIds?: string[];
   dimensionScores?: DimensionScoreFx[];
@@ -71,15 +83,38 @@ function makeClient(opts: ClientOpts): {
       });
     },
     from(table: string) {
-      if (table === "problem_attempts") {
-        const rows = (opts.attempts ?? []).map((attempt) => ({
-          problem_id: attempt.problem_id,
-          started_at: "2026-07-01T00:00:00.000Z",
-          problems: { id: attempt.problem_id, question_no: attempt.question_no },
+      if (table === "writing_submissions") {
+        const rows = (opts.submissions ?? []).map((submission) => ({
+          problem_id: submission.problem_id,
+          question_no: submission.question_no,
+          submitted_at:
+            submission.submitted_at ?? "2026-07-01T00:00:00.000Z",
         }));
         const chain = {
           eq: () => chain,
           order: () => Promise.resolve({ data: rows, error: null }),
+        };
+        return { select: () => chain };
+      }
+      if (table === "writing_drafts") {
+        const rows = (opts.drafts ?? []).map((draft) => ({
+          problem_id: draft.problem_id,
+          question_no: draft.question_no,
+          updated_at: draft.updated_at ?? "2026-07-01T00:00:00.000Z",
+          autosave_status: draft.autosave_status ?? "dirty",
+        }));
+        let excludedStatus: string | null = null;
+        const chain = {
+          eq: () => chain,
+          neq: (column: string, value: string) => {
+            if (column === "autosave_status") excludedStatus = value;
+            return chain;
+          },
+          order: () =>
+            Promise.resolve({
+              data: rows.filter((row) => row.autosave_status !== excludedStatus),
+              error: null,
+            }),
         };
         return { select: () => chain };
       }
@@ -214,29 +249,49 @@ describe("computeFallbackRecommendations", () => {
     expect(result.availableTypes).toEqual([51, 52, 53, 54]);
   });
 
-  it("never recommends a problem the user already attempted", async () => {
+  it("never recommends a writing problem the user already submitted or drafted", async () => {
     const { client } = makeClient({
-      problems: FOUR_TYPE_PROBLEMS,
-      attempts: [{ problem_id: "p-51-a", question_no: 51 }],
+      problems: [
+        ...FOUR_TYPE_PROBLEMS,
+        problem("p-52-b", 52),
+        problem("p-draft-superseded", 53),
+      ],
+      submissions: [{ problem_id: "p-51-a", question_no: 51 }],
+      drafts: [
+        { problem_id: "p-52-a", question_no: 52 },
+        {
+          problem_id: "p-draft-superseded",
+          question_no: 53,
+          autosave_status: "superseded",
+        },
+      ],
     });
 
     const result = await computeFallbackRecommendations(client, "user-1", null);
 
     const ids = result.items.map((item) => item.problemId);
     expect(ids).not.toContain("p-51-a");
+    expect(ids).not.toContain("p-52-a");
     expect(ids).toContain("p-51-b");
+    expect(ids).toContain("p-52-b");
     expect(result.summaryCode).toBe("history");
   });
 
   it("puts the rotation-next type first and marks the recent type as continuation", async () => {
     const { client } = makeClient({
       problems: FOUR_TYPE_PROBLEMS,
-      attempts: [{ problem_id: "p-old", question_no: 51 }],
+      submissions: [
+        {
+          problem_id: "p-old",
+          question_no: 51,
+          submitted_at: "2026-07-01T00:00:00.000Z",
+        },
+      ],
     });
 
     const result = await computeFallbackRecommendations(client, "user-1", null);
 
-    // Latest attempt was 51 → rotation starts at 52; 51 comes back last.
+    // Latest writing activity was 51 → rotation starts at 52; 51 comes back last.
     expect(result.items.map((item) => item.questionNo)).toEqual([
       52, 53, 54, 51,
     ]);
@@ -251,10 +306,10 @@ describe("computeFallbackRecommendations", () => {
         problem("p-51-plain", 51),
         problem("p-51-grammar", 51, { tags: ["grammar", "extra"] }),
       ],
-      // Latest attempt is type 52, so type-51 candidates earn neither the
+      // Latest writing activity is type 52, so type-51 candidates earn neither the
       // rotation-next (53) nor the continuation (52) bonus — the weak-tag
       // overlap is the only differentiator and must own the reason code.
-      attempts: [{ problem_id: "p-done-52", question_no: 52 }],
+      submissions: [{ problem_id: "p-done-52", question_no: 52 }],
       dimensionScores: [
         ...dimensionRows("grammar", 40),
         ...dimensionRows("vocab", 90),
@@ -280,6 +335,47 @@ describe("computeFallbackRecommendations", () => {
     expect(result.items).toHaveLength(1);
     expect(result.items[0].problemId).toBe("p-52-a");
     expect(result.availableTypes).toEqual([52]);
+  });
+
+  it("uses the latest writing draft or submission as the rotation anchor", async () => {
+    const { client } = makeClient({
+      problems: FOUR_TYPE_PROBLEMS,
+      submissions: [
+        {
+          problem_id: "p-old",
+          question_no: 51,
+          submitted_at: "2026-07-01T00:00:00.000Z",
+        },
+      ],
+      drafts: [
+        {
+          problem_id: "p-draft",
+          question_no: 53,
+          updated_at: "2026-07-02T00:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await computeFallbackRecommendations(client, "user-1", null);
+
+    expect(result.items.map((item) => item.questionNo)).toEqual([
+      54, 51, 52, 53,
+    ]);
+  });
+
+  it("marks goal-only scoring as a personal-signal summary", async () => {
+    const { client } = makeClient({
+      problems: [
+        problem("p-easy", 51, { topik_level: 1, difficulty: 1 }),
+        problem("p-goal", 51, { topik_level: 2, difficulty: 4 }),
+      ],
+      goal: { topik_level: "TOPIK_II", target_grade: 4 },
+    });
+
+    const result = await computeFallbackRecommendations(client, "user-1", 51);
+
+    expect(result.items[0].problemId).toBe("p-goal");
+    expect(result.summaryCode).toBe("history");
   });
 
   it("fails closed to an empty result when the visibility RPC hides everything", async () => {
@@ -346,7 +442,7 @@ describe("computeFallbackRecommendations", () => {
         problem("p-51-a", 51, { title: "같은 제목", difficulty: 3 }),
         problem("p-52-a", 52),
       ],
-      attempts: [{ problem_id: "p-old", question_no: 54 }],
+      submissions: [{ problem_id: "p-old", question_no: 54 }],
     };
 
     const first = await computeFallbackRecommendations(
