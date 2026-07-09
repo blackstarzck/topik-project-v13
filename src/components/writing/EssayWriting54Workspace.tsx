@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
+import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
 import {
   getCharLimit,
   isCountInRecommendedRange,
@@ -117,7 +119,8 @@ export function EssayWriting54Workspace({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] =
     useState<SubmittedAnalysisState | null>(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { elapsedSeconds, markInputActivity, getTimeMetricsSnapshot } =
+    useWritingTimeMetrics();
   const [composerMode, setComposerMode] = useState<ComposerMode>("write");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
@@ -158,13 +161,6 @@ export function EssayWriting54Workspace({
       payload: { question_no: 54 },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setElapsedSeconds((value) => value + 1);
-    }, 1000);
-    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -250,6 +246,7 @@ export function EssayWriting54Workspace({
   }
 
   function onTextChange(next: string) {
+    markInputActivity();
     const nextState = { ...state, text: next };
     setState(nextState);
     setBlurNotice(null);
@@ -291,6 +288,12 @@ export function EssayWriting54Workspace({
             problemId: problem.id,
             submissionId: result.submissionId,
             payload: { question_no: 54, char_count: charCount },
+          });
+          void recordWritingSubmissionMetrics({
+            submissionId: result.submissionId,
+            problemId: problem.id,
+            questionNo: 54,
+            ...getTimeMetricsSnapshot(),
           });
           setSubmittedAnalysis({
             submissionId: result.submissionId,
