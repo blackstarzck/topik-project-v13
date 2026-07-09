@@ -275,10 +275,28 @@ type WritingProblemQueryResult = {
   error: { message: string } | null;
 };
 
+type WritingProblemHistoryRow = {
+  problem_id: string | null;
+};
+
+type WritingProblemHistoryQueryResult = {
+  data: WritingProblemHistoryRow[] | null;
+  error: { message: string } | null;
+};
+
 type NextWritingProblemCandidateResult = {
   data: NextWritingProblemCandidateRow[] | null;
   error: { message: string } | null;
 };
+
+type GetWritingProblemOptions = {
+  userId?: string | null;
+};
+
+type RunWritingProblemQuery = (
+  withLifecycle: boolean,
+  range: { from: number; to: number } | null,
+) => Promise<WritingProblemQueryResult>;
 
 function normalizeWritingProblemRow(
   row: WritingProblemQueryRow,
@@ -452,10 +470,111 @@ async function getNextWritingProblemTarget({
   );
 }
 
+async function getTouchedWritingProblemIds(
+  supabase: SupabaseServerClient,
+  userId: string,
+  problemIds: readonly string[],
+): Promise<Set<string>> {
+  const uniqueIds = [...new Set(problemIds.filter(Boolean))];
+  if (uniqueIds.length === 0) return new Set();
+
+  const [submissions, drafts] = (await Promise.all([
+    supabase
+      .from("writing_submissions")
+      .select("problem_id")
+      .eq("user_id", userId)
+      .in("problem_id", uniqueIds),
+    supabase
+      .from("writing_drafts")
+      .select("problem_id")
+      .eq("user_id", userId)
+      .in("problem_id", uniqueIds),
+  ])) as unknown as [
+    WritingProblemHistoryQueryResult,
+    WritingProblemHistoryQueryResult,
+  ];
+
+  if (submissions.error) {
+    throw new Error(
+      `getWritingProblem(writing_submissions): ${submissions.error.message}`,
+    );
+  }
+  if (drafts.error) {
+    throw new Error(
+      `getWritingProblem(writing_drafts): ${drafts.error.message}`,
+    );
+  }
+
+  return new Set(
+    [...(submissions.data ?? []), ...(drafts.data ?? [])].flatMap((row) =>
+      row.problem_id ? [row.problem_id] : [],
+    ),
+  );
+}
+
+async function selectDefaultWritingProblemForUser({
+  questionNo,
+  userId,
+  supabase,
+  runQuery,
+  withLifecycle,
+}: {
+  questionNo: QuestionNo;
+  userId: string;
+  supabase: SupabaseServerClient;
+  runQuery: RunWritingProblemQuery;
+  withLifecycle: boolean;
+}): Promise<{
+  problem: WritingProblem | null;
+  error: WritingProblemQueryResult["error"];
+}> {
+  const submittableProblems: WritingProblem[] = [];
+
+  for (
+    let offset = 0;
+    offset < MAX_VISIBILITY_SCAN_ROWS;
+    offset += PROBLEM_SCAN_PAGE_SIZE
+  ) {
+    const result = await runQuery(withLifecycle, {
+      from: offset,
+      to: offset + PROBLEM_SCAN_PAGE_SIZE - 1,
+    });
+    if (result.error) return { problem: null, error: result.error };
+
+    const pageRows = result.data ?? [];
+    const nonSeedRows = pageRows.filter((row) => !isSeedFixtureProblem(row));
+    const visibleIds = await filterVisibleProblemIds(
+      supabase,
+      nonSeedRows.map((row) => row.id),
+    );
+    submittableProblems.push(
+      ...nonSeedRows
+        .filter((row) => visibleIds.has(row.id))
+        .map((row) => normalizeWritingProblemRow(row, questionNo))
+        .filter((problem) => problem.submitBlockedReason === null),
+    );
+
+    if (pageRows.length < PROBLEM_SCAN_PAGE_SIZE) break;
+  }
+
+  const touchedIds = await getTouchedWritingProblemIds(
+    supabase,
+    userId,
+    submittableProblems.map((problem) => problem.id),
+  );
+  const untouched = submittableProblems.find(
+    (problem) => !touchedIds.has(problem.id),
+  );
+  if (untouched) return { problem: untouched, error: null };
+
+  return { problem: null, error: null };
+}
+
 export async function getWritingProblem(
   questionNo: number,
   problemId: string | undefined,
   createClient: ClientFactory = createSupabaseServerClient,
+  options: GetWritingProblemOptions = {},
 ): Promise<WritingProblem | null> {
   if (!isQuestionNo(questionNo)) return null;
   if (problemId && !isProblemIdLikeUuid(problemId)) return null;
@@ -539,6 +658,32 @@ export async function getWritingProblem(
 
     return { data: rows, error: lastError } satisfies WritingProblemQueryResult;
   };
+
+  if (!explicitProblemId && options.userId) {
+    let userDefault = await selectDefaultWritingProblemForUser({
+      questionNo,
+      userId: options.userId,
+      supabase,
+      runQuery,
+      withLifecycle: true,
+    });
+    if (
+      userDefault.error &&
+      userDefault.error.message.includes("lifecycle_status")
+    ) {
+      userDefault = await selectDefaultWritingProblemForUser({
+        questionNo,
+        userId: options.userId,
+        supabase,
+        runQuery,
+        withLifecycle: false,
+      });
+    }
+    if (userDefault.error) {
+      throw new Error(`getWritingProblem: ${userDefault.error.message}`);
+    }
+    if (userDefault.problem) return userDefault.problem;
+  }
 
   let { data, error } = await collectVisibleRows(true);
   if (error && error.message.includes("lifecycle_status")) {
