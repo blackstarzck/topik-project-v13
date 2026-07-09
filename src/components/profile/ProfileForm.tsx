@@ -7,9 +7,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CountryRegionSelect,
+  isSupportedCountryCode,
   normalizeCountryCode,
 } from "@/components/shared/CountryRegionSelect";
 import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import {
   checkNicknameAvailability,
   NicknameTakenError,
@@ -42,6 +44,7 @@ type ProfileDraft = {
   display_name: string | null;
   nickname: string | null;
   nationality_country_code?: string | null;
+  phone_country_code?: string | null;
   phone_number?: string | null;
   bio: string | null;
 };
@@ -74,7 +77,17 @@ function normalizeProfileCountryCode(value: string | null | undefined) {
   return code.length === 0 ? null : code;
 }
 
+function normalizeProfilePhoneCountryCode(
+  value: string | null | undefined,
+  phoneNumber: string | null,
+) {
+  if (!phoneNumber) return null;
+  if (isSupportedCountryCode(value)) return normalizeCountryCode(value);
+  return DEFAULT_PHONE_COUNTRY_CODE;
+}
+
 function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
+  const phoneNumber = normalizeProfileField(profile.phone_number ?? "");
   return {
     display_name: normalizeProfileField(profile.display_name ?? ""),
     nickname: normalizeProfileField(profile.nickname ?? ""),
@@ -83,7 +96,11 @@ function normalizeProfileDraft(profile: ProfileDraft): ProfileDraft {
     ),
     // Trim only; empty -> null. Digit-only shape is validated at the save gate
     // so an in-progress invalid number is never silently dropped.
-    phone_number: normalizeProfileField(profile.phone_number ?? ""),
+    phone_country_code: normalizeProfilePhoneCountryCode(
+      profile.phone_country_code,
+      phoneNumber,
+    ),
+    phone_number: phoneNumber,
     bio: normalizeProfileField(profile.bio ?? ""),
   };
 }
@@ -93,6 +110,7 @@ function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
     left.display_name === right.display_name &&
     left.nickname === right.nickname &&
     left.nationality_country_code === right.nationality_country_code &&
+    left.phone_country_code === right.phone_country_code &&
     left.phone_number === right.phone_number &&
     left.bio === right.bio
   );
@@ -223,6 +241,9 @@ export function ProfileForm({
   const [phoneNumber, setPhoneNumber] = useState<string>(
     initialProfile.phone_number ?? "",
   );
+  const [phoneCountryCode, setPhoneCountryCode] = useState<string>(
+    initialProfile.phone_country_code ?? DEFAULT_PHONE_COUNTRY_CODE,
+  );
   const [bio, setBio] = useState<string>(initialProfile.bio ?? "");
 
   const draftProfile = useMemo(
@@ -231,10 +252,18 @@ export function ProfileForm({
         display_name: displayName,
         nickname,
         nationality_country_code: nationalityCountryCode,
+        phone_country_code: phoneCountryCode,
         phone_number: phoneNumber,
         bio,
       }),
-    [bio, displayName, nationalityCountryCode, nickname, phoneNumber],
+    [
+      bio,
+      displayName,
+      nationalityCountryCode,
+      nickname,
+      phoneCountryCode,
+      phoneNumber,
+    ],
   );
   const isDirty = !profilesEqual(draftProfile, savedProfile);
   const displayNameTooShort = isTooShortProfileField(draftProfile.display_name);
@@ -545,11 +574,13 @@ export function ProfileForm({
               id="phoneNumber"
               ariaLabel={t("phoneNumberLabel")}
               callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+              countryCode={phoneCountryCode}
               disabled={mutation.isPending}
               locale={locale}
               placeholder={t("phoneNumberPlaceholder")}
               value={phoneNumber}
               onChange={setPhoneNumber}
+              onCountryCodeChange={setPhoneCountryCode}
             />
           </Form.Item>
 

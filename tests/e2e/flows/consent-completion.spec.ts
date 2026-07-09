@@ -191,6 +191,7 @@ async function createTempAuthGateData({
       gender: completeProfile ? "female" : null,
       nationality_country_code: completeProfile ? "KR" : null,
       nickname: profile.nickname,
+      phone_country_code: completeProfile ? "KR" : null,
       phone_number: completeProfile ? "01012345678" : null,
     })
     .eq("id", userId);
@@ -275,7 +276,7 @@ async function expectAuthGateSaved(data: TempAuthGateData) {
   const { data: profile, error: profileError } = await data.admin
     .from("profiles")
     .select(
-      "display_name,gender,nationality_country_code,nickname,phone_number",
+      "display_name,gender,nationality_country_code,nickname,phone_country_code,phone_number",
     )
     .eq("id", data.userId)
     .single();
@@ -285,6 +286,7 @@ async function expectAuthGateSaved(data: TempAuthGateData) {
   expect(profile?.gender).toBe("female");
   expect(profile?.nationality_country_code).toBe("KR");
   expect(profile?.nickname).toBe(data.generatedNickname);
+  expect(profile?.phone_country_code).toBe("KR");
   expect(profile?.phone_number).toBe("01012345678");
 
   const { data: consents, error: consentError } = await data.admin

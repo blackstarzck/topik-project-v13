@@ -53,6 +53,7 @@ const blankProfile = {
   display_name: null,
   nickname: null,
   nationality_country_code: null,
+  phone_country_code: null,
   bio: null,
 };
 
@@ -234,6 +235,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: "chan-k",
         nationality_country_code: null,
+        phone_country_code: null,
         phone_number: null,
         bio: null,
       });
@@ -264,6 +266,7 @@ describe("ProfileForm", () => {
         display_name: "Chan",
         nickname: "tester",
         nationality_country_code: null,
+        phone_country_code: null,
         phone_number: null,
         bio: null,
       });
@@ -287,6 +290,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: null,
+        phone_country_code: null,
         phone_number: null,
         bio: "TOPIK II grade 4 goal",
       });
@@ -544,6 +548,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: "KR",
+        phone_country_code: null,
         phone_number: null,
         bio: null,
       });
@@ -610,6 +615,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: null,
+        phone_country_code: "KR",
         phone_number: "01012345678",
         bio: null,
       });
@@ -633,6 +639,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: null,
+        phone_country_code: "KR",
         phone_number: "01087654321",
         bio: null,
       });
@@ -663,6 +670,7 @@ describe("ProfileForm", () => {
         display_name: null,
         nickname: null,
         nationality_country_code: null,
+        phone_country_code: null,
         phone_number: null,
         bio: null,
       });

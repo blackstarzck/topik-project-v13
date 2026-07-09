@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | `phone_number_prompt_dismissed_at` | `timestamptz` | yes | 전화번호 보완 안내 배너를 "다시 보지 않기"로 닫은 시각. `null`이면 아직 닫지 않음. |
 
-- 기존 `profiles.phone_number`(숫자만 저장 또는 `null`, migration `20260709153000`)를 그대로 사용한다.
+- 기존 `profiles.phone_country_code`(ISO 국가 코드 또는 `null`)와 `profiles.phone_number`(국가번호를 제외한 로컬 번호 숫자만 저장 또는 `null`, migration `20260709153000` + `20260709165000`)를 그대로 사용한다.
 - 신규 프로필은 `handle_new_user()`에서 이 컬럼을 세팅하지 않으므로 자동 `null`로 초기화된다. **기존 사용자 backfill 불필요**(default null이 "아직 닫지 않음"과 동일).
 - 컬럼 갱신은 owner self-update로만 이뤄진다. `profiles_self_update` RLS(`id = auth.uid()`)와 `private.protect_profile_columns()` 트리거(보호 대상은 `app_role`/`plan_label`/`status`뿐)에 의해 자연히 소유자만 갱신할 수 있으며, RLS/트리거 변경이 필요 없다.
 
@@ -38,7 +38,7 @@
 
 | 화면 | 변경 |
 | --- | --- |
-| `/profile` (X-05) | 기존 프로필 편집 폼에 전화번호 입력을 추가한다. 기존 값이 있으면 표시하고, 빈 값 저장은 `null`(삭제), 값이 있으면 숫자만 저장할 수 있다(형식 오류 시 저장 차단 + 안내). `/auth/consent`와 같은 저장 정책을 사용하되, 국가번호 prefix는 signup/consent 입력 UI에서만 표시한다. |
+| `/profile` (X-05) | 기존 프로필 편집 폼에 전화번호 입력을 추가한다. 기존 값이 있으면 표시하고, 빈 값 저장은 `phone_country_code = null`, `phone_number = null`(삭제), 값이 있으면 국가 코드는 `KR` 같은 ISO 코드로, 번호는 국가번호를 제외한 숫자만 저장할 수 있다(형식 오류 시 저장 차단 + 안내). `/auth/consent`와 같은 저장 정책을 사용한다. |
 | workspace 공통 shell | 전화번호가 없고(`phone_number` 비어 있음) 아직 영구 dismiss하지 않았을(`phone_number_prompt_dismissed_at` 비어 있음) 때, 워크스페이스 어느 라우트로 진입하든(직접 URL 포함) 안내 모달을 띄운다. 단 몰입/입력 집중 화면인 작성 시험(51~54), 온보딩(`/onboarding/learning-goal`), 프로필 편집(`/profile`)에서는 띄우지 않는다. 브라우저 세션당 1회만 노출한다. |
 
 ## UI 계약

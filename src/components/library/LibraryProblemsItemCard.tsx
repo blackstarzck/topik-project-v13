@@ -20,7 +20,10 @@ import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
-import { LibraryProblemsDraftAction } from "./LibraryProblemsRows";
+import {
+  LibraryProblemsDraftAction,
+  LibraryProblemsRetryAction,
+} from "./LibraryProblemsRows";
 import {
   draftTitle,
   isAnalysisPendingStatus,
@@ -179,8 +182,9 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             {item.availabilityReason ?? tSaved("unavailableDefaultReason")}
           </Text>
         ) : null}
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
           <TagChips tags={item.tags} />
+          <LibraryProblemsRetryAction item={item} />
         </div>
       </div>
     </AppCard>

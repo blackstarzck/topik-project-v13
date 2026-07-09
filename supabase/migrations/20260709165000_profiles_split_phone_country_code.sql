@@ -1,29 +1,15 @@
 -- ============================================================================
--- TALKPIK AI - 2026-07-09 - optional profile gender and phone number
+-- TALKPIK AI - 2026-07-09 - split profile phone country code and local number
 --
--- Adds nullable profile fields collected during email signup and the existing
--- auth completion gate. Google/other OAuth flows keep using the gate page when
--- required signup information or required consent is missing; no People API
--- scope or provider-token fetch is introduced.
+-- Follow-up safety migration for environments that already applied
+-- 20260709153000 when phone_number briefly stored the selected calling code
+-- together with local digits. The durable contract is:
+--   phone_country_code = ISO 3166-1 alpha-2 country code, for example KR
+--   phone_number       = local digits only, for example 1012345678
 -- ============================================================================
 
 alter table public.profiles
-  add column if not exists gender text,
-  add column if not exists phone_country_code text,
-  add column if not exists phone_number text;
-
-alter table public.profiles
-  drop constraint if exists profiles_gender_check;
-
-alter table public.profiles
-  add constraint profiles_gender_check
-  check (
-    gender is null
-    or gender in ('male', 'female')
-  ) not valid;
-
-alter table public.profiles
-  validate constraint profiles_gender_check;
+  add column if not exists phone_country_code text;
 
 alter table public.profiles
   drop constraint if exists profiles_phone_country_code_check;
@@ -37,25 +23,6 @@ alter table public.profiles
 
 alter table public.profiles
   validate constraint profiles_phone_country_code_check;
-
-alter table public.profiles
-  drop constraint if exists profiles_phone_number_e164_check;
-
-alter table public.profiles
-  drop constraint if exists profiles_phone_number_digits_check;
-
-alter table public.profiles
-  add constraint profiles_phone_number_digits_check
-  check (
-    phone_number is null
-    or phone_number ~ '^[0-9]{1,20}$'
-  ) not valid;
-
-alter table public.profiles
-  validate constraint profiles_phone_number_digits_check;
-
-comment on column public.profiles.gender is
-  'Optional self-reported profile gender collected at signup or auth completion. Allowed values: male, female.';
 
 comment on column public.profiles.phone_country_code is
   'Optional self-reported phone country code stored as an ISO 3166-1 alpha-2 country code, for example KR.';
@@ -154,6 +121,9 @@ revoke all on function public.handle_new_user() from public;
 
 comment on function public.handle_new_user() is
   'After insert on auth.users, create matching public.profiles row idempotently; seeds required profile metadata, optional gender/split-phone metadata, generated nickname, and UI locale provenance. SECURITY DEFINER with locked search_path.';
+
+drop function if exists public.complete_auth_gate(text, text, text, text, text, boolean);
+drop function if exists public.complete_auth_gate(text, text, text, text, text, boolean, text, text);
 
 create or replace function public.complete_auth_gate(
   p_display_name text,

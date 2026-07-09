@@ -19,6 +19,7 @@ export type ProfileGender = (typeof PROFILE_GENDERS)[number];
 
 export type OptionalProfileShape = {
   gender?: ProfileGender | null;
+  phone_country_code?: string | null;
   phone_number?: string | null;
 };
 
@@ -33,6 +34,7 @@ export type AuthCompletionProfileInput = {
   nickname: string | null;
   nationality_country_code: string | null;
   gender: ProfileGender | null;
+  phone_country_code: string | null;
   phone_number: string | null;
 };
 
@@ -63,6 +65,15 @@ function normalizePhoneNumber(value: unknown): string | null {
     .replace(/\D/g, "")
     .slice(0, PHONE_NUMBER_MAX_LENGTH);
   return PHONE_NUMBER_DIGITS_PATTERN.test(digits) ? digits : null;
+}
+
+function normalizePhoneCountryCode(
+  value: unknown,
+  phoneNumber: string | null,
+): string | null {
+  if (!phoneNumber) return null;
+  if (!isSupportedCountryCode(value)) return null;
+  return normalizeCountryCode(value);
 }
 
 function isValidDisplayName(value: unknown) {
@@ -114,6 +125,7 @@ export function normalizeAuthCompletionProfileInput(input: {
   nickname?: unknown;
   nationality_country_code?: unknown;
   gender?: unknown;
+  phone_country_code?: unknown;
   phone_number?: unknown;
 }): AuthCompletionProfileInput {
   return {
@@ -137,19 +149,27 @@ export function isRequiredProfileInputValid(
 
 export function normalizeOptionalProfileInput(input: {
   gender?: unknown;
+  phone_country_code?: unknown;
   phone_number?: unknown;
 }): {
   gender: ProfileGender | null;
+  phone_country_code: string | null;
   phone_number: string | null;
 } {
+  const phoneNumber = normalizePhoneNumber(input.phone_number);
   return {
     gender: normalizeGender(input.gender),
-    phone_number: normalizePhoneNumber(input.phone_number),
+    phone_country_code: normalizePhoneCountryCode(
+      input.phone_country_code,
+      phoneNumber,
+    ),
+    phone_number: phoneNumber,
   };
 }
 
 export function isOptionalProfileInputValid(input: {
   gender?: unknown;
+  phone_country_code?: unknown;
   phone_number?: unknown;
 }) {
   const rawGender = normalizeText(input.gender);
