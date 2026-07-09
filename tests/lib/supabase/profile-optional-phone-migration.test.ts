@@ -26,5 +26,12 @@ describe("optional profile gender and phone migration", () => {
     expect(migration).toMatch(
       /validate constraint profiles_phone_number_digits_check;/i,
     );
+    expect(migration).toMatch(/add column if not exists phone_country_code text/i);
+    expect(migration).toMatch(
+      /add constraint profiles_phone_country_code_check[\s\S]*?\)\s+not valid;/i,
+    );
+    expect(migration).toMatch(
+      /validate constraint profiles_phone_country_code_check;/i,
+    );
   });
 });

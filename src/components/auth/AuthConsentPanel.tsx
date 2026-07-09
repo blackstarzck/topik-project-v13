@@ -21,6 +21,7 @@ import {
 import { AppCard } from "@/components/shared/AppCard";
 import { GenderRadioGroup } from "@/components/shared/GenderRadioGroup";
 import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import {
   DISPLAY_NAME_MAX_LENGTH,
   NICKNAME_MAX_LENGTH,
@@ -127,6 +128,9 @@ export function AuthConsentPanel({
   const [gender, setGender] = useState<ProfileGender | null>(
     profile.gender ?? null,
   );
+  const [phoneCountryCode, setPhoneCountryCode] = useState(
+    profile.phone_country_code ?? DEFAULT_PHONE_COUNTRY_CODE,
+  );
   const [phoneNumber, setPhoneNumber] = useState(profile.phone_number ?? "");
   const [nicknameAvailability, setNicknameAvailability] =
     useState<NicknameAvailability>("idle");
@@ -193,10 +197,12 @@ export function AuthConsentPanel({
           <PhoneNumberInput
             ariaLabel={tProfile("phoneNumberLabel")}
             callingCodeAriaLabel={tProfile("phoneCountryCodeLabel")}
+            countryCode={phoneCountryCode}
             locale={locale}
             value={phoneNumber}
             placeholder={tProfile("phoneNumberPlaceholder")}
             onChange={setPhoneNumber}
+            onCountryCodeChange={setPhoneCountryCode}
           />
         </Form.Item>
       </>
@@ -253,6 +259,11 @@ export function AuthConsentPanel({
         <form action={action}>
           <input type="hidden" name="next" value={next} />
           <input type="hidden" name="gender" value={gender ?? ""} />
+          <input
+            type="hidden"
+            name="phone_country_code"
+            value={phoneCountryCode}
+          />
           <input type="hidden" name="phone_number" value={phoneNumber} />
           <input
             type="hidden"

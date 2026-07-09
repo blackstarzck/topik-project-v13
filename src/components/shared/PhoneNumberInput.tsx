@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Input, Select } from "antd";
 import { CountryFlag } from "@/components/shared/CountryRegionSelect";
 import {
@@ -26,10 +26,12 @@ type PhoneNumberInputProps = {
   ariaLabel: string;
   callingCodeAriaLabel?: string;
   disabled?: boolean;
+  countryCode?: string | null;
   id?: string;
   locale?: string;
   onBlur?: () => void;
   onChange?: (value: string) => void;
+  onCountryCodeChange?: (countryCode: string) => void;
   onFocus?: () => void;
   placeholder?: string;
   value?: string | null;
@@ -85,9 +87,12 @@ function getSupportedPhoneCountryCode(countryCode: string | null | undefined) {
     : DEFAULT_PHONE_COUNTRY_CODE;
 }
 
-function normalizePhoneDigits(value: unknown) {
+function normalizePhoneDigits(
+  value: unknown,
+  maxLength = PHONE_NUMBER_INPUT_MAX_LENGTH,
+) {
   if (typeof value !== "string") return "";
-  return value.replace(/\D/g, "").slice(0, PHONE_NUMBER_INPUT_MAX_LENGTH);
+  return value.replace(/\D/g, "").slice(0, maxLength);
 }
 
 function getCallingCodeDigits(countryCode: string) {
@@ -95,18 +100,13 @@ function getCallingCodeDigits(countryCode: string) {
 }
 
 function stripSelectedCallingCode(value: unknown, countryCode: string) {
-  const digits = normalizePhoneDigits(value ?? "");
+  const digits = normalizePhoneDigits(value ?? "", Number.MAX_SAFE_INTEGER);
   const callingCode = getCallingCodeDigits(countryCode);
-  if (!callingCode || !digits.startsWith(callingCode)) return digits;
-  return digits.slice(callingCode.length);
-}
-
-function composePhoneNumber(countryCode: string, value: unknown) {
-  const digits = normalizePhoneDigits(value ?? "");
-  const callingCode = getCallingCodeDigits(countryCode);
-  if (!digits) return "";
-  if (!callingCode || digits.startsWith(callingCode)) return digits;
-  return `${callingCode}${digits}`.slice(0, PHONE_NUMBER_INPUT_MAX_LENGTH);
+  const localDigits =
+    callingCode && digits.startsWith(callingCode)
+      ? digits.slice(callingCode.length)
+      : digits;
+  return localDigits.slice(0, PHONE_NUMBER_INPUT_MAX_LENGTH);
 }
 
 function isAllowedPhoneKey(event: KeyboardEvent<HTMLInputElement>) {
@@ -123,17 +123,19 @@ function isAllowedPhoneKey(event: KeyboardEvent<HTMLInputElement>) {
 export function PhoneNumberInput({
   ariaLabel,
   callingCodeAriaLabel,
+  countryCode,
   disabled = false,
   id,
   locale,
   onBlur,
   onChange,
+  onCountryCodeChange,
   onFocus,
   placeholder = "1012345678",
   value,
 }: PhoneNumberInputProps) {
-  const [phoneCountryCode, setPhoneCountryCode] = useState(() =>
-    getSupportedPhoneCountryCode(DEFAULT_PHONE_COUNTRY_CODE),
+  const phoneCountryCode = getSupportedPhoneCountryCode(
+    countryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
   );
   const phoneCountryOptions = useMemo(
     () =>
@@ -143,7 +145,7 @@ export function PhoneNumberInput({
       ),
     [locale],
   );
-  const localNumber = stripSelectedCallingCode(value, phoneCountryCode);
+  const localNumber = normalizePhoneDigits(value ?? "");
 
   return (
     <div className="grid grid-cols-[minmax(104px,128px)_minmax(0,1fr)] gap-2">
@@ -167,14 +169,7 @@ export function PhoneNumberInput({
         onChange={(nextCountryCode) => {
           const normalizedCountryCode =
             getSupportedPhoneCountryCode(nextCountryCode);
-          const nextLocalNumber = stripSelectedCallingCode(
-            value,
-            phoneCountryCode,
-          );
-          setPhoneCountryCode(normalizedCountryCode);
-          onChange?.(
-            composePhoneNumber(normalizedCountryCode, nextLocalNumber),
-          );
+          onCountryCodeChange?.(normalizedCountryCode);
         }}
         onFocus={onFocus}
       />
@@ -191,7 +186,9 @@ export function PhoneNumberInput({
         value={localNumber}
         onBlur={onBlur}
         onChange={(event) => {
-          onChange?.(composePhoneNumber(phoneCountryCode, event.target.value));
+          onChange?.(
+            stripSelectedCallingCode(event.target.value, phoneCountryCode),
+          );
         }}
         onFocus={onFocus}
         onKeyDown={(event) => {

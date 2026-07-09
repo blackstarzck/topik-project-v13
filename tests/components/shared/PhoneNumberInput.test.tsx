@@ -18,9 +18,11 @@ describe("PhoneNumberInput", () => {
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
+        countryCode="KR"
         locale="ko"
         value="01012345678"
         onChange={vi.fn()}
+        onCountryCodeChange={vi.fn()}
       />,
     );
 
@@ -34,15 +36,17 @@ describe("PhoneNumberInput", () => {
     ).toContain("+82");
   });
 
-  it("normalizes pasted text to digits with the selected country code", () => {
+  it("normalizes pasted text to local digits without the selected country calling code", () => {
     const handleChange = vi.fn();
     renderWithIntl(
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
+        countryCode="KR"
         locale="ko"
         value=""
         onChange={handleChange}
+        onCountryCodeChange={vi.fn()}
       />,
     );
 
@@ -50,25 +54,47 @@ describe("PhoneNumberInput", () => {
       target: { value: "+82 010-1234-5678 abc 901234567890" },
     });
 
-    expect(handleChange).toHaveBeenCalledWith("82010123456789012345");
+    expect(handleChange).toHaveBeenCalledWith("01012345678901234567");
   });
 
-  it("updates the stored digits when the selected country code changes", () => {
+  it("does not strip calling-code-like prefixes from an already stored local number", () => {
+    renderWithIntl(
+      <PhoneNumberInput
+        ariaLabel="전화번호"
+        callingCodeAriaLabel="국가 번호"
+        countryCode="KR"
+        locale="ko"
+        value="8212345678"
+        onChange={vi.fn()}
+        onCountryCodeChange={vi.fn()}
+      />,
+    );
+
+    expect((screen.getByLabelText("전화번호") as HTMLInputElement).value).toBe(
+      "8212345678",
+    );
+  });
+
+  it("updates the selected country code without rewriting the stored local digits", () => {
     const handleChange = vi.fn();
+    const handleCountryCodeChange = vi.fn();
     renderWithIntl(
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
+        countryCode="KR"
         locale="ko"
-        value="821012345678"
+        value="1012345678"
         onChange={handleChange}
+        onCountryCodeChange={handleCountryCodeChange}
       />,
     );
 
     fireEvent.mouseDown(screen.getByRole("combobox", { name: "국가번호" }));
     fireEvent.click(screen.getByText("+84"));
 
-    expect(handleChange).toHaveBeenCalledWith("841012345678");
+    expect(handleCountryCodeChange).toHaveBeenCalledWith("VN");
+    expect(handleChange).not.toHaveBeenCalled();
   });
 
   it("blocks non-digit keyCode input while allowing digit keys", () => {
@@ -76,9 +102,11 @@ describe("PhoneNumberInput", () => {
       <PhoneNumberInput
         ariaLabel="전화번호"
         callingCodeAriaLabel="국가번호"
+        countryCode="KR"
         locale="ko"
         value=""
         onChange={vi.fn()}
+        onCountryCodeChange={vi.fn()}
       />,
     );
     const input = screen.getByLabelText("전화번호");

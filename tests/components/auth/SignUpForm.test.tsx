@@ -322,7 +322,8 @@ describe("SignUpForm", () => {
       display_name: "홍길동",
       gender: "female",
       nationality_country_code: "VN",
-      phone_number: "821012345678",
+      phone_country_code: "KR",
+      phone_number: "1012345678",
     });
   });
 

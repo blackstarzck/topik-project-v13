@@ -50,6 +50,7 @@ import {
   normalizeOptionalProfileInput,
   type ProfileGender,
 } from "@/lib/auth/profile-completion";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
@@ -190,6 +191,9 @@ export function SignUpForm({
   );
   // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
   const [passwordValue, setPasswordValue] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState(
+    DEFAULT_PHONE_COUNTRY_CODE,
+  );
   const [form] = Form.useForm<SignUpFields>();
   const displayNameValue = Form.useWatch("displayName", form);
   const nationalityCountryCodeValue = Form.useWatch(
@@ -335,6 +339,7 @@ export function SignUpForm({
       const affiliationMetadata = buildAffiliationMetadata();
       const optionalProfileMetadata = normalizeOptionalProfileInput({
         gender: values.gender,
+        phone_country_code: phoneCountryCode,
         phone_number: values.phoneNumber,
       });
       const { data, error } = await supabase.auth.signUp({
@@ -350,7 +355,11 @@ export function SignUpForm({
               values.nationalityCountryCode,
             ),
             ...(optionalProfileMetadata.phone_number
-              ? { phone_number: optionalProfileMetadata.phone_number }
+              ? {
+                  phone_country_code:
+                    optionalProfileMetadata.phone_country_code,
+                  phone_number: optionalProfileMetadata.phone_number,
+                }
               : {}),
             ui_locale: locale,
             ui_locale_source: hasSupportedLocaleCookie() ? "manual" : "auto",
@@ -609,8 +618,10 @@ export function SignUpForm({
                 id="phoneNumber"
                 ariaLabel={t("phoneNumberLabel")}
                 callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+                countryCode={phoneCountryCode}
                 locale={locale}
                 placeholder={t("phoneNumberPlaceholder")}
+                onCountryCodeChange={setPhoneCountryCode}
                 onFocus={() => onTypingChange?.(true)}
                 onBlur={() => onTypingChange?.(false)}
               />

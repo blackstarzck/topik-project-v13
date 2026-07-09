@@ -7,11 +7,11 @@ import { coerceNotificationPrefs, type ProfileSettings } from "./types";
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
 const PROFILE_SETTINGS_COLUMNS =
-  "display_name, nickname, nationality_country_code, phone_number, bio, ui_locale, ui_locale_source, notification_prefs";
-// Legacy projection intentionally omits phone_number (and ui_locale_source) so
-// the page still loads on environments where the optional-profile migration
-// (20260709153000) has not been applied yet; toProfileSettings maps the absent
-// column to null.
+  "display_name, nickname, nationality_country_code, phone_country_code, phone_number, bio, ui_locale, ui_locale_source, notification_prefs";
+// Legacy projection intentionally omits split phone fields (and
+// ui_locale_source) so the page still loads on environments where the
+// optional-profile migrations (20260709153000/20260709165000) have not been
+// applied yet; toProfileSettings maps the absent columns to null.
 const LEGACY_PROFILE_SETTINGS_COLUMNS =
   "display_name, nickname, nationality_country_code, bio, ui_locale, notification_prefs";
 
@@ -19,7 +19,8 @@ type ProfileSettingsRow = {
   display_name: string | null;
   nickname: string | null;
   nationality_country_code?: string | null;
-  phone_number: string | null;
+  phone_country_code?: string | null;
+  phone_number?: string | null;
   bio: string | null;
   ui_locale: ProfileSettings["ui_locale"];
   ui_locale_source?: ProfileSettings["ui_locale_source"] | null;
@@ -54,6 +55,7 @@ function toProfileSettings(data: ProfileSettingsRow): ProfileSettings {
     display_name: data.display_name,
     nickname: data.nickname,
     nationality_country_code: data.nationality_country_code ?? null,
+    phone_country_code: data.phone_country_code ?? null,
     phone_number: data.phone_number ?? null,
     bio: data.bio,
     ui_locale: data.ui_locale,

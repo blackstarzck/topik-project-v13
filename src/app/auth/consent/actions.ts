@@ -174,6 +174,7 @@ export async function completeAuthGateAction(formData: FormData) {
     nationality_country_code: formData
       .get("nationality_country_code")
       ?.toString(),
+    phone_country_code: formData.get("phone_country_code")?.toString(),
     phone_number: formData.get("phone_number")?.toString(),
   };
   const input = normalizeAuthCompletionProfileInput(rawProfileInput);
@@ -215,6 +216,7 @@ export async function completeAuthGateAction(formData: FormData) {
     p_gender: string | null;
     p_nickname: string | null;
     p_nationality_country_code: string | null;
+    p_phone_country_code: string | null;
     p_phone_number: string | null;
     p_accept_required_consents: boolean;
     p_ui_locale?: Locale;
@@ -224,6 +226,7 @@ export async function completeAuthGateAction(formData: FormData) {
     p_gender: input.gender,
     p_nickname: input.nickname,
     p_nationality_country_code: input.nationality_country_code,
+    p_phone_country_code: input.phone_country_code,
     p_phone_number: input.phone_number,
     p_accept_required_consents: acceptRequiredConsents,
   };
