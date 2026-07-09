@@ -56,6 +56,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
     const item = entry.item;
     const feedbackStatus = meta?.feedbackStatus ?? "pending";
     const analysisPending = isAnalysisPendingStatus(feedbackStatus);
+    const actionMenuAvailable = feedbackStatus === "complete";
     const fallbackTitle = tSubmissions("problemTitle", {
       id: item.problem_id.slice(0, 8),
     });
@@ -106,7 +107,9 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             <span className="flex flex-wrap items-center gap-2">
               <TagChips tags={item.tags} />
             </span>
-            {analysisPending ? null : <LibraryProblemsActionMenu item={item} />}
+            {actionMenuAvailable ? (
+              <LibraryProblemsActionMenu item={item} />
+            ) : null}
           </div>
         </div>
       </AppCard>

@@ -44,6 +44,7 @@ export function LibraryProblemsSubmissionRow({
   ) as LibraryListTranslate;
   const feedbackStatus = meta?.feedbackStatus ?? "pending";
   const analysisPending = isAnalysisPendingStatus(feedbackStatus);
+  const actionMenuAvailable = feedbackStatus === "complete";
   const fallbackTitle = tSubmissions("problemTitle", {
     id: item.problem_id.slice(0, 8),
   });
@@ -56,9 +57,9 @@ export function LibraryProblemsSubmissionRow({
       tab="submissions"
       tags={item.tags}
       trailingActions={
-        analysisPending
-          ? undefined
-          : [<LibraryProblemsActionMenu key="actions" item={item} />]
+        actionMenuAvailable
+          ? [<LibraryProblemsActionMenu key="actions" item={item} />]
+          : undefined
       }
     >
       <div className="flex w-full flex-col gap-1">

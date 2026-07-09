@@ -376,6 +376,31 @@ describe("LibraryProblemsList", () => {
     ).toBeNull();
   });
 
+  it("hides submission action menus when analysis failed", async () => {
+    mockedFetchSubmissionEnrichment.mockResolvedValue(
+      new Map([
+        [
+          "sub-1",
+          {
+            feedbackStatus: "failed",
+            scoreTotal: null,
+            scoreMax: null,
+            summary: "분석 실패 답안은 메뉴를 숨깁니다.",
+          },
+        ],
+      ]),
+    );
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText("분석 실패 답안은 메뉴를 숨깁니다.")).toBeTruthy();
+    });
+    expect(
+      screen.queryByRole("button", { name: actionMenuLabels.open }),
+    ).toBeNull();
+  });
+
   it("does not render delete buttons in the problems list rows", () => {
     renderList();
 
