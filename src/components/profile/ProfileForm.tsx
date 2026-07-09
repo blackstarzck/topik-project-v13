@@ -98,6 +98,28 @@ function profilesEqual(left: ProfileDraft, right: ProfileDraft) {
   );
 }
 
+function changedProfileFields(next: ProfileDraft, previous: ProfileDraft) {
+  const patch: Partial<ProfileDraft> = {};
+
+  if (next.display_name !== previous.display_name) {
+    patch.display_name = next.display_name;
+  }
+  if (next.nickname !== previous.nickname) {
+    patch.nickname = next.nickname;
+  }
+  if (next.nationality_country_code !== previous.nationality_country_code) {
+    patch.nationality_country_code = next.nationality_country_code;
+  }
+  if (next.phone_number !== previous.phone_number) {
+    patch.phone_number = next.phone_number;
+  }
+  if (next.bio !== previous.bio) {
+    patch.bio = next.bio;
+  }
+
+  return patch;
+}
+
 function isTooShortProfileField(value: string | null) {
   return value !== null && value.length < PROFILE_NAME_MIN_LENGTH;
 }
@@ -389,7 +411,8 @@ export function ProfileForm({
     }
 
     try {
-      await mutation.mutateAsync(draftProfile);
+      const changedFields = changedProfileFields(draftProfile, savedProfile);
+      await mutation.mutateAsync(changedFields);
       setSavedProfile(draftProfile);
       setNicknameAvailability("idle");
       message.success(t("saveSuccess"));
