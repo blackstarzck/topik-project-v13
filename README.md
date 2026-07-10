@@ -42,12 +42,12 @@ flowchart LR
 
 | 항목 | 상태 |
 | --- | --- |
-| 구현 상태 | 기반 구현 진행 중 — `src/` + `package.json` 존재. App Router 라우트 scaffold + 인증 흐름 + 테마 시스템 + Supabase 스키마/RLS 마이그레이션 완료. 쓰기 제출·피드백 화면과 mock 피드백 경로도 일부 구현됨. 실제 LLM 기반 AI 첨삭·문제 생성은 단계적으로 추가 중. |
-| 현재 기준 | `docs/`와 `AGENTS.md`가 제품, 화면, AI 작업 방식의 source of truth. 인증 영역은 관련 auth Wireframe 기능명세와 `src/app/auth/`, `src/lib/supabase/` 구현을 함께 확인합니다. |
+| 구현 상태 | 기반 구현 진행 중 — `src/` + `package.json` 존재. App Router 라우트 scaffold + 인증 흐름 + 테마 시스템 + Supabase 스키마/RLS 마이그레이션 완료. 쓰기 제출·피드백 화면과 mock 피드백 경로도 일부 구현됨. 실제 LLM 기반 AI 첨삭·문제 생성은 현재 MVP 보류 범위입니다. |
+| 현재 기준 | `docs/sot-registry.json`과 생성된 `docs/INDEX.md`가 범위별 active source of truth를 알려줍니다. 인증 영역은 관련 auth Wireframe 기능명세와 `src/app/auth/`, `src/lib/supabase/` 구현을 함께 확인합니다. |
 | 구현 방식 | Next.js App Router 기반. 인증·테마·DB 스키마는 구현됨, 학습 기능은 단계적 추가. |
 | 협업 방식 | 사람과 AI가 같은 문서 세트를 읽고, 변경 근거와 검증 결과를 남깁니다. |
 
-지금 이 저장소는 골조와 일부 인프라 (인증, 테마, DB 스키마/RLS) 가 올라간 공사장입니다. 쓰기 제출·피드백 화면과 mock 피드백 경로는 일부 올라갔고, 실제 LLM 첨삭과 문제 생성은 단계적으로 추가 중입니다. 인증·보안 영역은 골조 + 다른 AI 검토까지 받은 상태. 문서가 여전히 source of truth 라는 점은 변하지 않습니다.
+지금 이 저장소는 골조와 일부 인프라 (인증, 테마, DB 스키마/RLS) 가 올라간 공사장입니다. 쓰기 제출·피드백 화면과 mock 피드백 경로는 일부 올라갔고, 실제 LLM 첨삭과 문제 생성은 MVP 범위 결정에 따라 보류 중입니다. 어떤 문서가 현재 계약인지는 active SOT registry에서 확인합니다.
 
 ## 만들고 있는 것
 
@@ -150,7 +150,7 @@ AI에게 긴 명령을 한 번에 던지기보다, 문서와 검증 조건을 �
 | "그냥 알아서 예쁘게 만들어줘" | 현재 문서와 다른 제품이 될 수 있습니다. |
 | "필요한 라이브러리 마음대로 추가해" | 기술 스택은 기존 `package.json`, lockfile, AGENTS의 승인 규칙을 기준으로 합니다. |
 | "테스트는 나중에" | 이 프로젝트는 검증 근거를 남기는 방식으로 협업합니다. |
-| "문서 안 보고 바로 구현해" | 문서가 현재 source of truth입니다. |
+| "문서 안 보고 바로 구현해" | active SOT와 현재 구현을 함께 봐야 제품 범위를 지킬 수 있습니다. |
 
 ## 비개발자인 외부인을 위한 읽는 순서
 
@@ -164,7 +164,7 @@ flowchart TD
     D --> E["docs/Wireframe/README.md<br/>화면별 설명과 와이어프레임"]
 ```
 
-구현 기준은 항상 `AGENTS.md`, `README.md`, `docs/ia.md`, `docs/Wireframe/`, `docs/flow/user-flow.md`, 현재 `src/` 구현을 함께 봅니다. 인증·로그인·회원가입 흐름은 관련 auth Wireframe 기능명세와 `src/app/auth/`, `src/lib/supabase/`를 함께 확인합니다.
+구현 기준은 `AGENTS.md`, `docs/INDEX.md`에서 찾은 관련 active SOT, 현재 `src/` 구현을 함께 봅니다. 인증·로그인·회원가입 흐름은 관련 auth Wireframe 기능명세와 `src/app/auth/`, `src/lib/supabase/`를 함께 확인합니다.
 
 ## 개발 협업자를 위한 읽는 순서
 
@@ -186,8 +186,8 @@ flowchart TD
 
 | 규칙 | 의미 |
 | --- | --- |
-| `docs/` 먼저 | 현재는 코드보다 문서가 기준입니다. |
-| 현재 기준 문서 우선 | `AGENTS.md`, `README.md`, `docs/ia.md`, `docs/Wireframe/`, `docs/flow/user-flow.md`를 기준으로 봅니다. |
+| active SOT 먼저 | `docs/INDEX.md`에서 이 작업의 현재 owner 문서를 찾습니다. |
+| 현재 구현 함께 확인 | active SOT와 관련 `src/`·tests를 함께 봅니다. |
 | 작은 변경 | unrelated refactor를 섞지 않습니다. |
 | 검증 후 완료 | 테스트, 체크, 수동 검증 중 가능한 근거를 남깁니다. |
 
@@ -225,8 +225,9 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    A["README.md<br/>Project entry"] --> B["AGENTS.md<br/>AI agent contract"]
-    B --> C["package.json + src/<br/>Implementation reference"]
+    A["README.md<br/>Project entry"] --> B["AGENTS.md<br/>AI agent constitution"]
+    B --> R["docs/INDEX.md<br/>Active SOT registry"]
+    R --> C["package.json + src/<br/>Implementation reference"]
     B --> D["docs/prd.md<br/>Product requirements"]
     B --> E["docs/ia.md<br/>Routes and IA"]
     B --> F["docs/Wireframe/README.md<br/>Screen specs"]
@@ -241,6 +242,7 @@ flowchart TD
 | Need | Start here |
 | --- | --- |
 | 프로젝트 전체를 사람 관점에서 이해하기 | [README.md](./README.md) |
+| Active owner와 정책 우선순위 | [docs/INDEX.md](./docs/INDEX.md), [docs/agent-workflow/core.md](./docs/agent-workflow/core.md) |
 | Implementation stack, dependencies, backend, auth, AI boundary, deployment, environment variables, testing | [AGENTS.md](./AGENTS.md), [package.json](./package.json), [TESTING.md](./TESTING.md), [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 | Product scope, user value, business rules | [docs/prd.md](./docs/prd.md) |
 | Routes and navigation | [docs/ia.md](./docs/ia.md), [docs/flow/user-flow.md](./docs/flow/user-flow.md), [docs/flow/sitemap.md](./docs/flow/sitemap.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
@@ -254,12 +256,13 @@ flowchart TD
 
 | 기준 | 문서 |
 | --- | --- |
-| 구현 기준 | [AGENTS.md](./AGENTS.md), [README.md](./README.md), [package.json](./package.json), 현재 `src/` |
+| active SOT owner | [docs/INDEX.md](./docs/INDEX.md) |
+| 구현 기준 | [AGENTS.md](./AGENTS.md), [package.json](./package.json), 현재 `src/`와 tests |
 | 제품 목적과 범위 | [docs/prd.md](./docs/prd.md) |
 | 화면과 라우트 | [docs/ia.md](./docs/ia.md), [docs/flow/user-flow.md](./docs/flow/user-flow.md), [docs/flow/sitemap.md](./docs/flow/sitemap.md), [docs/Wireframe/README.md](./docs/Wireframe/README.md) |
 | 사용자 흐름 | [docs/flow/user-flow.md](./docs/flow/user-flow.md) |
 | UI 규칙 | [docs/ant-design/README.md](./docs/ant-design/README.md) |
-| AI 협업 규칙 | [AGENTS.md](./AGENTS.md) |
+| AI 협업 규칙 | [AGENTS.md](./AGENTS.md), [docs/agent-workflow/README.md](./docs/agent-workflow/README.md) |
 | 외부 백엔드 API 참고 | [docs/swagger-api/README.md](./docs/swagger-api/README.md) |
 | 인증 흐름과 운영 정책 | 관련 auth Wireframe 기능명세, `src/app/auth/`, `src/lib/supabase/`, [supabase/migrations/INDEX.md](./supabase/migrations/INDEX.md) |
 

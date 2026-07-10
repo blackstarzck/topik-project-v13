@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check active SOT registry
+        run: pnpm check:sot-registry
+
       - name: Typecheck
         run: pnpm typecheck
 

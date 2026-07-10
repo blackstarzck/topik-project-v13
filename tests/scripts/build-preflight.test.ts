@@ -12,7 +12,39 @@ import { describe, expect, test } from "vitest";
 // exercised by every assertion below.
 // prettier-ignore
 // @ts-expect-error -- .mjs script has no .d.ts; runtime contract verified here
-import { evaluateBuildPreflight, evaluateSupabaseRemoteApplyBoundary, normalizePort, resolveProbePorts } from "../../scripts/build-preflight.mjs";
+import { evaluateBuildPreflight, evaluateSupabaseRemoteApplyBoundary, hasIsolatedDevBuildOptOut, normalizePort, resolveProbePorts, supportsIsolatedDevBuild } from "../../scripts/build-preflight.mjs";
+
+describe("supportsIsolatedDevBuild — gate framework capability", () => {
+  test("accepts the verified Next 16 contract", () => {
+    expect(supportsIsolatedDevBuild("16.2.6")).toBe(true);
+  });
+
+  test("fails closed for legacy, future, or invalid versions", () => {
+    expect(supportsIsolatedDevBuild("15.5.0")).toBe(false);
+    expect(supportsIsolatedDevBuild("17.0.0-canary.1")).toBe(false);
+    expect(supportsIsolatedDevBuild("unknown")).toBe(false);
+    expect(supportsIsolatedDevBuild(undefined)).toBe(false);
+  });
+
+  test("detects an explicit isolatedDevBuild opt-out", () => {
+    expect(
+      hasIsolatedDevBuildOptOut(`experimental: { isolatedDevBuild: false }`),
+    ).toBe(true);
+    expect(
+      hasIsolatedDevBuildOptOut(`experimental: { "isolatedDevBuild": false }`),
+    ).toBe(true);
+    expect(
+      hasIsolatedDevBuildOptOut(
+        `experimental: { isolatedDevBuild: process.env.ISOLATED === "1" }`,
+      ),
+    ).toBe(true);
+    expect(
+      hasIsolatedDevBuildOptOut(`experimental: { isolatedDevBuild: true }`),
+    ).toBe(false);
+    expect(hasIsolatedDevBuildOptOut(`const nextConfig = {}`)).toBe(false);
+    expect(hasIsolatedDevBuildOptOut(undefined)).toBe(true);
+  });
+});
 
 // Cross-audit P0/P1: the preflight must probe the ports dev actually uses, not
 // just 3000. The founding incident (2026-06-02) was on :3100; Next dev auto-
@@ -73,6 +105,19 @@ describe("evaluateBuildPreflight — block build while a dev server is alive", (
     expect(result.block).toBe(false);
     expect(result.code).toBe(0);
     expect(result.warn).toBe(true);
+  });
+
+  test("allows the build when Next isolated dev output is explicitly enabled", () => {
+    const result = evaluateBuildPreflight({
+      devServerDetected: true,
+      isolatedDevBuild: true,
+      force: false,
+    });
+
+    expect(result.block).toBe(false);
+    expect(result.code).toBe(0);
+    expect(result.warn).toBe(true);
+    expect(result.message).toMatch(/\.next\/dev/);
   });
 
   // The rejection message must point at the recovery path (stop dev → delete
