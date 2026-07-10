@@ -58,9 +58,11 @@ Phase 2의 최소 task registry, 상태 전이, read-only inventory와 보수적
 - Schema boundary: closed predicates are exported instead of mutable transition/state collections
 - Remote Windows validation: run `29091266548` exposed a DOS 8.3/canonical-path mismatch; after canonical-ancestor and production exact-child guards were added, GitHub Actions run `29092192264` passed the Windows lifecycle job
 
-## Phase 2A handoff
+## Phase 2A review outcome
 
-현재 자동 또는 수동 removal로 넘길 후보는 없다. Phase 2A는 아래 증거를 별도로 모은 뒤 사용자 검토 묶음을 다시 만들어야 한다.
+사용자의 순차 실행 지시에 따라 최신 inventory를 수동 remediation 기준으로 검토했다. `REVIEW_CANDIDATE`가 0개이므로 삭제 묶음을 만들지 않았고, 25개 worktree를 모두 `NEEDS_ATTENTION`으로 보존했다. cleanup command, branch deletion, worktree removal, `--force` 실행은 모두 0건이다.
+
+후속 remediation 후보를 만들려면 아래 증거를 새로 모아야 한다.
 
 1. owner task/person과 branch/worktree identity
 2. GitHub API에서 새로 확인한 PR 상태, base, published head 일치
@@ -68,7 +70,7 @@ Phase 2의 최소 task registry, 상태 전이, read-only inventory와 보수적
 4. process, dev server, port, file lock 상태
 5. 검사 직전과 직후의 stable repository snapshot
 
-위 항목이 모두 갖춰져도 결과는 `REVIEW_CANDIDATE`일 뿐 삭제 권한이 아니다. 삭제는 별도 명시 권한과 직전 재검사가 필요하다.
+위 항목이 모두 갖춰져도 결과는 `REVIEW_CANDIDATE`일 뿐 삭제 권한이 아니다. 삭제는 별도 명시 권한과 직전 재검사가 필요하다. 현재 Phase 2A의 종료 결과는 **삭제 0 / 보존 25 / 미분류 0**이다.
 
 ## SOT check
 

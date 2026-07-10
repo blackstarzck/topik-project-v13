@@ -859,6 +859,10 @@ Codex Desktop cleanup mode를 `report`로 유지한 채 최소 task registry, sy
 
 이 구현은 cleanup lease, monitor, supervisor, task archive, worktree/branch 삭제를 활성화하지 않는다. Phase 2A의 사용자 검토와 별도 삭제 권한 없이 어떤 후보도 정리하지 않는다. proposal의 `superseded` 상태와 active owner는 바뀌지 않는다.
 
+### Phase 2A 검토 이력 — 2026-07-10
+
+최신 report-only inventory를 수동 remediation 기준으로 다시 검토했지만 `REVIEW_CANDIDATE`가 0개였다. 25개 worktree를 모두 `NEEDS_ATTENTION`으로 보존했고 cleanup command, branch deletion, worktree removal, `--force` 실행은 0건이었다. owner, live PR, runtime process/port/file-lock 증거가 새로 확보되기 전에는 동일 대상을 삭제 후보로 승격하지 않는다.
+
 Phase 1 promotion은 branch 삭제나 `global.css` 대규모 수정을 승인하는 것이 아니다. Phase별 구현·검증·Git 반영은 각 변경 범위와 현재 안전 조건을 다시 확인한다.
 
 ## 20. SOT 체크
