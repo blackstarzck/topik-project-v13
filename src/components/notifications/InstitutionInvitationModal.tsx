@@ -18,7 +18,7 @@ export type InstitutionInvitationModalStatus =
   | InstitutionInvitationErrorKind
   | null;
 
-type InvitationSubmitAction = "accept" | "decline";
+type InvitationSubmitAction = "accept";
 
 type Props = {
   open: boolean;
@@ -27,7 +27,6 @@ type Props = {
   status: InstitutionInvitationModalStatus;
   submitting: InvitationSubmitAction | null;
   onAccept: () => void;
-  onDecline: () => void;
   onSignIn?: () => void;
   onClose: () => void;
 };
@@ -49,14 +48,12 @@ export function InstitutionInvitationModal({
   status,
   submitting,
   onAccept,
-  onDecline,
   onSignIn,
   onClose,
 }: Props) {
   const t = useTranslations("notifications.institutionInvitation");
 
-  const code = invitation?.code ?? t("unknownCode");
-  const codeLabel = invitation?.codeLabel ?? t("unknownLabel");
+  const code = invitation?.code?.trim() || t("unknownCode");
   const currentAffiliation = affiliationCode?.trim() ?? "";
   const invitationId = invitation?.invitationId?.trim() ?? "";
   const invitedAffiliation = invitation?.code?.trim() ?? "";
@@ -86,33 +83,27 @@ export function InstitutionInvitationModal({
               {t("signInAgain")}
             </Button>
           ) : (
-            <>
-              <Button
-                danger
-                disabled={actionsDisabled}
-                loading={submitting === "decline"}
-                onClick={onDecline}
-              >
-                {t("decline")}
-              </Button>
-              <Button
-                type="primary"
-                disabled={actionsDisabled}
-                loading={submitting === "accept"}
-                onClick={onAccept}
-              >
-                {t("accept")}
-              </Button>
-            </>
+            <Button
+              type="primary"
+              disabled={actionsDisabled}
+              loading={submitting === "accept"}
+              onClick={onAccept}
+            >
+              {t("accept")}
+            </Button>
           )}
         </div>
       }
     >
       <div className="grid gap-3">
         <div className="grid gap-1">
-          <Text type="secondary">{t("description")}</Text>
-          <Text strong>{codeLabel}</Text>
-          <Text code>{code}</Text>
+          <Text
+            type="secondary"
+            className="institution-invitation-modal__description"
+          >
+            {t("description")}
+          </Text>
+          <Text className="institution-invitation-modal__code">{code}</Text>
         </div>
         {!invitationId ? (
           <Alert type="error" showIcon title={t("invalid")} />

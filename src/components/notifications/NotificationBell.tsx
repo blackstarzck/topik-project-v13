@@ -48,7 +48,7 @@ type Props = {
   affiliationCode?: string | null;
 };
 
-type InvitationSubmitAction = "accept" | "decline";
+type InvitationSubmitAction = "accept";
 
 type InvitationModalState = {
   invitation: InstitutionInvitationPayload;
@@ -165,14 +165,13 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
     }
   }
 
-  async function handleInvitationResponse(accept: boolean) {
+  async function handleInvitationResponse() {
     const invitationId = invitationModal?.invitation.invitationId;
     if (!invitationId) return;
 
-    const submitAction: InvitationSubmitAction = accept ? "accept" : "decline";
-    setInvitationSubmitting(submitAction);
+    setInvitationSubmitting("accept");
     try {
-      const result = await respondInstitutionInvitation(invitationId, accept);
+      const result = await respondInstitutionInvitation(invitationId, true);
       const status = resolveInstitutionInvitationStatus(result);
       setInvitationModal((prev) => {
         if (!prev) return prev;
@@ -346,8 +345,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
         affiliationCode={affiliationCode}
         status={invitationModal?.status ?? null}
         submitting={invitationSubmitting}
-        onAccept={() => void handleInvitationResponse(true)}
-        onDecline={() => void handleInvitationResponse(false)}
+        onAccept={() => void handleInvitationResponse()}
         onSignIn={() => router.push(APP_ROUTES.login as never)}
         onClose={() => {
           setInvitationModal(null);
