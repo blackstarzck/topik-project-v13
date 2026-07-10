@@ -2,11 +2,14 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -361,7 +364,7 @@ describe("registry capability containment", () => {
     });
 
     expect(capability.recordDir).toBe(
-      join(codexHome, "worktree-lifecycle", "talkpik-v13"),
+      join(realpathSync.native(codexHome), "worktree-lifecycle", "talkpik-v13"),
     );
     expect(capability.kind).toBe("production");
 
@@ -422,6 +425,113 @@ describe("registry capability containment", () => {
       createTestRegistryCapability({ registryRoot, repoId: "talkpik-v13" }),
     ).toThrow(/TEST_REGISTRY_ROOT_REQUIRED/);
     expect(existsSync(registryRoot)).toBe(false);
+  });
+
+  it("canonicalizes a temp-internal directory alias before containment checks", () => {
+    const root = createTempRoot();
+    const target = join(root, "target");
+    const alias = join(root, "alias");
+    mkdirSync(target, { recursive: true });
+    symlinkSync(target, alias, process.platform === "win32" ? "junction" : "dir");
+
+    const capability = createTestRegistryCapability({
+      registryRoot: join(alias, "registry"),
+      repoId: "talkpik-v13",
+    });
+
+    expect(capability.registryRoot).toBe(join(realpathSync.native(target), "registry"));
+    expect(capability.recordDir).toBe(
+      join(realpathSync.native(target), "registry", "talkpik-v13"),
+    );
+  });
+
+  it("rejects a temp-internal alias whose canonical target escapes the temp root", () => {
+    const root = createTempRoot();
+    const alias = join(root, "outside-alias");
+    symlinkSync(
+      process.cwd(),
+      alias,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+
+    expect(() =>
+      createTestRegistryCapability({
+        registryRoot: join(alias, "registry"),
+        repoId: "talkpik-v13",
+      }),
+    ).toThrow(/TEST_REGISTRY_ROOT_REQUIRED/);
+    expect(existsSync(join(process.cwd(), "registry"))).toBe(false);
+  });
+
+  it.runIf(process.platform === "win32")(
+    "treats a DOS 8.3 short path and its canonical long path as one temp location",
+    () => {
+      const root = createTempRoot("v13 lifecycle short path ");
+      const canonicalRoot = realpathSync.native(root);
+      const shortRoot = execFileSync(
+        "cmd.exe",
+        ["/d", "/c", "for %I in (.) do @echo %~sI"],
+        { cwd: canonicalRoot, encoding: "utf8" },
+      ).trim();
+
+      expect(shortRoot.toLowerCase()).not.toBe(canonicalRoot.toLowerCase());
+
+      const capability = createTestRegistryCapability({
+        registryRoot: join(shortRoot, "registry"),
+        repoId: "talkpik-v13",
+      });
+
+      expect(capability.registryRoot).toBe(join(canonicalRoot, "registry"));
+    },
+  );
+
+  it("rejects a production CODEX_HOME alias that resolves inside a protected worktree", () => {
+    const root = createTempRoot();
+    const worktree = join(root, "repo");
+    const gitCommonDir = join(worktree, ".git");
+    const codexHomeAlias = join(root, "codex-home-alias");
+    mkdirSync(gitCommonDir, { recursive: true });
+    symlinkSync(
+      worktree,
+      codexHomeAlias,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+    process.env.CODEX_HOME = codexHomeAlias;
+
+    expect(() =>
+      createProductionRegistryCapability({
+        repoId: "talkpik-v13",
+        gitCommonDir,
+        worktreePaths: [worktree],
+      }),
+    ).toThrow(/CODEX_HOME_INVALID/);
+    expect(existsSync(join(worktree, "worktree-lifecycle"))).toBe(false);
+  });
+
+  it("rejects an existing production registry junction outside CODEX_HOME without writing through it", () => {
+    const root = createTempRoot();
+    const codexHome = join(root, "codex-home");
+    const external = join(root, "external");
+    const worktree = join(root, "repo");
+    const gitCommonDir = join(worktree, ".git");
+    mkdirSync(codexHome, { recursive: true });
+    mkdirSync(external, { recursive: true });
+    mkdirSync(gitCommonDir, { recursive: true });
+    symlinkSync(
+      external,
+      join(codexHome, "worktree-lifecycle"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
+    process.env.CODEX_HOME = codexHome;
+
+    expect(() =>
+      createProductionRegistryCapability({
+        repoId: "talkpik-v13",
+        gitCommonDir,
+        worktreePaths: [worktree],
+      }),
+    ).toThrow(/REGISTRY_PATH_ESCAPE/);
+    expect(readdirSync(external)).toEqual([]);
   });
 
   it("uses case-insensitive overlap checks for Windows canonical paths", () => {

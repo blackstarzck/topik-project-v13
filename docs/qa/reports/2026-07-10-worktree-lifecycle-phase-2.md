@@ -46,13 +46,13 @@ Phase 2의 최소 task registry, 상태 전이, read-only inventory와 보수적
 ## Verification evidence
 
 - RED: 두 production module이 없을 때 전용 Vitest 2개가 `ERR_MODULE_NOT_FOUND`로 실패함을 확인
-- GREEN: `pnpm check:worktree-lifecycle` — 2 files, 83 tests passed
-- Full regression: `pnpm test` — 255 files passed, 7 skipped; 1,820 tests passed, 14 skipped; 147.35 seconds
+- GREEN: `pnpm check:worktree-lifecycle` — 2 files, 88 tests passed
+- Full regression: `pnpm test` — 255 files passed, 7 skipped; 1,825 tests passed, 14 skipped; 142.88 seconds
 - Actual report: 25 entries, snapshot stable, 0 review candidates
 - Before/after: worktree porcelain unchanged, refs unchanged, current status unchanged
 - Registry fault fixtures: write/fsync/rename failure, concurrent revision, read-during-write, corrupt target preservation, foreign lock replacement
 - Registry boundary fixtures: explicit test capability, invalid production `CODEX_HOME`, full-schema validation, safe public projection
-- Windows path fixtures: case-insensitive containment, reserved/UNC/ADS/traversal ID, junction escape, reserved filename stem
+- Windows path fixtures: case-insensitive containment, DOS 8.3/long-path identity, canonical ancestor plus lexical suffix, temp-internal alias, temp-external escape, production exact-child junction rejection, reserved/UNC/ADS/traversal ID, reserved filename stem
 - Parser fixtures: spaces, Unicode, CRLF, rename/copy, detached, locked, prunable, bare, malformed output, command failure, double-scan race
 - CLI integration: a valid `--registry-root` is loaded without cleanup authority or secret-bearing registry fields in output
 - Schema boundary: closed predicates are exported instead of mutable transition/state collections

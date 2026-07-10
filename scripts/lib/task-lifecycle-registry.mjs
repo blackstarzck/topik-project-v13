@@ -111,7 +111,25 @@ function samePath(first, second, platform = process.platform) {
 }
 
 function realpathIfExists(value) {
-  return existsSync(value) ? realpathSync.native(value) : path.resolve(value);
+  return existsSync(value) ? realpathSync.native(value) : canonicalPlannedPath(value);
+}
+
+function canonicalPlannedPath(value) {
+  // Canonicalize the deepest existing ancestor (including Windows 8.3 aliases)
+  // while keeping only the not-yet-created suffix as a lexical path plan.
+  const resolved = path.resolve(value);
+  let existingAncestor = resolved;
+  const missingSegments = [];
+
+  while (!existsSync(existingAncestor)) {
+    const parent = path.dirname(existingAncestor);
+    if (parent === existingAncestor) break;
+    missingSegments.unshift(path.basename(existingAncestor));
+    existingAncestor = parent;
+  }
+
+  const canonicalAncestor = realpathSync.native(existingAncestor);
+  return path.join(canonicalAncestor, ...missingSegments);
 }
 
 function assertNoSymlinkAt(value, expectedPath) {
@@ -133,7 +151,7 @@ function createCapability({
   worktreePaths = [],
 }) {
   if (!isValidIdentifier(repoId)) throw new RegistryError("INVALID_IDENTIFIER");
-  const plannedRoot = path.resolve(registryRoot);
+  const plannedRoot = canonicalPlannedPath(registryRoot);
   const plannedRecordDir = path.join(plannedRoot, repoId);
   for (const protectedPath of protectedPaths) {
     const canonicalProtected = realpathIfExists(protectedPath);
@@ -209,7 +227,10 @@ export function createProductionRegistryCapability(options) {
     canonicalExistingDirectory(worktreePath, "PROTECTED_WORKTREE_INVALID"),
   );
   const registryRoot = path.join(canonicalCodexHome, "worktree-lifecycle");
-  return createCapability({
+  if (existsSync(registryRoot)) {
+    assertNoSymlinkAt(registryRoot, registryRoot);
+  }
+  const capability = createCapability({
     kind: "production",
     registryRoot,
     repoId,
@@ -217,17 +238,21 @@ export function createProductionRegistryCapability(options) {
     gitCommonDir: canonicalGitCommonDir,
     worktreePaths: canonicalWorktreePaths,
   });
+  if (!samePath(capability.registryRoot, registryRoot)) {
+    throw new RegistryError("REGISTRY_PATH_ESCAPE");
+  }
+  return capability;
 }
 
 export function createTestRegistryCapability({ registryRoot, repoId, protectedPaths = [] }) {
-  const plannedRoot = path.resolve(registryRoot);
+  const plannedRoot = canonicalPlannedPath(registryRoot);
   const canonicalTemp = realpathSync.native(tmpdir());
   if (!pathContains(canonicalTemp, plannedRoot)) {
     throw new RegistryError("TEST_REGISTRY_ROOT_REQUIRED");
   }
   return createCapability({
     kind: "test",
-    registryRoot,
+    registryRoot: plannedRoot,
     repoId,
     protectedPaths,
   });
