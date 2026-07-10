@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import {
   createE2EAdminClient,
-  ensureE2EStudentUser,
+  findE2EStudentUserId,
   resolveE2EStudentConfig,
 } from "../_setup/e2e-student-fixture";
 
@@ -31,6 +31,7 @@ const koMessages = JSON.parse(
 
 const REMINDER_TITLE = koMessages.app.phoneReminder.title;
 const DISMISS_LABEL = koMessages.app.phoneReminder.dismiss;
+const LEGACY_SESSION_SUPPRESS_KEY = "talkpik.phoneReminderModalDismissed";
 
 const config = resolveE2EStudentConfig();
 const admin: SupabaseClient = createClient(
@@ -43,11 +44,10 @@ let studentId = "";
 let columnReady = false;
 
 test.beforeAll(async () => {
-  const ensured = await ensureE2EStudentUser(
+  studentId = await findE2EStudentUserId(
     createE2EAdminClient(config),
-    config,
+    config.email,
   );
-  studentId = ensured.userId;
   const probe = await admin
     .from("profiles")
     .select("phone_country_code, phone_number_prompt_dismissed_at")
@@ -90,6 +90,18 @@ test("opens on a direct-URL landing to a non-dashboard page", async ({
   page,
 }) => {
   await page.goto("/library", { waitUntil: "networkidle" });
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByText(REMINDER_TITLE)).toBeVisible();
+});
+
+test("ignores session suppression left by another account", async ({ page }) => {
+  await page.goto("/library", { waitUntil: "networkidle" });
+  await page.evaluate((legacyKey) => {
+    window.sessionStorage.setItem(legacyKey, "1");
+    window.sessionStorage.setItem(`${legacyKey}:another-user`, "1");
+  }, LEGACY_SESSION_SUPPRESS_KEY);
+
+  await page.reload({ waitUntil: "networkidle" });
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByText(REMINDER_TITLE)).toBeVisible();
 });

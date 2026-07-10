@@ -3,14 +3,18 @@
 import { App, Button, Modal } from "antd";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { APP_ROUTES } from "@/lib/routes";
 import { dismissPhoneNumberPrompt } from "@/lib/settings/mutations";
 
 /** Session-scoped suppression so the modal shows at most once per browser session. */
-const SESSION_SUPPRESS_KEY = "talkpik.phoneReminderModalDismissed";
+const SESSION_SUPPRESS_KEY_PREFIX = "talkpik.phoneReminderModalDismissed";
 const SESSION_SUPPRESS_EVENT = "talkpik:phone-reminder-session-suppressed";
+
+function getSessionSuppressKey(userId: string) {
+  return `${SESSION_SUPPRESS_KEY_PREFIX}:${userId}`;
+}
 
 /**
  * Routes where the modal must NOT interrupt: the profile editor itself (where
@@ -34,10 +38,10 @@ function isExcludedRoute(pathname: string) {
   );
 }
 
-function readSessionSuppressed() {
+function readSessionSuppressed(userId: string) {
   if (typeof window === "undefined") return false;
   try {
-    return window.sessionStorage.getItem(SESSION_SUPPRESS_KEY) === "1";
+    return window.sessionStorage.getItem(getSessionSuppressKey(userId)) === "1";
   } catch {
     return false;
   }
@@ -49,12 +53,16 @@ function readServerSessionSuppressed() {
   return true;
 }
 
-function subscribeToSessionSuppressed(onStoreChange: () => void) {
+function subscribeToSessionSuppressed(
+  userId: string,
+  onStoreChange: () => void,
+) {
   if (typeof window === "undefined") return () => {};
 
+  const sessionSuppressKey = getSessionSuppressKey(userId);
   const hydrationTick = window.setTimeout(onStoreChange, 0);
   const handleStorageChange = (event: StorageEvent) => {
-    if (event.key === SESSION_SUPPRESS_KEY) onStoreChange();
+    if (event.key === sessionSuppressKey) onStoreChange();
   };
 
   window.addEventListener("storage", handleStorageChange);
@@ -66,10 +74,10 @@ function subscribeToSessionSuppressed(onStoreChange: () => void) {
   };
 }
 
-function writeSessionSuppressed() {
+function writeSessionSuppressed(userId: string) {
   if (typeof window === "undefined") return false;
   try {
-    window.sessionStorage.setItem(SESSION_SUPPRESS_KEY, "1");
+    window.sessionStorage.setItem(getSessionSuppressKey(userId), "1");
     window.dispatchEvent(new Event(SESSION_SUPPRESS_EVENT));
     return true;
   } catch {
@@ -103,9 +111,18 @@ export function PhoneNumberReminderModal({
   const t = useTranslations("app.phoneReminder");
   const { message } = App.useApp();
   const router = useRouter();
+  const subscribeToCurrentUserSuppression = useCallback(
+    (onStoreChange: () => void) =>
+      subscribeToSessionSuppressed(userId, onStoreChange),
+    [userId],
+  );
+  const readCurrentUserSuppression = useCallback(
+    () => readSessionSuppressed(userId),
+    [userId],
+  );
   const sessionSuppressed = useSyncExternalStore(
-    subscribeToSessionSuppressed,
-    readSessionSuppressed,
+    subscribeToCurrentUserSuppression,
+    readCurrentUserSuppression,
     readServerSessionSuppressed,
   );
   const [locallySuppressed, setLocallySuppressed] = useState(false);
@@ -118,7 +135,7 @@ export function PhoneNumberReminderModal({
     eligible && !sessionSuppressed && !locallySuppressed && !permanentlyDismissed;
 
   function suppressForSession() {
-    if (!writeSessionSuppressed()) {
+    if (!writeSessionSuppressed(userId)) {
       // sessionStorage unavailable (e.g. privacy mode). Fall back to the
       // in-memory close below; the modal simply may reappear on a full reload.
     }

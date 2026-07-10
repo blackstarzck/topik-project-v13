@@ -280,6 +280,7 @@ export function WorkspaceShell({
       {phoneNumber === undefined ||
       phoneNumberPromptDismissedAt === undefined ? null : (
         <PhoneNumberReminderModal
+          key={userId}
           userId={userId}
           phoneNumber={phoneNumber}
           phoneNumberPromptDismissedAt={phoneNumberPromptDismissedAt}

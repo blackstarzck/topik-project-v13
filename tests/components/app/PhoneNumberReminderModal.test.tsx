@@ -21,7 +21,11 @@ vi.mock("next/navigation", () => ({
 import { PhoneNumberReminderModal } from "../../../src/components/app/PhoneNumberReminderModal";
 
 const reminder = koMessages.app.phoneReminder;
-const SESSION_KEY = "talkpik.phoneReminderModalDismissed";
+const LEGACY_SESSION_KEY = "talkpik.phoneReminderModalDismissed";
+
+function sessionKey(userId: string) {
+  return `${LEGACY_SESSION_KEY}:${userId}`;
+}
 
 function renderModal(
   props: Partial<Parameters<typeof PhoneNumberReminderModal>[0]> = {},
@@ -87,7 +91,7 @@ describe("PhoneNumberReminderModal", () => {
   });
 
   it("stays closed for the rest of the session once suppressed", () => {
-    window.sessionStorage.setItem(SESSION_KEY, "1");
+    window.sessionStorage.setItem(sessionKey("user-1"), "1");
     renderModal({ pathname: "/dashboard" });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
@@ -96,7 +100,24 @@ describe("PhoneNumberReminderModal", () => {
     renderModal({ pathname: "/dashboard" });
     fireEvent.click(await screen.findByRole("button", { name: reminder.cta }));
     expect(pushMock).toHaveBeenCalledWith("/profile");
-    expect(window.sessionStorage.getItem(SESSION_KEY)).toBe("1");
+    expect(window.sessionStorage.getItem(sessionKey("user-1"))).toBe("1");
+  });
+
+  it("does not suppress a new account after another account closed the modal", async () => {
+    const firstAccount = renderModal({ userId: "user-1" });
+    fireEvent.click(await screen.findByRole("button", { name: reminder.cta }));
+    expect(window.sessionStorage.getItem(sessionKey("user-1"))).toBe("1");
+    expect(window.sessionStorage.getItem(sessionKey("user-2"))).toBeNull();
+    firstAccount.unmount();
+
+    renderModal({ userId: "user-2" });
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+  });
+
+  it("ignores the legacy account-agnostic suppression key", async () => {
+    window.sessionStorage.setItem(LEGACY_SESSION_KEY, "1");
+    renderModal({ userId: "user-2" });
+    expect(await screen.findByRole("dialog")).toBeTruthy();
   });
 
   it("permanently dismisses via 'don't show again'", async () => {
