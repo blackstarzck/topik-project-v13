@@ -50,6 +50,7 @@ Phase 4는 기존 UI 부채를 한 번에 실패시키지 않고, 현재 상태�
 - `node scripts/check-ui-contract.mjs --mode diff-block`: `LOCAL_NOT_BASE_AUTHORITY`, 신규 위반 0, exit 0
 - `pnpm exec vitest run tests/scripts/check-ui-contract.test.mjs --reporter=verbose --maxWorkers=1`: 57개 fixture 통과
 - `pnpm exec eslint scripts/check-ui-contract.mjs scripts/lib/ui-contract.mjs tests/scripts/check-ui-contract.test.mjs`: 경고·오류 0
+- GitHub Actions `29098875643`: Linux `typecheck / test / lint / build`와 Windows lifecycle job 통과, bootstrap marker `BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF`, 신규 위반 0
 
 ## Phase 5 우선순위
 

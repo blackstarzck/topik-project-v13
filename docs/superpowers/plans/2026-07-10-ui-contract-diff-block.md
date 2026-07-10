@@ -325,7 +325,7 @@ Record total/rule/path counts, `global.css` selector and declaration counts, zer
 - [x] Confirm product route output and `src/styles/global.css` bytes are unchanged; this policy/checker phase does not substitute Playwright evidence for a runtime change
 - [x] Independent critic rechecks AST boundaries, selector/declaration freeze, baseline swap/undercut/poisoning, env-to-CLI authority, bootstrap classification, exception approval authority/cardinality, output redaction, collector containment, Windows path behavior, and SOT/Phase 5 boundary
 - [x] Re-run targeted tests after critic fixes
-- [ ] Commit with Lore trailers, push `codex/workflow-overhaul`, update draft PR #39 against `main`, and read CI result; never target or modify `collab`
+- [x] Commit with Lore trailers, push `codex/workflow-overhaul`, update draft PR #39 against `main`, and read successful CI run `29098875643`; never target or modify `collab`
 
 ### Task 10A: critic NO-GO remediation
 
