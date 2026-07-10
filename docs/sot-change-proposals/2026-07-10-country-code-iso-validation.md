@@ -2,7 +2,7 @@
 
 작성일: 2026-07-10
 
-상태: implementation brief (구현 전 승인 필요). net-new data rule이므로 승인 전에는 구현하지 않는다.
+상태: 승인·구현 완료 (2026-07-10). 사용자 승인 후 migration `20260710095000_profiles_country_code_iso_check.sql`로 구현했다. 아래 "결정 기록 (2026-07-10)" 참조. 원격 apply는 v13에서 수행하지 않고 운영 절차 소관이다.
 
 ## 배경
 
@@ -56,3 +56,11 @@ RPC 내부 검증/정규화 (`complete_auth_gate` 계열):
 
 - **현행 유지(정규식)**: 앱이 이미 막으므로 사용자 경로 위험은 낮음. 그러나 직접 RPC/API·향후 신규 경로에서 무결성 보장 없음. 감사에서 지적된 갭이라 강화 권장.
 - **앱 계층만 강화**: 이미 강화돼 있어 추가 이득 없음. DB 갭이 핵심.
+
+## 결정 기록 (2026-07-10)
+
+- **결정**: 사용자 승인으로 국가코드 ISO 검증 강화를 구현. migration `20260710095000_profiles_country_code_iso_check.sql`.
+- **무엇을**: IMMUTABLE `public.is_supported_country_code(text)`(249개 ISO 3166-1 alpha-2 집합)를 추가하고, 실제로 느슨했던 `profiles_phone_country_code_check`를 정규식 `^[A-Z]{2}$`에서 ISO 집합으로 강화. `profiles_nationality_country_code_format`는 이미 동일 249배열을 강제하고 있었으므로(20260617195000) 같은 함수로 **단일 소스화**(무동작-변경). 두 CHECK 모두 `null` 허용 유지, `NOT VALID → VALIDATE`.
+- **이유/근거**: 앱 `ISO_COUNTRY_CODES`(country-flag-icons@1.6.17 파생 249개)와 20260617195000 정적 배열이 **완전 동일**(249==249, zero-diff)함을 확인. dev 실데이터(197행) 국가코드가 전부 유효 ISO(비-ISO 0건, phone 전부 null)라 backfill 불필요·VALIDATE 안전. 감사가 지적한 "DB가 ZZ 등 허용" 갭은 실제로는 phone 컬럼에만 존재했다.
+- **검토한 대안(제외)**: (a) RPC/트리거(`handle_new_user`, `complete_auth_gate` 오버로드)의 `^[A-Z]{2}$` 정규식까지 ISO로 강화 → base `complete_auth_gate(text,text,text,boolean)` 재작성이 `20260710094000`의 신뢰-동의문서 필터를 훼손해 consent 무한 바운스 회귀 위험이 커서 제외([[consent-gate-untrusted-doc-bounce]]). CHECK를 권위 있는 backstop으로 두는 최소 변경을 채택하고, RPC 정규식 강화는 후속 선택 작업으로 남김(앱이 이미 ISO로 선검증하므로 앱 경로 도달 불가·fail-closed). (b) phone CHECK에 배열 인라인 → nationality와 사본 2벌 유지되어 함수 단일화보다 열위.
+- **검증**: 249코드가 앱·기존 nationality 배열과 zero-diff, dev 15개 코드 전부 포함, 적대적 검증 SOUND. 원격 apply(운영)에서 실효.
