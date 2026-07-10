@@ -21,17 +21,16 @@ UI 작업은 다음을 함께 확인한다.
 
 새 화면을 만들기 전에 화면 유형을 고른다.
 
-| Recipe | 기본 구조 |
-| --- | --- |
-| Authenticated workspace | `WorkspaceShell`의 `<main>` + `WorkspaceBody` |
-| Workspace header | 기존 `PageHeader` 또는 report 계열 `ReportPageHeader` |
-| Fixed workspace action | `WorkspaceFixedActionBar` |
-| Settings/form | `WorkspaceBody size="form"` + 기존 settings shell/pattern |
-| Focused task gate | `WorkspaceBody size="task"` |
-| Default dashboard/list/detail | `WorkspaceBody size="workspace"` |
-| Dense data page | 근거가 있을 때 `wide` |
-| Editor/canvas | 의도적으로 전체 폭이 필요할 때만 `full` |
-| Public/auth | 기존 `PageContainer` pattern |
+| Recipe | Shell/body | Header/surface/action/state owner |
+| --- | --- | --- |
+| `workspace` | `WorkspaceShell`의 `<main>` + `WorkspaceBody size="workspace"` | `PageHeader` 또는 report 계열 `ReportPageHeader`; `AppCard`; 고정 action은 `WorkspaceFixedActionBar`; 상태는 기존 AntD feedback component |
+| `form` | `WorkspaceShell` + `WorkspaceBody size="form"` | 기존 settings/form header와 `Form`; submit action은 form 또는 정렬된 fixed action owner; validation/disabled/error를 함께 설계 |
+| `reading` | `WorkspaceShell` + 약 760px semantic reading body | `PageHeader`; 16px 이상·약 1.7 line-height의 본문; 문서 계약만 존재하며 첫 Phase 5 consumer 전에는 unused runtime API를 추가하지 않음 |
+| `task` | `WorkspaceShell` + `WorkspaceBody size="task"` | focused prompt/editor 또는 gate가 주 surface; 진행/확인 action과 loading/success/error owner를 명시 |
+| `wide` | `WorkspaceShell` + `WorkspaceBody size="wide"` | dense table/report처럼 추가 폭의 근거가 있을 때만 사용; header와 action은 workspace 규칙 유지 |
+| `full` | `WorkspaceShell` + `WorkspaceBody size="full"` | editor/canvas처럼 의도적으로 전체 폭이 필요한 surface만 허용; focus와 overflow 검증 필수 |
+| `public/auth` | 기존 `PageContainer` pattern | 기존 public/auth header, form, feedback owner를 재사용하며 workspace shell과 섞지 않음 |
+| `empty/error` | 독립 width recipe가 아니라 부모 recipe를 그대로 유지 | `Empty`, `Result`, `Alert` 또는 기존 wrapper가 상태를 소유하고 다음 행동을 제공; 새 shell/card를 만들지 않음 |
 
 Workspace route에 별도 `<main>`이나 `PageContainer`를 추가하지 않는다. 같은 recipe의 sibling 화면과 heading, action, card, spacing 위계를 비교한다.
 
@@ -79,17 +78,35 @@ theme은 하나의 project source에서 두 adapter로 투영한다.
 
 신규 page-specific `global.css` selector와 broad `.ant-*` override는 금지한다. 기존 부채 때문에 무관한 PR을 실패시키지 않도록 rollout은 다음 순서를 따른다.
 
-1. `report`: 기존 baseline과 신규 위반을 구분해 보고
-2. `diff-block`: 새로 추가된 위반만 차단
-3. `enforce`: baseline이 제거된 영역부터 전체 계약 적용
+| 목적 | 명령 | 권한과 판정 |
+| --- | --- | --- |
+| 현재 부채 읽기 | `pnpm report:ui-contract` | read-only 보고다. candidate baseline의 최신 여부를 승인하거나 CI 통과를 증명하지 않는다. |
+| 신규 부채 차단 | `pnpm check:ui-contract` | candidate가 current source와 정확히 일치해야 하고, CI에서는 base commit의 baseline을 ratchet authority로 사용한다. |
+| 기준선 갱신 | `node scripts/check-ui-contract.mjs --mode report --write-baseline config/ui-contract-baseline.json` | 최초 bootstrap, 승인된 scanner migration, 또는 검증된 Phase 5 부채 감소에서만 사용한다. 부채 감소 PR은 제거된 fingerprint만 같은 PR의 baseline에서 함께 줄여야 하며, 일반 PR에서 baseline을 늘리는 도구가 아니다. |
+
+최초 CI bootstrap은 base commit에 baseline·approval·active-exception 세 파일이 모두 없고 candidate의 두 exception manifest가 비어 있을 때만 허용한다. 세 파일 중 일부만 존재하면 fail closed다. baseline이 merge된 뒤에는 base commit이 유일한 기존 부채 권한이다.
+
+예외가 정말 필요하면 두 PR로 나눈다.
+
+1. 첫 PR에서 exact `path` / `ruleId` / `fingerprint` approval을 추가하고 merge한다.
+2. 다음 PR에서 source 변경과 exact active exception을 함께 제출한다.
+
+다음을 금지한다.
+
+- current source보다 많은 위반을 담도록 baseline을 늘리거나 기존 fingerprint를 바꿔치기하는 일
+- 같은 CI PR에서 새 approval을 추가해 그 PR의 위반을 숨기는 일
+- glob, wildcard, selector pattern처럼 범위가 넓은 exception
+- 별도 STRICT 계획·fixture·migration 증거 없이 `scannerVersion: 1`을 바꾸는 일
+
+로컬 exception preview는 작성 중 정책을 확인하는 advisory 기능일 뿐이다. `LOCAL_NOT_BASE_AUTHORITY`가 표시된 로컬 PASS를 CI authorization 증거로 사용하지 않는다.
 
 CSS exception은 다음을 모두 가진다.
 
-- path/selector pattern
+- exact path, known rule ID, exact fingerprint
 - owner
 - token/prop/scoped provider로 해결되지 않은 이유
 - created date
-- expires date 또는 removal condition
+- 90일 이내 expires date와 removal condition
 - regression evidence
 
 ## 6. STRICT remediation lane
@@ -102,6 +119,7 @@ CSS exception은 다음을 모두 가진다.
 4. 한 PR에 한 화면/recipe 범위를 유지한다.
 5. 관련 상태와 sibling hierarchy를 검증한다.
 6. 사용하지 않는 selector를 삭제한다.
+7. 제거된 fingerprint만 반영하도록 baseline을 같은 PR에서 갱신하고 `pnpm check:ui-contract`로 current source와 exact 일치를 확인한다.
 
 새 token, recipe, shell 변경이 필요하면 remediation lane을 멈추고 별도 설계 검토를 받는다.
 

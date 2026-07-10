@@ -865,6 +865,17 @@ Codex Desktop cleanup mode를 `report`로 유지한 채 최소 task registry, sy
 
 Phase 1 promotion은 branch 삭제나 `global.css` 대규모 수정을 승인하는 것이 아니다. Phase별 구현·검증·Git 반영은 각 변경 범위와 현재 안전 조건을 다시 확인한다.
 
+### Phase 4 구현 이력 — 2026-07-10
+
+기존 UI 부채를 즉시 실패시키지 않으면서 새 부채만 차단하는 diff baseline 계약을 구현했다.
+
+- TypeScript compiler API와 PostCSS AST를 사용해 React inline style, arbitrary visual Tailwind 값, raw visual token, 보호된 AntD surface 우회, workspace recipe 누락, global CSS selector/declaration 부채를 구조적으로 수집한다.
+- candidate baseline은 current source와 정확히 일치해야 하고, CI는 base commit의 baseline을 ratchet authority로 사용한다. 초기 3-file bootstrap 뒤에는 candidate가 기준선을 늘리거나 바꿔치기할 수 없다.
+- 예외는 exact path/rule/fingerprint approval을 먼저 merge한 뒤 다음 PR에서 source/active exception을 적용하는 두 단계로 제한했다. wildcard와 같은-PR CI suppression은 허용하지 않는다.
+- active UI owner는 `DESIGN.md`, `docs/agent-workflow/ui.md`, `docs/ant-design/07-review-checklist.md`로 유지한다. proposal은 `superseded` 상태를 유지하며 registry path/status 변경은 없다.
+- 제품 runtime UI와 `src/styles/global.css`는 Phase 4에서 변경하지 않았다. 실제 selector 이관은 화면별 Phase 5 STRICT remediation에서 desktop/mobile 회귀 증거와 함께 수행한다.
+- 검증 근거: `docs/qa/reports/2026-07-10-ui-contract-baseline.md`, `docs/superpowers/plans/2026-07-10-ui-contract-diff-block.md`
+
 ## 20. SOT 체크
 
 - 읽은 공통 진입 문서: `AGENTS.md`, `README.md`

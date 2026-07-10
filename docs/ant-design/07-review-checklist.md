@@ -58,6 +58,13 @@ Use this checklist before calling UI work complete.
 ## Layout
 
 - [ ] The page uses an app/workspace structure, not a marketing hero.
+- [ ] A documented Page Recipe (`workspace`, `form`, `reading`, `task`, `wide`,
+      `full`, or `public/auth`) was selected before adding layout code.
+- [ ] Workspace routes reuse `WorkspaceBody`, `PageHeader` or
+      `ReportPageHeader`, and existing surface/action owners instead of adding a
+      second `<main>`, page container, or ad-hoc common layout.
+- [ ] Empty and error views inherit the parent Page Recipe and provide the next
+      action; they do not introduce a new width or shell.
 - [ ] Navigation is stable and predictable.
 - [ ] The primary task is visible and visually dominant.
 - [ ] Cards are not nested inside cards.
@@ -72,6 +79,21 @@ Use this checklist before calling UI work complete.
       `Card` `title`/`extra`, not custom header rows inside the body.
 - [ ] Mobile layout has no horizontal overflow.
 - [ ] Text does not overlap controls or other text.
+
+## UI Contract Evidence
+
+- [ ] `pnpm report:ui-contract` was used when a debt inventory was needed; its
+      output was not treated as CI authorization.
+- [ ] `pnpm check:ui-contract` passes with no new or increased fingerprint.
+- [ ] No baseline increase, wildcard exception, or same-PR CI approval bypass
+      was introduced.
+- [ ] Any scanner-version change has its own STRICT plan, migration fixtures,
+      and separately reviewed baseline transition.
+- [ ] UI output changes were rendered at desktop and mobile viewports and the
+      relevant interactions and loading/empty/success/error/disabled states
+      were exercised with scoped Playwright evidence.
+- [ ] For policy/checker-only changes, runtime UI and global style files are
+      unchanged; Playwright is not run only when this boundary is demonstrated.
 
 ## Feedback States
 
