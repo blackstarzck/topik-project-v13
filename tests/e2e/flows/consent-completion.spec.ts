@@ -231,8 +231,15 @@ async function selectCountryRegion(page: Page, label: string) {
     .click();
 }
 
+function genderOption(page: Page, label: string) {
+  // AntD Radio.Button renders the native <input type="radio"> at 0x0 size, so
+  // Playwright treats it as not-visible (and click/toBeVisible fail). Target the
+  // visible label wrapper (.ant-radio-button-wrapper) filtered by its text.
+  return page.locator(".ant-radio-button-wrapper").filter({ hasText: label });
+}
+
 async function selectGender(page: Page, label: string) {
-  await page.getByRole("radio", { name: label }).click();
+  await genderOption(page, label).click();
 }
 
 async function attachEvidenceScreenshot(
@@ -330,8 +337,8 @@ test("auth completion gate renders profile fields and current required consent d
       /talkpik-/,
     );
     await expect(page.getByTestId("auth-consent-country-select")).toBeVisible();
-    await expect(page.getByRole("radio", { name: "남성" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "여성" })).toBeVisible();
+    await expect(genderOption(page, "남성")).toBeVisible();
+    await expect(genderOption(page, "여성")).toBeVisible();
     await expect(page.getByLabel(/전화번호/)).toBeVisible();
     await expect(page.locator('input[name="accept"]')).toHaveCount(1);
     await expectNoCurrentRequiredConsents(tempData);
