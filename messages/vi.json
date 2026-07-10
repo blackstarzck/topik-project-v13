@@ -2710,7 +2710,7 @@
       "heading": "Chính sách bảo mật",
       "intro": "Trang này là thông báo tạm thời về việc xử lý thông tin cá nhân của DOTORE TOPIK. Chính sách bảo mật chính thức sẽ phản ánh việc tuân thủ Luật Bảo vệ Thông tin Cá nhân của Hàn Quốc và được công bố riêng trước khi ra mắt.",
       "summaryTitle": "Tóm tắt việc xử lý (tạm thời)",
-      "summaryCollect": "<strong>Dữ liệu thu thập:</strong> email, tên, nhật ký hoạt động học tập, bài viết nộp, kết quả đánh giá.",
+      "summaryCollect": "<strong>Dữ liệu thu thập:</strong> email, tên, số điện thoại (tùy chọn), giới tính (tùy chọn), nhật ký hoạt động học tập, bài viết nộp, kết quả đánh giá.",
       "summaryPurpose": "<strong>Mục đích sử dụng:</strong> nhận dạng tài khoản, theo dõi tiến độ học tập, cải thiện chất lượng phản hồi AI.",
       "summaryRetention": "<strong>Thời gian lưu trữ:</strong> bị hủy ngay khi rút khỏi tài khoản. Thống kê học tập có thể được lưu giữ ở dạng ẩn danh sau khi loại bỏ thông tin nhận dạng.",
       "summaryThirdParty": "<strong>Chia sẻ với bên thứ ba:</strong> không có. Tuy nhiên, khi gọi mô hình AI, nội dung bài viết nộp được truyền tạm thời đến nhà cung cấp LLM bên ngoài (chính sách lưu trữ sau khi mô hình phản hồi tuân theo điều khoản của nhà cung cấp mô hình).",

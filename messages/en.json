@@ -2710,7 +2710,7 @@
       "heading": "Privacy Policy",
       "intro": "This page is a provisional notice on personal data handling for DOTORE TOPIK. The formal privacy policy will reflect compliance with Korea's Personal Information Protection Act and be published separately before launch.",
       "summaryTitle": "Summary of processing (provisional)",
-      "summaryCollect": "<strong>Data collected:</strong> email, name, learning activity logs, writing submissions, evaluation results.",
+      "summaryCollect": "<strong>Data collected:</strong> email, name, phone number (optional), gender (optional), learning activity logs, writing submissions, evaluation results.",
       "summaryPurpose": "<strong>Purpose of use:</strong> account identification, tracking learning progress, improving AI feedback quality.",
       "summaryRetention": "<strong>Retention period:</strong> destroyed immediately upon account withdrawal. Learning statistics may be retained in anonymized form after identifying information is removed.",
       "summaryThirdParty": "<strong>Third-party sharing:</strong> none. However, when an AI model is called, the body of a writing submission is transiently transmitted to an external LLM provider (the retention policy after the model responds is governed by the model provider's terms).",
