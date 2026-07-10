@@ -56,6 +56,7 @@ Phase 2의 최소 task registry, 상태 전이, read-only inventory와 보수적
 - Parser fixtures: spaces, Unicode, CRLF, rename/copy, detached, locked, prunable, bare, malformed output, command failure, double-scan race
 - CLI integration: a valid `--registry-root` is loaded without cleanup authority or secret-bearing registry fields in output
 - Schema boundary: closed predicates are exported instead of mutable transition/state collections
+- Remote Windows validation: run `29091266548` exposed a DOS 8.3/canonical-path mismatch; after canonical-ancestor and production exact-child guards were added, GitHub Actions run `29092192264` passed the Windows lifecycle job
 
 ## Phase 2A handoff
 

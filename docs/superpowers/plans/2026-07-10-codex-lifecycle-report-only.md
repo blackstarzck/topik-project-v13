@@ -123,8 +123,8 @@
 - [x] Run: `git diff --check` and secret-like filename/content checks on the candidate diff.
 - [x] 실제 report CLI 실행 전후 worktree porcelain, refs, current status snapshot을 비교해 Git/worktree/branch 변화가 0건인지 확인한다.
 - [x] 독립 critic이 unsafe-safe classification, hidden destructive path, registry path escape, Windows path handling을 검토하고 Critical/Important 0건까지 수정한다.
-- [ ] GitHub Actions의 Windows 전용 job에서 두 lifecycle test를 실행해 Windows path/rename 동작을 검증한다.
-- [ ] 기존 사용자 publish 권한 범위에서 `main` 대상 draft PR #39의 같은 branch에 commit/push하고 PR 본문을 갱신한다. `collab`은 건드리지 않는다.
+- [x] GitHub Actions의 Windows 전용 job에서 두 lifecycle test를 실행해 Windows path/rename 동작을 검증한다.
+- [x] 기존 사용자 publish 권한 범위에서 `main` 대상 draft PR #39의 같은 branch에 commit/push하고 PR 본문을 갱신한다. `collab`은 건드리지 않는다.
 
 ## Rollback
 
