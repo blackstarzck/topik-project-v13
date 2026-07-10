@@ -81,14 +81,14 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 
 ## 배포 브랜치 보호
 
-`collab` 브랜치는 Vercel에 연결된 배포 브랜치다. `collab`에 merge 또는 push되면 사용자에게 바로 노출될 수 있으므로, 모든 AI 에이전트는 아래 규칙을 비협상으로 따른다.
+Vercel 프로덕션 배포는 **keduall 저장소의 `main` 브랜치**에 연결돼 있다. 이 작업 폴더에서 keduall 저장소는 git remote 이름 **`collab`**(별칭)으로 등록돼 있다. 즉 이 저장소 맥락에서 `collab`은 브랜치가 아니라 **keduall 배포 저장소를 가리키는 remote 이름**이다. remote `collab`의 `main`(= keduall `main`)에 merge 또는 push되면 Vercel 프로덕션이 갱신돼 사용자에게 바로 노출되므로, 모든 AI 에이전트는 아래 규칙을 비협상으로 따른다.
 
-- 사용자가 `main에 머지`, `git에 올려`, `push해`, `PR 만들어`, `배포해`라고 말해도 기본 대상은 절대 `collab`이 아니다.
-- `collab`으로 merge, rebase, push, force-push, PR target 변경, `git push origin HEAD:collab`, `git push origin main:collab` 같은 작업을 하지 않는다.
-- `collab`을 대상으로 하는 Git 작업은 사용자가 정확히 `collab에 배포`, `collab 브랜치에 merge`, `collab으로 push`처럼 브랜치 이름과 배포 의도를 명시한 경우에만 고려한다.
-- 그래도 `collab` 대상 작업은 바로 실행하지 않는다. 먼저 `collab은 Vercel 배포 브랜치라 즉시 노출됩니다`라고 경고하고, 변경 범위, 검증 결과, secret 점검 결과를 보고한 뒤 명시 확인을 받아야 한다.
-- Git 작업 전에는 항상 `git branch --show-current`, `git status --short --branch`, push/merge/PR 대상 브랜치를 확인한다. 대상에 `collab`이 포함되면 위 조건을 만족하지 않는 한 중단한다.
-- 자동화, 스크립트, subagent, 외부 도구가 `collab`에 쓰려고 해도 같은 규칙을 적용한다. 애매하면 fail closed로 중단하고 사용자에게 보고한다.
+- 사용자가 `main에 머지`, `git에 올려`, `push해`, `PR 만들어`, `배포해`라고 말해도 기본 대상은 절대 keduall 배포 저장소(remote `collab`)의 `main`이 아니다. 기본 대상은 `origin`(blackstarzck) 또는 기능 branch다.
+- keduall 배포 저장소를 대상으로 merge, rebase, push, force-push, PR target 변경, `git push collab main`, `git push collab HEAD:main`, `git push collab <branch>:main` 같은 작업을 임의로 하지 않는다.
+- keduall(remote `collab`)의 `main`을 대상으로 하는 Git 작업은 사용자가 정확히 `collab에 배포`, `keduall main에 배포`, `collab의 main으로 push`처럼 대상 저장소와 배포 의도를 명시한 경우에만 고려한다.
+- 그래도 keduall 배포 대상 작업은 바로 실행하지 않는다. 먼저 `keduall 배포 저장소(remote collab)의 main은 Vercel 프로덕션이라 즉시 노출됩니다`라고 경고하고, 변경 범위, 검증 결과, secret 점검 결과를 보고한 뒤 명시 확인을 받아야 한다.
+- Git 작업 전에는 항상 `git branch --show-current`, `git status --short --branch`, `git remote -v`로 push/merge/PR 대상 **remote와 branch**를 확인한다. 대상이 keduall(remote `collab`)의 `main`이면 위 조건을 만족하지 않는 한 중단한다.
+- 자동화, 스크립트, subagent, 외부 도구가 keduall 배포 저장소(remote `collab`)의 `main`에 쓰려고 해도 같은 규칙을 적용한다. 애매하면 fail closed로 중단하고 사용자에게 보고한다.
 
 ## 구현 규칙
 
@@ -132,7 +132,7 @@ Codex와 모든 AI 에이전트는 이 문서를 프로젝트 작업 계약으�
 - 문서/비코드 요청에서 "읽기", "검토", "정리", "요약", "제안"은 기본적으로 채팅 응답만 반환한다. 새 파일/폴더 생성은 사용자가 명시적으로 요청했거나, 생성할 경로와 목적을 먼저 제시해 승인받은 경우에만 한다.
 - 사용자 또는 다른 도구가 만든 변경을 임의로 되돌리지 않는다. 이미 수정된 worktree에서는 내가 만든 변경과 기존 변경을 구분한다.
 - 병렬 AI 작업은 같은 프로젝트 폴더에서 진행하지 않고, 반드시 `한 작업/세션 = 한 branch = 한 worktree` 원칙을 따른다. 자세한 기준은 `병렬 작업과 worktree 격리` 섹션을 우선한다.
-- `collab` 브랜치는 Vercel 배포 브랜치이므로 명시적인 `collab` 배포 요청과 별도 확인 없이는 merge, push, PR target으로 사용하지 않는다. 자세한 기준은 `배포 브랜치 보호` 섹션을 우선한다.
+- keduall 배포 저장소(git remote `collab`)의 `main`은 Vercel 프로덕션 배포 대상이므로, 명시적인 배포 요청과 별도 확인 없이는 merge, push, PR target으로 사용하지 않는다. 자세한 기준은 `배포 브랜치 보호` 섹션을 우선한다.
 - Git 저장소가 아닌 경우 장기 변경 추적이 어렵다는 사실을 사용자에게 알린다. 사용자가 명시적으로 요청하지 않으면 `git init`을 실행하지 않는다.
 - 사용자 동의 없이 브랜치를 만들지 않는다.
 - 작업 후 Git 반영 절차는 반드시 확인한다. 변경 범위와 검증 결과를 보고한 뒤 사용자 승인에 따라 stage/commit/push/PR을 수행한다. 사용자가 이미 commit/push/PR을 명시한 경우에도 검증과 secret 점검 후 진행한다.

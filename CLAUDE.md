@@ -38,10 +38,10 @@ worktree는 코드 파일을 격리하지만 포트, 로컬 DB, Supabase 테스�
 
 ## 배포 브랜치 보호
 
-`collab` 브랜치는 Vercel에 연결된 배포 브랜치다. `collab`에 merge 또는 push되면 사용자에게 바로 노출될 수 있으므로 아래 규칙을 반드시 지킨다.
+Vercel 프로덕션 배포는 **keduall 저장소의 `main` 브랜치**에 연결돼 있다. 이 작업 폴더에서 keduall 저장소는 git remote 이름 **`collab`**(별칭)으로 등록돼 있다. 즉 이 저장소 맥락에서 `collab`은 브랜치가 아니라 **keduall 배포 저장소를 가리키는 remote 이름**이다. remote `collab`의 `main`(= keduall `main`)에 merge 또는 push되면 Vercel 프로덕션이 갱신돼 사용자에게 바로 노출되므로 아래 규칙을 반드시 지킨다.
 
-- 사용자가 `main에 머지`, `git에 올려`, `push해`, `PR 만들어`, `배포해`라고 말해도 기본 대상은 절대 `collab`이 아니다.
-- `collab`으로 merge, rebase, push, force-push, PR target 변경, `git push origin HEAD:collab`, `git push origin main:collab` 같은 작업을 하지 않는다.
-- `collab` 대상 작업은 사용자가 정확히 `collab에 배포`, `collab 브랜치에 merge`, `collab으로 push`처럼 브랜치 이름과 배포 의도를 명시한 경우에만 고려한다.
-- 그래도 바로 실행하지 않는다. 먼저 `collab은 Vercel 배포 브랜치라 즉시 노출됩니다`라고 경고하고, 변경 범위, 검증 결과, secret 점검 결과를 보고한 뒤 명시 확인을 받아야 한다.
-- Git 작업 전에는 `git branch --show-current`, `git status --short --branch`, push/merge/PR 대상 브랜치를 확인한다. 대상에 `collab`이 포함되면 위 조건을 만족하지 않는 한 중단한다.
+- 사용자가 `main에 머지`, `git에 올려`, `push해`, `PR 만들어`, `배포해`라고 말해도 기본 대상은 절대 keduall 배포 저장소(remote `collab`)의 `main`이 아니다. 기본 대상은 `origin`(blackstarzck) 또는 기능 branch다.
+- keduall 배포 저장소를 대상으로 merge, rebase, push, force-push, PR target 변경, `git push collab main`, `git push collab HEAD:main`, `git push collab <branch>:main` 같은 작업을 임의로 하지 않는다.
+- keduall(remote `collab`)의 `main` 대상 작업은 사용자가 정확히 `collab에 배포`, `keduall main에 배포`, `collab의 main으로 push`처럼 대상 저장소와 배포 의도를 명시한 경우에만 고려한다.
+- 그래도 바로 실행하지 않는다. 먼저 `keduall 배포 저장소(remote collab)의 main은 Vercel 프로덕션이라 즉시 노출됩니다`라고 경고하고, 변경 범위, 검증 결과, secret 점검 결과를 보고한 뒤 명시 확인을 받아야 한다.
+- Git 작업 전에는 `git branch --show-current`, `git status --short --branch`, `git remote -v`로 push/merge/PR 대상 **remote와 branch**를 확인한다. 대상이 keduall(remote `collab`)의 `main`이면 위 조건을 만족하지 않는 한 중단한다.
