@@ -146,4 +146,4 @@
 - [x] `git diff --check`, staged secret scan, ignored mirror 비포함을 확인한다.
 - [x] 독립 reviewer가 Critical / Important / Minor 0건으로 판정할 때까지 수정한다.
 - [x] superseded proposal의 status·권한은 바꾸지 않고 Phase 1B 구현 이력만 append한다.
-- [ ] 현재 사용자 요청이 publish를 명시적으로 포함하면 active contract의 intent-first commit 형식으로 기록하고 기존 draft PR을 갱신한다. 권한이 없으면 verified diff 보고에서 멈춘다.
+- [x] 현재 사용자 요청이 publish를 명시적으로 포함하면 active contract의 intent-first commit 형식으로 기록하고 기존 draft PR을 갱신한다. 권한이 없으면 verified diff 보고에서 멈춘다.

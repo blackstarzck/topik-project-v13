@@ -846,6 +846,19 @@ Phase 1 promotion 뒤 repo-local 실행 skill이 active workflow보다 더 넓�
 
 이 이력 추가는 proposal의 `superseded` 상태를 바꾸지 않으며, Phase 2 guarded cleanup이나 제품 동작 변경을 승인하지 않는다.
 
+### Phase 2 구현 이력 — 2026-07-10
+
+Codex Desktop cleanup mode를 `report`로 유지한 채 최소 task registry, synthetic lifecycle transition, read-only worktree inventory와 보수적 분류기를 구현했다.
+
+- lifecycle state와 inventory disposition을 분리하고 report mode에서 `FINALIZING`, `CLEANED`, `cleanupAuthorized=true`를 거부한다.
+- production registry root는 `$CODEX_HOME/worktree-lifecycle/<repo-id>`로 제한하고 test는 OS temp capability만 사용한다. 이번 검증에서 실제 `$CODEX_HOME` write는 0건이다.
+- registry PR/owner 값은 display hint로만 취급한다. fresh GitHub API, process/port/file-lock, clean/ignored/owner/head 증거가 모두 없으면 `REVIEW_CANDIDATE`가 될 수 없다.
+- report CLI는 registry writer, network, scheduler, cleanup capability를 import하지 않으며 exact read-only Git argv와 NUL-delimited porcelain을 사용한다.
+- 실제 25개 worktree 재수집 결과는 모두 `NEEDS_ATTENTION`, `REVIEW_CANDIDATE` 0개였다. 실행 전후 worktree 목록, refs, current status는 동일했다.
+- 검증 근거: `docs/qa/reports/2026-07-10-worktree-lifecycle-phase-2.md`, `docs/superpowers/plans/2026-07-10-codex-lifecycle-report-only.md`
+
+이 구현은 cleanup lease, monitor, supervisor, task archive, worktree/branch 삭제를 활성화하지 않는다. Phase 2A의 사용자 검토와 별도 삭제 권한 없이 어떤 후보도 정리하지 않는다. proposal의 `superseded` 상태와 active owner는 바뀌지 않는다.
+
 Phase 1 promotion은 branch 삭제나 `global.css` 대규모 수정을 승인하는 것이 아니다. Phase별 구현·검증·Git 반영은 각 변경 범위와 현재 안전 조건을 다시 확인한다.
 
 ## 20. SOT 체크
