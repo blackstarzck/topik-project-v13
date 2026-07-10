@@ -8,7 +8,7 @@
 - Tables: 37 (36 v13 + 1 topik-ai shared)
 - RPC/functions: 41
 - Storage buckets: 3
-- Page data links: 135
+- Page data links: 136
 - Unclassified DB objects: 0
 
 > 집계 기준: Tables는 현재 v13 forward migration 테이블 36개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. v13 테이블 수에는 2026-07-08에 accepted된 PDF quota 테이블 4개와 `writing_submission_metrics`가 포함된다. RPC/functions에는 PDF quota RPC 3개가 포함된다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
@@ -168,7 +168,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| A-01 | Sign-up | table | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. |
+| A-01 | Sign-up | table | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status`, `gender`, `phone_country_code`, `phone_number` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. `gender`/`phone_country_code`/`phone_number`는 `/sign-up`에서 선택 입력한 값이 Auth signup metadata로 전달되면 `handle_new_user()`가 함께 저장한다(선택 항목, 미입력 시 null). |
 | A-02 | Login | table | `id`, `status`, `app_role` | read | 로그인 후 세션 사용자의 상태와 권한을 확인한다. |
 | A-03 | Learning goal setup | table | `id`, `ui_locale`, `status` | read | 사용자 기본 설정과 onboarding 상태 판단에 사용한다. |
 | B-01 | Home dashboard | table | `id`, `display_name`, `plan_label`, `status` | read | 대시보드 사용자 표시와 권한 상태에 사용한다. |
@@ -177,12 +177,12 @@
 | X-01 | Product landing | table | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA fallback과 사용자 상태 분기에 연결될 수 있다. |
 | X-03 | Paywall | table | `plan_label`, `status` | fallback read | 현재 플랜과 접근 제한 안내의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`와 `subscriptions`다. |
 | X-04 | Subscription management | table | `plan_label`, `status` | fallback read | 구독 상태 셸의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`, `subscriptions`, `payment_history`다. |
-| X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. |
+| X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status`, `phone_country_code`, `phone_number`, `phone_number_prompt_dismissed_at` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. `phone_country_code`/`phone_number`는 선택 입력 전화번호 조회·수정·삭제에 사용한다. `phone_number_prompt_dismissed_at`은 전화번호 없는 사용자에게 workspace 공통 shell에서 뜨는 비차단 안내 모달의 "다시 보지 않기"(영구 dismiss) 시각을 기록한다. |
 | X-06 | Password reset | table | `id`, `email`, `status` | read | 비밀번호 재설정 성공 후 사용자 상태 확인에 연결될 수 있다. |
 | X-09 | Notification settings | table | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
-| X-18 | Auth consent | table | `id`, `ui_locale` | read/bootstrap | 소셜 로그인 후 사용자 locale 기준으로 필수 법적 문서 동의 게이트를 구성한다. |
+| X-18 | Auth consent | table | `id`, `ui_locale`, `gender`, `phone_country_code`, `phone_number` | read/bootstrap + write via RPC | 소셜 로그인 후 사용자 locale 기준으로 필수 법적 문서 동의 게이트를 구성한다. 게이트 완료 시 `complete_auth_gate` RPC가 선택 입력한 `gender`/`phone_country_code`/`phone_number`를 같은 트랜잭션에서 저장한다(선택 항목). |
 
 ## subscription_plans
 
@@ -211,6 +211,7 @@
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | X-18 | Auth consent | table | `id`, `doc_type`, `version`, `locale`, `title`, `summary`, `body`, `effective_at`, `status`, `requires_consent` | read | 최신 published required 약관/개인정보 문서를 조회해 누락 동의 목록을 만든다. |
+| X-14 | Privacy policy | table | `id`, `doc_type`, `version`, `locale`, `title`, `summary`, `body`, `effective_at`, `status`, `is_placeholder`, `source_policy_id` | read | 발행된 privacy 문서를 locale 기준으로 조회해 표시하고, 없거나 placeholder면 정적 fallback 카드를 렌더링한다. |
 
 ## user_consents
 

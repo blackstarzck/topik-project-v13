@@ -48,3 +48,9 @@
 - Google People API 연동.
 - Google OAuth scope에 `user.gender.read`, `user.phonenumbers.read` 추가.
 - 기존 사용자에게 선택값 입력을 강제하는 리마인더 또는 게이트.
+
+## 결정 기록 (2026-07-10 accepted)
+
+- 사용자 승인으로 이 제안의 "갱신이 필요한 active SOT"를 직접 반영했다. 갱신 문서: `docs/Wireframe/data-usage-index.md`(A-01/X-05/X-18 profiles에 `gender`/`phone_country_code`/`phone_number` 역색인), `docs/Wireframe/01-A-01-sign-up/functional-spec.md`, `docs/Wireframe/40-X-18-auth-consent/functional-spec.md`.
+- 근거: 제안 기능은 이미 shipped(migration `20260709153000`/`20260709165000`, `SignUpForm.tsx`, `consent/actions.ts`)되어 있었고, 편집은 새 동작 도입이 아니라 구현·검증된 동작을 SOT에 정합화하는 reconciliation이다(각 화면 수용기준의 data-usage-index 역색인 요구 준수).
+- 성별 편집/리마인더는 [[2026-07-09-phone-number-profile-reminder]]가 전화번호 한정으로 supersede했으므로 X-05 편집에서 성별을 제외했다(범위 유지).
