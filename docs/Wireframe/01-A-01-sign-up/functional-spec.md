@@ -16,12 +16,13 @@
 - 기준 흐름: `docs/flow/user-flow.md`의 IA 순서를 따른다.
 - 진입 경로: X-01 제품 랜딩의 무료 시작 CTA, A-02 로그인의 회원가입 링크, 직접 `/sign-up` 접근.
 - 이탈 경로: 이메일 가입 성공 시 X-12 인증 메일 확인 안내로 이동하고, 인증 링크의 `/auth/callback?next=/onboarding/learning-goal` 처리 후 A-03 학습 목표 설정으로 이어진다. 소셜 가입/로그인은 `/auth/post-auth`에서 약관 동의와 학습 목표 상태를 확인한 뒤 X-18, A-03, B-01 중 하나로 이동한다. 약관/개인정보 링크는 X-13/X-14로 이동한다.
-- 화면 내부 동작: 입력값 검증, 약관 동의, 소셜 로그인 선택, 인증 메일 발송 실패/중복 이메일 오류 표시.
+- 화면 내부 동작: 입력값 검증, 약관 동의, 약관 단계에서 성별/전화번호 선택 입력(필수 아님, Auth metadata로 전달), 소셜 로그인 선택, 인증 메일 발송 실패/중복 이메일 오류 표시.
 
 ## 주요 기능
 
 - 이메일/비밀번호 입력
 - 약관 동의
+- 선택 입력(성별/전화번호): 비밀번호 확인까지 유효해 약관 단계가 열릴 때 함께 표시하며 둘 다 필수 아님
 - 가입 요청
 - 인증 메일 안내
 
@@ -37,8 +38,8 @@
 
 | 테이블/버킷/RPC | 컬럼/필드 | 사용 방식 | 화면 기능 | 권한/RLS | 근거 | 불확실성 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `profiles` | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. | public/auth flow; no user-owned row access unless session exists | `src/app/(workspace)/profile/page.tsx`<br>`src/lib/auth/profile.ts`<br>`src/lib/settings/mutations.ts` | none |
-| `rpc:public.handle_new_user` | - | trigger | auth.users 생성 후 public.profiles를 보강한다. | public/auth flow; no user-owned row access unless session exists | `supabase/migrations/20260521120000_auth_user_profile_bootstrap.sql` | none |
+| `profiles` | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status`, `gender`, `phone_country_code`, `phone_number` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. 약관 단계에서 선택 입력한 성별/전화번호는 Auth signup metadata로 전달되어 `handle_new_user()`가 함께 저장한다(선택, 미입력 시 null). | public/auth flow; no user-owned row access unless session exists | `src/components/auth/SignUpForm.tsx`<br>`src/components/shared/PhoneNumberInput.tsx`<br>`src/lib/auth/profile.ts` | none |
+| `rpc:public.handle_new_user` | - | trigger | auth.users 생성 후 public.profiles를 보강한다. | public/auth flow; no user-owned row access unless session exists | `supabase/migrations/20260521120000_auth_user_profile_bootstrap.sql`<br>`supabase/migrations/20260709153000_profiles_optional_gender_phone.sql`<br>`supabase/migrations/20260709165000_profiles_split_phone_country_code.sql` | none |
 
 ## 현재 구현 상태
 

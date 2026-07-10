@@ -67,3 +67,9 @@
 - 시간제한(예: N일) 재노출, 가입 코호트(email/Google/매직링크)별 분기.
 - `/profile` 저장 직후 same-session optimistic 모달 숨김.
 - 모달 노출 빈도 제어를 위한 알림 센터/대시보드 notice 통합.
+
+## 결정 기록 (2026-07-10 accepted)
+
+- 사용자 승인으로 이 제안의 "갱신이 필요한 active SOT"를 직접 반영했다. 갱신 문서: `docs/Wireframe/data-usage-index.md`(X-05 profiles에 `phone_country_code`/`phone_number`/`phone_number_prompt_dismissed_at` 역색인), `docs/Wireframe/27-X-05-profile-editing/functional-spec.md`(전화번호 편집 필드 + workspace 안내 모달 규칙).
+- 함께 정정한 drift: `docs/Wireframe/36-X-14-privacy-policy/functional-spec.md`가 "직접 DB 사용 근거 없음"으로 단정했으나 실제 `src/app/privacy/page.tsx`는 `legal_documents`를 조회하므로 read 사용을 반영. 개인정보 fallback 문구(ko/en/vi)에 전화번호·성별 선택 수집을 명시.
+- 근거: 기능은 이미 shipped(migration `20260709154000`, `ProfileForm.tsx`, `WorkspaceShell.tsx`, `PhoneNumberReminderModal.tsx`)되어 있었고 편집은 SOT 정합화 reconciliation이다.
