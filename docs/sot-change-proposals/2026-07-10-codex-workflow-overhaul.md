@@ -827,6 +827,25 @@ cleanup 실패는 성공으로 숨기지 않는다. task에 다음을 남긴다.
 - 현재 비허용: branch/worktree 자동 삭제, `global.css` 대규모 이관, cleanup enforce 활성화
 - 새 workflow 정책 문서는 `active`로 promotion했고, 이 proposal은 replacement ID와 함께 `superseded`로 보존한다.
 
+### Phase 1B 구현 이력 — 2026-07-10
+
+Phase 1 promotion 뒤 repo-local 실행 skill이 active workflow보다 더 넓은 Git·cleanup 권한을 암시하지 않도록 정렬했다.
+
+- 변경 대상: `brainstorming`, `subagent-driven-development`, `using-git-worktrees`, `finishing-a-development-branch`, `verification-before-completion`
+- 권한 결정: 설계 승인, 구현 할당, worktree 격리 동의, 완료 선택지, 검증 성공은 각각 별도의 branch/commit/push/PR/merge/cleanup 권한을 만들지 않는다.
+- cleanup 결정: Phase 2 lifecycle과 owner 증명이 끝나기 전까지 finish skill은 integration handoff와 `report-only` 보존만 제공한다.
+- 리뷰 결정: 전역의 안전 문구만 찾는 checker는 모순된 실행 지시를 가릴 수 있어, 실제 action line과 인접 gate를 검사하도록 보강했다.
+- 회귀 방지: `pnpm check:agent-skill-policy`와 전용 Vitest를 독립 CI step으로 연결하고 canonical `.codex/skills`를 ignored `.claude/skills` mirror에 동기화한다.
+- 근거: `docs/qa/reports/2026-07-10-agent-skill-policy-pressure.md`, `docs/superpowers/plans/2026-07-10-agent-skill-policy-alignment.md`
+
+검토하고 거절한 대안은 다음과 같다.
+
+- skill의 넓은 자동 실행 지시를 유지하고 상위 `AGENTS.md`만 믿는 방식: 하위 prompt가 상위 정책과 충돌하며 agent 판단에만 안전을 의존하므로 거절했다.
+- 완료 skill이 shared base checkout 통합과 정리를 직접 수행하는 방식: app-managed worktree ownership과 lifecycle 지속성이 아직 증명되지 않아 거절했다.
+- checker가 문서 어딘가의 `authority` 또는 `report-only` 문구만 확인하는 방식: 떨어진 위치의 모순된 action directive를 놓치므로 거절했다.
+
+이 이력 추가는 proposal의 `superseded` 상태를 바꾸지 않으며, Phase 2 guarded cleanup이나 제품 동작 변경을 승인하지 않는다.
+
 Phase 1 promotion은 branch 삭제나 `global.css` 대규모 수정을 승인하는 것이 아니다. Phase별 구현·검증·Git 반영은 각 변경 범위와 현재 안전 조건을 다시 확인한다.
 
 ## 20. SOT 체크

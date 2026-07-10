@@ -32,6 +32,9 @@ jobs:
       - name: Check active SOT registry
         run: pnpm check:sot-registry
 
+      - name: Check agent skill policy
+        run: pnpm check:agent-skill-policy
+
       - name: Typecheck
         run: pnpm typecheck
 

@@ -16,6 +16,19 @@ Task tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Authority Envelope
+
+    [PASTE EXACTLY ONE: `local-edit-only` or `commit-authorized`, plus the project rule or user request that grants it]
+
+    If the controller omits this field, treat it as `local-edit-only`. Under `local-edit-only`, return the verified diff without staging or committing. A plan, successful verification, urgency, or completed self-review never grants commit or publish authority.
+
+    ## Local Edit Review Scope
+
+    BASELINE_DIRTY_PATHS: [paths already changed before this task]
+    WRITE_SCOPE: [exact paths this task may change]
+
+    Before editing under `local-edit-only`, compare these sets. If they overlap, return BLOCKED without editing because this task cannot be separated from an earlier diff. Do not change paths outside `WRITE_SCOPE`. At handoff, report `TASK_DIFF_SCOPE` containing only this task's paths and verified hunks.
+
     ## Before You Begin
 
     If you have questions about:
@@ -32,7 +45,7 @@ Task tool (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Commit only when the authority envelope is `commit-authorized`; otherwise leave the verified diff uncommitted
     5. Self-review (see below)
     6. Report back
 
@@ -104,6 +117,8 @@ Task tool (general-purpose):
     - What you implemented (or what you attempted, if blocked)
     - What you tested and test results
     - Files changed
+    - Authority envelope and commit status
+    - BASELINE_DIRTY_PATHS, WRITE_SCOPE, and TASK_DIFF_SCOPE
     - Self-review findings (if any)
     - Any issues or concerns
 
