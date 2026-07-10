@@ -53,7 +53,7 @@ export function InstitutionInvitationModal({
 }: Props) {
   const t = useTranslations("notifications.institutionInvitation");
 
-  const code = invitation?.code ?? t("unknownCode");
+  const code = invitation?.code?.trim() || t("unknownCode");
   const currentAffiliation = affiliationCode?.trim() ?? "";
   const invitationId = invitation?.invitationId?.trim() ?? "";
   const invitedAffiliation = invitation?.code?.trim() ?? "";

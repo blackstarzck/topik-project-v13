@@ -368,12 +368,13 @@ describe("NotificationBell", () => {
     ).toBeNull();
   });
 
-  it("allows invitation acceptance when only the display code is missing", async () => {
+  it("allows invitation acceptance when the display code is blank", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification({
         payload: {
           kind: "institution_invitation",
           invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "   ",
           code_label: "캠페인 유입 유저",
         },
       }),
