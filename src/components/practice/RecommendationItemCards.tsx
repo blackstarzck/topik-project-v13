@@ -199,8 +199,12 @@ export function SecondaryRecommendationCard({
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
     <AppCard
-      className="h-full"
+      className="flex h-full flex-col"
       size="small"
+      classNames={{
+        body: "flex-1",
+        actions: "app-card-footer-actions app-card-footer-actions-compact",
+      }}
       title={
         card.questionNo
           ? tCommon("questionNo", { no: card.questionNo })
@@ -213,6 +217,12 @@ export function SecondaryRecommendationCard({
           </RecommendationBadge>
         ) : null
       }
+      actions={[
+        <Button key="continue" block href={ctaHref(card)}>
+          {t("continueProblem")}
+          <ArrowRight size={16} aria-hidden="true" />
+        </Button>,
+      ]}
     >
       <Text strong>{title}</Text>
       {card.reason ? (
@@ -221,14 +231,6 @@ export function SecondaryRecommendationCard({
         </Paragraph>
       ) : null}
       <WeaknessTags tags={card.weaknessTags} />
-      <div className="mt-3">
-        <Link href={ctaHref(card) as never}>
-          <Button block>
-            {t("continueProblem")}
-            <ArrowRight size={16} aria-hidden="true" />
-          </Button>
-        </Link>
-      </div>
     </AppCard>
   );
 }

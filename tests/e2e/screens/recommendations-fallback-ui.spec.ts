@@ -118,7 +118,7 @@ test("C-01 computed bundle renders an honest rule-based recommendation", async (
   await expect(page.getByText(STRINGS.secondaryTitle)).toBeVisible();
   await expect(page.getByText(STRINGS.unattemptedReason)).toBeVisible();
   await expect(
-    page.getByRole("button", { name: STRINGS.continueProblem }),
+    page.getByRole("link", { name: STRINGS.continueProblem }),
   ).toBeVisible();
 
   // Both cards link into the writing workspace with their problem ids.
@@ -162,9 +162,9 @@ test("C-01 shows loading skeletons while the computed bundle is in flight", asyn
   release?.();
 
   await expect(page.getByText(STRINGS.primaryBadge)).toBeVisible();
-  await expect(
-    page.getByTestId("recommendation-results-skeleton"),
-  ).toHaveCount(0);
+  await expect(page.getByTestId("recommendation-results-skeleton")).toHaveCount(
+    0,
+  );
 });
 
 test("C-01 surfaces the error state on a 500 and recovers via retry", async ({

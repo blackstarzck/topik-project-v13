@@ -4587,6 +4587,10 @@ body {
   text-align: left;
 }
 
+.app-card.app-surface .app-card-footer-actions-compact > li {
+  padding: 0 12px 12px;
+}
+
 .app-card.app-surface .app-card-footer-actions > li > span {
   display: block;
 }

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import koMessages from "../../../messages/ko.json";
 import { RecommendationsView } from "../../../src/components/practice/RecommendationsView";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -214,6 +214,64 @@ describe("RecommendationsView", () => {
     );
     expect(keyWarnings).toEqual([]);
     consoleErrorSpy.mockRestore();
+  });
+
+  it("places secondary recommendation CTAs in the card footer", () => {
+    mocks.useRecommendationBundle.mockReturnValue({
+      data: {
+        run: null,
+        items: [
+          {
+            itemId: "rec-51",
+            problemId: "problem-51",
+            rank: 1,
+            reason: "primary reason",
+            estimatedMinutes: 15,
+            weaknessTags: [],
+            title: "primary recommendation",
+            questionNo: 51,
+          },
+          {
+            itemId: "rec-52",
+            problemId: "problem-52",
+            rank: 2,
+            reason: "secondary reason 52",
+            estimatedMinutes: 25,
+            weaknessTags: [],
+            title: "secondary recommendation 52",
+            questionNo: 52,
+          },
+          {
+            itemId: "rec-53",
+            problemId: "problem-53",
+            rank: 3,
+            reason: "secondary reason 53",
+            estimatedMinutes: 30,
+            weaknessTags: [],
+            title: "secondary recommendation 53",
+            questionNo: 53,
+          },
+        ],
+        availableTypes: new Set([51, 52, 53]),
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderWithIntl(<RecommendationsView />);
+
+    const secondaryCard = screen
+      .getByText("secondary recommendation 52")
+      .closest(".ant-card");
+    expect(secondaryCard).toBeTruthy();
+
+    const continueLink = within(secondaryCard as HTMLElement).getByRole(
+      "link",
+      { name: koMessages.practice.recommendations.continueProblem },
+    );
+    expect(continueLink.closest(".ant-card-actions")).toBeTruthy();
+    expect(continueLink.closest(".ant-card-body")).toBeNull();
   });
 
   it("renders the honest empty state for a type filter with zero items", () => {
