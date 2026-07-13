@@ -7,10 +7,68 @@ const root = process.cwd();
 const workflow = readFileSync(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
 const codeowners = readFileSync(path.join(root, ".github", "CODEOWNERS"), "utf8");
 
+function checkoutStepBlocks(source) {
+  const lines = source.split(/\r?\n/u);
+  const blocks = [];
+
+  for (const [index, line] of lines.entries()) {
+    const usesMatch = line.match(/^(\s*)uses:\s*actions\/checkout@v4\s*$/u);
+    if (!usesMatch) continue;
+
+    const stepIndent = Math.max(0, usesMatch[1].length - 2);
+    const stepPrefix = `${" ".repeat(stepIndent)}- `;
+    let start = index;
+    while (start >= 0 && !lines[start].startsWith(stepPrefix)) start -= 1;
+    if (start < 0) continue;
+
+    let end = index + 1;
+    while (end < lines.length) {
+      const nextLine = lines[end];
+      const nextIndent = nextLine.match(/^\s*/u)?.[0].length ?? 0;
+      if (nextLine.trim() && nextIndent <= stepIndent) break;
+      end += 1;
+    }
+    blocks.push({ lines: lines.slice(start, end), propertyIndent: usesMatch[1].length });
+  }
+
+  return blocks;
+}
+
+function disablesCheckoutCredentialPersistence({ lines, propertyIndent }) {
+  const propertyPrefix = " ".repeat(propertyIndent);
+  const valuePrefix = " ".repeat(propertyIndent + 2);
+  const withIndex = lines.findIndex((line) => line === `${propertyPrefix}with:`);
+  if (withIndex < 0) return false;
+
+  for (const line of lines.slice(withIndex + 1)) {
+    const lineIndent = line.match(/^\s*/u)?.[0].length ?? 0;
+    if (line.trim() && lineIndent <= propertyIndent) break;
+    if (line === `${valuePrefix}persist-credentials: false`) return true;
+  }
+
+  return false;
+}
+
 describe("CI trusted UI contract boundary", () => {
   it("does not persist checkout credentials before candidate code runs", () => {
-    expect(workflow.match(/uses: actions\/checkout@v4/gu)).toHaveLength(2);
-    expect(workflow.match(/persist-credentials: false/gu)).toHaveLength(2);
+    const checkoutSteps = checkoutStepBlocks(workflow);
+
+    expect(checkoutSteps).toHaveLength(2);
+    for (const checkoutStep of checkoutSteps) {
+      expect(disablesCheckoutCredentialPersistence(checkoutStep)).toBe(true);
+    }
+  });
+
+  it("does not accept a misplaced credential setting outside checkout with", () => {
+    const tamperedWorkflow = workflow
+      .replace("          persist-credentials: false", "          persist-credentials: true")
+      .replace("          fetch-depth: 0", "          fetch-depth: 0\n        env:\n          persist-credentials: false");
+
+    const checkoutSteps = checkoutStepBlocks(tamperedWorkflow);
+
+    expect(checkoutSteps).toHaveLength(2);
+    expect(checkoutSteps.some(disablesCheckoutCredentialPersistence)).toBe(true);
+    expect(checkoutSteps.every(disablesCheckoutCredentialPersistence)).toBe(false);
   });
 
   it("runs the trusted check before enabling the candidate package manager", () => {
