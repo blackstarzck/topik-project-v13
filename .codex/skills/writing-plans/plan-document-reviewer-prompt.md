@@ -23,6 +23,7 @@ Task tool (general-purpose):
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
     | Task Decomposition | Tasks have clear boundaries, steps are actionable |
     | Buildability | Could an engineer follow this plan without getting stuck? |
+    | Git Authority | A plan never grants Git authority; every Git action is a verified diff checkpoint unless the current user or project contract grants the exact action |
 
     ## Calibration
 

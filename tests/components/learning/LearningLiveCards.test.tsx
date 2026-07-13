@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach } from "vitest";
 import { cleanup, screen } from "@testing-library/react";
+import dayjs from "dayjs";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import {
@@ -94,16 +95,14 @@ describe("RecentFeedbackCard i18n chrome", () => {
 describe("UpcomingExamCard i18n chrome", () => {
   it("renders the title and the D-day copy for a future exam", () => {
     // 10 days from now so daysLeft > 0 (the D-{days} ICU branch).
-    const future = new Date();
-    future.setDate(future.getDate() + 10);
-    const iso = future.toISOString().slice(0, 10);
+    const iso = dayjs().add(10, "day").format("YYYY-MM-DD");
     renderWithIntl(<UpcomingExamCard examDate={iso} />);
     expect(screen.getByText("예정된 시험")).toBeTruthy();
     expect(screen.getByText("남은 일수: D-10")).toBeTruthy();
   });
 
   it("renders the today copy when the exam is today", () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = dayjs().format("YYYY-MM-DD");
     renderWithIntl(<UpcomingExamCard examDate={today} />);
     expect(screen.getByText("남은 일수: 오늘")).toBeTruthy();
   });

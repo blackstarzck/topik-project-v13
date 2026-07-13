@@ -37,7 +37,7 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 **Option B: "Good enough" solution**
 - Use `await sleep(5000)` - seems to work
 - Add comment: "TODO: investigate why status update is slow"
-- Commit and go to dinner
+- Take the unsafe commit-and-dinner shortcut
 - File ticket to investigate later
 - At least those 4 hours weren't completely wasted
 

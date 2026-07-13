@@ -18,6 +18,14 @@ Task tool (general-purpose):
 
     [From implementer's report]
 
+    ## Review Scope
+
+    BASELINE_DIRTY_PATHS: [paths changed before this task]
+    WRITE_SCOPE: [allowed paths for this task]
+    TASK_DIFF_SCOPE: [task-owned paths and hunks]
+
+    If `BASELINE_DIRTY_PATHS` overlaps `WRITE_SCOPE`, or the implementation changed anything outside `WRITE_SCOPE`, report a scope violation instead of reviewing the cumulative working-tree diff.
+
     ## CRITICAL: Do Not Trust the Report
 
     The implementer finished suspiciously quickly. Their report may be incomplete,
@@ -29,7 +37,7 @@ Task tool (general-purpose):
     - Accept their interpretation of requirements
 
     **DO:**
-    - Read the actual code they wrote
+    - Read the actual code inside TASK_DIFF_SCOPE
     - Compare actual implementation to requirements line by line
     - Check for missing pieces they claimed to implement
     - Look for extra features they didn't mention

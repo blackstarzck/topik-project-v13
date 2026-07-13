@@ -207,6 +207,19 @@ describe("RecommendationsView", () => {
     ).toBeTruthy();
     expect(screen.queryByText("grammar")).toBeNull();
 
+    // Card-level CTAs belong to the Ant Design footer, not the content body.
+    const continueButtons = screen.getAllByRole("button", {
+      name: koMessages.practice.recommendations.continueProblem,
+    });
+    expect(continueButtons).toHaveLength(2);
+    for (const button of continueButtons) {
+      expect(button.closest(".ant-card-actions")).toBeTruthy();
+      expect(button.closest(".ant-card-body")).toBeNull();
+      expect(
+        button.closest(".ant-card")?.querySelector(".app-card-footer-actions"),
+      ).toBeTruthy();
+    }
+
     // Two secondary cards with null itemId — keys fall back to problemId, so
     // React must not log a duplicate-key warning.
     const keyWarnings = consoleErrorSpy.mock.calls.filter((call) =>

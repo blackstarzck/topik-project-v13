@@ -116,6 +116,20 @@ difficulty.
 | display-sm | 56px | 1.12 | — | `--text-display-sm` |
 | display | 64px | 1 | — | `--text-display` |
 
+### Runtime UI Hierarchy Contract
+
+아래 표는 현재 공통 컴포넌트의 runtime anchor와 앞으로 새 UI가 따라야 할 계약을 함께 정리한다. 기존 화면의 불일치는 Phase 5 remediation 대상으로 다루며, 새 화면에서 다시 복제하지 않는다.
+
+| Role | Contract |
+| --- | --- |
+| Page title | `PageHeader` 또는 report 계열 `ReportPageHeader`를 재사용한다. route의 주 제목은 의미상 `h1` 하나이며, 현재 공통 title의 24px / 1.35 / 600을 시각 anchor로 삼는다. 기존 wrapper의 heading semantics가 다르면 별도 remediation에서 고친다. |
+| Section title | 한 section에는 한 가지 목적만 두고 18px / 1.45 / 600을 기본 목표로 한다. page title과 경쟁하는 크기나 별도 display heading을 만들지 않는다. |
+| Card title | 카드 전체를 설명하는 title과 status/count는 `AppCard`의 `title` / `extra`를 사용한다. body 안에 같은 역할의 header row를 다시 만들지 않는다. |
+| Korean reading | 연속된 한국어 읽기 본문은 16px 이상, 약 1.7 line-height, 약 760px 읽기 폭을 목표로 한다. 새 `max-w-[...]` 임의값 대신 승인된 reading recipe 또는 semantic layout source를 사용한다. |
+| Helper/status | 현재 14px / 약 1.57 anchor와 semantic secondary token을 사용한다. 색만으로 의미나 상태를 전달하지 않는다. |
+
+한 task area에는 primary action을 하나만 둔다. Desktop에서는 공간이 허용될 때 title과 actions를 같은 header axis에 두고, mobile에서는 actions를 아래로 감싸되 title의 크기와 위계를 줄이지 않는다.
+
 ## Tokens — Spacing & Shapes
 
 **Base unit:** 4px

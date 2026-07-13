@@ -49,11 +49,21 @@ Step 1 for how each skill uses these signals.
 ## Codex App Finishing
 
 When the sandbox blocks branch/push operations (detached HEAD in an
-externally managed worktree), the agent commits all work and informs
-the user to use the App's native controls:
+externally managed worktree), the agent preserves the verified diff and
+informs the user to use the App's native controls:
 
 - **"Create branch"** — names the branch, then commit/push/PR via App UI
 - **"Hand off to local"** — transfers work to the user's local checkout
 
-The agent can still run tests, stage files, and output suggested branch
-names, commit messages, and PR descriptions for the user to copy.
+The agent can still run tests and output suggested branch names, commit
+messages, and PR descriptions for the user to copy. Git mutations require a
+current structured authority envelope whose action and target match the
+operation exactly:
+
+- `Authority envelope: action=stage; target=worktree; status=granted.`
+- `Authority envelope: action=commit; target=index; status=granted.`
+- `Authority envelope: action=push; target=<remote>:<ref>; status=granted.`
+- `Authority envelope: action=pr-create; target=<repo>:<base>; status=granted.`
+
+An envelope for one action or target never authorizes another. The protected
+`collab` deployment target remains prohibited as executable skill guidance.
