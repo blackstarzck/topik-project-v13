@@ -22,6 +22,32 @@ function isDigest(value) {
   return typeof value === "string" && /^[a-f0-9]{64}$/u.test(value);
 }
 
+function stableJson(value) {
+  if (Array.isArray(value)) return value.map(stableJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, stableJson(value[key])]),
+    );
+  }
+  return value;
+}
+
+export function computeBaselineApprovalDigest(baseline) {
+  const semanticBaseline = {
+    schemaVersion: baseline?.schemaVersion,
+    scannerVersion: baseline?.scannerVersion,
+    scannerDigest: baseline?.scannerDigest,
+    fingerprints: baseline?.fingerprints,
+    summaryByRule: baseline?.summaryByRule,
+    summaryByPath: baseline?.summaryByPath,
+  };
+  return createHash("sha256")
+    .update(JSON.stringify(stableJson(semanticBaseline)), "utf8")
+    .digest("hex");
+}
+
 export function computeScannerDigest({ rootDir }) {
   const hash = createHash("sha256");
   for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
@@ -54,6 +80,7 @@ export function validateScannerMigrationManifest(manifest) {
       migration.toVersion <= migration.fromVersion ||
       !isDigest(migration.fromDigest) ||
       !isDigest(migration.toDigest) ||
+      !isDigest(migration.toBaselineDigest) ||
       typeof migration.approvedBy !== "string" ||
       migration.approvedBy.trim().length === 0 ||
       typeof migration.reason !== "string" ||
@@ -99,7 +126,8 @@ export function selectScannerAuthority({
       migration.fromVersion === baseBaseline.scannerVersion &&
       migration.fromDigest === baseBaseline.scannerDigest &&
       migration.toVersion === candidateBaseline.scannerVersion &&
-      migration.toDigest === candidateDigest,
+      migration.toDigest === candidateDigest &&
+      migration.toBaselineDigest === computeBaselineApprovalDigest(candidateBaseline),
   );
   if (!approved) throw new ScannerTrustError("UI_SCANNER_MIGRATION_NOT_APPROVED");
   return "candidate";

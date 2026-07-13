@@ -881,7 +881,7 @@ Phase 1 promotion은 branch 삭제나 `global.css` 대규모 수정을 승인하
 아키텍처 BLOCK 리뷰에서 확인된 권한·검사기·SOT 소유권 우회를 active workflow 계약에 반영했다.
 
 - 실행 skill 검사는 고정 목록을 폐기하고 `.codex/skills/`의 실행 surface를 재귀적으로 찾는다. `writing-plans`와 `executing-plans`는 계획 승인이나 테스트 성공을 Git 권한으로 해석하지 않고, 권한이 없으면 stage/commit 단계를 verified diff checkpoint로 바꾼다.
-- UI scanner 변경은 source digest와 scanner version을 함께 관리하고, 기준 브랜치의 trusted runner 및 사전 merge된 migration approval 없이는 candidate scanner를 실행 권한으로 사용하지 않는다. 최초 bootstrap은 독립적으로 tamper-proof하지 않으므로 CODEOWNER 검토가 필요하다.
+- UI scanner 변경은 source digest와 scanner version을 함께 관리하고, 기준 브랜치의 trusted runner 및 사전 merge된 exact source·target-baseline migration approval 없이는 candidate scanner를 실행 권한으로 사용하지 않는다. migration approval은 `toBaselineDigest`까지 고정해 scanner version 변경으로 fingerprint namespace가 달라져도 candidate가 기준선을 임의로 재생성할 수 없게 한다. 최초 bootstrap은 독립적으로 tamper-proof하지 않으므로 CODEOWNER 검토가 필요하다.
 - raw visual token 탐지는 객체 literal뿐 아니라 JSX `color`·`fill`·`stroke`와 정적 식별자 binding까지 포함한다. 탐지 의미가 바뀌므로 scanner version과 baseline을 함께 migration한다.
 - `docs/sot-registry.json` schema v2의 `pathPrefix` 상속으로 `docs/Wireframe/`과 `docs/ant-design/` 하위 상세 계약의 lifecycle owner를 명시한다. exact path 등록은 prefix 상속보다 우선한다.
 

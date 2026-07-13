@@ -88,7 +88,7 @@ theme은 하나의 project source에서 두 adapter로 투영한다.
 
 최초 CI bootstrap은 base commit에 baseline·approval·active-exception·scanner-migration 네 파일이 모두 없고 candidate의 exception/migration manifest가 비어 있을 때만 허용한다. 네 파일 중 일부만 존재하면 fail closed다. baseline이 merge된 뒤에는 base commit의 기존 부채와 scanner digest가 권한이다.
 
-scanner source가 기준 브랜치와 다르면 같은 PR의 checker나 migration manifest는 권한이 아니다. 별도 PR에서 exact `fromVersion`/`fromDigest`/`toVersion`/`toDigest` migration approval을 먼저 merge해야 하며, CI는 기준 브랜치에서 추출한 trusted runner로 이 순서를 검사한다. source가 같으면 기준 브랜치 scanner를 실행하고, 사전 승인된 exact migration일 때만 candidate scanner를 실행한다. `CODEOWNERS`는 workflow·checker·config 변경의 소유자 리뷰를 지정하지만 실제 강제 여부는 GitHub branch protection 설정에 달려 있다.
+scanner source가 기준 브랜치와 다르면 같은 PR의 checker나 migration manifest는 권한이 아니다. 별도 PR에서 exact `fromVersion`/`fromDigest`/`toVersion`/`toDigest`와 target baseline의 semantic `toBaselineDigest` migration approval을 먼저 merge해야 하며, CI는 기준 브랜치에서 추출한 trusted runner로 이 순서를 검사한다. source가 같으면 기준 브랜치 scanner와 기존 fingerprint ratchet을 실행한다. 사전 승인된 exact migration이면 candidate scanner가 current source와 정확히 일치하는지 확인한 뒤, 이전 scanner version의 호환되지 않는 fingerprint 대신 사전 승인된 target baseline digest를 ratchet authority로 사용한다. `generatedAt`은 semantic digest에서 제외한다. `CODEOWNERS`는 workflow·checker·config 변경의 소유자 리뷰를 지정하지만 실제 강제 여부는 GitHub branch protection 설정에 달려 있다.
 
 예외가 정말 필요하면 두 PR로 나눈다.
 

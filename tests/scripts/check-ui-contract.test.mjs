@@ -22,6 +22,10 @@ import {
 } from "../../scripts/check-ui-contract.mjs";
 
 import {
+  computeBaselineApprovalDigest,
+} from "../../scripts/lib/ui-contract-trust.mjs";
+
+import {
   UI_CONTRACT_SCANNER_VERSION,
   applyUiContractExceptions,
   assertCandidateMatchesCurrent,
@@ -1279,9 +1283,15 @@ describe("UI contract collector, Git base, and CLI", () => {
 
   it("runs an exact version-increasing scanner migration approved on base", async () => {
     const root = createProject({
-      "src/example.tsx": "export const Example = () => <div />;",
+      "src/example.tsx": `export const Example = () => <div style={{ color: "#fff" }} />;`,
     });
-    const candidate = createUiContractBaseline([], {
+    const raw = scanUiContract([
+      source(
+        "src/example.tsx",
+        `export const Example = () => <div style={{ color: "#fff" }} />;`,
+      ),
+    ]);
+    const candidate = createUiContractBaseline(raw.violations, {
       generatedAt: "2026-07-10T00:00:00.000Z",
     });
     const baseDigest = "a".repeat(64);
@@ -1291,6 +1301,14 @@ describe("UI contract collector, Git base, and CLI", () => {
       }),
       scannerVersion: UI_CONTRACT_SCANNER_VERSION - 1,
       scannerDigest: baseDigest,
+      fingerprints: Object.fromEntries(
+        Object.values(candidate.fingerprints).map((count, index) => [
+          (index + 1).toString(16).padStart(64, "0"),
+          count,
+        ]),
+      ),
+      summaryByRule: candidate.summaryByRule,
+      summaryByPath: candidate.summaryByPath,
     };
     const approvedMigration = {
       schemaVersion: 1,
@@ -1300,6 +1318,7 @@ describe("UI contract collector, Git base, and CLI", () => {
           fromDigest: baseDigest,
           toVersion: candidate.scannerVersion,
           toDigest: candidate.scannerDigest,
+          toBaselineDigest: computeBaselineApprovalDigest(candidate),
           approvedBy: "@blackstarzck",
           reason: "Exercise the reviewed migration path.",
         },

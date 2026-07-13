@@ -345,6 +345,7 @@ export async function runUiContractCli(
     const baseRef = resolveBaseRef(options.baseRef, env, options.mode);
     const useCiAuthority = options.mode === "diff-block" && Boolean(baseRef);
     let baseTuple = null;
+    let scannerAuthority = null;
     let applied;
 
     if (useCiAuthority) {
@@ -420,7 +421,7 @@ export async function runUiContractCli(
     assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
     if (baseTuple && !baseTuple.bootstrap) {
       try {
-        selectScannerAuthority({
+        scannerAuthority = selectScannerAuthority({
           baseBaseline: baseTuple.baseline,
           candidateBaseline,
           candidateDigest: scannerDigest,
@@ -431,7 +432,7 @@ export async function runUiContractCli(
       }
     }
     const comparison =
-      baseTuple && !baseTuple.bootstrap
+      baseTuple && !baseTuple.bootstrap && scannerAuthority !== "candidate"
         ? compareAgainstBase(applied.violations, baseTuple.baseline)
         : { newViolations: [] };
     const marker = baseTuple?.bootstrap

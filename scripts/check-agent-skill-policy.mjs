@@ -239,7 +239,7 @@ function publishDirectives(content) {
     ...commandDirectives(content, /\bgh\s+pr\s+create\b/i),
     ...naturalDirectives(
       content,
-      /^(?:push|publish)\b|^(?:open|create)\s+(?:a\s+)?PR\b/i,
+      /^(?:push|publish)\b(?!\s+back\b)|^(?:open|create)\s+(?:a\s+)?PR\b/i,
     ),
   ];
 }
@@ -285,6 +285,80 @@ export function validateSkillPolicy({ skillName, content }) {
       issue(
         "GIT_MUTATION_AUTHORITY",
         "Executable skill surfaces must not stage or commit without exact current authority.",
+      ),
+    );
+  }
+
+  const publishes = publishDirectives(content);
+  if (publishes.length > 0 && hasUnguardedPublish(content)) {
+    issues.push(
+      issue(
+        "PUBLISH_AUTHORITY",
+        "Push and PR actions in every executable skill need an adjacent selected option, publish authority, and validated target.",
+      ),
+    );
+  }
+
+  const prDirectives = commandDirectives(content, /\bgh\s+pr\s+create\b/i);
+  if (
+    prDirectives.some(
+      (directive) => !/--base(?:\s+|=)\S+/i.test(actionBlock(directive)),
+    )
+  ) {
+    issues.push(
+      issue(
+        "PR_BASE_PINNING",
+        "PR creation in every executable skill must pin the verified non-deployment base explicitly.",
+      ),
+    );
+  }
+
+  const integrationDirectives = commandDirectives(
+    content,
+    /\bgit\s+(?:merge|rebase)\b/i,
+  );
+  const hasUnguardedIntegration = integrationDirectives.some((directive) => {
+    const guard = `${nearbyText(directive, 10)}\n${actionBlock(directive)}`;
+    return !hasPositiveGuard(guard, [
+      /user selected (?:the )?(?:merge|integration) option/i,
+      /current user or project contract grants? the exact action/i,
+      /exact (?:merge|rebase|integration) authority (?:is )?(?:present|granted|confirmed)/i,
+    ]);
+  });
+  if (hasUnguardedIntegration) {
+    issues.push(
+      issue(
+        "INTEGRATE_AUTHORITY",
+        "Merge and rebase actions in every executable skill require exact current integration authority.",
+      ),
+    );
+  }
+
+  const checkoutDirectives = commandDirectives(
+    content,
+    /\bgit\s+(?:checkout|switch|pull)\b/i,
+  );
+  if (
+    checkoutDirectives.some((directive) =>
+      !hasPositiveGuard(`${nearbyText(directive, 10)}\n${actionBlock(directive)}`, [
+        /current user or project contract grants? the exact action/i,
+        /exact (?:checkout|switch|pull|branch) authority (?:is )?(?:present|granted|confirmed)/i,
+      ]),
+    )
+  ) {
+    issues.push(
+      issue(
+        "GIT_MUTATION_AUTHORITY",
+        "Checkout, switch, and pull actions in every executable skill require exact current authority.",
+      ),
+    );
+  }
+
+  if (hasUnguardedWorktreeCreate(content)) {
+    issues.push(
+      issue(
+        "WORKTREE_CREATE_AUTHORITY",
+        "Worktree creation in every executable skill needs isolation consent, exact branch authority, and protected-branch checks at the action.",
       ),
     );
   }
@@ -428,15 +502,6 @@ export function validateSkillPolicy({ skillName, content }) {
   }
 
   if (skillName === "using-git-worktrees") {
-    if (hasUnguardedWorktreeCreate(content)) {
-      issues.push(
-        issue(
-          "WORKTREE_CREATE_AUTHORITY",
-          "Worktree creation needs isolation consent, exact branch authority, and protected-branch checks at the action.",
-        ),
-      );
-    }
-
     const commitsIgnoreChange =
       /\.gitignore/i.test(content) &&
       /\bcommit(?: the change)?\b/i.test(content);
@@ -493,46 +558,6 @@ export function validateSkillPolicy({ skillName, content }) {
   }
 
   if (skillName === "finishing-a-development-branch") {
-    const publishes = publishDirectives(content);
-    if (publishes.length > 0 && hasUnguardedPublish(content)) {
-      issues.push(
-        issue(
-          "PUBLISH_AUTHORITY",
-          "Push and PR actions need an adjacent selected option, publish authority, and validated target.",
-        ),
-      );
-    }
-
-    const prDirectives = commandDirectives(content, /\bgh\s+pr\s+create\b/i);
-    if (
-      prDirectives.some(
-        (directive) => !/--base(?:\s+|=)\S+/i.test(actionBlock(directive)),
-      )
-    ) {
-      issues.push(
-        issue(
-          "PR_BASE_PINNING",
-          "PR creation must pin the verified non-deployment base explicitly.",
-        ),
-      );
-    }
-
-    const integrationDirectives = commandDirectives(
-      content,
-      /\bgit\s+(?:merge|rebase)\b/i,
-    );
-    const selectedIntegration = hasPositiveGuard(content, [
-      /user selected (?:the )?(?:merge|integration) option/i,
-    ]);
-    if (integrationDirectives.length > 0 && !selectedIntegration) {
-      issues.push(
-        issue(
-          "INTEGRATE_AUTHORITY",
-          "Merge and rebase actions require a user-selected integration option.",
-        ),
-      );
-    }
-
     const sharedCheckoutCommands = commandDirectives(
       content,
       /\bgit\s+(?:checkout|switch|pull|merge|rebase)\b/i,

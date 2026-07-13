@@ -166,6 +166,45 @@ describe("validateSkillPolicy", () => {
     ).not.toContain("CONTROLLER_SELF_AUTHORITY");
   });
 
+  test("requires authority for Git mutations and publishing in every nested skill", () => {
+    for (const directive of [
+      command.runPush,
+      command.runCheckout,
+      command.runMerge,
+      `Run ${command.prCreate} --base main`,
+    ]) {
+      expect(issueIds("nested-executor", directive)).not.toEqual([]);
+    }
+
+    expect(
+      issueIds(
+        "nested-executor",
+        `Only after the user selects the publish option, publish authority is present, and the exact validated base is main: ${command.runPush}`,
+      ),
+    ).not.toContain("PUBLISH_AUTHORITY");
+    expect(
+      issueIds(
+        "nested-executor",
+        `The current user or project contract grants the exact action. ${command.runCheckout}`,
+      ),
+    ).not.toContain("GIT_MUTATION_AUTHORITY");
+
+    const staleIntegrationGuard = [
+      "The current user or project contract grants the exact action.",
+      ...Array.from({ length: 30 }, (_, index) => `Unrelated guidance ${index}.`),
+      command.runMerge,
+    ].join("\n");
+    expect(issueIds("nested-executor", staleIntegrationGuard)).toContain(
+      "INTEGRATE_AUTHORITY",
+    );
+    expect(
+      issueIds(
+        "nested-executor",
+        `The current user or project contract grants the exact action. ${command.runMerge}`,
+      ),
+    ).not.toContain("INTEGRATE_AUTHORITY");
+  });
+
   test("isolates local-edit-only review scope from earlier task diffs", () => {
     expect(
       issueIds(
