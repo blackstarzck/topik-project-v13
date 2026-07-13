@@ -6,7 +6,7 @@ import ts from "typescript";
 
 export const UI_CONTRACT_SCHEMA_VERSION = 1;
 export const UI_CONTRACT_BASELINE_SCHEMA_VERSION = 2;
-export const UI_CONTRACT_SCANNER_VERSION = 2;
+export const UI_CONTRACT_SCANNER_VERSION = 3;
 const TEST_SCANNER_DIGEST = "0".repeat(64);
 
 const SCRIPT_KINDS = new Map([
@@ -177,11 +177,11 @@ function isNonReferenceIdentifier(node) {
   return false;
 }
 
-function directLexicalBinding(scope, identifier) {
+function directLexicalBindingInfo(scope, identifier) {
   if (ts.isFunctionLike(scope)) {
     for (const parameter of scope.parameters) {
       if (ts.isIdentifier(parameter.name) && parameter.name.text === identifier) {
-        return parameter.initializer ?? parameter;
+        return { node: parameter.initializer ?? parameter, immutable: false };
       }
     }
   }
@@ -196,7 +196,10 @@ function directLexicalBinding(scope, identifier) {
   if (loopInitializer && ts.isVariableDeclarationList(loopInitializer)) {
     for (const declaration of loopInitializer.declarations) {
       if (ts.isIdentifier(declaration.name) && declaration.name.text === identifier) {
-        return declaration.initializer ?? declaration;
+        return {
+          node: declaration.initializer ?? declaration,
+          immutable: Boolean(loopInitializer.flags & ts.NodeFlags.Const),
+        };
       }
     }
   }
@@ -204,7 +207,27 @@ function directLexicalBinding(scope, identifier) {
     if (ts.isVariableStatement(statement)) {
       for (const declaration of statement.declarationList.declarations) {
         if (ts.isIdentifier(declaration.name) && declaration.name.text === identifier) {
-          return declaration.initializer ?? declaration;
+          return {
+            node: declaration.initializer ?? declaration,
+            immutable: Boolean(statement.declarationList.flags & ts.NodeFlags.Const),
+          };
+        }
+  if (
+    ts.isObjectBindingPattern(declaration.name) ||
+    ts.isArrayBindingPattern(declaration.name)
+  ) {
+    const binding = declaration.name.elements.find(
+      (element) =>
+        ts.isBindingElement(element) &&
+        ts.isIdentifier(element.name) &&
+        element.name.text === identifier,
+    );
+          if (binding) {
+            return {
+              node: binding,
+              immutable: Boolean(statement.declarationList.flags & ts.NodeFlags.Const),
+            };
+          }
         }
       }
     }
@@ -212,13 +235,13 @@ function directLexicalBinding(scope, identifier) {
       (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) &&
       statement.name?.text === identifier
     ) {
-      return statement;
+      return { node: statement, immutable: false };
     }
   }
   return null;
 }
 
-function nearestLexicalBinding(identifierNode) {
+function nearestLexicalBindingInfo(identifierNode) {
   for (let scope = identifierNode.parent; scope; scope = scope.parent) {
     if (
       ts.isSourceFile(scope) ||
@@ -229,21 +252,27 @@ function nearestLexicalBinding(identifierNode) {
       ts.isForInStatement(scope) ||
       ts.isForOfStatement(scope)
     ) {
-      const binding = directLexicalBinding(scope, identifierNode.text);
+      const binding = directLexicalBindingInfo(scope, identifierNode.text);
       if (binding) return binding;
     }
   }
   return null;
 }
 
-function resolveStyleBinding(identifierNode, entry, sourceEntries) {
+function resolveStyleBinding(
+  identifierNode,
+  entry,
+  sourceEntries,
+  { immutableOnly = false } = {},
+) {
   const ast = entry.parsed.ast;
-  const localBinding = nearestLexicalBinding(identifierNode);
+  const localBinding = nearestLexicalBindingInfo(identifierNode);
   if (localBinding) {
+    if (immutableOnly && !localBinding.immutable) return null;
     return {
       entry,
-      node: localBinding,
-      key: `${entry.path}#${identifierNode.text}@${localBinding.pos}`,
+      node: localBinding.node,
+      key: `${entry.path}#${identifierNode.text}@${localBinding.node.pos}`,
     };
   }
 
@@ -252,13 +281,119 @@ function resolveStyleBinding(identifierNode, entry, sourceEntries) {
   const targetPath = resolveLocalModule(entry.path, binding.moduleName, sourceEntries);
   const targetEntry = targetPath ? sourceEntries.get(targetPath) : null;
   if (!targetEntry) return null;
-  const targetNode = findLocalSymbol(targetEntry.parsed.ast, binding.importedName);
-  return targetNode
-    ? {
-        entry: targetEntry,
-        node: targetNode,
-        key: `${targetEntry.path}#${binding.importedName}`,
+  if (binding.importedName === "*") {
+    return {
+      entry: targetEntry,
+      namespaceEntry: targetEntry,
+      node: null,
+      key: `${targetEntry.path}#namespace`,
+    };
+  }
+  if (!immutableOnly) {
+    const targetNode = findLocalSymbol(targetEntry.parsed.ast, binding.importedName);
+    return targetNode
+      ? {
+          entry: targetEntry,
+          node: targetNode,
+          key: `${targetEntry.path}#${binding.importedName}`,
+        }
+      : null;
+  }
+  return resolveExportedStyleBinding(targetEntry, binding.importedName, sourceEntries);
+}
+
+function resolveExportedStyleBinding(
+  entry,
+  symbolName,
+  sourceEntries,
+  state = { depth: 0, resolving: new Set() },
+) {
+  if (state.depth > MAX_STATIC_BINDING_DEPTH) return null;
+  const key = `${entry.path}#export:${symbolName}`;
+  if (state.resolving.has(key)) return null;
+  const resolving = new Set(state.resolving);
+  resolving.add(key);
+
+  const localNode = findImmutableLocalSymbol(entry.parsed.ast, symbolName);
+  if (localNode) return { entry, node: localNode, key };
+
+  if (symbolName === "default") {
+    const assignment = entry.parsed.ast.statements.find(
+      (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals,
+    );
+    if (assignment && ts.isExportAssignment(assignment) && ts.isIdentifier(assignment.expression)) {
+      const forwarded = resolveStyleBinding(
+        assignment.expression,
+        entry,
+        sourceEntries,
+        { immutableOnly: true },
+      );
+      if (forwarded) return forwarded;
+    }
+  }
+
+  for (const statement of entry.parsed.ast.statements) {
+    if (!ts.isExportDeclaration(statement) || statement.isTypeOnly) continue;
+    const moduleName = ts.isStringLiteralLike(statement.moduleSpecifier)
+      ? statement.moduleSpecifier.text
+      : null;
+    if (
+      statement.exportClause &&
+      ts.isNamespaceExport(statement.exportClause) &&
+      statement.exportClause.name.text === symbolName &&
+      moduleName
+    ) {
+      const targetPath = resolveLocalModule(entry.path, moduleName, sourceEntries);
+      const targetEntry = targetPath ? sourceEntries.get(targetPath) : null;
+      return targetEntry
+        ? {
+            entry: targetEntry,
+            namespaceEntry: targetEntry,
+            node: null,
+            key: `${targetEntry.path}#namespace`,
+          }
+        : null;
+    }
+    if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+      for (const element of statement.exportClause.elements) {
+        if (element.isTypeOnly || element.name.text !== symbolName) continue;
+        const importedName = element.propertyName?.text ?? element.name.text;
+        if (!moduleName) {
+          const node = findImmutableLocalSymbol(entry.parsed.ast, importedName);
+          return node ? { entry, node, key } : null;
+        }
+        const targetPath = resolveLocalModule(entry.path, moduleName, sourceEntries);
+        const targetEntry = targetPath ? sourceEntries.get(targetPath) : null;
+        return targetEntry
+          ? resolveExportedStyleBinding(targetEntry, importedName, sourceEntries, {
+              depth: state.depth + 1,
+              resolving,
+            })
+          : null;
       }
+    } else if (!statement.exportClause && moduleName) {
+      const targetPath = resolveLocalModule(entry.path, moduleName, sourceEntries);
+      const targetEntry = targetPath ? sourceEntries.get(targetPath) : null;
+      const resolved = targetEntry
+        ? resolveExportedStyleBinding(targetEntry, symbolName, sourceEntries, {
+            depth: state.depth + 1,
+            resolving,
+          })
+        : null;
+      if (resolved) return resolved;
+    }
+  }
+  return null;
+}
+
+function resolveNamespaceStyleMember(expression, propertyName, entry, sourceEntries) {
+  if (!ts.isIdentifier(expression)) return null;
+  const binding = importBindings(entry.parsed.ast).get(expression.text);
+  if (binding?.importedName !== "*") return null;
+  const targetPath = resolveLocalModule(entry.path, binding.moduleName, sourceEntries);
+  const targetEntry = targetPath ? sourceEntries.get(targetPath) : null;
+  return targetEntry
+    ? resolveExportedStyleBinding(targetEntry, propertyName, sourceEntries)
     : null;
 }
 
@@ -503,72 +638,551 @@ function staticPrimitiveText(node) {
   return null;
 }
 
-function boundStaticPrimitiveText(node, resolving = new Set()) {
-  if (!node) return null;
-  const direct = staticPrimitiveText(node);
-  if (direct !== null) return direct;
-  if (ts.isJsxExpression(node)) {
-    return boundStaticPrimitiveText(node.expression, resolving);
-  }
-  if (
-    ts.isParenthesizedExpression(node) ||
-    ts.isAsExpression(node) ||
-    ts.isTypeAssertionExpression(node) ||
-    ts.isSatisfiesExpression(node)
-  ) {
-    return boundStaticPrimitiveText(node.expression, resolving);
-  }
-  if (!ts.isIdentifier(node)) return null;
+const MAX_STATIC_BINDING_DEPTH = 16;
 
-  const binding = nearestLexicalBinding(node);
-  if (!binding) return null;
-  const bindingKey = `${node.text}@${binding.pos}`;
-  if (resolving.has(bindingKey)) return null;
-  const nextResolving = new Set(resolving);
-  nextResolving.add(bindingKey);
-  return boundStaticPrimitiveText(binding, nextResolving);
+function unwrapStaticExpression(node) {
+  let current = node;
+  while (
+    current &&
+    (ts.isJsxExpression(current) ||
+      ts.isParenthesizedExpression(current) ||
+      ts.isAsExpression(current) ||
+      ts.isTypeAssertionExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isNonNullExpression(current))
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+function nextStaticBindingState(state, bindingKey) {
+  if (state.depth >= MAX_STATIC_BINDING_DEPTH || state.resolving.has(bindingKey)) {
+    return null;
+  }
+  const resolving = new Set(state.resolving);
+  resolving.add(bindingKey);
+  return { depth: state.depth + 1, resolving };
+}
+
+function staticPropertyAccessName(node) {
+  if (ts.isPropertyAccessExpression(node)) return node.name.text;
+  if (!ts.isElementAccessExpression(node)) return null;
+  const argument = unwrapStaticExpression(node.argumentExpression);
+  return argument && (ts.isStringLiteralLike(argument) || ts.isNumericLiteral(argument))
+    ? argument.text
+    : null;
+}
+
+function staticObjectProperty(target, propertyName, sourceEntries, state) {
+  if (target.namespaceEntry) {
+    return resolveExportedStyleBinding(target.namespaceEntry, propertyName, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+  }
+  for (const property of [...target.node.properties].reverse()) {
+    if (
+      (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) &&
+      boundPropertyNameText(
+        property.name,
+        target.entry,
+        sourceEntries,
+        state,
+      ) === propertyName
+    ) {
+      return {
+        entry: target.entry,
+        node: ts.isPropertyAssignment(property) ? property.initializer : property.name,
+      };
+    }
+    if (ts.isSpreadAssignment(property)) {
+      const spreadTarget = boundStaticObjectLiteral(
+        property.expression,
+        target.entry,
+        sourceEntries,
+        { depth: state.depth + 1, resolving: state.resolving },
+      );
+      const resolved = spreadTarget
+        ? staticObjectProperty(spreadTarget, propertyName, sourceEntries, {
+            depth: state.depth + 1,
+            resolving: state.resolving,
+          })
+        : null;
+      if (resolved) return resolved;
+    }
+  }
+  return null;
+}
+
+function boundStaticObjectLiteral(node, entry, sourceEntries, state) {
+  const current = unwrapStaticExpression(node);
+  if (!current || state.depth > MAX_STATIC_BINDING_DEPTH) return null;
+  if (ts.isObjectLiteralExpression(current)) return { entry, node: current };
+  if (
+    ts.isCallExpression(current) &&
+    current.arguments.length === 1 &&
+    ts.isPropertyAccessExpression(current.expression) &&
+    ts.isIdentifier(current.expression.expression) &&
+    current.expression.expression.text === "Object" &&
+    current.expression.name.text === "freeze" &&
+    !nearestLexicalBindingInfo(current.expression.expression)
+  ) {
+    return boundStaticObjectLiteral(current.arguments[0], entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+  }
+
+  if (ts.isIdentifier(current)) {
+    const resolved = resolveStyleBinding(current, entry, sourceEntries, {
+      immutableOnly: true,
+    });
+    if (!resolved) return null;
+    const nextState = nextStaticBindingState(state, resolved.key);
+    if (resolved.namespaceEntry) {
+      return nextState
+        ? { entry: resolved.namespaceEntry, namespaceEntry: resolved.namespaceEntry }
+        : null;
+    }
+    return nextState
+      ? boundStaticObjectLiteral(resolved.node, resolved.entry, sourceEntries, nextState)
+      : null;
+  }
+
+  if (ts.isPropertyAccessExpression(current) || ts.isElementAccessExpression(current)) {
+    const propertyName = staticPropertyAccessName(current);
+    if (propertyName === null) return null;
+    const namespaceMember = resolveNamespaceStyleMember(
+      current.expression,
+      propertyName,
+      entry,
+      sourceEntries,
+    );
+    if (namespaceMember) {
+      const nextState = nextStaticBindingState(state, namespaceMember.key);
+      return nextState
+        ? boundStaticObjectLiteral(
+            namespaceMember.node,
+            namespaceMember.entry,
+            sourceEntries,
+            nextState,
+          )
+        : null;
+    }
+    const target = boundStaticObjectLiteral(current.expression, entry, sourceEntries, state);
+    if (!target) return null;
+    const property = staticObjectProperty(target, propertyName, sourceEntries, state);
+    return property
+      ? boundStaticObjectLiteral(property.node, property.entry, sourceEntries, {
+          depth: state.depth + 1,
+          resolving: state.resolving,
+        })
+      : null;
+  }
+
+  return null;
+}
+
+function boundStaticArrayLiteral(node, entry, sourceEntries, state) {
+  const current = unwrapStaticExpression(node);
+  if (!current || state.depth > MAX_STATIC_BINDING_DEPTH) return null;
+  if (ts.isArrayLiteralExpression(current)) return { entry, node: current };
+  if (
+    ts.isCallExpression(current) &&
+    current.arguments.length === 1 &&
+    ts.isPropertyAccessExpression(current.expression) &&
+    ts.isIdentifier(current.expression.expression) &&
+    current.expression.expression.text === "Object" &&
+    current.expression.name.text === "freeze" &&
+    !nearestLexicalBindingInfo(current.expression.expression)
+  ) {
+    return boundStaticArrayLiteral(current.arguments[0], entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+  }
+  if (ts.isIdentifier(current)) {
+    const resolved = resolveStyleBinding(current, entry, sourceEntries, {
+      immutableOnly: true,
+    });
+    if (!resolved?.node) return null;
+    const nextState = nextStaticBindingState(state, resolved.key);
+    return nextState
+      ? boundStaticArrayLiteral(resolved.node, resolved.entry, sourceEntries, nextState)
+      : null;
+  }
+  return null;
+}
+
+function boundStaticBoolean(node, entry, sourceEntries, state) {
+  const current = unwrapStaticExpression(node);
+  if (!current || state.depth > MAX_STATIC_BINDING_DEPTH) return null;
+  if (current.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (current.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (
+    ts.isPrefixUnaryExpression(current) &&
+    current.operator === ts.SyntaxKind.ExclamationToken
+  ) {
+    const operand = boundStaticBoolean(current.operand, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    return operand === null ? null : !operand;
+  }
+  if (ts.isIdentifier(current)) {
+    const resolved = resolveStyleBinding(current, entry, sourceEntries, {
+      immutableOnly: true,
+    });
+    if (!resolved?.node) return null;
+    const nextState = nextStaticBindingState(state, resolved.key);
+    return nextState
+      ? boundStaticBoolean(resolved.node, resolved.entry, sourceEntries, nextState)
+      : null;
+  }
+  return null;
+}
+
+function mergeStaticPrimitiveCandidates(left, right) {
+  if (left && right) {
+    return {
+      text: left.text === right.text ? left.text : `${left.text} | ${right.text}`,
+      trustedTheme: left.trustedTheme && right.trustedTheme,
+    };
+  }
+  return left ?? right;
+}
+
+function boundStaticPrimitiveText(
+  node,
+  entry,
+  sourceEntries,
+  state = { depth: 0, resolving: new Set() },
+) {
+  const current = unwrapStaticExpression(node);
+  if (!current || state.depth > MAX_STATIC_BINDING_DEPTH) return null;
+
+  const direct = staticPrimitiveText(current);
+  if (direct !== null) {
+    return { text: direct, trustedTheme: entry.path.startsWith("src/theme/") };
+  }
+
+  if (
+    ts.isBinaryExpression(current) &&
+    current.operatorToken.kind === ts.SyntaxKind.PlusToken
+  ) {
+    const left = boundStaticPrimitiveText(current.left, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    const right = boundStaticPrimitiveText(current.right, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    return left && right
+      ? {
+          text: `${left.text}${right.text}`,
+          trustedTheme: left.trustedTheme && right.trustedTheme,
+        }
+      : null;
+  }
+
+  if (
+    ts.isBinaryExpression(current) &&
+    [
+      ts.SyntaxKind.QuestionQuestionToken,
+      ts.SyntaxKind.BarBarToken,
+      ts.SyntaxKind.AmpersandAmpersandToken,
+    ].includes(current.operatorToken.kind)
+  ) {
+    const left = boundStaticPrimitiveText(current.left, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    const right = boundStaticPrimitiveText(current.right, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    return mergeStaticPrimitiveCandidates(left, right);
+  }
+
+  if (ts.isTemplateExpression(current)) {
+    let text = current.head.text;
+    let trustedTheme = entry.path.startsWith("src/theme/");
+    for (const span of current.templateSpans) {
+      const value = boundStaticPrimitiveText(span.expression, entry, sourceEntries, {
+        depth: state.depth + 1,
+        resolving: state.resolving,
+      });
+      if (!value) return null;
+      text += `${value.text}${span.literal.text}`;
+      trustedTheme = trustedTheme && value.trustedTheme;
+    }
+    return { text, trustedTheme };
+  }
+
+  if (ts.isConditionalExpression(current)) {
+    const condition = boundStaticBoolean(current.condition, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    if (condition !== null) {
+      return boundStaticPrimitiveText(
+        condition ? current.whenTrue : current.whenFalse,
+        entry,
+        sourceEntries,
+        { depth: state.depth + 1, resolving: state.resolving },
+      );
+    }
+    const whenTrue = boundStaticPrimitiveText(current.whenTrue, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    const whenFalse = boundStaticPrimitiveText(current.whenFalse, entry, sourceEntries, {
+      depth: state.depth + 1,
+      resolving: state.resolving,
+    });
+    return mergeStaticPrimitiveCandidates(whenTrue, whenFalse);
+  }
+
+  if (ts.isBindingElement(current) && ts.isObjectBindingPattern(current.parent)) {
+    const declaration = current.parent.parent;
+    if (!ts.isVariableDeclaration(declaration) || !declaration.initializer) return null;
+    const propertyNode = current.propertyName ?? current.name;
+    const propertyName = boundPropertyNameText(
+      propertyNode,
+      entry,
+      sourceEntries,
+      state,
+    );
+    const target = boundStaticObjectLiteral(declaration.initializer, entry, sourceEntries, state);
+    if (!target) {
+      return current.initializer
+        ? boundStaticPrimitiveText(current.initializer, entry, sourceEntries, {
+            depth: state.depth + 1,
+            resolving: state.resolving,
+          })
+        : null;
+    }
+    const property = staticObjectProperty(target, propertyName, sourceEntries, state);
+    if (property) {
+      const value = boundStaticPrimitiveText(property.node, property.entry, sourceEntries, {
+        depth: state.depth + 1,
+        resolving: state.resolving,
+      });
+      if (value) return value;
+    }
+    return current.initializer
+      ? boundStaticPrimitiveText(current.initializer, entry, sourceEntries, {
+          depth: state.depth + 1,
+          resolving: state.resolving,
+        })
+      : null;
+  }
+
+  if (ts.isBindingElement(current) && ts.isArrayBindingPattern(current.parent)) {
+    const declaration = current.parent.parent;
+    if (!ts.isVariableDeclaration(declaration) || !declaration.initializer) return null;
+    const index = current.parent.elements.indexOf(current);
+    if (index < 0) return null;
+    const target = boundStaticArrayLiteral(
+      declaration.initializer,
+      entry,
+      sourceEntries,
+      state,
+    );
+    if (!target) {
+      return current.initializer
+        ? boundStaticPrimitiveText(current.initializer, entry, sourceEntries, {
+            depth: state.depth + 1,
+            resolving: state.resolving,
+          })
+        : null;
+    }
+    const element = target?.node.elements[index];
+    if (element && !ts.isOmittedExpression(element) && !ts.isSpreadElement(element)) {
+      const value = boundStaticPrimitiveText(element, target.entry, sourceEntries, {
+        depth: state.depth + 1,
+        resolving: state.resolving,
+      });
+      if (value) return value;
+    }
+    return current.initializer
+      ? boundStaticPrimitiveText(current.initializer, entry, sourceEntries, {
+          depth: state.depth + 1,
+          resolving: state.resolving,
+        })
+      : null;
+  }
+
+  if (ts.isIdentifier(current)) {
+    const resolved = resolveStyleBinding(current, entry, sourceEntries, {
+      immutableOnly: true,
+    });
+    if (!resolved) return null;
+    const nextState = nextStaticBindingState(state, resolved.key);
+    return nextState
+      ? boundStaticPrimitiveText(resolved.node, resolved.entry, sourceEntries, nextState)
+      : null;
+  }
+
+  if (ts.isPropertyAccessExpression(current) || ts.isElementAccessExpression(current)) {
+    const propertyName = staticPropertyAccessName(current);
+    if (propertyName === null) return null;
+    if (ts.isElementAccessExpression(current) && /^\d+$/u.test(propertyName)) {
+      const target = boundStaticArrayLiteral(
+        current.expression,
+        entry,
+        sourceEntries,
+        state,
+      );
+      const element = target?.node.elements[Number(propertyName)];
+      if (element && !ts.isOmittedExpression(element) && !ts.isSpreadElement(element)) {
+        return boundStaticPrimitiveText(element, target.entry, sourceEntries, {
+          depth: state.depth + 1,
+          resolving: state.resolving,
+        });
+      }
+    }
+    const namespaceMember = resolveNamespaceStyleMember(
+      current.expression,
+      propertyName,
+      entry,
+      sourceEntries,
+    );
+    if (namespaceMember) {
+      const nextState = nextStaticBindingState(state, namespaceMember.key);
+      return nextState
+        ? boundStaticPrimitiveText(
+            namespaceMember.node,
+            namespaceMember.entry,
+            sourceEntries,
+            nextState,
+          )
+        : null;
+    }
+    const target = boundStaticObjectLiteral(current.expression, entry, sourceEntries, state);
+    if (!target) return null;
+    const property = staticObjectProperty(target, propertyName, sourceEntries, state);
+    return property
+      ? boundStaticPrimitiveText(property.node, property.entry, sourceEntries, {
+          depth: state.depth + 1,
+          resolving: state.resolving,
+        })
+      : null;
+  }
+
+  return null;
 }
 
 function propertyNameText(name, ast) {
   if (ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)) {
     return name.text;
   }
+  if (ts.isComputedPropertyName(name)) {
+    const expression = unwrapStaticExpression(name.expression);
+    if (
+      expression &&
+      (ts.isStringLiteralLike(expression) || ts.isNumericLiteral(expression))
+    ) {
+      return expression.text;
+    }
+  }
   return name.getText(ast);
 }
 
-function scanRawTypeScriptVisualValues(source, ast) {
+function boundPropertyNameText(name, entry, sourceEntries, state) {
+  if (!ts.isComputedPropertyName(name)) {
+    return propertyNameText(name, entry.parsed.ast);
+  }
+  const value = boundStaticPrimitiveText(name.expression, entry, sourceEntries, {
+    depth: state.depth + 1,
+    resolving: state.resolving,
+  });
+  return value?.text ?? propertyNameText(name, entry.parsed.ast);
+}
+
+function scanRawTypeScriptVisualValues(entry, sourceEntries) {
+  const { source, parsed } = entry;
+  const ast = parsed.ast;
   const normalizedPath = normalizeRepoPath(source.path);
   if (normalizedPath.startsWith("src/theme/")) return [];
 
   const violations = [];
   const difficultySource = normalizedPath === "src/components/practice/DifficultyMeter.tsx";
+  const addRawColorViolation = (propertyName, value, node) => {
+    if (
+      difficultySource ||
+      value === null ||
+      value.trustedTheme ||
+      !COLOR_PROPERTIES.test(propertyName) ||
+      !RAW_COLOR_VALUE.test(value.text)
+    ) {
+      return;
+    }
+    violations.push(
+      createViolation({
+        ruleId: "visual.raw-color",
+        path: source.path,
+        line: lineOf(ast, node),
+        semanticKey: `${propertyName.toLowerCase()}:${value.text.toLowerCase()}`,
+        lexeme: `${propertyName}:${value.text}`,
+      }),
+    );
+  };
+
+  const inspectJsxShorthandSpread = (
+    expression,
+    spreadNode,
+    visitedObjects = new Set(),
+    depth = 0,
+  ) => {
+    if (depth > MAX_STATIC_BINDING_DEPTH) return;
+    const target = boundStaticObjectLiteral(expression, entry, sourceEntries, {
+      depth: 0,
+      resolving: new Set(),
+    });
+    if (!target) return;
+    const objectKey = `${target.entry.path}@${target.node.pos}`;
+    if (visitedObjects.has(objectKey)) return;
+    const nextVisitedObjects = new Set(visitedObjects);
+    nextVisitedObjects.add(objectKey);
+    for (const property of target.node.properties) {
+      if (ts.isShorthandPropertyAssignment(property)) {
+        const propertyName = property.name.text.replaceAll("-", "");
+        addRawColorViolation(
+          propertyName,
+          boundStaticPrimitiveText(property.name, target.entry, sourceEntries),
+          spreadNode,
+        );
+      } else if (ts.isSpreadAssignment(property)) {
+        inspectJsxShorthandSpread(
+          property.expression,
+          spreadNode,
+          nextVisitedObjects,
+          depth + 1,
+        );
+      }
+    }
+  };
+
   const visit = (node) => {
     if (ts.isPropertyAssignment(node)) {
       const propertyName = propertyNameText(node.name, ast).replaceAll("-", "");
-      const value = boundStaticPrimitiveText(node.initializer);
-      if (value !== null && COLOR_PROPERTIES.test(propertyName) && RAW_COLOR_VALUE.test(value)) {
-        if (!difficultySource) {
-          violations.push(
-            createViolation({
-              ruleId: "visual.raw-color",
-              path: source.path,
-              line: lineOf(ast, node),
-              semanticKey: `${propertyName.toLowerCase()}:${value.toLowerCase()}`,
-              lexeme: `${propertyName}:${value}`,
-            }),
-          );
-        }
-      } else if (
+      const value = boundStaticPrimitiveText(node.initializer, entry, sourceEntries);
+      addRawColorViolation(propertyName, value, node);
+      if (
         value !== null &&
+        !value.trustedTheme &&
         RADIUS_SHADOW_FONT_PROPERTIES.test(propertyName) &&
-        !value.includes("var(--app-")
+        !value.text.includes("var(--app-")
       ) {
         violations.push(
           createViolation({
             ruleId: "visual.raw-radius-shadow-font",
             path: source.path,
             line: lineOf(ast, node),
-            semanticKey: `${propertyName.toLowerCase()}:${value}`,
+            semanticKey: `${propertyName.toLowerCase()}:${value.text}`,
             lexeme: propertyName,
           }),
         );
@@ -576,23 +1190,11 @@ function scanRawTypeScriptVisualValues(source, ast) {
     }
     if (ts.isJsxAttribute(node)) {
       const propertyName = node.name.getText(ast).replaceAll("-", "");
-      const value = boundStaticPrimitiveText(node.initializer);
-      if (
-        value !== null &&
-        COLOR_PROPERTIES.test(propertyName) &&
-        RAW_COLOR_VALUE.test(value) &&
-        !difficultySource
-      ) {
-        violations.push(
-          createViolation({
-            ruleId: "visual.raw-color",
-            path: source.path,
-            line: lineOf(ast, node),
-            semanticKey: `${propertyName.toLowerCase()}:${value.toLowerCase()}`,
-            lexeme: `${propertyName}:${value}`,
-          }),
-        );
-      }
+      const value = boundStaticPrimitiveText(node.initializer, entry, sourceEntries);
+      addRawColorViolation(propertyName, value, node);
+    }
+    if (ts.isJsxSpreadAttribute(node)) {
+      inspectJsxShorthandSpread(node.expression, node);
     }
     ts.forEachChild(node, visit);
   };
@@ -809,6 +1411,8 @@ function importBindings(ast) {
           importedName: element.propertyName?.text ?? element.name.text,
         });
       }
+    } else if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+      bindings.set(namedBindings.name.text, { moduleName, importedName: "*" });
     }
   }
   return bindings;
@@ -840,6 +1444,37 @@ function findLocalSymbol(ast, symbolName) {
         if (ts.isIdentifier(declaration.name) && declaration.name.text === symbolName) {
           return declaration.initializer ?? declaration;
         }
+      }
+    }
+  }
+  return null;
+}
+
+function findImmutableLocalSymbol(ast, symbolName) {
+  if (symbolName === "default") {
+    for (const statement of ast.statements) {
+      if (ts.isExportAssignment(statement) && !statement.isExportEquals) {
+        return ts.isIdentifier(statement.expression)
+          ? findImmutableLocalSymbol(ast, statement.expression.text)
+          : statement.expression;
+      }
+    }
+    return null;
+  }
+  for (const statement of ast.statements) {
+    if (
+      !ts.isVariableStatement(statement) ||
+      !(statement.declarationList.flags & ts.NodeFlags.Const)
+    ) {
+      continue;
+    }
+    for (const declaration of statement.declarationList.declarations) {
+      if (
+        ts.isIdentifier(declaration.name) &&
+        declaration.name.text === symbolName &&
+        declaration.initializer
+      ) {
+        return declaration.initializer;
       }
     }
   }
@@ -1740,7 +2375,7 @@ export function scanUiContract(sources) {
     if (parsed.kind === "typescript") {
       violations.push(...scanStaticInlineStyles(entry, sourceEntries));
       violations.push(...scanArbitraryTailwind(source, parsed.ast));
-      violations.push(...scanRawTypeScriptVisualValues(source, parsed.ast));
+      violations.push(...scanRawTypeScriptVisualValues(entry, sourceEntries));
       violations.push(...scanAntdWrapperBypass(source, parsed.ast));
       violations.push(...scanExtraWorkspaceMain(source, parsed.ast));
     } else {

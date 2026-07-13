@@ -15,6 +15,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check:agent-skill-policy": "node scripts/check-agent-skill-policy.mjs",
+    "sync:agent-skills": "node scripts/sync-agent-skills.mjs",
+    "check:agent-skills": "node scripts/sync-agent-skills.mjs --check",
     "report:ui-contract": "node scripts/check-ui-contract.mjs --mode report",
     "check:ui-contract": "node scripts/check-ui-contract.mjs --mode diff-block",
     "check:worktree-lifecycle": "vitest run tests/scripts/worktree-lifecycle.test.mjs tests/scripts/report-worktree-lifecycle.test.mjs --maxWorkers=1",

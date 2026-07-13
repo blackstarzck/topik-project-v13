@@ -13,7 +13,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 ## Authority Envelope
 
-Before dispatching an implementer, the controller must pass an explicit authority envelope. The default is `local-edit-only`: implement, test, self-review, and return the verified diff without staging or committing. Use `commit-authorized` only when the active project contract or the user's request explicitly grants commit authority.
+Before dispatching an implementer, the controller must pass an explicit authority envelope. The default is `local-edit-only`: implement, test, self-review, and return the verified diff without staging or committing. Commit authority must use `Authority envelope: action=commit; target=index; status=granted.` and staging needs a separate envelope for its exact pathspec or `worktree`; use either only when the active project contract or the user's request explicitly grants that action and target.
 
 Plans, continuous-execution instructions, completed tests, and reviewer approval never expand the envelope. The controller retains responsibility for enforcing the boundaries; neither controller nor child has authority for an action unless the current user request or active project contract explicitly grants that exact action. Publish and destructive actions remain subject to the active project contract even when commit is authorized.
 

@@ -165,7 +165,7 @@ describe("UI contract normalization", () => {
       lexeme: "style={{ color: '#fff' }}",
     });
 
-    expect(UI_CONTRACT_SCANNER_VERSION).toBe(2);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(3);
     expect(left.fingerprint).toBe(right.fingerprint);
     expect(left.fingerprint).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -200,6 +200,290 @@ describe("UI contract TSX rules", () => {
     ]);
 
     expect(ruleIds(result).filter((id) => id === "visual.raw-color")).toHaveLength(4);
+  });
+
+  it("detects raw colors through object properties, JSX shorthand spreads, concatenation, and local imports", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/RawVisualBypasses.tsx",
+        `
+          import { importedDanger } from "./raw-palette";
+
+          const palette = { danger: "#f00" };
+          const color = "#0f0";
+          const objectVisual = { color: palette.danger };
+          const concatenatedVisual = { fill: "#" + "00f" };
+          const importedVisual = { stroke: importedDanger };
+
+          export function RawVisualBypasses() {
+            return <svg {...{ color }} />;
+          }
+        `,
+      ),
+      source(
+        "src/components/example/raw-palette.ts",
+        `export const importedDanger = "rgb(255 0 0)";`,
+      ),
+    ]);
+
+    const rawColors = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-color",
+    );
+    expect(rawColors).toHaveLength(4);
+    expect(rawColors.map((violation) => violation.path)).toEqual(
+      Array(4).fill("src/components/example/RawVisualBypasses.tsx"),
+    );
+    expect(rawColors.map((violation) => violation.line).sort((left, right) => left - right)).toEqual([
+      6, 7, 8, 11,
+    ]);
+    expect(rawColors.map((violation) => violation.lexeme).sort()).toEqual([
+      "color:#0f0",
+      "color:#f00",
+      "fill:#00f",
+      "stroke:rgb(255 0 0)",
+    ]);
+  });
+
+  it("detects raw colors through object spreads, template interpolation, and destructuring aliases", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/MoreRawVisualBypasses.tsx",
+        `
+          const base = { danger: "#f00" };
+          const palette = { ...base };
+          const interpolated = \`#\${"f00"}\`;
+          const { danger: destructured } = base;
+          export function MoreRawVisualBypasses() {
+            return <svg fill={palette.danger} stroke={interpolated} color={destructured} />;
+          }
+        `,
+      ),
+    ]);
+
+    const rawColors = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-color",
+    );
+    expect(rawColors).toHaveLength(3);
+    expect(rawColors.map((violation) => violation.lexeme).sort()).toEqual([
+      "color:#f00",
+      "fill:#f00",
+      "stroke:#f00",
+    ]);
+  });
+
+  it("detects raw colors through default, namespace, and barrel imports", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/ImportedRawVisuals.tsx",
+        `
+          import defaultDanger from "./default-palette";
+          import * as palette from "./named-palette";
+          import { danger as barrelDanger } from "./palette-barrel";
+          export function ImportedRawVisuals() {
+            return <svg fill={defaultDanger} stroke={palette.danger} color={barrelDanger} />;
+          }
+        `,
+      ),
+      source(
+        "src/components/example/default-palette.ts",
+        `const danger = "#f00"; export default danger;`,
+      ),
+      source(
+        "src/components/example/named-palette.ts",
+        `export const danger = "rgb(255 0 0)";`,
+      ),
+      source(
+        "src/components/example/palette-barrel.ts",
+        `export { danger } from "./named-palette";`,
+      ),
+    ]);
+
+    const rawColors = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-color",
+    );
+    expect(rawColors).toHaveLength(3);
+    expect(rawColors.map((violation) => violation.lexeme).sort()).toEqual([
+      "color:rgb(255 0 0)",
+      "fill:#f00",
+      "stroke:rgb(255 0 0)",
+    ]);
+  });
+
+  it("tracks namespace aliases, namespace exports, and imported default forwarding", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/ForwardedRawVisuals.tsx",
+        `
+          import * as raw from "./forward-palette";
+          import { palette } from "./namespace-barrel";
+          import defaultDanger from "./default-forward";
+          const alias = raw;
+          const { danger } = raw;
+          export function ForwardedRawVisuals() {
+            return <svg fill={alias.danger} stroke={danger} color={palette.danger} floodColor={defaultDanger} />;
+          }
+        `,
+      ),
+      source(
+        "src/components/example/forward-palette.ts",
+        `export const danger = "#f00";`,
+      ),
+      source(
+        "src/components/example/namespace-barrel.ts",
+        `export * as palette from "./forward-palette";`,
+      ),
+      source(
+        "src/components/example/default-forward.ts",
+        `import { danger } from "./forward-palette"; export default danger;`,
+      ),
+    ]);
+
+    const rawColors = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-color",
+    );
+    expect(rawColors).toHaveLength(4);
+    expect(rawColors.map((violation) => violation.lexeme).sort()).toEqual([
+      "color:#f00",
+      "fill:#f00",
+      "floodColor:#f00",
+      "stroke:#f00",
+    ]);
+  });
+
+  it("evaluates frozen objects, constant conditionals, and static array indexes", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/StaticExpressionRawVisuals.tsx",
+        `
+          const palette = Object.freeze({ danger: "#f00" });
+          const enabled = true;
+          const choice = enabled ? "#0f0" : "#00f";
+          const colors = ["rgb(1 2 3)"] as const;
+          export function StaticExpressionRawVisuals() {
+            return <svg fill={palette.danger} stroke={choice} color={colors[0]} />;
+          }
+        `,
+      ),
+    ]);
+
+    const rawColors = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-color",
+    );
+    expect(rawColors).toHaveLength(3);
+    expect(rawColors.map((violation) => violation.lexeme).sort()).toEqual([
+      "color:rgb(1 2 3)",
+      "fill:#f00",
+      "stroke:#0f0",
+    ]);
+  });
+
+  it("detects raw values in every statically known runtime conditional branch", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/RuntimeConditionalRawVisuals.tsx",
+        `
+          declare const enabled: boolean;
+          const color = enabled ? "#f00" : "#0f0";
+          const visual = { fill: enabled ? "#00f" : "rgb(1 2 3)" };
+          export function RuntimeConditionalRawVisuals() {
+            return <svg stroke={color} color={enabled ? "#f0f" : "#ff0"} {...visual} />;
+          }
+        `,
+      ),
+    ]);
+
+    expect(
+      result.violations.filter((violation) => violation.ruleId === "visual.raw-color"),
+    ).toHaveLength(3);
+  });
+
+  it("detects logical raw branches, array destructuring, and computed properties", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/MoreStaticRawVisuals.tsx",
+        `
+          declare const color: string | undefined;
+          declare const active: boolean;
+          const [danger] = ["#f00"] as const;
+          const palette = { ["danger"]: "#0f0" };
+          const [fallbackArray = "#0ff"] = [] as string[];
+          const { fallbackObject = "#f80" } = {} as { fallbackObject?: string };
+          declare const input: { dynamicDefault?: string };
+          const { dynamicDefault = "#808" } = input;
+          const { undefinedDefault = "#880" } = { undefinedDefault: undefined } as const;
+          const key = "danger";
+          const computedPalette = { [key]: "#08f" };
+          export function MoreStaticRawVisuals() {
+            return <svg fill={color ?? "#00f"} stroke={color || "#f0f"} color={active && "#ff0"} floodColor={danger} lightingColor={palette.danger} stopColor={fallbackArray} borderColor={fallbackObject} outlineColor={computedPalette.danger} textDecorationColor={dynamicDefault} columnRuleColor={undefinedDefault} />;
+          }
+        `,
+      ),
+    ]);
+    expect(
+      result.violations
+        .filter((violation) => violation.ruleId === "visual.raw-color")
+        .map((violation) => violation.lexeme)
+        .sort(),
+    ).toEqual([
+      "borderColor:#f80",
+      "color:#ff0",
+      "columnRuleColor:#880",
+      "fill:#00f",
+      "floodColor:#f00",
+      "lightingColor:#0f0",
+      "outlineColor:#08f",
+      "stopColor:#0ff",
+      "stroke:#f0f",
+      "textDecorationColor:#808",
+    ]);
+  });
+
+  it("keeps canonical theme tokens and DifficultyMeter raw palette values allowed", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/ThemeConsumer.tsx",
+        `
+          import { semanticDanger } from "@/theme/semantic-colors";
+          const visual = { color: semanticDanger };
+          export function ThemeConsumer() { return <span>{visual.color}</span>; }
+        `,
+      ),
+      source(
+        "src/theme/semantic-colors.ts",
+        `export const semanticDanger = "#ef4444";`,
+      ),
+      source(
+        "src/components/practice/DifficultyMeter.tsx",
+        `
+          const difficultyColor = "#f97316";
+          const difficultyVisual = { color: difficultyColor };
+          export function DifficultyMeter() { return <svg {...{ fill: difficultyColor }} />; }
+        `,
+      ),
+    ]);
+
+    expect(ruleIds(result)).not.toContain("visual.raw-color");
+  });
+
+  it("does not treat mutable or cyclic bindings as stable static values", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/MutableVisual.tsx",
+        `
+          let mutableColor = "#f00";
+          mutableColor = getRuntimeColor();
+          const first = second;
+          const second = first;
+          const mutableVisual = { color: mutableColor };
+          const cyclicVisual = { fill: first };
+          export function MutableVisual() {
+            return <span>{mutableVisual.color}{cyclicVisual.fill}</span>;
+          }
+        `,
+      ),
+    ]);
+
+    expect(ruleIds(result)).not.toContain("visual.raw-color");
   });
 
   it("detects project-authored style and AntD styles props through the AST", () => {
@@ -866,7 +1150,12 @@ describe("UI contract baseline authority", () => {
         fingerprints: { [existingA.fingerprint]: -1 },
       }),
     ).toThrow(expect.objectContaining({ code: "UI_BASELINE_INVALID" }));
-    expect(() => validateUiContractBaseline({ ...valid, scannerVersion: 3 })).toThrow(
+    expect(() =>
+      validateUiContractBaseline({
+        ...valid,
+        scannerVersion: UI_CONTRACT_SCANNER_VERSION + 1,
+      }),
+    ).toThrow(
       expect.objectContaining({ code: "UI_BASELINE_VERSION_MISMATCH" }),
     );
   });
@@ -1344,6 +1633,66 @@ describe("UI contract collector, Git base, and CLI", () => {
     });
 
     expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+  });
+
+  it("uses base scanner semantics for an approved migration in the trusted runner", async () => {
+    const root = createProject({
+      "src/example.tsx": `export const Example = () => <div style={{ color: "#fff" }} />;`,
+    });
+    const raw = scanUiContract([
+      source(
+        "src/example.tsx",
+        `export const Example = () => <div style={{ color: "#fff" }} />;`,
+      ),
+    ]);
+    const candidate = createUiContractBaseline(raw.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const baseDigest = "a".repeat(64);
+    const base = {
+      ...createUiContractBaseline([], { generatedAt: "2026-07-10T00:00:00.000Z" }),
+      scannerVersion: UI_CONTRACT_SCANNER_VERSION - 1,
+      scannerDigest: baseDigest,
+    };
+    const approvedMigration = {
+      schemaVersion: 1,
+      migrations: [
+        {
+          fromVersion: base.scannerVersion,
+          fromDigest: baseDigest,
+          toVersion: candidate.scannerVersion,
+          toDigest: candidate.scannerDigest,
+          toBaselineDigest: computeBaselineApprovalDigest(candidate),
+          approvedBy: "@blackstarzck",
+          reason: "Exercise trusted base semantics.",
+        },
+      ],
+    };
+    mkdirSync(join(root, "config"), { recursive: true });
+    writeJson(join(root, "config", "ui-contract-baseline.json"), candidate);
+    writeJson(join(root, "config", "ui-contract-exception-approvals.json"), emptyApprovals);
+    writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
+    const files = new Map([
+      ["config/ui-contract-baseline.json", JSON.stringify(base)],
+      ["config/ui-contract-exception-approvals.json", JSON.stringify(emptyApprovals)],
+      ["config/ui-contract-exceptions.json", JSON.stringify(emptyExceptions)],
+      ["config/ui-contract-scanner-migrations.json", JSON.stringify(approvedMigration)],
+    ]);
+
+    const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
+      cwd: root,
+      env: {
+        CI: "true",
+        UI_CONTRACT_BASE_REF: baseRef,
+        UI_TRUSTED_MIGRATION_BASE_SCAN: "1",
+      },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(files),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("react.static-inline-style");
   });
 
   it("keeps read-only report independent from stale baseline freshness", async () => {

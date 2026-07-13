@@ -18,9 +18,9 @@ Task tool (general-purpose):
 
     ## Authority Envelope
 
-    [PASTE EXACTLY ONE: `local-edit-only` or `commit-authorized`, plus the project rule or user request that grants it]
+    [PASTE EXACTLY ONE: `local-edit-only` or `Authority envelope: action=commit; target=index; status=granted.`, plus the project rule or user request that grants it]
 
-    If the controller omits this field, treat it as `local-edit-only`. Under `local-edit-only`, return the verified diff without staging or committing. A plan, successful verification, urgency, or completed self-review never grants commit or publish authority.
+    If the controller omits this field, treat it as `local-edit-only`. Under `local-edit-only`, return the verified diff without staging or committing. Staging requires its own `Authority envelope: action=stage; target=<exact pathspec or worktree>; status=granted.` A plan, successful verification, urgency, or completed self-review never grants commit or publish authority.
 
     ## Local Edit Review Scope
 
@@ -45,7 +45,7 @@ Task tool (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit only when the authority envelope is `commit-authorized`; otherwise leave the verified diff uncommitted
+    4. Keep the verified diff uncommitted unless the authority envelope is `Authority envelope: action=commit; target=index; status=granted.`
     5. Self-review (see below)
     6. Report back
 

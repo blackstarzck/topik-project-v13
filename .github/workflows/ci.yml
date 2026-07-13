@@ -25,6 +25,57 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Check UI contract diff baseline (trusted)
+        env:
+          UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          if git cat-file -e "${UI_CONTRACT_BASE_REF}:scripts/run-trusted-ui-contract.mjs" 2>/dev/null; then
+            trusted_root="$(mktemp -d "${RUNNER_TEMP}/ui-contract.XXXXXXXX")"
+            trap 'rm -rf "${trusted_root}"' EXIT
+            trusted_real="$(realpath "${trusted_root}")"
+            runner_temp_real="$(realpath "${RUNNER_TEMP}")"
+            workspace_real="$(realpath "${GITHUB_WORKSPACE}")"
+            case "${trusted_real}/" in
+              "${runner_temp_real}/"*) ;;
+              *) echo "UI_TRUSTED_ROOT_OUTSIDE_RUNNER_TEMP" >&2; exit 2 ;;
+            esac
+            case "${trusted_real}/" in
+              "${workspace_real}/"*) echo "UI_TRUSTED_ROOT_INSIDE_WORKSPACE" >&2; exit 2 ;;
+            esac
+
+            materialize_base_file() {
+              local repo_path="$1"
+              local destination="$2"
+              local mode
+              mode="$(git ls-tree "${UI_CONTRACT_BASE_REF}" -- "${repo_path}" | awk '{print $1}')"
+              case "${mode}" in
+                100644|100755) ;;
+                *) echo "UI_TRUSTED_BASE_FILE_MODE_INVALID:${repo_path}" >&2; exit 2 ;;
+              esac
+              mkdir -p "$(dirname "${destination}")"
+              git show "${UI_CONTRACT_BASE_REF}:${repo_path}" > "${destination}"
+              test -f "${destination}" && test ! -L "${destination}"
+            }
+
+            materialize_base_file "config/ui-contract-runtime/package.json" "${trusted_root}/package.json"
+            materialize_base_file "config/ui-contract-runtime/package-lock.json" "${trusted_root}/package-lock.json"
+            materialize_base_file "scripts/run-trusted-ui-contract.mjs" "${trusted_root}/scripts/run-trusted-ui-contract.mjs"
+            materialize_base_file "scripts/check-ui-contract.mjs" "${trusted_root}/scripts/check-ui-contract.mjs"
+            materialize_base_file "scripts/lib/ui-contract.mjs" "${trusted_root}/scripts/lib/ui-contract.mjs"
+            materialize_base_file "scripts/lib/ui-contract-trust.mjs" "${trusted_root}/scripts/lib/ui-contract-trust.mjs"
+            : > "${trusted_root}/.npmrc"
+            (
+              cd "${trusted_root}"
+              npm_config_userconfig="${trusted_root}/.npmrc" npm ci --ignore-scripts --no-audit --no-fund
+            )
+            env -u NODE_OPTIONS -u NODE_PATH node "${trusted_root}/scripts/run-trusted-ui-contract.mjs" --base-ref "${UI_CONTRACT_BASE_REF}"
+          else
+            echo "BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF"
+          fi
+
       - name: Enable corepack (pnpm)
         run: corepack enable
 
@@ -37,21 +88,16 @@ jobs:
       - name: Check agent skill policy
         run: pnpm check:agent-skill-policy
 
-      - name: Check UI contract diff baseline
+      - name: Check tracked agent skill proxies
+        run: pnpm check:agent-skills
+
+      - name: Check bootstrap UI contract diff baseline
         env:
           UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         shell: bash
         run: |
           set -euo pipefail
-          trusted_root=".ui-contract-trusted-runner"
-          if git cat-file -e "${UI_CONTRACT_BASE_REF}:scripts/run-trusted-ui-contract.mjs" 2>/dev/null; then
-            mkdir -p "${trusted_root}/scripts/lib"
-            git show "${UI_CONTRACT_BASE_REF}:scripts/run-trusted-ui-contract.mjs" > "${trusted_root}/scripts/run-trusted-ui-contract.mjs"
-            git show "${UI_CONTRACT_BASE_REF}:scripts/check-ui-contract.mjs" > "${trusted_root}/scripts/check-ui-contract.mjs"
-            git show "${UI_CONTRACT_BASE_REF}:scripts/lib/ui-contract.mjs" > "${trusted_root}/scripts/lib/ui-contract.mjs"
-            git show "${UI_CONTRACT_BASE_REF}:scripts/lib/ui-contract-trust.mjs" > "${trusted_root}/scripts/lib/ui-contract-trust.mjs"
-            node "${trusted_root}/scripts/run-trusted-ui-contract.mjs" --base-ref "${UI_CONTRACT_BASE_REF}"
-          else
+          if ! git cat-file -e "${UI_CONTRACT_BASE_REF}:scripts/run-trusted-ui-contract.mjs" 2>/dev/null; then
             pnpm check:ui-contract
           fi
 

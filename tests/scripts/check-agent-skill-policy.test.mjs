@@ -19,13 +19,13 @@ const command = {
   addAll: ["git", "add", "-A"].join(" "),
   branchDelete: ["git", "branch", "-d", "feature"].join(" "),
   checkout: ["git", "checkout", "main"].join(" "),
-  commitTracked: ["git", "commit", "-am", "done"].join(" "),
+  commitTracked: ["git", "commit", "-m", "done"].join(" "),
   merge: ["git", "merge", "feature"].join(" "),
   prCreate: ["gh", "pr", "create"].join(" "),
   push: ["git", "push", "origin", "feature"].join(" "),
   runAddAll: ["Run", "git", "add", "-A"].join(" "),
   runCheckout: ["Run", "git", "checkout", "main"].join(" "),
-  runCommitTracked: ["Run", "git", "commit", "-am", "done"].join(" "),
+  runCommitTracked: ["Run", "git", "commit", "-m", "done"].join(" "),
   runMerge: ["Run", "git", "merge", "feature"].join(" "),
   runPush: ["Run", "git", "push", "origin", "feature"].join(" "),
   runWorktreeAdd: [
@@ -179,13 +179,13 @@ describe("validateSkillPolicy", () => {
     expect(
       issueIds(
         "nested-executor",
-        `Only after the user selects the publish option, publish authority is present, and the exact validated base is main: ${command.runPush}`,
+        `Only after the user selects the publish option and protected-branch checks pass.\nAuthority envelope: action=push; target=origin:feature; status=granted.\n${command.runPush}`,
       ),
     ).not.toContain("PUBLISH_AUTHORITY");
     expect(
       issueIds(
         "nested-executor",
-        `The current user or project contract grants the exact action. ${command.runCheckout}`,
+        `Authority envelope: action=checkout; target=main; status=granted.\n${command.runCheckout}`,
       ),
     ).not.toContain("GIT_MUTATION_AUTHORITY");
 
@@ -200,9 +200,443 @@ describe("validateSkillPolicy", () => {
     expect(
       issueIds(
         "nested-executor",
-        `The current user or project contract grants the exact action. ${command.runMerge}`,
+        `Authority envelope: action=merge; target=feature; status=granted.\n${command.runMerge}`,
       ),
     ).not.toContain("INTEGRATE_AUTHORITY");
+  });
+
+  test("binds stage and commit authority to the exact action and target", () => {
+    const stageOnly = [
+      "Authority envelope: action=stage; target=worktree; status=granted.",
+      command.runCommitTracked,
+    ].join("\n");
+    expect(issueIds("nested-executor", stageOnly)).toContain(
+      "GIT_MUTATION_AUTHORITY",
+    );
+
+    const commitOnly = [
+      "Authority envelope: action=commit; target=index; status=granted.",
+      command.runAddAll,
+    ].join("\n");
+    expect(issueIds("nested-executor", commitOnly)).toContain(
+      "GIT_MUTATION_AUTHORITY",
+    );
+
+    expect(
+      issueIds(
+        "nested-executor",
+        `Authority envelope: action=stage; target=worktree; status=granted.\n${command.runAddAll}`,
+      ),
+    ).not.toContain("GIT_MUTATION_AUTHORITY");
+    expect(
+      issueIds(
+        "nested-executor",
+        `Authority envelope: action=commit; target=index; status=granted.\n${command.runCommitTracked}`,
+      ),
+    ).not.toContain("GIT_MUTATION_AUTHORITY");
+    for (const unsafeCommit of [
+      "Run git commit -am x",
+      "Run git commit --amend --no-edit",
+      "Run git commit topic.txt -m x",
+    ]) {
+      expect(
+        issueIds(
+          "nested-executor",
+          `Authority envelope: action=commit; target=index; status=granted.\n${unsafeCommit}`,
+        ),
+      ).toContain("GIT_MUTATION_AUTHORITY");
+    }
+    expect(
+      issueIds(
+        "nested-executor",
+        "Authority envelope: action=stage; target=worktree; status=granted.\nRun git add .",
+      ),
+    ).not.toContain("GIT_MUTATION_AUTHORITY");
+    expect(
+      issueIds(
+        "nested-executor",
+        "Authority envelope: action=stage; target=pathspec:src/example.ts; status=granted.\nRun git add src/example.ts",
+      ),
+    ).not.toContain("GIT_MUTATION_AUTHORITY");
+  });
+
+  test("binds push and PR authority to the exact validated target", () => {
+    const wrongPushTarget = [
+      "The user selected the publish option.",
+      "Authority envelope: action=push; target=origin:feature; status=granted.",
+      "Protected-branch checks pass.",
+      "Run git push upstream feature",
+    ].join("\n");
+    expect(issueIds("nested-executor", wrongPushTarget)).toContain(
+      "PUBLISH_AUTHORITY",
+    );
+
+    const exactPushTarget = [
+      "The user selected the publish option.",
+      "Authority envelope: action=push; target=origin:feature; status=granted.",
+      "Protected-branch checks pass.",
+      command.runPush,
+    ].join("\n");
+    expect(issueIds("nested-executor", exactPushTarget)).not.toContain(
+      "PUBLISH_AUTHORITY",
+    );
+
+    const wrongPrTarget = [
+      "The user selected the publish option.",
+      "Authority envelope: action=pr-create; target=blackstarzck/topik:develop; status=granted.",
+      "Protected-branch checks pass.",
+      "Run gh pr create --repo blackstarzck/topik --base main",
+    ].join("\n");
+    expect(issueIds("nested-executor", wrongPrTarget)).toContain(
+      "PUBLISH_AUTHORITY",
+    );
+
+    const exactPrTarget = [
+      "The user selected the publish option.",
+      "Authority envelope: action=pr-create; target=blackstarzck/topik:main; status=granted.",
+      "Protected-branch checks pass.",
+      "Run gh pr create --repo blackstarzck/topik --base main",
+    ].join("\n");
+    expect(issueIds("nested-executor", exactPrTarget)).not.toContain(
+      "PUBLISH_AUTHORITY",
+    );
+
+    const implicitRepository = [
+      "The user selected the publish option.",
+      "Authority envelope: action=pr-create; target=current-repo:main; status=granted.",
+      "Protected-branch checks pass.",
+      "Run gh pr create --base main",
+    ].join("\n");
+    expect(issueIds("nested-executor", implicitRepository)).toContain(
+      "PUBLISH_AUTHORITY",
+    );
+
+    const chainedWithoutPrAuthority = [
+      "The user selected the publish option and protected-branch checks pass.",
+      "Authority envelope: action=push; target=origin:feature; status=granted.",
+      "Run git push origin feature; gh pr create --repo blackstarzck/topik --base main",
+    ].join("\n");
+    expect(issueIds("nested-executor", chainedWithoutPrAuthority)).toContain(
+      "PUBLISH_AUTHORITY",
+    );
+
+    const chainedWithExactAuthorities = [
+      "The user selected the publish option and protected-branch checks pass.",
+      "Authority envelope: action=push; target=origin:feature; status=granted.",
+      "Authority envelope: action=pr-create; target=blackstarzck/topik:main; status=granted.",
+      "Run git push origin feature; gh pr create --repo blackstarzck/topik --base main",
+    ].join("\n");
+    expect(issueIds("nested-executor", chainedWithExactAuthorities)).not.toContain(
+      "PUBLISH_AUTHORITY",
+    );
+  });
+
+  test("binds integration, navigation, and worktree authority to exact actions and targets", () => {
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=merge; target=feature-a; status=granted.\nRun git rebase main.",
+      ),
+    ).toContain("INTEGRATE_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=pull; target=origin/main; status=granted.\nRun git checkout main.",
+      ),
+    ).toContain("GIT_MUTATION_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "Explicit user consent and protected-branch checks pass. Authority envelope: action=worktree-add; target=codex/one; status=granted.\nRun git worktree add .worktrees/two -b codex/two.",
+      ),
+    ).toContain("WORKTREE_CREATE_AUTHORITY");
+
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=rebase; target=main; status=granted.\nRun git rebase main.",
+      ),
+    ).not.toContain("INTEGRATE_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=checkout; target=main; status=granted.\nRun git checkout main.",
+      ),
+    ).not.toContain("GIT_MUTATION_AUTHORITY");
+  });
+
+  test("requires every Git command to have preceding exact authority", () => {
+    expect(
+      issueIds(
+        "nested",
+        "Run git rebase main.\nAuthority envelope: action=rebase; target=main; status=granted.",
+      ),
+    ).toContain("INTEGRATE_AUTHORITY");
+
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=merge; target=allowed; status=granted. Run git merge forbidden && git merge allowed.",
+      ),
+    ).toContain("INTEGRATE_AUTHORITY");
+
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=checkout; target=allowed; status=granted. Run git checkout forbidden || git checkout allowed.",
+      ),
+    ).toContain("GIT_MUTATION_AUTHORITY");
+
+    expect(
+      issueIds(
+        "nested",
+        [
+          "The user selected the publish option and protected-branch checks pass.",
+          "Authority envelope: action=push; target=origin:allowed; status=granted.",
+          "Run git push origin allowed && git push origin forbidden.",
+        ].join("\n"),
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+  });
+
+  test("recognizes shell control operators, Git global options, and env wrappers", () => {
+    for (const chained of [
+      "Authority envelope: action=merge; target=allowed; status=granted. Run git merge forbidden & git merge allowed.",
+      "Authority envelope: action=merge; target=allowed; status=granted. Run git merge forbidden | git merge allowed.",
+    ]) {
+      expect(issueIds("nested", chained)).toContain("INTEGRATE_AUTHORITY");
+    }
+    expect(issueIds("nested", "Run git -C . merge forbidden.")).toContain(
+      "INTEGRATE_AUTHORITY",
+    );
+    expect(
+      issueIds("nested", "Run env GIT_DIR=.git git merge forbidden."),
+    ).toContain("INTEGRATE_AUTHORITY");
+    expect(issueIds("nested", "Run command git merge forbidden.")).toContain(
+      "INTEGRATE_AUTHORITY",
+    );
+    expect(issueIds("nested", "Run sudo git checkout forbidden.")).toContain(
+      "GIT_MUTATION_AUTHORITY",
+    );
+    expect(
+      issueIds(
+        "nested",
+        "Authority envelope: action=merge; target=allowed; status=granted. Run git merge forbidden allowed.",
+      ),
+    ).toContain("INTEGRATE_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        [
+          "The user selected the publish option and protected-branch checks pass.",
+          "Authority envelope: action=push; target=origin:allowed; status=granted.",
+          "Run git push origin allowed forbidden.",
+        ].join("\n"),
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+    expect(issueIds("nested", "Run git --no-pager merge forbidden.")).toContain(
+      "INTEGRATE_AUTHORITY",
+    );
+    expect(issueIds("nested", "Run git.exe merge forbidden.")).toContain(
+      "INTEGRATE_AUTHORITY",
+    );
+    expect(issueIds("nested", "Run git.exe add .")).toContain(
+      "GIT_MUTATION_AUTHORITY",
+    );
+    expect(issueIds("nested", "Run git.cmd push origin main.")).toContain(
+      "PUBLISH_AUTHORITY",
+    );
+    expect(issueIds("nested", "Run GIT_DIR=.git git merge forbidden.")).toContain(
+      "INTEGRATE_AUTHORITY",
+    );
+    for (const executable of [
+      'Run "git" merge forbidden.',
+      'Run & "git.exe" merge forbidden.',
+      'Run & "C:\\Program Files\\Git\\bin\\git.exe" add .',
+      "Run C:\\Git\\bin\\git.exe merge forbidden.",
+    ]) {
+      expect(issueIds("nested", executable)).not.toEqual([]);
+    }
+  });
+
+  test("fails closed for Git aliases and unclassified mutations", () => {
+    for (const mutation of [
+      "Run git -c alias.deploy=push deploy collab main",
+      "Run git config alias.deploy push\nRun git deploy collab main",
+      "Run git reset --hard HEAD~1",
+      "Run git clean -fdx",
+      "Run git branch -D main",
+      "Run git cherry-pick deadbeef",
+      "Run git --no-pager reset --hard HEAD~1",
+      "Run git --paginate clean -fdx",
+      "Run git --literal-pathspecs cherry-pick deadbeef",
+    ]) {
+      expect(issueIds("nested", mutation)).not.toEqual([]);
+    }
+    for (const mutation of [
+      "Always git push collab main",
+      "You must git push collab main",
+      "Please git reset --hard HEAD~1",
+      "Now git clean -fdx",
+      "The agent should git commit -am done",
+      "Automatically git checkout main",
+      "Next, git merge feature",
+      "Perform git branch -D main",
+    ]) {
+      expect(issueIds("nested", mutation)).not.toEqual([]);
+    }
+    for (const readOnly of [
+      "Run git status --short --branch",
+      "Run git diff --check",
+      "Run git log -1",
+      "Run git rev-parse HEAD",
+      "Run git branch --show-current",
+      "Run git worktree list --porcelain",
+    ]) {
+      expect(issueIds("nested", readOnly)).not.toContain("GIT_MUTATION_AUTHORITY");
+    }
+  });
+
+  test("rejects negated or non-canonical authority envelopes", () => {
+    expect(
+      issueIds(
+        "nested",
+        [
+          "No Authority envelope: action=push; target=origin:feature; status=granted.",
+          "The user selected the publish option and protected-branch checks pass.",
+          "Run git push origin feature",
+        ].join("\n"),
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "Do not grant Authority envelope: action=commit; target=index; status=granted.\nRun git commit -m done",
+      ),
+    ).toContain("GIT_MUTATION_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "Record Authority envelope: action=commit; target=index; status=granted. as prose.\nRun git commit -m done",
+      ),
+    ).toContain("GIT_MUTATION_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "Do not grant the following authority.\nAuthority envelope: action=commit; target=index; status=granted.\nRun git commit -m done",
+      ),
+    ).toContain("GIT_MUTATION_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        "The authority below is denied.\nAuthority envelope: action=merge; target=feature; status=granted.\nRun git merge feature",
+      ),
+    ).toContain("INTEGRATE_AUTHORITY");
+  });
+
+  test("rejects dynamic integration targets, branch creation options, and explicit PR heads", () => {
+    for (const mutation of [
+      "Authority envelope: action=merge; target=$BRANCH; status=granted.\nRun git merge $BRANCH",
+      "Authority envelope: action=switch; target=topic; status=granted.\nRun git switch -c topic",
+      "Authority envelope: action=checkout; target=topic; status=granted.\nRun git checkout -b topic",
+      "Authority envelope: action=merge; target=topic; status=granted.\nRun git merge --no-edit topic",
+      "Authority envelope: action=pull; target=$REMOTE/$BRANCH; status=granted.\nRun git pull $REMOTE $BRANCH",
+    ]) {
+      expect(issueIds("nested", mutation)).not.toEqual([]);
+    }
+    expect(
+      issueIds(
+        "nested",
+        [
+          "The user selected the publish option.",
+          "Protected-branch checks pass.",
+          "Authority envelope: action=pr-create; target=owner/repo:main; status=granted.",
+          "Run gh pr create --repo owner/repo --base main --head other",
+        ].join("\n"),
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+    for (const shortHead of ["-H other", "-H=other", "-Hother"]) {
+      expect(
+        issueIds(
+          "nested",
+          [
+            "The user selected the publish option.",
+            "Protected-branch checks pass.",
+            "Authority envelope: action=pr-create; target=owner/repo:main; status=granted.",
+            `Run gh pr create --repo owner/repo --base main ${shortHead}`,
+          ].join("\n"),
+        ),
+      ).toContain("PUBLISH_AUTHORITY");
+    }
+    for (const duplicateTarget of [
+      "Run gh pr create --repo owner/repo --base main --base production",
+      "Run gh pr create --repo owner/repo --base main --repo attacker/deploy",
+    ]) {
+      expect(
+        issueIds(
+          "nested",
+          [
+            "The user selected the publish option.",
+            "Protected-branch checks pass.",
+            "Authority envelope: action=pr-create; target=owner/repo:main; status=granted.",
+            duplicateTarget,
+          ].join("\n"),
+        ),
+      ).toContain("PUBLISH_AUTHORITY");
+    }
+  });
+
+  test("rejects dynamic, URL, and malformed publish targets", () => {
+    const action = "pu" + "sh";
+    const publishGuard =
+      "The user selected the publish option and protected-branch checks pass.";
+    const commandText = (...parts) => ["Run", "git", action, ...parts].join(" ");
+    expect(
+      issueIds(
+        "nested",
+        `${publishGuard}\nAuthority envelope: action=${action}; target=https://github.com/o/r.git:main; status=granted.\n${commandText("https://github.com/o/r.git", "main")}`,
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        `${publishGuard}\nAuthority envelope: action=${action}; target=$REMOTE:main; status=granted.\n${commandText("$REMOTE", "main")}`,
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        `${publishGuard}\nAuthority envelope: action=pr-create; target=$REPO:$BASE; status=granted.\nRun gh pr create --repo $REPO --base $BASE`,
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+    expect(
+      issueIds(
+        "nested",
+        `${publishGuard}\nAuthority envelope: action=${action}; target=origin:main; status=granted.\n${commandText("origin", "-u", "main")}`,
+      ),
+    ).toContain("PUBLISH_AUTHORITY");
+  });
+
+  test("protects the collab deployment target on every skill surface", () => {
+    const guardedCollabPush = [
+      "The user selected the publish option.",
+      "Authority envelope: action=push; target=collab:main; status=granted.",
+      "Protected-branch checks pass and explicit deployment confirmation is present.",
+      "Run git push collab main",
+    ].join("\n");
+    expect(issueIds("nested-executor", guardedCollabPush)).toContain(
+      "COLLAB_TARGET_DIRECTIVE",
+    );
+
+    const guardedCollabPr = [
+      "The user selected the publish option.",
+      "Authority envelope: action=pr-create; target=collab:main; status=granted.",
+      "Protected-branch checks pass and explicit deployment confirmation is present.",
+      "Run gh pr create --repo collab --base main",
+    ].join("\n");
+    expect(issueIds("nested-executor", guardedCollabPr)).toContain(
+      "COLLAB_TARGET_DIRECTIVE",
+    );
   });
 
   test("isolates local-edit-only review scope from earlier task diffs", () => {
@@ -236,7 +670,7 @@ describe("validateSkillPolicy", () => {
     expect(
       issueIds(
         "using-git-worktrees",
-        "After explicit user consent, exact named branch creation authority, and protected-branch checks pass, run git worktree add .worktrees/task -b codex/task.",
+        "After explicit user consent and protected-branch checks pass.\nAuthority envelope: action=worktree-add; target=codex/task; status=granted.\nRun git worktree add .worktrees/task -b codex/task.",
       ),
     ).not.toContain("WORKTREE_CREATE_AUTHORITY");
     expect(
@@ -289,12 +723,13 @@ describe("validateSkillPolicy", () => {
     expect(
       issueIds(
         "finishing-a-development-branch",
-        "Only after the user selects the publish option, publish authority is present, and protected-branch checks pass: git push -u origin feature; gh pr create --base main.",
+        "Only after the user selects the publish option and protected-branch checks pass.\nAuthority envelope: action=push; target=origin:feature; status=granted.\ngit push -u origin feature.",
       ),
     ).not.toContain("PUBLISH_AUTHORITY");
     const pinnedPublish =
-      `Only after the user selects the publish option, publish authority is present, and protected-branch checks pass. ` +
-      `Protected target collab requires explicit deployment confirmation.\n${command.prCreate} --base main`;
+      `Only after the user selects the publish option and protected-branch checks pass.\n` +
+      `Authority envelope: action=pr-create; target=blackstarzck/topik:main; status=granted.\n` +
+      `Protected target collab requires explicit deployment confirmation.\n${command.prCreate} --repo blackstarzck/topik --base main`;
     expect(
       issueIds("finishing-a-development-branch", pinnedPublish),
     ).not.toContain("PUBLISH_AUTHORITY");
@@ -311,7 +746,8 @@ describe("validateSkillPolicy", () => {
       ),
     ).toContain("PR_BASE_PINNING");
     const multilinePrWithoutBase = [
-      "Only after the user selects the publish option and publish authority is present.",
+      "Only after the user selects the publish option and protected-branch checks pass.",
+      "Authority envelope: action=pr-create; target=blackstarzck/topik:main; status=granted.",
       ["Run", "gh", "pr", "create", "\\"].join(" "),
       "  --title feature",
       "  --body body",
@@ -319,7 +755,7 @@ describe("validateSkillPolicy", () => {
     expect(
       issueIds("finishing-a-development-branch", multilinePrWithoutBase),
     ).toContain("PR_BASE_PINNING");
-    const multilinePrWithBase = `${multilinePrWithoutBase}\n  --base main`;
+    const multilinePrWithBase = `${multilinePrWithoutBase}\n  --repo blackstarzck/topik\n  --base main`;
     expect(
       issueIds("finishing-a-development-branch", multilinePrWithBase),
     ).not.toContain("PR_BASE_PINNING");
@@ -340,7 +776,8 @@ describe("validateSkillPolicy", () => {
     ).not.toContain("PR_BASE_PINNING");
     const chainedPrWithoutBase = [
       "Protected target collab requires explicit deployment confirmation.",
-      "The user selects the publish option, publish authority is present, and the exact validated base is main:",
+      "The user selects the publish option and protected-branch checks pass.",
+      "Authority envelope: action=push; target=origin:feature; status=granted.",
       [
         "Run",
         "git",
@@ -541,26 +978,86 @@ describe("validateSkillPolicy", () => {
 });
 
 describe("evaluateSkillPolicy", () => {
-  test("discovers executable skill surfaces recursively instead of using a fixed allowlist", async () => {
+  test("fails closed when a Markdown policy surface exceeds the bounded size", async () => {
+    const root = mkdtempSync(path.join(tmpdir(), "skill-policy-large-"));
+    try {
+      const skill = path.join(root, ".codex", "skills", "large", "SKILL.md");
+      mkdirSync(path.dirname(skill), { recursive: true });
+      writeFileSync(skill, "x".repeat(2 * 1024 * 1024 + 1), "utf8");
+
+      await expect(discoverSkillPolicyTargets({ rootDir: root })).rejects.toThrow(/too large/i);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("discovers every regular Markdown skill surface recursively instead of filtering by filename", async () => {
     const root = mkdtempSync(path.join(tmpdir(), "skill-policy-"));
     try {
       const nested = path.join(root, ".codex", "skills", "nested", "deeper", "SKILL.md");
+      const reference = path.join(
+        root,
+        ".codex",
+        "skills",
+        "nested",
+        "references",
+        "codex-tools.md",
+      );
       mkdirSync(path.dirname(nested), { recursive: true });
+      mkdirSync(path.dirname(reference), { recursive: true });
       writeFileSync(nested, "Commit your work.\n", "utf8");
+      writeFileSync(reference, "Stage the files now.\n", "utf8");
 
       const targets = await discoverSkillPolicyTargets({ rootDir: root });
       expect(targets).toEqual([
         expect.objectContaining({
           relativePath: ".codex/skills/nested/deeper/SKILL.md",
-          skillName: "deeper",
+          skillName: "nested",
         }),
-      ]);
-      expect((await evaluateSkillPolicy({ rootDir: root })).errors).toEqual([
         expect.objectContaining({
-          id: "GIT_MUTATION_AUTHORITY",
-          path: ".codex/skills/nested/deeper/SKILL.md",
+          relativePath: ".codex/skills/nested/references/codex-tools.md",
         }),
       ]);
+      expect((await evaluateSkillPolicy({ rootDir: root })).errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "GIT_MUTATION_AUTHORITY",
+            path: ".codex/skills/nested/deeper/SKILL.md",
+          }),
+          expect.objectContaining({
+            id: "GIT_MUTATION_AUTHORITY",
+            path: ".codex/skills/nested/references/codex-tools.md",
+          }),
+        ]),
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps nested Markdown owned by its root skill policy", async () => {
+    const root = mkdtempSync(path.join(tmpdir(), "skill-policy-owner-"));
+    try {
+      const reference = path.join(
+        root,
+        ".codex",
+        "skills",
+        "writing-plans",
+        "references",
+        "helper.md",
+      );
+      mkdirSync(path.dirname(reference), { recursive: true });
+      writeFileSync(reference, "Plans should use frequent commits after each task.\n", "utf8");
+
+      const result = await evaluateSkillPolicy({ rootDir: root });
+      expect(result.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "PLAN_COMMIT_AUTHORITY",
+            path: ".codex/skills/writing-plans/references/helper.md",
+          }),
+        ]),
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

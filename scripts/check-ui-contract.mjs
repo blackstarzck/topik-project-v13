@@ -344,6 +344,10 @@ export async function runUiContractCli(
     }
     const baseRef = resolveBaseRef(options.baseRef, env, options.mode);
     const useCiAuthority = options.mode === "diff-block" && Boolean(baseRef);
+    const trustedMigrationBaseScan = env.UI_TRUSTED_MIGRATION_BASE_SCAN === "1";
+    if (trustedMigrationBaseScan && !useCiAuthority) {
+      throw new UiContractError("UI_TRUSTED_MIGRATION_MODE_INVALID");
+    }
     let baseTuple = null;
     let scannerAuthority = null;
     let applied;
@@ -418,7 +422,6 @@ export async function runUiContractCli(
       BASELINE_PATH,
       "UI_BASELINE_INVALID",
     );
-    assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
     if (baseTuple && !baseTuple.bootstrap) {
       try {
         scannerAuthority = selectScannerAuthority({
@@ -431,8 +434,17 @@ export async function runUiContractCli(
         throw new UiContractError(error?.code ?? "UI_SCANNER_AUTHORITY_INVALID");
       }
     }
+    if (trustedMigrationBaseScan) {
+      if (scannerAuthority !== "candidate") {
+        throw new UiContractError("UI_TRUSTED_MIGRATION_MODE_INVALID");
+      }
+    } else {
+      assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
+    }
     const comparison =
-      baseTuple && !baseTuple.bootstrap && scannerAuthority !== "candidate"
+      baseTuple &&
+      !baseTuple.bootstrap &&
+      (scannerAuthority !== "candidate" || trustedMigrationBaseScan)
         ? compareAgainstBase(applied.violations, baseTuple.baseline)
         : { newViolations: [] };
     const marker = baseTuple?.bootstrap

@@ -115,7 +115,7 @@ digraph brainstorming {
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document only when project publish authority permits it; otherwise report the verified uncommitted file
+- Keep the design document uncommitted unless a current authority envelope grants `action=commit; target=index; status=granted`; otherwise report the verified local diff
 
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:

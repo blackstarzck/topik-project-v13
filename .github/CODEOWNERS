@@ -11,3 +11,4 @@
 /scripts/lib/ui-contract.mjs @blackstarzck
 /scripts/lib/ui-contract-trust.mjs @blackstarzck
 /config/ui-contract-*.json @blackstarzck
+/config/ui-contract-runtime/ @blackstarzck

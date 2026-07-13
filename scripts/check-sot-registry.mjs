@@ -55,6 +55,38 @@ function isSafeRelativePath(relativePath) {
   return !path.isAbsolute(relativePath) && !normalized.split("/").includes("..");
 }
 
+function canonicalDirectoryPrefix(relativePath) {
+  if (
+    typeof relativePath !== "string" ||
+    relativePath.includes("\\") ||
+    relativePath.startsWith("/") ||
+    !relativePath.endsWith("/")
+  ) {
+    return null;
+  }
+  const segments = relativePath.slice(0, -1).split("/");
+  if (segments.length === 0 || segments.some((segment) => !segment || segment === "." || segment === "..")) {
+    return null;
+  }
+  const canonical = `${path.posix.normalize(relativePath).replace(/\/$/u, "")}/`;
+  return canonical === relativePath ? canonical : null;
+}
+
+function canonicalFilePath(relativePath) {
+  if (
+    typeof relativePath !== "string" ||
+    relativePath.includes("\\") ||
+    relativePath.startsWith("/") ||
+    relativePath.endsWith("/")
+  ) {
+    return null;
+  }
+  const segments = relativePath.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === "..")) return null;
+  const canonical = path.posix.normalize(relativePath);
+  return canonical === relativePath ? canonical : null;
+}
+
 function isFile(rootDir, relativePath) {
   if (!isSafeRelativePath(relativePath)) return false;
   try {
@@ -113,6 +145,7 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
   const documentsById = new Map();
   const activeScopes = new Map();
   const activePathPrefixes = new Map();
+  const documentPaths = new Map();
 
   for (const [index, document] of registry.documents.entries()) {
     const label = document?.id || `documents[${index}]`;
@@ -154,18 +187,33 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(document.effectiveDate ?? "")) {
       errors.push(`[sot-registry] ${label} effectiveDate must use YYYY-MM-DD`);
     }
-    if (!isFile(rootDir, document.path)) {
+    const canonicalPath = canonicalFilePath(document.path);
+    if (!isNonEmptyString(document.path)) {
+      errors.push(`[sot-registry] ${label} missing path: ${document.path}`);
+    } else if (canonicalPath === null) {
+      errors.push(`[sot-registry] ${label} path must be a canonical POSIX relative file path`);
+    } else if (!isFile(rootDir, canonicalPath)) {
       errors.push(`[sot-registry] ${label} missing path: ${document.path}`);
     }
+    if (typeof document.path === "string") {
+      const normalizedPath = path.posix.normalize(normalizeRelative(document.path));
+      const previousPathOwner = documentPaths.get(normalizedPath);
+      if (previousPathOwner) {
+        errors.push(
+          `[sot-registry] duplicate document path ${normalizedPath}: ${previousPathOwner}, ${label}`,
+        );
+      } else {
+        documentPaths.set(normalizedPath, label);
+      }
+    }
     if (document.pathPrefix !== undefined && document.pathPrefix !== null) {
-      const normalizedPrefix = normalizeRelative(document.pathPrefix);
+      const normalizedPrefix = canonicalDirectoryPrefix(document.pathPrefix);
       if (
-        !isSafeRelativePath(document.pathPrefix) ||
-        !normalizedPrefix.endsWith("/") ||
+        normalizedPrefix === null ||
         !isDirectory(rootDir, normalizedPrefix)
       ) {
         errors.push(
-          `[sot-registry] ${label} pathPrefix must be an existing safe relative directory ending in /`,
+          `[sot-registry] ${label} pathPrefix must be a canonical existing POSIX relative directory ending in /`,
         );
       } else if (document.status !== "active") {
         errors.push(`[sot-registry] ${label} pathPrefix is allowed only for active documents`);
@@ -264,13 +312,14 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
 export function resolveRegistryOwner(registry, relativePath) {
   if (!isSafeRelativePath(relativePath)) return null;
   const normalizedPath = normalizeRelative(relativePath);
-  const active = Array.isArray(registry?.documents)
-    ? registry.documents.filter((document) => document?.status === "active")
-    : [];
-  const exact = active
-    .filter((document) => normalizeRelative(document.path ?? "") === normalizedPath)
-    .toSorted((left, right) => left.precedence - right.precedence)[0];
-  if (exact) return exact;
+  const documents = Array.isArray(registry?.documents) ? registry.documents : [];
+  const exact = documents.filter(
+    (document) => normalizeRelative(document?.path ?? "") === normalizedPath,
+  );
+  if (exact.length > 0) {
+    return exact.length === 1 && exact[0].status === "active" ? exact[0] : null;
+  }
+  const active = documents.filter((document) => document?.status === "active");
 
   return (
     active

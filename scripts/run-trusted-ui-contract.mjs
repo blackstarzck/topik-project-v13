@@ -3,10 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import {
-  computeScannerDigest,
-  selectScannerAuthority,
-} from "./lib/ui-contract-trust.mjs";
+import { computeScannerDigest, selectScannerAuthority } from "./lib/ui-contract-trust.mjs";
 
 const BASELINE_PATH = "config/ui-contract-baseline.json";
 const MIGRATION_PATH = "config/ui-contract-scanner-migrations.json";
@@ -37,30 +34,50 @@ function baseHasTrustedRunner(rootDir, baseRef) {
   );
 }
 
+function trustedEnvironment(overrides = {}) {
+  const allowedKeys = [
+    "CI",
+    "GITHUB_ACTIONS",
+    "HOME",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "PATH",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+  ];
+  const env = Object.fromEntries(
+    allowedKeys.filter((key) => process.env[key] !== undefined).map((key) => [key, process.env[key]]),
+  );
+  return { ...env, ...overrides };
+}
+
 export function runTrustedUiContract({ rootDir, baseRef, scannerArgs = [] }) {
   if (!/^[a-f0-9]{40}$/iu.test(baseRef ?? "")) {
     throw new Error("UI_BASE_REF_INVALID");
   }
-  const candidateEntry = path.join(rootDir, "scripts", "check-ui-contract.mjs");
-  let scannerEntry = candidateEntry;
-
-  if (baseHasTrustedRunner(rootDir, baseRef)) {
-    const baseBaseline = readBaseJson(rootDir, baseRef, BASELINE_PATH);
-    const baseMigrations = readBaseJson(rootDir, baseRef, MIGRATION_PATH);
-    const candidateBaseline = JSON.parse(
-      readFileSync(path.join(rootDir, ...BASELINE_PATH.split("/")), "utf8"),
-    );
-    const candidateDigest = computeScannerDigest({ rootDir });
-    const authority = selectScannerAuthority({
-      baseBaseline,
-      candidateBaseline,
-      candidateDigest,
-      baseMigrations,
-    });
-    if (authority === "base") {
-      scannerEntry = path.join(path.dirname(fileURLToPath(import.meta.url)), "check-ui-contract.mjs");
-    }
+  if (!baseHasTrustedRunner(rootDir, baseRef)) {
+    throw new Error("UI_TRUSTED_BASE_RUNNER_REQUIRED");
   }
+  const baseBaseline = readBaseJson(rootDir, baseRef, BASELINE_PATH);
+  const baseMigrations = readBaseJson(rootDir, baseRef, MIGRATION_PATH);
+  const candidateBaseline = JSON.parse(
+    readFileSync(path.join(rootDir, ...BASELINE_PATH.split("/")), "utf8"),
+  );
+  const candidateDigest = computeScannerDigest({ rootDir });
+  const authority = selectScannerAuthority({
+    baseBaseline,
+    candidateBaseline,
+    candidateDigest,
+    baseMigrations,
+  });
+  const scannerEntry = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "check-ui-contract.mjs",
+  );
+  const trustedMigrationBaseScan = authority === "candidate";
 
   const result = spawnSync(
     process.execPath,
@@ -68,7 +85,9 @@ export function runTrustedUiContract({ rootDir, baseRef, scannerArgs = [] }) {
     {
       cwd: rootDir,
       encoding: "utf8",
-      env: process.env,
+      env: trustedEnvironment({
+        ...(trustedMigrationBaseScan ? { UI_TRUSTED_MIGRATION_BASE_SCAN: "1" } : {}),
+      }),
       shell: false,
       windowsHide: true,
     },

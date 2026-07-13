@@ -82,6 +82,77 @@ describe("validateRegistry", () => {
     expect(resolveRegistryOwner(input, "docs/unregistered.md")).toBeNull();
   });
 
+  it.each(["proposed", "superseded"])(
+    "lets an exact %s lifecycle record block active prefix inheritance",
+    (status) => {
+      const input = registry([
+        document({ pathPrefix: "docs/Wireframe/" }),
+        document({
+          id: `screen-${status}`,
+          path: "docs/Wireframe/screen/functional-spec.md",
+          pathPrefix: null,
+          status,
+          role: status === "proposed" ? "proposal" : "archive",
+          scope: `screen/${status}`,
+        }),
+      ]);
+
+      expect(resolveRegistryOwner(input, "docs/Wireframe/screen/functional-spec.md")).toBeNull();
+    },
+  );
+
+  it("rejects duplicate exact document paths across lifecycle states", () => {
+    const root = createTempRoot();
+    write(root, "docs/core.md", "# Core\n");
+    const errors = validateRegistry(
+      registry([
+        document(),
+        document({
+          id: "workflow-proposal",
+          role: "proposal",
+          status: "proposed",
+          scope: "workflow/proposal",
+        }),
+      ]),
+      { rootDir: root },
+    );
+
+    expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/duplicate document path/i)]));
+  });
+
+  it("rejects non-canonical exact document paths before duplicate resolution", () => {
+    const root = createTempRoot();
+    write(root, "docs/core.md", "# Core\n");
+    const errors = validateRegistry(
+      registry([
+        document(),
+        document({
+          id: "workflow-alias",
+          path: "docs/./core.md",
+          scope: "workflow/alias",
+        }),
+      ]),
+      { rootDir: root },
+    );
+
+    expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/path.*canonical/i)]));
+  });
+
+  it.each([
+    "docs//",
+    "docs\\",
+    "/docs/",
+    "docs/./",
+    "docs/../docs/",
+    "docs",
+  ])("rejects non-canonical pathPrefix %s", (pathPrefix) => {
+    const root = createTempRoot();
+    write(root, "docs/core.md", "# Core\n");
+    const errors = validateRegistry(registry([document({ pathPrefix })]), { rootDir: root });
+
+    expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/pathPrefix.*canonical/i)]));
+  });
+
   it("accepts a valid active document and separate proposal lifecycle role", () => {
     const root = createTempRoot();
     write(root, "docs/core.md", "# Core\n");

@@ -109,6 +109,10 @@ Global directories (`~/.config/superpowers/worktrees/`) need no verification.
 
 **Branch creation authority:** Immediately before this fallback, verify that isolation consent is present, the exact `BRANCH_NAME` is authorized separately, and protected-branch checks pass.
 
+Record the verified grant in the action block as a standalone canonical line:
+
+`Authority envelope: action=worktree-add; target=$BRANCH_NAME; status=granted.`
+
 If any gate is missing, return `BLOCKED` before creation.
 
 ```bash
@@ -214,7 +218,7 @@ Ready to implement <feature-name>
 **Never:**
 
 - Create a worktree when Step 0 detects existing isolation
-- Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
+- Do not use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
 - Skip Step 1a by jumping straight to Step 1b's git commands
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification

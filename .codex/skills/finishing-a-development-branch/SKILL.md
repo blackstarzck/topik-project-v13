@@ -71,10 +71,13 @@ Return a handoff containing the source branch/head, exact validated base, fresh 
 
 Enter this section only after the user selects the publish option.
 
-Proceed only when publish authority is present and the current head, remote head, and exact validated base are known.
+Proceed only when the current head, remote head, and exact validated base are known and the user or project contract supplies a matching structured envelope for each operation:
 
-- Push the selected branch only; never redirect it to a protected branch.
-- Create the PR with an explicit base argument set to the exact validated base.
+- `Authority envelope: action=push; target=<remote>:<ref>; status=granted.`
+- `Authority envelope: action=pr-create; target=<repo>:<base>; status=granted.`
+
+- The push target must match the selected remote and branch; never redirect it to a protected branch.
+- PR creation must use explicit repository and base arguments matching the validated target.
 - If the validated base is `collab`, require the separate deployment warning and confirmation before either action.
 - Preserve the worktree for review feedback.
 

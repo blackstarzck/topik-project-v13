@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 export const UI_SCANNER_SOURCE_PATHS = Object.freeze([
-  "package.json",
-  "pnpm-lock.yaml",
+  "config/ui-contract-runtime/package.json",
+  "config/ui-contract-runtime/package-lock.json",
+  "scripts/run-trusted-ui-contract.mjs",
   "scripts/check-ui-contract.mjs",
   "scripts/lib/ui-contract.mjs",
   "scripts/lib/ui-contract-trust.mjs",
@@ -15,6 +16,46 @@ export class ScannerTrustError extends Error {
     super(code);
     this.name = "ScannerTrustError";
     this.code = code;
+  }
+}
+
+function normalizeRepoPath(value) {
+  return value.split(path.sep).join("/");
+}
+
+function assertScannerSourceClosure({ rootDir }) {
+  const rootReal = realpathSync(rootDir);
+  const listed = new Set(UI_SCANNER_SOURCE_PATHS);
+  const importPatterns = [
+    /\b(?:import|export)\s+(?:[^'";]*?\s+from\s+)?["'](\.[^"']+)["']/gu,
+    /\bimport\s*\(\s*["'](\.[^"']+)["']\s*\)/gu,
+  ];
+
+  for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
+    const absolutePath = path.join(rootDir, ...relativePath.split("/"));
+    const stat = lstatSync(absolutePath);
+    const fileReal = realpathSync(absolutePath);
+    if (
+      !stat.isFile() ||
+      stat.isSymbolicLink() ||
+      (fileReal !== rootReal && !fileReal.startsWith(`${rootReal}${path.sep}`))
+    ) {
+      throw new ScannerTrustError("UI_SCANNER_SOURCE_INVALID");
+    }
+    if (!relativePath.endsWith(".mjs")) continue;
+
+    const source = readFileSync(absolutePath, "utf8");
+    for (const pattern of importPatterns) {
+      pattern.lastIndex = 0;
+      for (const match of source.matchAll(pattern)) {
+        const importedPath = normalizeRepoPath(
+          path.normalize(path.join(path.dirname(relativePath), match[1])),
+        );
+        if (!listed.has(importedPath)) {
+          throw new ScannerTrustError("UI_SCANNER_SOURCE_UNLISTED");
+        }
+      }
+    }
   }
 }
 
@@ -49,6 +90,7 @@ export function computeBaselineApprovalDigest(baseline) {
 }
 
 export function computeScannerDigest({ rootDir }) {
+  assertScannerSourceClosure({ rootDir });
   const hash = createHash("sha256");
   for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
     hash.update(relativePath, "utf8");
