@@ -5,7 +5,9 @@ import postcss from "postcss";
 import ts from "typescript";
 
 export const UI_CONTRACT_SCHEMA_VERSION = 1;
-export const UI_CONTRACT_SCANNER_VERSION = 1;
+export const UI_CONTRACT_BASELINE_SCHEMA_VERSION = 2;
+export const UI_CONTRACT_SCANNER_VERSION = 2;
+const TEST_SCANNER_DIGEST = "0".repeat(64);
 
 const SCRIPT_KINDS = new Map([
   [".ts", [ts.ScriptKind.TS, "TS"]],
@@ -501,6 +503,32 @@ function staticPrimitiveText(node) {
   return null;
 }
 
+function boundStaticPrimitiveText(node, resolving = new Set()) {
+  if (!node) return null;
+  const direct = staticPrimitiveText(node);
+  if (direct !== null) return direct;
+  if (ts.isJsxExpression(node)) {
+    return boundStaticPrimitiveText(node.expression, resolving);
+  }
+  if (
+    ts.isParenthesizedExpression(node) ||
+    ts.isAsExpression(node) ||
+    ts.isTypeAssertionExpression(node) ||
+    ts.isSatisfiesExpression(node)
+  ) {
+    return boundStaticPrimitiveText(node.expression, resolving);
+  }
+  if (!ts.isIdentifier(node)) return null;
+
+  const binding = nearestLexicalBinding(node);
+  if (!binding) return null;
+  const bindingKey = `${node.text}@${binding.pos}`;
+  if (resolving.has(bindingKey)) return null;
+  const nextResolving = new Set(resolving);
+  nextResolving.add(bindingKey);
+  return boundStaticPrimitiveText(binding, nextResolving);
+}
+
 function propertyNameText(name, ast) {
   if (ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)) {
     return name.text;
@@ -517,7 +545,7 @@ function scanRawTypeScriptVisualValues(source, ast) {
   const visit = (node) => {
     if (ts.isPropertyAssignment(node)) {
       const propertyName = propertyNameText(node.name, ast).replaceAll("-", "");
-      const value = staticPrimitiveText(node.initializer);
+      const value = boundStaticPrimitiveText(node.initializer);
       if (value !== null && COLOR_PROPERTIES.test(propertyName) && RAW_COLOR_VALUE.test(value)) {
         if (!difficultySource) {
           violations.push(
@@ -542,6 +570,26 @@ function scanRawTypeScriptVisualValues(source, ast) {
             line: lineOf(ast, node),
             semanticKey: `${propertyName.toLowerCase()}:${value}`,
             lexeme: propertyName,
+          }),
+        );
+      }
+    }
+    if (ts.isJsxAttribute(node)) {
+      const propertyName = node.name.getText(ast).replaceAll("-", "");
+      const value = boundStaticPrimitiveText(node.initializer);
+      if (
+        value !== null &&
+        COLOR_PROPERTIES.test(propertyName) &&
+        RAW_COLOR_VALUE.test(value) &&
+        !difficultySource
+      ) {
+        violations.push(
+          createViolation({
+            ruleId: "visual.raw-color",
+            path: source.path,
+            line: lineOf(ast, node),
+            semanticKey: `${propertyName.toLowerCase()}:${value.toLowerCase()}`,
+            lexeme: `${propertyName}:${value}`,
           }),
         );
       }
@@ -1274,18 +1322,23 @@ function baselineSemanticContent(baseline) {
   return JSON.stringify({
     schemaVersion: baseline.schemaVersion,
     scannerVersion: baseline.scannerVersion,
+    scannerDigest: baseline.scannerDigest,
     fingerprints: baseline.fingerprints,
     summaryByRule: baseline.summaryByRule,
     summaryByPath: baseline.summaryByPath,
   });
 }
 
-export function validateUiContractBaseline(baseline) {
+export function validateUiContractBaseline(
+  baseline,
+  { expectedScannerVersion = UI_CONTRACT_SCANNER_VERSION } = {},
+) {
   assertExactObjectKeys(
     baseline,
     [
       "schemaVersion",
       "scannerVersion",
+      "scannerDigest",
       "generatedAt",
       "fingerprints",
       "summaryByRule",
@@ -1294,12 +1347,17 @@ export function validateUiContractBaseline(baseline) {
     "UI_BASELINE_INVALID",
   );
   if (
-    baseline.schemaVersion !== UI_CONTRACT_SCHEMA_VERSION ||
-    baseline.scannerVersion !== UI_CONTRACT_SCANNER_VERSION
+    baseline.schemaVersion !== UI_CONTRACT_BASELINE_SCHEMA_VERSION ||
+    !Number.isInteger(baseline.scannerVersion) ||
+    baseline.scannerVersion <= 0 ||
+    baseline.scannerVersion !== expectedScannerVersion
   ) {
     throw new UiContractError("UI_BASELINE_VERSION_MISMATCH");
   }
   if (!isUtcIsoTimestamp(baseline.generatedAt)) {
+    throw new UiContractError("UI_BASELINE_INVALID");
+  }
+  if (!/^[a-f0-9]{64}$/u.test(baseline.scannerDigest)) {
     throw new UiContractError("UI_BASELINE_INVALID");
   }
 
@@ -1329,12 +1387,19 @@ export function validateUiContractBaseline(baseline) {
 
 export function createUiContractBaseline(
   violations,
-  { generatedAt = new Date().toISOString(), previousBaseline = null } = {},
+  {
+    generatedAt = new Date().toISOString(),
+    previousBaseline = null,
+    scannerDigest = TEST_SCANNER_DIGEST,
+  } = {},
 ) {
-  if (!isUtcIsoTimestamp(generatedAt)) throw new UiContractError("UI_BASELINE_INVALID");
+  if (!isUtcIsoTimestamp(generatedAt) || !/^[a-f0-9]{64}$/u.test(scannerDigest)) {
+    throw new UiContractError("UI_BASELINE_INVALID");
+  }
   const baseline = {
-    schemaVersion: UI_CONTRACT_SCHEMA_VERSION,
+    schemaVersion: UI_CONTRACT_BASELINE_SCHEMA_VERSION,
     scannerVersion: UI_CONTRACT_SCANNER_VERSION,
+    scannerDigest,
     generatedAt,
     fingerprints: sortedCountObject(countBy(violations, (violation) => violation.fingerprint)),
     summaryByRule: sortedCountObject(countBy(violations, (violation) => violation.ruleId)),
@@ -1349,10 +1414,18 @@ export function createUiContractBaseline(
   return baseline;
 }
 
-export function assertCandidateMatchesCurrent(violations, candidateBaseline) {
+export function assertCandidateMatchesCurrent(
+  violations,
+  candidateBaseline,
+  { scannerDigest = candidateBaseline?.scannerDigest } = {},
+) {
   validateUiContractBaseline(candidateBaseline);
+  if (candidateBaseline.scannerDigest !== scannerDigest) {
+    throw new UiContractError("UI_SCANNER_DIGEST_MISMATCH");
+  }
   const expected = createUiContractBaseline(violations, {
     generatedAt: candidateBaseline.generatedAt,
+    scannerDigest,
   });
   if (baselineSemanticContent(candidateBaseline) !== baselineSemanticContent(expected)) {
     throw new UiContractError("UI_BASELINE_CURRENT_MISMATCH");
@@ -1361,7 +1434,9 @@ export function assertCandidateMatchesCurrent(violations, candidateBaseline) {
 }
 
 export function compareAgainstBase(violations, baseBaseline) {
-  validateUiContractBaseline(baseBaseline);
+  validateUiContractBaseline(baseBaseline, {
+    expectedScannerVersion: baseBaseline?.scannerVersion,
+  });
   const seen = new Map();
   const newViolations = [];
   for (const violation of violations) {

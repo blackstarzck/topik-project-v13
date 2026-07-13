@@ -23,11 +23,17 @@ import {
   validateExceptionManifest,
   validateUiContractBaseline,
 } from "./lib/ui-contract.mjs";
+import {
+  computeScannerDigest,
+  selectScannerAuthority,
+  validateScannerMigrationManifest,
+} from "./lib/ui-contract-trust.mjs";
 
 const BASELINE_PATH = "config/ui-contract-baseline.json";
 const APPROVAL_PATH = "config/ui-contract-exception-approvals.json";
 const EXCEPTION_PATH = "config/ui-contract-exceptions.json";
-const CONTRACT_PATHS = [BASELINE_PATH, APPROVAL_PATH, EXCEPTION_PATH];
+const MIGRATION_PATH = "config/ui-contract-scanner-migrations.json";
+const CONTRACT_PATHS = [BASELINE_PATH, APPROVAL_PATH, EXCEPTION_PATH, MIGRATION_PATH];
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".css"]);
 const MAX_SOURCE_BYTES = 2 * 1024 * 1024;
 const MAX_SOURCE_FILES = 20_000;
@@ -38,6 +44,10 @@ const EMPTY_APPROVALS = Object.freeze({
 const EMPTY_EXCEPTIONS = Object.freeze({
   schemaVersion: UI_CONTRACT_SCHEMA_VERSION,
   exceptions: Object.freeze([]),
+});
+const EMPTY_MIGRATIONS = Object.freeze({
+  schemaVersion: 1,
+  migrations: Object.freeze([]),
 });
 
 function compareNames(left, right) {
@@ -187,6 +197,7 @@ export function readBaseContractTuple({
       baseline: null,
       approvals: EMPTY_APPROVALS,
       exceptions: EMPTY_EXCEPTIONS,
+      migrations: EMPTY_MIGRATIONS,
     });
   }
   if (presentCount !== CONTRACT_PATHS.length) {
@@ -202,10 +213,18 @@ export function readBaseContractTuple({
   const baseline = values.get(BASELINE_PATH);
   const approvals = values.get(APPROVAL_PATH);
   const exceptions = values.get(EXCEPTION_PATH);
-  validateUiContractBaseline(baseline);
+  const migrations = values.get(MIGRATION_PATH);
+  validateUiContractBaseline(baseline, {
+    expectedScannerVersion: baseline?.scannerVersion,
+  });
   validateApprovalManifest(approvals, { today, role: "base" });
   validateExceptionManifest(exceptions);
-  return Object.freeze({ bootstrap: false, baseline, approvals, exceptions });
+  try {
+    validateScannerMigrationManifest(migrations);
+  } catch {
+    throw new UiContractError("UI_SCANNER_MIGRATION_INVALID");
+  }
+  return Object.freeze({ bootstrap: false, baseline, approvals, exceptions, migrations });
 }
 
 function parseCliOptions(argv) {
@@ -274,10 +293,14 @@ async function existingBaseline(rootDir) {
       await readFile(path.join(rootDir, ...BASELINE_PATH.split("/")), "utf8"),
       "UI_BASELINE_INVALID",
     );
+    if (baseline?.schemaVersion === 1) return null;
     validateUiContractBaseline(baseline);
     return baseline;
   } catch (error) {
     if (error?.code === "ENOENT") return null;
+    if (error instanceof UiContractError && error.code === "UI_BASELINE_VERSION_MISMATCH") {
+      return null;
+    }
     throw error;
   }
 }
@@ -289,12 +312,14 @@ export async function runUiContractCli(
     env = process.env,
     clock = () => new Date(),
     spawnSyncImpl = spawnSync,
+    computeScannerDigestImpl = computeScannerDigest,
   } = {},
 ) {
   try {
     const options = parseCliOptions(argv);
     const rootDir = await realpath(cwd);
     const today = clock().toISOString().slice(0, 10);
+    const scannerDigest = computeScannerDigestImpl({ rootDir });
     const sources = await collectUiSources(rootDir);
     const raw = scanUiContract(sources);
     const candidateApprovals = await readCandidateJson(
@@ -307,6 +332,16 @@ export async function runUiContractCli(
       EXCEPTION_PATH,
       "UI_EXCEPTION_INVALID",
     );
+    const candidateMigrations = await readCandidateJson(
+      rootDir,
+      MIGRATION_PATH,
+      "UI_SCANNER_MIGRATION_INVALID",
+    );
+    try {
+      validateScannerMigrationManifest(candidateMigrations);
+    } catch {
+      throw new UiContractError("UI_SCANNER_MIGRATION_INVALID");
+    }
     const baseRef = resolveBaseRef(options.baseRef, env, options.mode);
     const useCiAuthority = options.mode === "diff-block" && Boolean(baseRef);
     let baseTuple = null;
@@ -321,7 +356,9 @@ export async function runUiContractCli(
       });
       if (
         baseTuple.bootstrap &&
-        (candidateApprovals.approvals?.length !== 0 || candidateExceptions.exceptions?.length !== 0)
+        (candidateApprovals.approvals?.length !== 0 ||
+          candidateExceptions.exceptions?.length !== 0 ||
+          candidateMigrations.migrations?.length !== 0)
       ) {
         throw new UiContractError("UI_BOOTSTRAP_STATE_INVALID");
       }
@@ -353,6 +390,7 @@ export async function runUiContractCli(
       const baseline = createUiContractBaseline(applied.violations, {
         generatedAt: clock().toISOString(),
         previousBaseline,
+        scannerDigest,
       });
       await writeFile(
         path.join(rootDir, ...BASELINE_PATH.split("/")),
@@ -379,7 +417,19 @@ export async function runUiContractCli(
       BASELINE_PATH,
       "UI_BASELINE_INVALID",
     );
-    assertCandidateMatchesCurrent(applied.violations, candidateBaseline);
+    assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
+    if (baseTuple && !baseTuple.bootstrap) {
+      try {
+        selectScannerAuthority({
+          baseBaseline: baseTuple.baseline,
+          candidateBaseline,
+          candidateDigest: scannerDigest,
+          baseMigrations: baseTuple.migrations,
+        });
+      } catch (error) {
+        throw new UiContractError(error?.code ?? "UI_SCANNER_AUTHORITY_INVALID");
+      }
+    }
     const comparison =
       baseTuple && !baseTuple.bootstrap
         ? compareAgainstBase(applied.violations, baseTuple.baseline)

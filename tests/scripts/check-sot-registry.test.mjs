@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   evaluateRegistry,
   renderIndex,
+  resolveRegistryOwner,
   validateRegistry,
 } from "../../scripts/check-sot-registry.mjs";
 
@@ -38,13 +39,14 @@ function document(overrides = {}) {
     replaces: [],
     replacedBy: [],
     decisionLink: null,
+    pathPrefix: null,
     ...overrides,
   };
 }
 
 function registry(documents = [document()]) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedIndex: "docs/INDEX.md",
     classificationDefault: { role: "unclassified" },
     documents,
@@ -59,6 +61,27 @@ afterEach(() => {
 });
 
 describe("validateRegistry", () => {
+  it("inherits active ownership through a registered pathPrefix and prefers an exact owner", () => {
+    const input = registry([
+      document({ pathPrefix: "docs/Wireframe/" }),
+      document({
+        id: "screen-specialization",
+        path: "docs/Wireframe/screen/functional-spec.md",
+        pathPrefix: null,
+        scope: "screen/specialization",
+        precedence: 10,
+      }),
+    ]);
+
+    expect(resolveRegistryOwner(input, "docs/Wireframe/other/functional-spec.md")?.id).toBe(
+      "workflow-core",
+    );
+    expect(resolveRegistryOwner(input, "docs/Wireframe/screen/functional-spec.md")?.id).toBe(
+      "screen-specialization",
+    );
+    expect(resolveRegistryOwner(input, "docs/unregistered.md")).toBeNull();
+  });
+
   it("accepts a valid active document and separate proposal lifecycle role", () => {
     const root = createTempRoot();
     write(root, "docs/core.md", "# Core\n");

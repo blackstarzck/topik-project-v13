@@ -76,7 +76,7 @@ Promotion 절차:
 4. 검증이 통과하면 새 정책 문서를 `active`로 두고 proposal/이전 owner를 `superseded`로 보존한다.
 5. `replacedBy`/`replaces`에는 registry ID를 기록하고 index를 재생성한다.
 
-등록되지 않은 문서를 active라고 추정하지 않는다. `docs/INDEX.md`는 생성물이므로 직접 편집하지 않는다.
+등록되지 않은 문서를 active라고 추정하지 않는다. 단, registry의 active 문서에 `pathPrefix`가 선언되어 있으면 그 하위 경로는 같은 lifecycle·owner·scope 계약을 상속한다. 정확한 `path` 등록이 `pathPrefix` 상속보다 우선하고, 여러 prefix가 겹치면 가장 긴 prefix가 우선한다. `docs/INDEX.md`는 생성물이므로 직접 편집하지 않는다.
 
 ## 5. 실행과 역할 분리
 

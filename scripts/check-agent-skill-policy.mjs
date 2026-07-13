@@ -1,35 +1,63 @@
-import { readFile } from "node:fs/promises";
+import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const TARGETS = [
-  ["brainstorming", ".codex/skills/brainstorming/SKILL.md"],
-  [
-    "subagent-driven-development",
-    ".codex/skills/subagent-driven-development/SKILL.md",
-  ],
-  [
-    "subagent-driven-development",
-    ".codex/skills/subagent-driven-development/implementer-prompt.md",
-  ],
-  [
-    "subagent-driven-development-spec-reviewer",
-    ".codex/skills/subagent-driven-development/spec-reviewer-prompt.md",
-  ],
-  [
-    "subagent-driven-development-code-reviewer",
-    ".codex/skills/subagent-driven-development/code-quality-reviewer-prompt.md",
-  ],
-  ["using-git-worktrees", ".codex/skills/using-git-worktrees/SKILL.md"],
-  [
-    "finishing-a-development-branch",
-    ".codex/skills/finishing-a-development-branch/SKILL.md",
-  ],
-  [
-    "verification-before-completion",
-    ".codex/skills/verification-before-completion/SKILL.md",
-  ],
-];
+const SKILL_ROOT = ".codex/skills";
+
+function compareNames(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function skillNameFor(relativePath) {
+  const parts = relativePath.replaceAll("\\", "/").split("/");
+  const fileName = parts.at(-1);
+  const directoryName = parts.at(-2);
+  if (directoryName === "subagent-driven-development") {
+    if (fileName === "spec-reviewer-prompt.md") {
+      return "subagent-driven-development-spec-reviewer";
+    }
+    if (fileName === "code-quality-reviewer-prompt.md") {
+      return "subagent-driven-development-code-reviewer";
+    }
+    return "subagent-driven-development";
+  }
+  return directoryName;
+}
+
+function isExecutableSkillSurface(fileName) {
+  return (
+    fileName === "SKILL.md" ||
+    fileName.endsWith("-prompt.md") ||
+    fileName === "code-reviewer.md"
+  );
+}
+
+export async function discoverSkillPolicyTargets({ rootDir }) {
+  const absoluteRoot = path.join(rootDir, SKILL_ROOT);
+  const targets = [];
+
+  const walk = async (directory) => {
+    const entries = (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
+      compareNames(left.name, right.name),
+    );
+    for (const entry of entries) {
+      const absolutePath = path.join(directory, entry.name);
+      const stat = await lstat(absolutePath);
+      if (stat.isSymbolicLink()) {
+        throw new Error(`skill policy refuses symbolic links: ${absolutePath}`);
+      }
+      if (stat.isDirectory()) {
+        await walk(absolutePath);
+      } else if (stat.isFile() && isExecutableSkillSurface(entry.name)) {
+        const relativePath = path.relative(rootDir, absolutePath).replaceAll("\\", "/");
+        targets.push({ skillName: skillNameFor(relativePath), relativePath });
+      }
+    }
+  };
+
+  await walk(absoluteRoot);
+  return targets.sort((left, right) => compareNames(left.relativePath, right.relativePath));
+}
 
 function issue(id, message) {
   return { id, message };
@@ -238,6 +266,62 @@ function hasUnguardedPublish(content) {
 
 export function validateSkillPolicy({ skillName, content }) {
   const issues = [];
+
+  const gitMutationDirectives = [
+    ...commandDirectives(content, /\bgit\s+(?:add|commit)\b/i),
+    ...naturalDirectives(content, /^(?:stage|commit)(?:\s|$)|\bthen commit(?:\s|$)/i),
+  ];
+  const hasUnguardedGitMutation = gitMutationDirectives.some((directive) => {
+    const guard = `${nearbyText(directive, 10)}\n${actionBlock(directive)}`;
+    return !hasPositiveGuard(guard, [
+      /current user or project contract grants? the exact action/i,
+      /exact (?:stage|commit|git) authority (?:is )?(?:present|granted|confirmed)/i,
+      /project publish authority permits? it/i,
+      /authority envelope is `?commit-authorized`?/i,
+    ]);
+  });
+  if (hasUnguardedGitMutation) {
+    issues.push(
+      issue(
+        "GIT_MUTATION_AUTHORITY",
+        "Executable skill surfaces must not stage or commit without exact current authority.",
+      ),
+    );
+  }
+
+  if (skillName === "writing-plans") {
+    const plansCommit =
+      gitMutationDirectives.length > 0 ||
+      naturalDirectives(content, /^(?:stage|commit)\b/i).length > 0 ||
+      /frequent commits/i.test(content);
+    const preservesAuthority =
+      /plan never grants Git authority/i.test(content) &&
+      /verified diff checkpoint/i.test(content) &&
+      /current user or project contract grants? the exact action/i.test(content);
+    if (plansCommit || !preservesAuthority) {
+      issues.push(
+        issue(
+          "PLAN_COMMIT_AUTHORITY",
+          "Plans must express Git work as an authority-aware checkpoint, not an automatic step.",
+        ),
+      );
+    }
+  }
+
+  if (skillName === "executing-plans") {
+    const preservesAuthority =
+      /plan never grants Git authority/i.test(content) &&
+      /verified diff checkpoint/i.test(content) &&
+      /current user or project contract grants? the exact action/i.test(content);
+    if (!preservesAuthority) {
+      issues.push(
+        issue(
+          "PLAN_EXECUTION_AUTHORITY",
+          "Plan execution must convert unauthorized Git steps into verified diff checkpoints.",
+        ),
+      );
+    }
+  }
 
   if (skillName === "brainstorming") {
     const requiresCommit = hasAny(content, [
@@ -594,7 +678,8 @@ export function validateSkillPolicy({ skillName, content }) {
 export async function evaluateSkillPolicy({ rootDir }) {
   const errors = [];
 
-  for (const [skillName, relativePath] of TARGETS) {
+  const targets = await discoverSkillPolicyTargets({ rootDir });
+  for (const { skillName, relativePath } of targets) {
     const absolutePath = path.join(rootDir, relativePath);
     const content = await readFile(absolutePath, "utf8");
     for (const policyIssue of validateSkillPolicy({ skillName, content })) {

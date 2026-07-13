@@ -1,9 +1,12 @@
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
 import {
+  discoverSkillPolicyTargets,
   evaluateSkillPolicy,
   validateSkillPolicy,
 } from "../../scripts/check-agent-skill-policy.mjs";
@@ -62,6 +65,28 @@ function issueIds(skillName, content) {
 }
 
 describe("validateSkillPolicy", () => {
+  test("requires plans and plan executors to preserve the current Git authority envelope", () => {
+    expect(
+      issueIds(
+        "writing-plans",
+        "Step 5: Commit\ngit add src/example.tsx\ngit commit -m \"feat: example\"",
+      ),
+    ).toContain("PLAN_COMMIT_AUTHORITY");
+    expect(
+      issueIds(
+        "executing-plans",
+        "Load the plan and execute every task exactly, including its Git steps.",
+      ),
+    ).toContain("PLAN_EXECUTION_AUTHORITY");
+
+    const guardedPlan =
+      "A plan never grants Git authority. Record a verified diff checkpoint; stage or commit only when the current user or project contract grants the exact action.";
+    expect(issueIds("writing-plans", guardedPlan)).not.toContain("PLAN_COMMIT_AUTHORITY");
+    expect(issueIds("executing-plans", guardedPlan)).not.toContain(
+      "PLAN_EXECUTION_AUTHORITY",
+    );
+  });
+
   test("requires publish authority before design or implementer commits", () => {
     expect(
       issueIds("brainstorming", "Write design doc and commit your work."),
@@ -477,6 +502,31 @@ describe("validateSkillPolicy", () => {
 });
 
 describe("evaluateSkillPolicy", () => {
+  test("discovers executable skill surfaces recursively instead of using a fixed allowlist", async () => {
+    const root = mkdtempSync(path.join(tmpdir(), "skill-policy-"));
+    try {
+      const nested = path.join(root, ".codex", "skills", "nested", "deeper", "SKILL.md");
+      mkdirSync(path.dirname(nested), { recursive: true });
+      writeFileSync(nested, "Commit your work.\n", "utf8");
+
+      const targets = await discoverSkillPolicyTargets({ rootDir: root });
+      expect(targets).toEqual([
+        expect.objectContaining({
+          relativePath: ".codex/skills/nested/deeper/SKILL.md",
+          skillName: "deeper",
+        }),
+      ]);
+      expect((await evaluateSkillPolicy({ rootDir: root })).errors).toEqual([
+        expect.objectContaining({
+          id: "GIT_MUTATION_AUTHORITY",
+          path: ".codex/skills/nested/deeper/SKILL.md",
+        }),
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("accepts the repository skill set only when every authority boundary is satisfied", async () => {
     const result = await evaluateSkillPolicy({ rootDir: repoRoot });
     expect(result.errors).toEqual([]);

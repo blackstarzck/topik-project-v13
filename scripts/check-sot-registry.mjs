@@ -64,6 +64,15 @@ function isFile(rootDir, relativePath) {
   }
 }
 
+function isDirectory(rootDir, relativePath) {
+  if (!isSafeRelativePath(relativePath)) return false;
+  try {
+    return statSync(path.join(rootDir, relativePath)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
@@ -84,7 +93,7 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
   if (!registry || typeof registry !== "object" || Array.isArray(registry)) {
     return ["[sot-registry] registry must be a JSON object"];
   }
-  if (registry.schemaVersion !== 1) {
+  if (registry.schemaVersion !== 2) {
     errors.push(`[sot-registry] unsupported schemaVersion: ${registry.schemaVersion}`);
   }
   if (!isSafeRelativePath(registry.generatedIndex)) {
@@ -103,6 +112,7 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
   const ids = new Set();
   const documentsById = new Map();
   const activeScopes = new Map();
+  const activePathPrefixes = new Map();
 
   for (const [index, document] of registry.documents.entries()) {
     const label = document?.id || `documents[${index}]`;
@@ -146,6 +156,29 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
     }
     if (!isFile(rootDir, document.path)) {
       errors.push(`[sot-registry] ${label} missing path: ${document.path}`);
+    }
+    if (document.pathPrefix !== undefined && document.pathPrefix !== null) {
+      const normalizedPrefix = normalizeRelative(document.pathPrefix);
+      if (
+        !isSafeRelativePath(document.pathPrefix) ||
+        !normalizedPrefix.endsWith("/") ||
+        !isDirectory(rootDir, normalizedPrefix)
+      ) {
+        errors.push(
+          `[sot-registry] ${label} pathPrefix must be an existing safe relative directory ending in /`,
+        );
+      } else if (document.status !== "active") {
+        errors.push(`[sot-registry] ${label} pathPrefix is allowed only for active documents`);
+      } else {
+        const previous = activePathPrefixes.get(normalizedPrefix);
+        if (previous) {
+          errors.push(
+            `[sot-registry] duplicate active pathPrefix ${normalizedPrefix}: ${previous}, ${label}`,
+          );
+        } else {
+          activePathPrefixes.set(normalizedPrefix, label);
+        }
+      }
     }
     for (const field of ["replaces", "replacedBy"]) {
       if (!Array.isArray(document[field]) || document[field].some((id) => typeof id !== "string")) {
@@ -228,6 +261,31 @@ export function validateRegistry(registry, { rootDir = process.cwd() } = {}) {
   return errors;
 }
 
+export function resolveRegistryOwner(registry, relativePath) {
+  if (!isSafeRelativePath(relativePath)) return null;
+  const normalizedPath = normalizeRelative(relativePath);
+  const active = Array.isArray(registry?.documents)
+    ? registry.documents.filter((document) => document?.status === "active")
+    : [];
+  const exact = active
+    .filter((document) => normalizeRelative(document.path ?? "") === normalizedPath)
+    .toSorted((left, right) => left.precedence - right.precedence)[0];
+  if (exact) return exact;
+
+  return (
+    active
+      .filter(
+        (document) =>
+          typeof document.pathPrefix === "string" &&
+          normalizedPath.startsWith(normalizeRelative(document.pathPrefix)),
+      )
+      .toSorted((left, right) => {
+        const lengthDifference = right.pathPrefix.length - left.pathPrefix.length;
+        return lengthDifference || left.precedence - right.precedence;
+      })[0] ?? null
+  );
+}
+
 export function renderIndex(registry) {
   const documents = Array.isArray(registry?.documents) ? registry.documents : [];
   const active = documents
@@ -248,17 +306,17 @@ export function renderIndex(registry) {
     "",
     "## Active contracts",
     "",
-    "| Precedence | Scope | Role | Title | Path | Owner | Effective |",
-    "| ---: | --- | --- | --- | --- | --- | --- |",
+    "| Precedence | Scope | Role | Title | Path | Inherited path prefix | Owner | Effective |",
+    "| ---: | --- | --- | --- | --- | --- | --- | --- |",
   ];
 
   for (const document of active) {
     lines.push(
-      `| ${document.precedence} | \`${markdownCell(document.scope)}\` | ${markdownCell(document.role)} | ${markdownCell(document.title)} | ${indexLink(document.path)} | ${markdownCell(document.owner)} | ${markdownCell(document.effectiveDate)} |`,
+      `| ${document.precedence} | \`${markdownCell(document.scope)}\` | ${markdownCell(document.role)} | ${markdownCell(document.title)} | ${indexLink(document.path)} | ${document.pathPrefix ? `\`${markdownCell(document.pathPrefix)}\`` : "-"} | ${markdownCell(document.owner)} | ${markdownCell(document.effectiveDate)} |`,
     );
   }
   if (active.length === 0) {
-    lines.push("| - | - | - | No active contracts | - | - | - |");
+    lines.push("| - | - | - | No active contracts | - | - | - | - |");
   }
 
   lines.push(

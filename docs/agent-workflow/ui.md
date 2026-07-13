@@ -15,6 +15,8 @@ UI 작업은 다음을 함께 확인한다.
 - `docs/ant-design/08-theme-architecture.md`
 - 관련 Wireframe과 현재 sibling route/source
 
+`docs/sot-registry.json`의 `wireframe-entry`는 `docs/Wireframe/` 하위 상세 기능명세의 lifecycle·owner를 상속하고, `antd-entry`는 Page Pattern을 포함한 `docs/ant-design/` 하위 가이드의 lifecycle·owner를 상속한다. 하위 문서가 별도 exact path로 등록되어 있으면 그 계약이 우선한다.
+
 문서 값과 runtime token이 다르면 둘을 동시에 active로 취급하지 않는다. 현재 theme source와 adapter를 확인하고 불일치를 보고한다.
 
 ## 2. Page Recipe first
@@ -84,7 +86,9 @@ theme은 하나의 project source에서 두 adapter로 투영한다.
 | 신규 부채 차단 | `pnpm check:ui-contract` | candidate가 current source와 정확히 일치해야 하고, CI에서는 base commit의 baseline을 ratchet authority로 사용한다. |
 | 기준선 갱신 | `node scripts/check-ui-contract.mjs --mode report --write-baseline config/ui-contract-baseline.json` | 최초 bootstrap, 승인된 scanner migration, 또는 검증된 Phase 5 부채 감소에서만 사용한다. 부채 감소 PR은 제거된 fingerprint만 같은 PR의 baseline에서 함께 줄여야 하며, 일반 PR에서 baseline을 늘리는 도구가 아니다. |
 
-최초 CI bootstrap은 base commit에 baseline·approval·active-exception 세 파일이 모두 없고 candidate의 두 exception manifest가 비어 있을 때만 허용한다. 세 파일 중 일부만 존재하면 fail closed다. baseline이 merge된 뒤에는 base commit이 유일한 기존 부채 권한이다.
+최초 CI bootstrap은 base commit에 baseline·approval·active-exception·scanner-migration 네 파일이 모두 없고 candidate의 exception/migration manifest가 비어 있을 때만 허용한다. 네 파일 중 일부만 존재하면 fail closed다. baseline이 merge된 뒤에는 base commit의 기존 부채와 scanner digest가 권한이다.
+
+scanner source가 기준 브랜치와 다르면 같은 PR의 checker나 migration manifest는 권한이 아니다. 별도 PR에서 exact `fromVersion`/`fromDigest`/`toVersion`/`toDigest` migration approval을 먼저 merge해야 하며, CI는 기준 브랜치에서 추출한 trusted runner로 이 순서를 검사한다. source가 같으면 기준 브랜치 scanner를 실행하고, 사전 승인된 exact migration일 때만 candidate scanner를 실행한다. `CODEOWNERS`는 workflow·checker·config 변경의 소유자 리뷰를 지정하지만 실제 강제 여부는 GitHub branch protection 설정에 달려 있다.
 
 예외가 정말 필요하면 두 PR로 나눈다.
 

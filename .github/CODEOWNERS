@@ -1,0 +1,13 @@
+# Workflow policy and enforcement surfaces require repository-owner review.
+/.github/CODEOWNERS @blackstarzck
+/.github/workflows/ci.yml @blackstarzck
+/AGENTS.md @blackstarzck
+/docs/sot-registry.json @blackstarzck
+/scripts/check-sot-registry.mjs @blackstarzck
+/.codex/skills/ @blackstarzck
+/scripts/check-agent-skill-policy.mjs @blackstarzck
+/scripts/check-ui-contract.mjs @blackstarzck
+/scripts/run-trusted-ui-contract.mjs @blackstarzck
+/scripts/lib/ui-contract.mjs @blackstarzck
+/scripts/lib/ui-contract-trust.mjs @blackstarzck
+/config/ui-contract-*.json @blackstarzck

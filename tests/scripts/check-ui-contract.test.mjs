@@ -8,14 +8,17 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
+
+const repoRoot = join(fileURLToPath(new URL("../..", import.meta.url)));
 
 import {
   collectUiSources,
   readBaseContractTuple,
   resolveBaseRef,
-  runUiContractCli,
+  runUiContractCli as runUiContractCliRaw,
 } from "../../scripts/check-ui-contract.mjs";
 
 import {
@@ -47,6 +50,13 @@ function fingerprintsFor(result, ruleId) {
     .filter((violation) => violation.ruleId === ruleId)
     .map((violation) => violation.fingerprint)
     .sort();
+}
+
+function runUiContractCli(argv, options = {}) {
+  return runUiContractCliRaw(argv, {
+    computeScannerDigestImpl: () => "0".repeat(64),
+    ...options,
+  });
 }
 
 const temporaryRoots = [];
@@ -151,7 +161,7 @@ describe("UI contract normalization", () => {
       lexeme: "style={{ color: '#fff' }}",
     });
 
-    expect(UI_CONTRACT_SCANNER_VERSION).toBe(1);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(2);
     expect(left.fingerprint).toBe(right.fingerprint);
     expect(left.fingerprint).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -171,6 +181,23 @@ describe("UI contract normalization", () => {
 });
 
 describe("UI contract TSX rules", () => {
+  it("detects raw visual colors in JSX attributes and identifier bindings", () => {
+    const result = scanUiContract([
+      source(
+        "src/components/example/RawVisual.tsx",
+        `
+          const red = "#ff0000";
+          const visual = { color: red };
+          export function RawVisual() {
+            return <svg color={red} fill="#00ff00" stroke={red} data-visual={visual.color} />;
+          }
+        `,
+      ),
+    ]);
+
+    expect(ruleIds(result).filter((id) => id === "visual.raw-color")).toHaveLength(4);
+  });
+
   it("detects project-authored style and AntD styles props through the AST", () => {
     const result = scanUiContract([
       source(
@@ -835,7 +862,7 @@ describe("UI contract baseline authority", () => {
         fingerprints: { [existingA.fingerprint]: -1 },
       }),
     ).toThrow(expect.objectContaining({ code: "UI_BASELINE_INVALID" }));
-    expect(() => validateUiContractBaseline({ ...valid, scannerVersion: 2 })).toThrow(
+    expect(() => validateUiContractBaseline({ ...valid, scannerVersion: 3 })).toThrow(
       expect.objectContaining({ code: "UI_BASELINE_VERSION_MISMATCH" }),
     );
   });
@@ -1074,6 +1101,7 @@ describe("UI contract exceptions and redaction", () => {
 describe("UI contract collector, Git base, and CLI", () => {
   const emptyApprovals = { schemaVersion: 1, approvals: [] };
   const emptyExceptions = { schemaVersion: 1, exceptions: [] };
+  const emptyMigrations = { schemaVersion: 1, migrations: [] };
   const baseRef = "a".repeat(40);
 
   function writeJson(filePath, value) {
@@ -1083,6 +1111,17 @@ describe("UI contract collector, Git base, and CLI", () => {
 
   function createProject(files = {}) {
     const root = temporaryRoot();
+    for (const scannerPath of [
+      "scripts/check-ui-contract.mjs",
+      "scripts/lib/ui-contract.mjs",
+    ]) {
+      const scannerTarget = join(root, ...scannerPath.split("/"));
+      mkdirSync(join(scannerTarget, ".."), { recursive: true });
+      writeFileSync(
+        scannerTarget,
+        readFileSync(join(repoRoot, ...scannerPath.split("/"))),
+      );
+    }
     mkdirSync(join(root, "src", "폴더 with space"), { recursive: true });
     for (const [relativePath, content] of Object.entries(files)) {
       const target = join(root, ...relativePath.split("/"));
@@ -1167,6 +1206,7 @@ describe("UI contract collector, Git base, and CLI", () => {
       ["config/ui-contract-baseline.json", JSON.stringify(baseline)],
       ["config/ui-contract-exception-approvals.json", JSON.stringify(emptyApprovals)],
       ["config/ui-contract-exceptions.json", JSON.stringify(emptyExceptions)],
+      ["config/ui-contract-scanner-migrations.json", JSON.stringify(emptyMigrations)],
     ]);
 
     expect(
@@ -1217,10 +1257,12 @@ describe("UI contract collector, Git base, and CLI", () => {
     writeJson(join(root, "config", "ui-contract-baseline.json"), candidate);
     writeJson(join(root, "config", "ui-contract-exception-approvals.json"), emptyApprovals);
     writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
     const files = new Map([
       ["config/ui-contract-baseline.json", JSON.stringify(base)],
       ["config/ui-contract-exception-approvals.json", JSON.stringify(emptyApprovals)],
       ["config/ui-contract-exceptions.json", JSON.stringify(emptyExceptions)],
+      ["config/ui-contract-scanner-migrations.json", JSON.stringify(emptyMigrations)],
     ]);
 
     const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
@@ -1235,12 +1277,63 @@ describe("UI contract collector, Git base, and CLI", () => {
     expect(result.stdout).not.toContain("SECRET_GIT_STDERR");
   });
 
+  it("runs an exact version-increasing scanner migration approved on base", async () => {
+    const root = createProject({
+      "src/example.tsx": "export const Example = () => <div />;",
+    });
+    const candidate = createUiContractBaseline([], {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const baseDigest = "a".repeat(64);
+    const base = {
+      ...createUiContractBaseline([], {
+        generatedAt: "2026-07-10T00:00:00.000Z",
+      }),
+      scannerVersion: UI_CONTRACT_SCANNER_VERSION - 1,
+      scannerDigest: baseDigest,
+    };
+    const approvedMigration = {
+      schemaVersion: 1,
+      migrations: [
+        {
+          fromVersion: base.scannerVersion,
+          fromDigest: baseDigest,
+          toVersion: candidate.scannerVersion,
+          toDigest: candidate.scannerDigest,
+          approvedBy: "@blackstarzck",
+          reason: "Exercise the reviewed migration path.",
+        },
+      ],
+    };
+    mkdirSync(join(root, "config"), { recursive: true });
+    writeJson(join(root, "config", "ui-contract-baseline.json"), candidate);
+    writeJson(join(root, "config", "ui-contract-exception-approvals.json"), emptyApprovals);
+    writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
+    const files = new Map([
+      ["config/ui-contract-baseline.json", JSON.stringify(base)],
+      ["config/ui-contract-exception-approvals.json", JSON.stringify(emptyApprovals)],
+      ["config/ui-contract-exceptions.json", JSON.stringify(emptyExceptions)],
+      ["config/ui-contract-scanner-migrations.json", JSON.stringify(approvedMigration)],
+    ]);
+
+    const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(files),
+    });
+
+    expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+  });
+
   it("keeps read-only report independent from stale baseline freshness", async () => {
     const root = createProject({ "src/example.tsx": "export const Example = () => <div />;" });
     mkdirSync(join(root, "config"), { recursive: true });
     writeJson(join(root, "config", "ui-contract-baseline.json"), { stale: true });
     writeJson(join(root, "config", "ui-contract-exception-approvals.json"), emptyApprovals);
     writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
 
     const result = await runUiContractCli(["--mode", "report", "--format", "json"], {
       cwd: root,
@@ -1273,6 +1366,7 @@ describe("UI contract collector, Git base, and CLI", () => {
       ],
     });
     writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
 
     const result = await runUiContractCli(["--mode", "report"], {
       cwd: root,
@@ -1320,6 +1414,7 @@ describe("UI contract collector, Git base, and CLI", () => {
       schemaVersion: 1,
       exceptions: [{ id: approved.id, approvalId: approved.id }],
     });
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
     const before = readFileSync(baselinePath, "utf8");
 
     const result = await runUiContractCli(
@@ -1357,6 +1452,7 @@ describe("UI contract collector, Git base, and CLI", () => {
     writeJson(join(root, "config", "ui-contract-baseline.json"), staleBaseline);
     writeJson(join(root, "config", "ui-contract-exception-approvals.json"), emptyApprovals);
     writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
 
     const mismatch = await runUiContractCli(["--mode", "diff-block"], {
       cwd: root,
@@ -1390,6 +1486,7 @@ describe("UI contract collector, Git base, and CLI", () => {
       schemaVersion: 1,
       exceptions: [{ id: "missing-style", approvalId: "missing-style" }],
     });
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
     const cardinality = await runUiContractCli(["--mode", "diff-block"], {
       cwd: root,
       env: {},

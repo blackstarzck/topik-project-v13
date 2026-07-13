@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generatedIndex": "docs/INDEX.md",
   "classificationDefault": {
     "role": "unclassified"
@@ -163,6 +163,7 @@
       "id": "wireframe-entry",
       "title": "Wireframe Index",
       "path": "docs/Wireframe/README.md",
+      "pathPrefix": "docs/Wireframe/",
       "role": "active-sot",
       "scope": "product/wireframes",
       "owner": "product-design",
@@ -191,6 +192,7 @@
       "id": "antd-entry",
       "title": "Ant Design Guide",
       "path": "docs/ant-design/README.md",
+      "pathPrefix": "docs/ant-design/",
       "role": "active-sot",
       "scope": "ui/ant-design",
       "owner": "product-design",
