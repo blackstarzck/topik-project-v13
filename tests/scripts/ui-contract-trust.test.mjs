@@ -46,6 +46,103 @@ describe("trusted UI scanner authority", () => {
     );
   });
 
+  it.each([
+    ["computed import", 'const target = "./unlisted-helper.mjs"; await import(target);\n'],
+    ["CommonJS require", 'require("./unlisted-helper.mjs");\n'],
+    ["eval", 'eval(\'import("./" + "unlisted-helper.mjs")\');\n'],
+    ["Function constructor", 'new Function(\'return import("./" + "unlisted-helper.mjs")\')();\n'],
+    [
+      "createRequire",
+      'import { createRequire } from "node:module"; const load = createRequire(import.meta.url); load("./unlisted-helper.mjs");\n',
+    ],
+  ])("rejects %s in trusted scanner sources", (_label, source) => {
+    const rootDir = mkdtempSync(path.join(os.tmpdir(), "ui-contract-dynamic-loader-"));
+    for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
+      const absolutePath = path.join(rootDir, ...relativePath.split("/"));
+      mkdirSync(path.dirname(absolutePath), { recursive: true });
+      writeFileSync(absolutePath, "export {};\n");
+    }
+    writeFileSync(path.join(rootDir, "scripts", "check-ui-contract.mjs"), source);
+    writeFileSync(path.join(rootDir, "scripts", "unlisted-helper.mjs"), "export {};\n");
+
+    expect(() => computeScannerDigest({ rootDir })).toThrow(
+      expect.objectContaining({ code: "UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN" }),
+    );
+  });
+
+  it.each([
+    ["file URL import", 'import "file:///tmp/unlisted-helper.mjs";\n'],
+    ["absolute path import", 'import "/tmp/unlisted-helper.mjs";\n'],
+    ["unlisted bare import", 'import "unlisted-scanner-package";\n'],
+  ])("rejects %s outside the fixed scanner module graph", (_label, source) => {
+    const rootDir = mkdtempSync(path.join(os.tmpdir(), "ui-contract-unlisted-loader-"));
+    for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
+      const absolutePath = path.join(rootDir, ...relativePath.split("/"));
+      mkdirSync(path.dirname(absolutePath), { recursive: true });
+      writeFileSync(absolutePath, "export {};\n");
+    }
+    writeFileSync(path.join(rootDir, "scripts", "check-ui-contract.mjs"), source);
+
+    expect(() => computeScannerDigest({ rootDir })).toThrow(
+      expect.objectContaining({ code: "UI_SCANNER_SOURCE_UNLISTED" }),
+    );
+  });
+
+  it.each([
+    ["eval alias", 'const execute = eval; execute("export default 1");\n'],
+    ["sequence eval", '(0, eval)("export default 1");\n'],
+    ["Function alias", 'const Build = Function; new Build("return 1")();\n'],
+    [
+      "Reflect.construct Function",
+      'Reflect.construct(Function, ["return import(\\"./unlisted-helper.mjs\\")"])();\n',
+    ],
+    [
+      "process.getBuiltinModule loader alias",
+      'const makeRequire = process.getBuiltinModule("node:module").createRequire; const load = makeRequire(import.meta.url); load("./unlisted-helper.mjs");\n',
+    ],
+    [
+      "Reflect.get eval alias",
+      'const execute = Reflect.get(globalThis, "eval"); execute("export default 1");\n',
+    ],
+    [
+      "constructor-chain code generation",
+      'const Build = process.constructor.constructor; new Build("return 1")();\n',
+    ],
+  ])("rejects %s aliases in trusted scanner sources", (_label, source) => {
+    const rootDir = mkdtempSync(path.join(os.tmpdir(), "ui-contract-loader-alias-"));
+    for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
+      const absolutePath = path.join(rootDir, ...relativePath.split("/"));
+      mkdirSync(path.dirname(absolutePath), { recursive: true });
+      writeFileSync(absolutePath, "export {};\n");
+    }
+    writeFileSync(path.join(rootDir, "scripts", "check-ui-contract.mjs"), source);
+
+    expect(() => computeScannerDigest({ rootDir })).toThrow(
+      expect.objectContaining({ code: "UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN" }),
+    );
+  });
+
+  it("allows listed static dynamic imports without matching comments or strings", () => {
+    const rootDir = mkdtempSync(path.join(os.tmpdir(), "ui-contract-static-loader-"));
+    for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
+      const absolutePath = path.join(rootDir, ...relativePath.split("/"));
+      mkdirSync(path.dirname(absolutePath), { recursive: true });
+      writeFileSync(absolutePath, "export {};\n");
+    }
+    writeFileSync(
+      path.join(rootDir, "scripts", "check-ui-contract.mjs"),
+      [
+        '// require("./unlisted-helper.mjs")',
+        'const example = \'eval("ignored")\';',
+        'await import("./lib/ui-contract.mjs");',
+        "export {};",
+        "",
+      ].join("\n"),
+    );
+
+    expect(() => computeScannerDigest({ rootDir })).not.toThrow();
+  });
+
   it("never executes an approved candidate scanner from the workspace", () => {
     const runner = readFileSync(
       path.join(process.cwd(), "scripts", "run-trusted-ui-contract.mjs"),

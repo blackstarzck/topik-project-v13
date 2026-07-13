@@ -117,9 +117,28 @@ test("C-01 computed bundle renders an honest rule-based recommendation", async (
   await expect(page.getByText(STRINGS.otherRecommendations)).toBeVisible();
   await expect(page.getByText(STRINGS.secondaryTitle)).toBeVisible();
   await expect(page.getByText(STRINGS.unattemptedReason)).toBeVisible();
+  const continueButton = page.getByRole("button", {
+    name: STRINGS.continueProblem,
+  });
+  await expect(continueButton).toBeVisible();
+  const secondaryCard = continueButton.locator(
+    "xpath=ancestor::div[contains(concat(' ', normalize-space(@class), ' '), ' ant-card ')][1]",
+  );
+  const cardBody = secondaryCard.locator(":scope > .ant-card-body");
+  const cardActions = secondaryCard.locator(":scope > .ant-card-actions");
+  await expect(cardActions).toHaveClass(/app-card-footer-actions/);
   await expect(
-    page.getByRole("button", { name: STRINGS.continueProblem }),
-  ).toBeVisible();
+    continueButton.locator(
+      "xpath=ancestor::div[contains(@class, 'ant-card-body')]",
+    ),
+  ).toHaveCount(0);
+  const [bodyPadding, actionPadding] = await Promise.all([
+    cardBody.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    cardActions
+      .locator(":scope > li")
+      .evaluate((element) => getComputedStyle(element).paddingInlineStart),
+  ]);
+  expect(actionPadding).toBe(bodyPadding);
 
   // Both cards link into the writing workspace with their problem ids.
   await expect(

@@ -7,6 +7,7 @@ import {
   realpathSync,
   rmSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -593,6 +594,49 @@ describe("atomic registry writes", () => {
     expect(
       existsSync(join(capability.recordDir, "workflow-overhaul.json.tmp")),
     ).toBe(false);
+  });
+
+  it("tolerates another writer creating the record directory first", async () => {
+    const root = createTempRoot();
+    const capability = capabilityFor(root);
+    let raceInjected = false;
+
+    await expect(
+      writeTaskRecordAtomic(taskRecord(), {
+        capability,
+        expectedRevision: 0,
+        testHooks: {
+          beforeRecordDirCreate: async () => {
+            mkdirSync(capability.recordDir, { recursive: false });
+            raceInjected = true;
+          },
+        },
+      }),
+    ).resolves.toMatchObject({ revision: 1 });
+    expect(raceInjected).toBe(true);
+  });
+
+  it("skips a record that disappears after the directory scan", async () => {
+    const root = createTempRoot();
+    const capability = capabilityFor(root);
+    const otherRecord = taskRecord({
+      taskId: "other-task",
+      slug: "other-task",
+      branch: "codex/other-task",
+      worktreePath: "C:/worktrees/other-task",
+    });
+    await writeTaskRecordAtomic(taskRecord(), { capability, expectedRevision: 0 });
+    await writeTaskRecordAtomic(otherRecord, { capability, expectedRevision: 0 });
+
+    const records = await readTaskRecords(capability, {
+      testHooks: {
+        afterReadDirectory: async () => {
+          unlinkSync(join(capability.recordDir, "workflow-overhaul.json"));
+        },
+      },
+    });
+
+    expect(records).toEqual([otherRecord]);
   });
 
   it("allows only one concurrent writer for the same expected revision", async () => {

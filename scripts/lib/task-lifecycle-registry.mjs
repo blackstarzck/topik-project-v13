@@ -381,9 +381,6 @@ export async function writeTaskRecordAtomic(
     throw new RegistryError("TEST_HOOKS_FORBIDDEN");
   }
 
-  if (!existsSync(capability.recordDir)) mkdirSync(capability.recordDir, { recursive: false });
-  assertCapability(capability);
-
   const recordPath = path.join(capability.recordDir, `${record.taskId}.json`);
   const lockPath = path.join(capability.recordDir, `${record.taskId}.write.lock`);
   const tempPath = path.join(
@@ -396,6 +393,16 @@ export async function writeTaskRecordAtomic(
   let tempHandle;
 
   try {
+    if (!existsSync(capability.recordDir)) {
+      if (testHooks?.beforeRecordDirCreate) await testHooks.beforeRecordDirCreate();
+      try {
+        mkdirSync(capability.recordDir, { recursive: false });
+      } catch (error) {
+        if (error?.code !== "EEXIST") throw error;
+      }
+    }
+    assertCapability(capability);
+
     try {
       lockHandle = await open(lockPath, "wx");
     } catch (error) {
@@ -457,10 +464,15 @@ export async function writeTaskRecordAtomic(
   }
 }
 
-export async function readTaskRecords(capability) {
+export async function readTaskRecords(capability, { testHooks } = {}) {
   assertCapability(capability);
+  if (testHooks && capability.kind !== "test") {
+    throw new RegistryError("TEST_HOOKS_FORBIDDEN");
+  }
   if (!existsSync(capability.recordDir)) return [];
   const entries = await readdir(capability.recordDir, { withFileTypes: true });
+  if (testHooks?.afterReadDirectory) await testHooks.afterReadDirectory();
+  assertCapability(capability);
   const records = [];
   for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
     if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
@@ -475,7 +487,7 @@ export async function readTaskRecords(capability) {
     } catch {
       throw new RegistryError("CORRUPT_REGISTRY_RECORD");
     }
-    records.push(record);
+    if (record !== null) records.push(record);
   }
   return records;
 }

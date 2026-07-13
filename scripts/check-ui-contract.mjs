@@ -214,6 +214,8 @@ export function readBaseContractTuple({
   const approvals = values.get(APPROVAL_PATH);
   const exceptions = values.get(EXCEPTION_PATH);
   const migrations = values.get(MIGRATION_PATH);
+  // A trusted base may use an older scanner during an exact, base-approved migration.
+  // selectScannerAuthority binds this historical version to its base-owned digest tuple.
   validateUiContractBaseline(baseline, {
     expectedScannerVersion: baseline?.scannerVersion,
   });

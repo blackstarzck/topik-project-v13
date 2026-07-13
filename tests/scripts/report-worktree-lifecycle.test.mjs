@@ -48,7 +48,7 @@ function registryHintRecord(overrides = {}) {
     owner: "codex-desktop",
     repoId: "talkpik-v13",
     gitCommonDir: "C:/repo/.git",
-    worktreePath: "C:/?뚰겕 tree",
+    worktreePath: "C:/워크 tree",
     branch: "codex/workflow-overhaul",
     baseRef: "origin/main",
     baseSha: SHA_A,
@@ -75,6 +75,19 @@ function worktreeOutput() {
     `HEAD ${SHA_B}`,
     "detached",
     "locked user reason",
+    "",
+  ].join("\0");
+}
+
+function nestedWorktreeOutput() {
+  return [
+    "worktree C:/repo",
+    `HEAD ${SHA_A}`,
+    "branch refs/heads/main",
+    "",
+    "worktree C:/repo/.worktrees/feature",
+    `HEAD ${SHA_B}`,
+    "branch refs/heads/codex/feature",
     "",
   ].join("\0");
 }
@@ -108,6 +121,12 @@ function stableRunner(overrides = {}) {
 }
 
 describe("NUL-delimited Git porcelain parsers", () => {
+  it("keeps the registry hint path aligned with the Unicode worktree fixture", () => {
+    const worktreePath = parseWorktreePorcelain(worktreeOutput())[1].worktreePath;
+
+    expect(registryHintRecord().worktreePath).toBe(worktreePath);
+  });
+
   it("parses spaces, Unicode, detached, locked, prunable, and bare records", () => {
     const output =
       worktreeOutput() +
@@ -243,6 +262,68 @@ describe("read-only Git invocation contract", () => {
 });
 
 describe("inventory collection", () => {
+  it("fails closed on duplicate registry hints for one worktree", async () => {
+    const runner = stableRunner();
+
+    await expect(
+      collectWorktreeInventory({
+        repoRoot: "C:/repo",
+        currentPath: "C:/워크 tree",
+        now: NOW,
+        executeGit: runner.executeGit,
+        registryHints: [
+          registryHintRecord({ worktreePath: "C:/워크 tree", owner: "manual" }),
+          registryHintRecord({
+            taskId: "other-task",
+            slug: "other-task",
+            worktreePath: "C:/워크 tree",
+            owner: "codex-desktop",
+          }),
+        ],
+      }),
+    ).rejects.toMatchObject({ code: "REGISTRY_HINT_INVALID" });
+  });
+
+  it("recognizes a descendant directory as the current worktree", async () => {
+    const runner = stableRunner();
+    const inventory = await collectWorktreeInventory({
+      repoRoot: "C:/repo",
+      currentPath: "C:/워크 tree/src/nested",
+      now: NOW,
+      executeGit: runner.executeGit,
+      registryHints: [],
+    });
+
+    expect(inventory.entries[1]).toMatchObject({
+      isCurrent: true,
+      owner: "current-task",
+      ownerEvidence: "current-process",
+    });
+    expect(inventory.entries[0].isCurrent).toBe(false);
+  });
+
+  it("marks only the deepest containing worktree as current", async () => {
+    const nestedOutput = nestedWorktreeOutput();
+    const runner = stableRunner({
+      0: commandResult(nestedOutput),
+      10: commandResult(nestedOutput),
+    });
+    const inventory = await collectWorktreeInventory({
+      repoRoot: "C:/repo",
+      currentPath: "C:/repo/.worktrees/feature/src/nested",
+      now: NOW,
+      executeGit: runner.executeGit,
+      registryHints: [],
+    });
+
+    expect(inventory.entries[0].isCurrent).toBe(false);
+    expect(inventory.entries[1]).toMatchObject({
+      isCurrent: true,
+      owner: "current-task",
+      ownerEvidence: "current-process",
+    });
+  });
+
   it("recognizes valid Codex metadata without returning the owner thread ID", () => {
     const root = mkdtempSync(join(tmpdir(), "v13-codex-owner-"));
     tempDirs.push(root);
@@ -313,7 +394,7 @@ describe("inventory collection", () => {
     try {
       await collectWorktreeInventory({
         repoRoot: "C:/repo",
-        currentPath: "C:/?뚰겕 tree",
+        currentPath: "C:/워크 tree",
         now: NOW,
         executeGit: runner.executeGit,
         registryHints: [registryHintRecord(overrides)],
@@ -331,7 +412,7 @@ describe("inventory collection", () => {
     const runner = stableRunner();
     const inventory = await collectWorktreeInventory({
       repoRoot: "C:/repo",
-      currentPath: "C:/?뚰겕 tree",
+      currentPath: "C:/워크 tree",
       now: NOW,
       executeGit: runner.executeGit,
       registryHints: [
@@ -440,7 +521,7 @@ describe("inventory collection", () => {
 
     const inventory = await collectWorktreeInventory({
       repoRoot: "C:/repo",
-      currentPath: "C:/?뚰겕 tree",
+      currentPath: "C:/워크 tree",
       now: NOW,
       executeGit: runner.executeGit,
       registryHints: [],
@@ -465,7 +546,7 @@ describe("inventory collection", () => {
 
       const inventory = await collectWorktreeInventory({
         repoRoot: "C:/repo",
-        currentPath: "C:/?뚰겕 tree",
+        currentPath: "C:/워크 tree",
         now: NOW,
         executeGit: runner.executeGit,
         registryHints: [],

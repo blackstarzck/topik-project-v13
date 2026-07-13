@@ -220,6 +220,27 @@ function samePath(first, second) {
   return comparablePath(first) === comparablePath(second);
 }
 
+function isAncestorOrSame(root, candidate) {
+  const relative = path.relative(comparablePath(root), comparablePath(candidate));
+  return (
+    relative === "" ||
+    (relative !== ".." &&
+      !relative.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relative))
+  );
+}
+
+function deepestContainingWorktree(worktrees, currentPath) {
+  return (
+    worktrees
+      .filter((worktree) => isAncestorOrSame(worktree.worktreePath, currentPath))
+      .sort(
+        (left, right) =>
+          comparablePath(right.worktreePath).length - comparablePath(left.worktreePath).length,
+      )[0]?.worktreePath ?? null
+  );
+}
+
 function stableSnapshot(firstWorktrees, secondWorktrees, firstRefs, secondRefs) {
   if (!commandSucceeded(firstRefs) || !commandSucceeded(secondRefs)) return false;
   if (normalizeOutput(firstRefs.stdout) !== normalizeOutput(secondRefs.stdout)) return false;
@@ -238,9 +259,11 @@ function stableSnapshot(firstWorktrees, secondWorktrees, firstRefs, secondRefs) 
 }
 
 function hintForPath(registryHints, worktreePath) {
-  return registryHints.find(
+  const matches = registryHints.filter(
     (hint) => typeof hint?.worktreePath === "string" && samePath(hint.worktreePath, worktreePath),
   );
+  if (matches.length > 1) throw reportError("REGISTRY_HINT_INVALID");
+  return matches[0];
 }
 
 export function readCodexOwnerEvidence(worktreePath) {
@@ -309,6 +332,7 @@ export async function collectWorktreeInventory({
   const initialRefsResult = await executeGit({ operation: "refs", cwd: repoRoot });
   const initialWorktrees = parseWorktreePorcelain(initialListResult.stdout);
   if (initialWorktrees.length === 0) throw reportError("WORKTREE_LIST_EMPTY");
+  const currentWorktreePath = deepestContainingWorktree(initialWorktrees, currentPath);
 
   const firstInspections = [];
   for (const worktree of initialWorktrees) {
@@ -386,7 +410,8 @@ export async function collectWorktreeInventory({
     const hint = hintForPath(displayHints, worktree.worktreePath);
     const codexOwner = readCodexOwnerEvidence(worktree.worktreePath);
     const isBaseCheckout = index === 0;
-    const isCurrent = samePath(worktree.worktreePath, currentPath);
+    const isCurrent =
+      currentWorktreePath !== null && samePath(worktree.worktreePath, currentWorktreePath);
     const owner =
       codexOwner?.owner ??
       hint?.owner ??

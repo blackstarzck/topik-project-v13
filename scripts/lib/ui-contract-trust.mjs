@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
+import ts from "typescript";
+
 export const UI_SCANNER_SOURCE_PATHS = Object.freeze([
   "config/ui-contract-runtime/package.json",
   "config/ui-contract-runtime/package-lock.json",
@@ -9,6 +11,39 @@ export const UI_SCANNER_SOURCE_PATHS = Object.freeze([
   "scripts/check-ui-contract.mjs",
   "scripts/lib/ui-contract.mjs",
   "scripts/lib/ui-contract-trust.mjs",
+]);
+
+const FORBIDDEN_DYNAMIC_LOADING_NAMES = new Set([
+  "require",
+  "createRequire",
+  "getBuiltinModule",
+  "eval",
+  "Function",
+  "Reflect",
+  "globalThis",
+]);
+
+const FORBIDDEN_DYNAMIC_LOADING_MEMBER_NAMES = new Set([
+  "constructor",
+  "binding",
+  "_linkedBinding",
+  "dlopen",
+]);
+
+// Security boundary: these sources, this external-module allowlist, and the runtime
+// lockfile form a Code Owner-reviewed authority tuple. This AST pass is a
+// defense-in-depth module-closure check, not a JavaScript sandbox. In particular,
+// node:child_process remains required for the fixed Git and trusted-runner calls
+// whose behavior is reviewed and covered by the scanner digest itself.
+const ALLOWED_EXTERNAL_MODULES = new Set([
+  "node:child_process",
+  "node:crypto",
+  "node:fs",
+  "node:fs/promises",
+  "node:path",
+  "node:url",
+  "postcss",
+  "typescript",
 ]);
 
 export class ScannerTrustError extends Error {
@@ -23,13 +58,101 @@ function normalizeRepoPath(value) {
   return value.split(path.sep).join("/");
 }
 
+function invokedName(expression) {
+  if (ts.isIdentifier(expression)) return expression.text;
+  if (ts.isPropertyAccessExpression(expression)) return expression.name.text;
+  if (
+    ts.isElementAccessExpression(expression) &&
+    expression.argumentExpression
+  ) {
+    return staticStringValue(expression.argumentExpression);
+  }
+  return null;
+}
+
+function staticStringValue(node) {
+  if (ts.isStringLiteralLike(node)) return node.text;
+  if (
+    ts.isBinaryExpression(node) &&
+    node.operatorToken.kind === ts.SyntaxKind.PlusToken
+  ) {
+    const left = staticStringValue(node.left);
+    const right = staticStringValue(node.right);
+    return left === null || right === null ? null : `${left}${right}`;
+  }
+  return null;
+}
+
+function assertAllowedModuleSpecifier(specifier, { listed, relativePath }) {
+  if (specifier === "module" || specifier === "node:module") {
+    throw new ScannerTrustError("UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN");
+  }
+  if (specifier.startsWith(".")) {
+    const importedPath = normalizeRepoPath(
+      path.normalize(path.join(path.dirname(relativePath), specifier)),
+    );
+    if (listed.has(importedPath)) return;
+    throw new ScannerTrustError("UI_SCANNER_SOURCE_UNLISTED");
+  }
+  if (!ALLOWED_EXTERNAL_MODULES.has(specifier)) {
+    throw new ScannerTrustError("UI_SCANNER_SOURCE_UNLISTED");
+  }
+}
+
+function assertScannerModuleClosure(source, { listed, relativePath }) {
+  const sourceFile = ts.createSourceFile(
+    relativePath,
+    source,
+    ts.ScriptTarget.ESNext,
+    true,
+    ts.ScriptKind.JS,
+  );
+  if (sourceFile.parseDiagnostics.length > 0) {
+    throw new ScannerTrustError("UI_SCANNER_SOURCE_INVALID");
+  }
+
+  const visit = (node) => {
+    if (FORBIDDEN_DYNAMIC_LOADING_NAMES.has(invokedName(node))) {
+      throw new ScannerTrustError("UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN");
+    }
+    if (
+      (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+      FORBIDDEN_DYNAMIC_LOADING_MEMBER_NAMES.has(invokedName(node))
+    ) {
+      throw new ScannerTrustError("UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN");
+    }
+
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier
+    ) {
+      if (!ts.isStringLiteralLike(node.moduleSpecifier)) {
+        throw new ScannerTrustError("UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN");
+      }
+      assertAllowedModuleSpecifier(node.moduleSpecifier.text, { listed, relativePath });
+    }
+
+    if (ts.isImportEqualsDeclaration(node)) {
+      throw new ScannerTrustError("UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN");
+    }
+
+    if (ts.isCallExpression(node)) {
+      if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+        if (node.arguments.length !== 1 || !ts.isStringLiteralLike(node.arguments[0])) {
+          throw new ScannerTrustError("UI_SCANNER_DYNAMIC_LOADING_FORBIDDEN");
+        }
+        assertAllowedModuleSpecifier(node.arguments[0].text, { listed, relativePath });
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+}
+
 function assertScannerSourceClosure({ rootDir }) {
   const rootReal = realpathSync(rootDir);
   const listed = new Set(UI_SCANNER_SOURCE_PATHS);
-  const importPatterns = [
-    /\b(?:import|export)\s+(?:[^'";]*?\s+from\s+)?["'](\.[^"']+)["']/gu,
-    /\bimport\s*\(\s*["'](\.[^"']+)["']\s*\)/gu,
-  ];
 
   for (const relativePath of UI_SCANNER_SOURCE_PATHS) {
     const absolutePath = path.join(rootDir, ...relativePath.split("/"));
@@ -45,17 +168,7 @@ function assertScannerSourceClosure({ rootDir }) {
     if (!relativePath.endsWith(".mjs")) continue;
 
     const source = readFileSync(absolutePath, "utf8");
-    for (const pattern of importPatterns) {
-      pattern.lastIndex = 0;
-      for (const match of source.matchAll(pattern)) {
-        const importedPath = normalizeRepoPath(
-          path.normalize(path.join(path.dirname(relativePath), match[1])),
-        );
-        if (!listed.has(importedPath)) {
-          throw new ScannerTrustError("UI_SCANNER_SOURCE_UNLISTED");
-        }
-      }
-    }
+    assertScannerModuleClosure(source, { listed, relativePath });
   }
 }
 
