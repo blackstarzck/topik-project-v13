@@ -109,7 +109,8 @@ vi.mock("../../../src/components/notifications/notifications-data", () => ({
             typeof item.payload?.invitation_id === "string"
               ? item.payload.invitation_id
               : null,
-          code: typeof item.payload?.code === "string" ? item.payload.code : null,
+          code:
+            typeof item.payload?.code === "string" ? item.payload.code : null,
           codeLabel:
             typeof item.payload?.code_label === "string"
               ? item.payload.code_label
@@ -276,9 +277,7 @@ describe("NotificationBell", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText(tInvitation.title)).toBeTruthy();
     expect(
-      within(dialog)
-        .getByText(tInvitation.description)
-        .getAttribute("class"),
+      within(dialog).getByText(tInvitation.description).getAttribute("class"),
     ).toContain("institution-invitation-modal__description");
     expect(screen.queryByText("캠페인 유입 유저")).toBeNull();
     const code = screen.getByText("CAMPAIGN-01");
@@ -312,13 +311,17 @@ describe("NotificationBell", () => {
         true,
       );
     });
+    expect(respondInstitutionInvitationMock).not.toHaveBeenCalledWith(
+      "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      false,
+    );
     expect(routerRefreshMock).toHaveBeenCalledTimes(1);
     expect(messageSuccessMock).toHaveBeenCalledWith(
       koMessages.notifications.institutionInvitation.accepted,
     );
   });
 
-  it("keeps institution invitations dismissible without rendering a decline action", async () => {
+  it("closes an invitation without sending a response or rendering a decline action", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification(),
     ]);
@@ -358,7 +361,9 @@ describe("NotificationBell", () => {
     if (!rowButton) throw new Error("notification row button not found");
     fireEvent.click(rowButton);
 
-    expect(await screen.findByText(/초대 정보를 확인할 수 없습니다/)).toBeTruthy();
+    expect(
+      await screen.findByText(/초대 정보를 확인할 수 없습니다/),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "수락" })).toHaveProperty(
       "disabled",
       true,

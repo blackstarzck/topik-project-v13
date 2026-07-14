@@ -11,7 +11,8 @@
 //   RS_ORIGIN     default "http://localhost:3000" (use http://127.0.0.1:3000 for authed pages,
 //                 to match the storageState cookie domain)
 //   RS_VIEWPORTS  csv widths, default "1280" (e.g. "360,768,1280")
-//   RS_OUT        output dir (created if missing), default "./.design-review-shots"
+//   UI_EVIDENCE_SLUG required lowercase kebab-case task slug
+//   RS_OUT        optional output dir inside the slug-scoped ui-evidence root
 //   RS_LABEL      file prefix, default a slug of RS_ROUTE
 //   RS_STORAGE    optional path to a Playwright storageState JSON (authed pages)
 //   RS_WAIT       extra settle ms after load, default "800"
@@ -20,13 +21,24 @@
 // READ-ONLY w.r.t. the app: it only navigates and screenshots. It writes PNG/JSON to RS_OUT.
 
 import { chromium } from 'playwright'
-import { mkdir, writeFile, stat } from 'node:fs/promises'
+import { writeFile, stat } from 'node:fs/promises'
 import path from 'node:path'
+import { evidenceRoot, prepareEvidenceOutputDirectory, resolveEvidenceOutput, requireEvidenceSlug } from './evidence-paths.mjs'
 
 const ROUTE = process.env.RS_ROUTE
 const ORIGIN = process.env.RS_ORIGIN || 'http://localhost:3000'
 const VIEWPORTS = (process.env.RS_VIEWPORTS || '1280').split(',').map((s) => parseInt(s.trim(), 10)).filter(Boolean)
-const OUT = process.env.RS_OUT || './.design-review-shots'
+const UI_EVIDENCE_SLUG = requireEvidenceSlug(process.env.UI_EVIDENCE_SLUG)
+const evidenceBase = evidenceRoot(process.cwd(), UI_EVIDENCE_SLUG)
+const requestedOut = process.env.RS_OUT
+  ? path.resolve(process.cwd(), process.env.RS_OUT)
+  : path.join(evidenceBase, 'render-shot')
+const OUT_CHILD = path.relative(evidenceBase, requestedOut)
+const OUT = resolveEvidenceOutput({
+  cwd: process.cwd(),
+  slug: UI_EVIDENCE_SLUG,
+  child: OUT_CHILD,
+})
 const STORAGE = process.env.RS_STORAGE || ''
 const WAIT = parseInt(process.env.RS_WAIT || '800', 10)
 const LABEL = process.env.RS_LABEL || (ROUTE || 'page').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'page'
@@ -41,7 +53,11 @@ async function fileExists(p) {
 }
 
 async function main() {
-  await mkdir(OUT, { recursive: true })
+  prepareEvidenceOutputDirectory({
+    cwd: process.cwd(),
+    slug: UI_EVIDENCE_SLUG,
+    child: OUT_CHILD,
+  })
 
   // Reuse running server: a quick reachability probe before launching a browser.
   try {

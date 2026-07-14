@@ -5036,8 +5036,7 @@ body {
  * Card radius already comes from `theme.components.Card`, so only the outline
  * is restored here. The color mixes the shared app border and layout bridges so
  * AntD Card outlines stay lighter than the raw Pebble divider. Card-internal rows
- * (`app-card-compact`) and the continuous footer actions stay flat per
- * docs/ant-design/08-theme-architecture.md.
+ * (`app-card-compact`) and the continuous footer actions stay flat per DESIGN.md.
  */
 .app-cards-bordered .app-card.app-surface {
   border: 1px solid

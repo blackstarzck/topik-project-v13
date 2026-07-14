@@ -30,7 +30,7 @@ test("X-03 paywall hides IA code and keeps checkout deferred", async ({
   await expect(page.getByText("X-03")).toHaveCount(0);
 
   // The plan catalog (subscription_plans) is empty under the deferred billing
-  // scope (docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md), so the
+  // scope in docs/prd.md, so the
   // page may render either the plan grid or the "no plans" empty state. Both are
   // valid; anchor on whichever appears, then assert the state-specific details.
   const planGrid = page.getByTestId("paywall-plan-grid");

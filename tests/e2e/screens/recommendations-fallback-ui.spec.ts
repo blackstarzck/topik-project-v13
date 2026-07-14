@@ -3,9 +3,8 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 // C-01 problem-type recommendations — COMPUTED (rule-based fallback) UI states.
 //
 // The bundle is assembled server-side (stored recommendation_items first, else
-// a transient rule-based computation from the user's history — implementation
-// brief: docs/sot-change-proposals/2026-07-09-c01-rule-fallback-recommendations-
-// implementation-brief.md). These specs pin the UI contract for a computed
+// a transient rule-based computation from the user's history. These specs pin
+// the UI contract for a computed
 // bundle by stubbing the API route: success (hero + reason panel + honest
 // tags), loading (skeletons), and error (alert + retry recovers). The rule
 // logic itself is covered by tests/lib/practice/recommendation-fallback.test.ts;

@@ -2,7 +2,6 @@
 .claude/
 .codex/
 .next/
-.omx/
 node_modules/
 out/
 build/

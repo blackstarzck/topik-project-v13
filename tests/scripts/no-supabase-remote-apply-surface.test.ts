@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -30,6 +30,18 @@ describe("v13 Supabase remote-apply boundary", () => {
     expect(violations).toEqual([]);
   });
 
+  it("guards the mutating PDF quota integration behind an explicit loopback local stack", () => {
+    const integrationTest = readFileSync(
+      join(root, "tests", "integration", "pdf-export-quota-rpc.test.ts"),
+      "utf8",
+    );
+
+    expect(integrationTest).toContain(
+      'process.env.SUPABASE_LOCAL_STACK === "1"',
+    );
+    expect(integrationTest).toContain("isLoopbackUrl(SUPABASE_URL)");
+  });
+
   it("does not carry institution exposure schema ownership in v13 migrations", () => {
     const migrationSql = [
       "supabase/migrations/20260626110000_writing_institution_visibility_predicate.sql",
@@ -46,13 +58,13 @@ describe("v13 Supabase remote-apply boundary", () => {
     expect(migrationSql).not.toMatch(
       /alter\s+table\s+public\.topik_writing_question_institution_exposure/,
     );
-    expect(
-      existsSync(
-        join(
-          root,
-          "docs/todo/v13-institution-question-exposure-handoff-2026-06-26.md",
-        ),
-      ),
-    ).toBe(false);
+    const contract = readFileSync(
+      join(root, "docs", "supabase", "database-api-contract.md"),
+      "utf8",
+    );
+    expect(contract).toContain(
+      "`topik_writing_question_institution_exposure`",
+    );
+    expect(contract).toContain("v13 migration은 이 table을 생성하거나 변경하지 않는다");
   });
 });

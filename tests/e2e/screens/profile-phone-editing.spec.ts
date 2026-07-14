@@ -1,8 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-// X-05 /profile phone number save + delete (SOT: docs/sot-change-proposals/
-// 2026-07-09-phone-number-profile-reminder.md). Uses a per-test temp user seeded
+// X-05 /profile phone number save + delete. Uses a per-test temp user seeded
 // with a complete required profile + required consents so it passes the workspace
 // gate, and overrides the shared STUDENT_STATE storageState with an in-test login
 // so it never dirties the shared account.
@@ -74,7 +73,10 @@ function latestByDocType(rows: RequiredDoc[]): RequiredDoc[] {
   for (const row of rows) {
     const t = Date.parse(row.effective_at ?? row.created_at);
     const current = latest.get(row.doc_type);
-    if (!current || t > Date.parse(current.effective_at ?? current.created_at)) {
+    if (
+      !current ||
+      t > Date.parse(current.effective_at ?? current.created_at)
+    ) {
       latest.set(row.doc_type, row);
     }
   }
@@ -164,7 +166,9 @@ async function createTempProfileUser(): Promise<TempProfileUser> {
 async function signIn(page: Page, user: TempProfileUser) {
   await page.goto("/login", { waitUntil: "networkidle" });
   await page.locator('input[autocomplete="email"]').fill(user.email);
-  await page.locator('input[autocomplete="current-password"]').fill(user.password);
+  await page
+    .locator('input[autocomplete="current-password"]')
+    .fill(user.password);
   await page.locator('button[type="submit"]').click();
   // Complete + consented user never lands on the consent gate; it routes to
   // onboarding (no learning goal yet) or dashboard.

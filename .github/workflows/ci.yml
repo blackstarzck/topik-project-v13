@@ -83,8 +83,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check active SOT registry
-        run: pnpm check:sot-registry
+      - name: Check project structure
+        run: pnpm check:project-structure
 
       - name: Check agent skill policy
         run: pnpm check:agent-skill-policy

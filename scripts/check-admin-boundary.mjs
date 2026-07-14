@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -62,7 +62,7 @@ const SHARED_ALLOWED_TERMS = [
   "user_marketing_consent",
 ];
 
-const ALLOWED_CODE_REFERENCES = new Map([
+const ALLOWED_SOURCE_REFERENCES = new Map([
   [
     "src/app/api/notifications/dispatch-email/route.ts",
     new Set([
@@ -87,8 +87,7 @@ const ALLOWED_CODE_REFERENCES = new Map([
       // Documentation-only reference. The comment explains that admin publishes
       // policies via operation_policies which are projected into the v13-owned
       // legal_documents table; this page reads legal_documents only (no direct
-      // admin table access). See
-      // docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md
+      // admin table access). See the product boundary in docs/prd.md.
       "operation_policies",
     ]),
   ],
@@ -97,8 +96,7 @@ const ALLOWED_CODE_REFERENCES = new Map([
     new Set([
       // Documentation-only reference explaining the admin operation_policies ->
       // v13 legal_documents projection. The renderer consumes doc.body from
-      // legal_documents; it never queries operation_policies. See
-      // docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md
+      // legal_documents; it never queries operation_policies. See docs/prd.md.
       "operation_policies",
     ]),
   ],
@@ -107,8 +105,7 @@ const ALLOWED_CODE_REFERENCES = new Map([
     new Set([
       // Documentation-only reference. All queries here target legal_documents
       // (the user-facing projection of admin operation_policies); v13 has
-      // read-only access and never touches operation_policies directly. See
-      // docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md
+      // read-only access and never touches operation_policies directly. See docs/prd.md.
       "operation_policies",
     ]),
   ],
@@ -124,77 +121,9 @@ const ALLOWED_CODE_REFERENCES = new Map([
       "admin_audit_logs",
     ]),
   ],
-  [
-    "tests/lib/supabase/phase-6-types.test.ts",
-    new Set([
-      // Regression assertion documents that these RPCs were removed from v13.
-      "admin_toggle_problem_publish",
-      "admin_change_user_role",
-      "get_admin_org_dashboard",
-      // Historical type regression only; v13 app code must not use this admin
-      // audit sink after the topik-ai ownership transfer.
-      "admin_audit_logs",
-    ]),
-  ],
-  [
-    "tests/scripts/check-admin-boundary.test.mjs",
-    new Set([
-      // The boundary checker's own fixture strings intentionally include
-      // forbidden terms to prove the checker fails on real regressions.
-      "admin_update_problem",
-      "get_admin_users",
-      "notification_templates",
-      "notification_dispatches",
-      "operation_faqs",
-      "commerce_coupons",
-      "system_metadata_groups",
-      "admin_audit_logs",
-    ]),
-  ],
-  [
-    "tests/scripts/check-admin-boundary-proposal.test.mjs",
-    new Set([
-      // Proposal coverage fixture strings intentionally include warning terms
-      // to prove every active-doc warning must be covered by the proposal.
-      "admin_update_problem",
-      "get_admin_users",
-      "admin_set_user_status",
-      "admin_audit_logs",
-      "notification_templates",
-      "notification_groups",
-      "notification_dispatches",
-      "admin_list_audit_logs",
-      "admin_set_admin_app_role",
-      "admin_list_admin_app_roles",
-      "operation_notices",
-      "operation_faqs",
-      "operation_faq_curations",
-      "operation_faq_metrics",
-      "operation_events",
-      "operation_policies",
-      "operation_policy_histories",
-      "community_posts",
-      "community_post_admin_notes",
-      "community_reports",
-      "commerce_point_policies",
-      "commerce_point_ledgers",
-      "commerce_point_expirations",
-      "commerce_coupons",
-      "commerce_coupon_subscription_templates",
-      "commerce_refunds",
-      "system_metadata_groups",
-      "system_metadata_group_items",
-      "system_logs",
-    ]),
-  ],
 ]);
 
-const CODE_DIRS = ["src", "tests"];
-const DOC_FILES_TO_WARN = [
-  "docs/Wireframe/data-usage-index.md",
-  "docs/ia.md",
-  "docs/superpowers/plans/2026-06-17-talkpik-qa-notification-remediation-plan.md",
-];
+const SOURCE_DIRS = ["src"];
 
 const SKIP_DIRS = new Set([
   ".git",
@@ -253,65 +182,66 @@ function normalizeRelative(relativeFile) {
   return relativeFile.split(path.sep).join("/");
 }
 
-function isAllowedCodeReference(hit) {
-  const allowed = ALLOWED_CODE_REFERENCES.get(normalizeRelative(hit.file));
+function isAllowedSourceReference(hit) {
+  const allowed = ALLOWED_SOURCE_REFERENCES.get(normalizeRelative(hit.file));
   return allowed?.has(hit.term) ?? false;
 }
 
-function fileExists(relativeFile, rootDir = ROOT) {
-  try {
-    return statSync(path.join(rootDir, relativeFile)).isFile();
-  } catch {
-    return false;
-  }
-}
-
 export function evaluateAdminBoundary({ rootDir = ROOT } = {}) {
-  const codeFiles = CODE_DIRS.flatMap((dir) => walkFiles(dir, rootDir));
-  const codeFailures = codeFiles
+  const sourceFiles = SOURCE_DIRS.flatMap((dir) => walkFiles(dir, rootDir));
+  const termFailures = sourceFiles
     .flatMap((file) =>
-      findTerms(file, [...REMOVED_ADMIN_ISLAND_TERMS, ...TOPIK_AI_ADMIN_TERMS], rootDir),
+      findTerms(
+        file,
+        [...REMOVED_ADMIN_ISLAND_TERMS, ...TOPIK_AI_ADMIN_TERMS],
+        rootDir,
+      ),
     )
-    .filter((hit) => !isAllowedCodeReference(hit));
+    .filter((hit) => !isAllowedSourceReference(hit));
+  const routeFailures = sourceFiles.flatMap((file) => {
+    const normalizedFile = normalizeRelative(file);
+    const isAdminRouteFile =
+      /^src\/app\/(?:.*\/)?(?:admin|\(admin\))(?:\/|$)/iu.test(normalizedFile);
+    const exposesAdminRoute =
+      normalizedFile === "src/lib/routes.ts" &&
+      /["'`]\/admin(?:\/|["'`])/iu.test(readText(file, rootDir));
+    return isAdminRouteFile || exposesAdminRoute
+      ? [{ file: normalizedFile, term: "admin route" }]
+      : [];
+  });
+  const codeFailures = [...routeFailures, ...termFailures];
 
-  const docWarnings = DOC_FILES_TO_WARN.filter((file) => fileExists(file, rootDir)).flatMap((file) =>
-    findTerms(file, [...REMOVED_ADMIN_ISLAND_TERMS, ...TOPIK_AI_ADMIN_TERMS], rootDir),
-  );
-
-  const sharedEvidence = codeFiles.flatMap((file) =>
+  const sharedEvidence = sourceFiles.flatMap((file) =>
     findTerms(file, SHARED_ALLOWED_TERMS, rootDir),
   );
 
-  return { codeFailures, docWarnings, sharedEvidence };
+  return { codeFailures, sharedEvidence };
 }
 
 export function formatAdminBoundaryReport(result) {
   const lines = [];
   if (result.codeFailures.length > 0) {
-    lines.push("[admin-boundary] FAIL: v13 code/tests reference admin-owned objects.");
+    lines.push(
+      "[admin-boundary] FAIL: v13 source references admin-owned objects.",
+    );
     for (const hit of result.codeFailures) {
       lines.push(`- ${hit.file}: ${hit.term}`);
     }
     lines.push(
-      "Move admin management to topik-ai or document a new SOT-approved exception before using these objects in v13.",
+      "Move admin management to topik-ai or approve the product boundary in docs/prd.md before using these objects in v13.",
     );
     return lines.join("\n");
   }
 
-  lines.push("[admin-boundary] PASS: v13 code/tests do not reference removed or topik-ai-owned admin objects.");
+  lines.push(
+    "[admin-boundary] PASS: v13 source does not reference removed or topik-ai-owned admin objects.",
+  );
 
   if (result.sharedEvidence.length > 0) {
-    lines.push("[admin-boundary] Shared user-facing objects still referenced as expected:");
-    for (const hit of result.sharedEvidence) {
-      lines.push(`- ${hit.file}: ${hit.term}`);
-    }
-  }
-
-  if (result.docWarnings.length > 0) {
     lines.push(
-      "[admin-boundary] WARN: active docs still mention removed/topik-ai admin terms. Track via docs/sot-change-proposals/2026-06-18-admin-ownership-transfer-to-topik-ai.md before editing active SOT.",
+      "[admin-boundary] Shared user-facing objects still referenced as expected:",
     );
-    for (const hit of result.docWarnings) {
+    for (const hit of result.sharedEvidence) {
       lines.push(`- ${hit.file}: ${hit.term}`);
     }
   }
@@ -326,13 +256,12 @@ function main() {
     console.error(report);
     process.exit(1);
   }
-  if (result.docWarnings.length > 0) {
-    console.warn(report);
-    return;
-  }
   console.log(report);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main();
 }

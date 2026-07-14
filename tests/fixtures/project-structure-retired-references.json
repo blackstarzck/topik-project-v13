@@ -1,0 +1,10 @@
+{
+  "css": "@import \"docs/ant-design/legacy.css\";",
+  "splitWireframe": "const output = path.join(process.cwd(), \"docs\", \"Wireframe\");",
+  "splitRecreate": "mkdirSync(path.resolve(root, \"docs\", \"flow\"), { recursive: true });",
+  "adminPlan": "docs/admin-integration-plan.md",
+  "pdfBrief": "docs/pdf-export-real-file-brief-20260612.md",
+  "ciCommand": "run: pnpm check-sot-registry",
+  "codeowners": "/docs/Wireframe/ @owner",
+  "configJson": "{\"owner\":\"docs/sot-change-proposals/legacy.md\"}"
+}
