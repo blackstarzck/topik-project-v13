@@ -17,9 +17,25 @@ type RecItem = {
   } | null;
 };
 
+type FallbackProblemRow = {
+  id: string;
+  title: string;
+  question_no: number;
+  topik_level: number | null;
+  difficulty: number | null;
+  tags: string[] | null;
+  materials: unknown;
+};
+
 function makeClient(opts: {
   recItems?: RecItem[];
   visibleProblemIds?: string[];
+  /**
+   * Candidate pool for the computed (Tier-2) path. When ABSENT, touching
+   * writing history / `problems` throws — which is exactly how the
+   * stored-precedence tests prove Tier-2 never runs.
+   */
+  fallbackProblems?: FallbackProblemRow[];
 }) {
   return {
     rpc(name: string, args: { p_problem_ids?: string[] }) {
@@ -37,6 +53,61 @@ function makeClient(opts: {
       });
     },
     from(table: string) {
+      if (opts.fallbackProblems) {
+        if (table === "writing_submissions") {
+          const chain = {
+            eq: () => chain,
+            order: () => Promise.resolve({ data: [], error: null }),
+          };
+          return { select: () => chain };
+        }
+        if (table === "writing_drafts") {
+          const chain = {
+            eq: () => chain,
+            neq: () => chain,
+            order: () => Promise.resolve({ data: [], error: null }),
+          };
+          return { select: () => chain };
+        }
+        if (table === "feedback_dimension_scores") {
+          return {
+            select: () => ({
+              eq: () => Promise.resolve({ data: [], error: null }),
+            }),
+          };
+        }
+        if (table === "learning_goals") {
+          const chain = {
+            eq: () => chain,
+            maybeSingle: () => Promise.resolve({ data: null, error: null }),
+          };
+          return { select: () => chain };
+        }
+        if (table === "problems") {
+          let questionNoFilter: number | null = null;
+          const chain = {
+            eq: (column: string, value: unknown) => {
+              if (column === "question_no" && typeof value === "number") {
+                questionNoFilter = value;
+              }
+              return chain;
+            },
+            order: () => chain,
+            range: (from: number, to: number) => {
+              const rows = (opts.fallbackProblems ?? []).filter(
+                (row) =>
+                  questionNoFilter == null ||
+                  row.question_no === questionNoFilter,
+              );
+              return Promise.resolve({
+                data: rows.slice(from, to + 1),
+                error: null,
+              });
+            },
+          };
+          return { select: () => chain };
+        }
+      }
       if (table === "recommendation_runs") {
         const chain = {
           eq: () => chain,
@@ -112,6 +183,10 @@ describe("queryRecommendationBundleForUser", () => {
     expect(bundle.items.map((item) => item.problemId)).toEqual(["p-visible"]);
     expect(bundle.availableTypes).toEqual([52]);
     expect(bundle.run?.reasonSummary).toBeNull();
+    // Stored items present → Tier-2 must not run. makeClient throws on any
+    // writing history/problems access when fallbackProblems is absent, so
+    // reaching this assertion IS the proof.
+    expect(bundle.source).toBe("stored");
   });
 
   it("applies the selected question number filter before returning items", async () => {
@@ -158,13 +233,94 @@ describe("queryRecommendationBundleForUser", () => {
         makeClient({
           recItems: [makeItem("i-hidden", "p-hidden", 1, 53)],
           visibleProblemIds: [],
+          // Tier-2 runs but the visibility RPC hides everything → honest empty.
+          fallbackProblems: [makeFallbackProblem("p-candidate", 51)],
         }) as never,
     );
 
     expect(bundle.items).toEqual([]);
     expect(bundle.run).toBeNull();
+    expect(bundle.source).toBe("computed");
+  });
+
+  it("computes a rule-based bundle when the user has zero stored items", async () => {
+    const bundle = await queryRecommendationBundleForUser(
+      "user-1",
+      null,
+      async () =>
+        makeClient({
+          recItems: [],
+          fallbackProblems: [
+            makeFallbackProblem("p-51", 51),
+            makeFallbackProblem("p-52", 52),
+          ],
+        }) as never,
+    );
+
+    expect(bundle.source).toBe("computed");
+    expect(bundle.run).toBeNull();
+    expect(bundle.items.map((item) => item.problemId)).toEqual([
+      "p-51",
+      "p-52",
+    ]);
+    expect(bundle.items.every((item) => item.itemId === null)).toBe(true);
+    expect(bundle.items.map((item) => item.rank)).toEqual([1, 2]);
+    expect(bundle.summaryCode).toBe("rotation");
+    expect(bundle.availableTypes).toEqual([51, 52]);
+  });
+
+  it("falls back to computed items when every stored item is hidden but candidates exist", async () => {
+    const bundle = await queryRecommendationBundleForUser(
+      "user-1",
+      null,
+      async () =>
+        makeClient({
+          recItems: [makeItem("i-hidden", "p-hidden", 1, 53)],
+          visibleProblemIds: ["p-51"],
+          fallbackProblems: [makeFallbackProblem("p-51", 51)],
+        }) as never,
+    );
+
+    expect(bundle.source).toBe("computed");
+    expect(bundle.items.map((item) => item.problemId)).toEqual(["p-51"]);
+  });
+
+  it("computes for a type whose stored items don't cover the requested filter", async () => {
+    const bundle = await queryRecommendationBundleForUser(
+      "user-1",
+      51,
+      async () =>
+        makeClient({
+          // Stored recommendation exists only for type 52 — a 51 request must
+          // resolve per-query: zero stored 51 items → computed 51 items.
+          recItems: [makeItem("i-52", "p-52", 1, 52)],
+          fallbackProblems: [
+            makeFallbackProblem("p-51-fresh", 51),
+            makeFallbackProblem("p-52-fresh", 52),
+          ],
+        }) as never,
+    );
+
+    expect(bundle.source).toBe("computed");
+    expect(bundle.items.map((item) => item.problemId)).toEqual(["p-51-fresh"]);
+    expect(bundle.availableTypes).toEqual([51]);
   });
 });
+
+function makeFallbackProblem(
+  id: string,
+  questionNo: number,
+): FallbackProblemRow {
+  return {
+    id,
+    title: `Fallback ${id}`,
+    question_no: questionNo,
+    topik_level: 2,
+    difficulty: 3,
+    tags: [],
+    materials: null,
+  };
+}
 
 function makeItem(
   id: string,

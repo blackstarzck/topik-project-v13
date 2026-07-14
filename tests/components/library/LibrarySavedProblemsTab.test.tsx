@@ -41,13 +41,14 @@ afterEach(() => {
 });
 
 describe("LibrarySavedProblemsTab hidden problem UX", () => {
-  it("keeps available saved problems as solve-again links", () => {
+  it("keeps available saved problems retryable", () => {
     renderTab([
       {
         kind: "problem",
         id: "p-available",
         title: "TOPIK 53 chart writing",
         question_no: 53,
+        answer_text: null,
         item_id: "li-p-available",
         saved_at: "2026-06-29T10:00:00.000Z",
         tags: ["bookmark"],
@@ -57,12 +58,11 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       },
     ]);
 
-    const link = screen.getByRole("link", {
-      name: koMessages.library.saved.retry,
-    });
-    expect(link.getAttribute("href")).toBe(
-      "/writing/long-form-writing-53?problem=p-available",
-    );
+    expect(
+      screen
+        .getByRole("link", { name: koMessages.library.saved.retry })
+        .getAttribute("href"),
+    ).toBe("/writing/long-form-writing-53?problem=p-available");
     expect(screen.getByTestId("library-item-row").className).toContain(
       "border-[var(--ant-color-border-secondary)]",
     );
@@ -84,6 +84,7 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
         id: "p-soft",
         title: "TOPIK 52 sentence completion",
         question_no: 52,
+        answer_text: null,
         item_id: "li-p-soft",
         saved_at: "2026-06-29T10:00:00.000Z",
         tags: [],
@@ -102,10 +103,11 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       "opacity-40",
     );
 
-    const disabledRetry = screen.getByRole("button", {
-      name: koMessages.library.saved.retryUnavailable,
-    }) as HTMLButtonElement;
-    expect(disabledRetry.disabled).toBe(true);
+    expect(
+      screen.getByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }).textContent,
+    ).toContain(koMessages.library.saved.retry);
     expect(
       screen.queryByRole("link", { name: koMessages.library.saved.retry }),
     ).toBeNull();
@@ -118,6 +120,7 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
         id: "p-hard",
         title: null,
         question_no: null,
+        answer_text: null,
         item_id: "li-p-hard",
         saved_at: "2026-06-29T10:00:00.000Z",
         tags: ["bookmark"],
@@ -138,9 +141,13 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       "opacity-40",
     );
 
-    const disabledRetry = screen.getByRole("button", {
-      name: koMessages.library.saved.retryUnavailable,
-    }) as HTMLButtonElement;
-    expect(disabledRetry.disabled).toBe(true);
+    expect(
+      screen.getByRole("button", {
+        name: koMessages.library.saved.retryUnavailable,
+      }).textContent,
+    ).toContain(koMessages.library.saved.retry);
+    expect(
+      screen.queryByRole("link", { name: koMessages.library.saved.retry }),
+    ).toBeNull();
   });
 });

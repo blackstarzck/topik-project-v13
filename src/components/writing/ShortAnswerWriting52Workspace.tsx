@@ -13,6 +13,8 @@ import { useTranslations } from "next-intl";
 
 import { logStudyEvent } from "@/lib/events/study-events";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
+import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
 import {
   getCharLimit,
   isCountInRecommendedRange,
@@ -121,7 +123,8 @@ export function ShortAnswerWriting52Workspace({
   const [submittedAnalysis, setSubmittedAnalysis] =
     useState<SubmittedAnalysisState | null>(null);
   const [autosaveEnabled, setAutosaveEnabled] = useState(true);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { elapsedSeconds, markInputActivity, getTimeMetricsSnapshot } =
+    useWritingTimeMetrics();
   const [activeBlankIndex, setActiveBlankIndex] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveSeqRef = useRef(0);
@@ -208,13 +211,6 @@ export function ShortAnswerWriting52Workspace({
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setElapsedSeconds((value) => value + 1);
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -276,6 +272,7 @@ export function ShortAnswerWriting52Workspace({
 
   function onChange(next: string) {
     if (!activeBlank) return;
+    markInputActivity();
     const nextAnswers = { ...blankAnswers, [activeBlank.label]: next };
     setBlankAnswers(nextAnswers);
     setBlurNotice(null);
@@ -348,6 +345,12 @@ export function ShortAnswerWriting52Workspace({
             submissionId: result.submissionId,
             payload: { question_no: 52, char_count: charCount },
           });
+          void recordWritingSubmissionMetrics({
+            submissionId: result.submissionId,
+            problemId: problem.id,
+            questionNo: 52,
+            ...getTimeMetricsSnapshot(),
+          });
           setSubmittedAnalysis({
             submissionId: result.submissionId,
             questionNo: result.questionNo,
@@ -393,6 +396,7 @@ export function ShortAnswerWriting52Workspace({
       }
       isSaving={status === "syncing" && upsert.isPending}
       isSubmitting={submit.isPending}
+      problemBookmark={{ userId, problemId: problem.id }}
       onSave={onManualSave}
       onSubmit={onOpenSubmitConfirm}
       onRequestBack={exitGuard.requestNavigation}

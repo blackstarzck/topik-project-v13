@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import koMessages from "../../../messages/ko.json";
+import { InstitutionInvitationModal } from "../../../src/components/notifications/InstitutionInvitationModal";
 import { NotificationBell } from "../../../src/components/notifications/NotificationBell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -155,6 +162,7 @@ vi.mock("../../../src/components/notifications/notifications-data", () => ({
 }));
 
 const t = koMessages.notifications.bell;
+const tInvitation = koMessages.notifications.institutionInvitation;
 
 function makeNotification(id: string, title: string) {
   return {
@@ -315,8 +323,21 @@ describe("NotificationBell", () => {
 
     expect(markNotificationReadMock).toHaveBeenCalledWith("n-invite");
     expect(routerPushMock).not.toHaveBeenCalled();
-    expect(await screen.findByText("캠페인 유입 유저")).toBeTruthy();
-    expect(screen.getByText("CAMPAIGN-01")).toBeTruthy();
+    await screen.findByText("CAMPAIGN-01");
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText(tInvitation.title)).toBeTruthy();
+    expect(
+      within(dialog).getByText(tInvitation.description).getAttribute("class"),
+    ).toContain("institution-invitation-modal__description");
+    expect(screen.queryByText("캠페인 유입 유저")).toBeNull();
+    const code = screen.getByText("CAMPAIGN-01");
+    expect(code.getAttribute("class")).toContain(
+      "institution-invitation-modal__code",
+    );
+    expect(code.tagName.toLowerCase()).not.toBe("code");
+    expect(
+      screen.queryByRole("button", { name: tInvitation.decline }),
+    ).toBeNull();
     expect(screen.getByText(/기존 소속이 변경됩니다/)).toBeTruthy();
   });
 
@@ -337,6 +358,10 @@ describe("NotificationBell", () => {
     expect(metadata?.classList.contains("app-notification-item__meta")).toBe(
       true,
     );
+    expect(metadata?.classList.contains("flex")).toBe(true);
+    expect(metadata?.classList.contains("min-w-0")).toBe(true);
+    expect(metadata?.classList.contains("items-center")).toBe(true);
+    expect(metadata?.classList.contains("gap-2")).toBe(true);
     expect(metadata?.querySelector(".app-notification-item__time")).not.toBe(
       null,
     );
@@ -390,6 +415,61 @@ describe("NotificationBell", () => {
     vi.useRealTimers();
   });
 
+  it("treats a retryable failure as expired when its deadline has passed", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-13T15:00:00.000Z"));
+
+    renderWithIntl(
+      <InstitutionInvitationModal
+        open
+        invitation={{
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          codeLabel: null,
+          expiresAt: "2026-07-13T14:59:59.000Z",
+        }}
+        status="failed"
+        submitting={null}
+        onAccept={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(koMessages.notifications.institutionInvitation.expired),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: koMessages.notifications.institutionInvitation.accept,
+      }),
+    ).toHaveProperty("disabled", true);
+  });
+
+  it("does not submit when the invitation expires immediately before acceptance", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-13T15:00:00.000Z"));
+    fetchNotificationsMock.mockResolvedValue([
+      makeInstitutionInvitationNotification({
+        payload: { expires_at: "2026-07-13T15:00:01.000Z" },
+      }),
+    ]);
+
+    renderWithIntl(<NotificationBell userId="user-1" />);
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+    await screen.findByText("D-0");
+    const rowButton = screen.getByRole("listitem").querySelector("button");
+    if (!rowButton) throw new Error("notification row button not found");
+    fireEvent.click(rowButton);
+
+    vi.setSystemTime(new Date("2026-07-13T15:00:02.000Z"));
+    fireEvent.click(
+      await screen.findByRole("button", { name: tInvitation.accept }),
+    );
+
+    expect(respondInstitutionInvitationMock).not.toHaveBeenCalled();
+    expect(await screen.findByText(tInvitation.expired)).toBeTruthy();
+  });
+
   it("submits an accepted invitation and refreshes the workspace state", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification(),
@@ -416,15 +496,10 @@ describe("NotificationBell", () => {
     );
   });
 
-  it("submits a declined invitation without refreshing profile state", async () => {
+  it("keeps institution invitations dismissible without rendering a decline action", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification(),
     ]);
-    respondInstitutionInvitationMock.mockResolvedValue({
-      status: "declined",
-      code: "CAMPAIGN-01",
-      code_label: "캠페인 유입 유저",
-    });
     renderWithIntl(<NotificationBell userId="user-1" />);
 
     fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
@@ -433,21 +508,18 @@ describe("NotificationBell", () => {
     if (!rowButton) throw new Error("notification row button not found");
     fireEvent.click(rowButton);
 
-    fireEvent.click(await screen.findByRole("button", { name: "거부" }));
-
-    await waitFor(() => {
-      expect(respondInstitutionInvitationMock).toHaveBeenCalledWith(
-        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
-        false,
-      );
-    });
-    expect(routerRefreshMock).not.toHaveBeenCalled();
-    expect(messageInfoMock).toHaveBeenCalledWith(
-      koMessages.notifications.institutionInvitation.declined,
+    expect(
+      screen.queryByRole("button", { name: tInvitation.decline }),
+    ).toBeNull();
+    fireEvent.click(
+      await screen.findByRole("button", { name: tInvitation.close }),
     );
+    expect(respondInstitutionInvitationMock).not.toHaveBeenCalled();
+    expect(routerRefreshMock).not.toHaveBeenCalled();
+    expect(messageInfoMock).not.toHaveBeenCalled();
   });
 
-  it("disables invitation acceptance when the payload has no usable code", async () => {
+  it("disables invitation acceptance when the payload has no invitation id", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification({
         payload: {
@@ -471,10 +543,43 @@ describe("NotificationBell", () => {
       "disabled",
       true,
     );
-    expect(screen.getByRole("button", { name: "거부" })).toHaveProperty(
-      "disabled",
-      true,
-    );
+    expect(
+      screen.queryByRole("button", { name: tInvitation.decline }),
+    ).toBeNull();
+  });
+
+  it("allows invitation acceptance when the display code is blank", async () => {
+    fetchNotificationsMock.mockResolvedValue([
+      makeInstitutionInvitationNotification({
+        payload: {
+          kind: "institution_invitation",
+          invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "   ",
+          code_label: "캠페인 유입 유저",
+        },
+      }),
+    ]);
+    renderWithIntl(<NotificationBell userId="user-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+    const title = await screen.findByText("기관 소속 초대가 도착했습니다");
+    const rowButton = title.closest("button");
+    if (!rowButton) throw new Error("notification row button not found");
+    fireEvent.click(rowButton);
+
+    expect(await screen.findByText(tInvitation.unknownCode)).toBeTruthy();
+    const acceptButton = screen.getByRole("button", {
+      name: tInvitation.accept,
+    });
+    expect(acceptButton).toHaveProperty("disabled", false);
+
+    fireEvent.click(acceptButton);
+    await waitFor(() => {
+      expect(respondInstitutionInvitationMock).toHaveBeenCalledWith(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        true,
+      );
+    });
   });
 
   it("shows a handled state when the invitation was already responded", async () => {

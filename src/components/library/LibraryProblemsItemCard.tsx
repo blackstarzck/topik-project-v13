@@ -18,9 +18,11 @@ import {
 import { AppCard } from "@/components/shared/AppCard";
 import { writingFeedbackHref } from "@/lib/writing/routes";
 
+import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
-import { LibraryProblemsRetryAction } from "./LibraryProblemsRows";
 import {
+  answerPreview,
+  draftTitle,
   isAnalysisPendingStatus,
   problemTitle,
   submissionTitle,
@@ -50,12 +52,14 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
   const tSubmissions = useTranslations(
     "library.submissions",
   ) as LibraryListTranslate;
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSaved = useTranslations("library.saved") as LibraryListTranslate;
 
   if (entry.kind === "submission") {
     const item = entry.item;
     const feedbackStatus = meta?.feedbackStatus ?? "pending";
     const analysisPending = isAnalysisPendingStatus(feedbackStatus);
+    const actionMenuAvailable = feedbackStatus === "complete";
     const fallbackTitle = tSubmissions("problemTitle", {
       id: item.problem_id.slice(0, 8),
     });
@@ -102,8 +106,45 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
               {tSubmissions("analysisPendingHint")}
             </Paragraph>
           ) : null}
-          <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-            <TagChips tags={item.tags} />
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
+            <span className="flex flex-wrap items-center gap-2">
+              <TagChips tags={item.tags} />
+            </span>
+            {actionMenuAvailable ? (
+              <LibraryProblemsActionMenu kind="submission" item={item} />
+            ) : null}
+          </div>
+        </div>
+      </AppCard>
+    );
+  }
+
+  if (entry.kind === "draft") {
+    const item = entry.item;
+    const fallbackTitle = tSubmissions("problemTitle", {
+      id: item.problem_id.slice(0, 8),
+    });
+    const title = draftTitle(item, fallbackTitle);
+
+    return (
+      <AppCard className="h-full">
+        <div className="flex h-full flex-col gap-2">
+          <div className="flex justify-end">
+            <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tag data-testid="library-problems-type-badge">
+              {t("typeDraft")}
+            </Tag>
+          </div>
+          <Text strong>{clampTitle(title)}</Text>
+          {item.answer_text ? (
+            <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+              {item.answer_text}
+            </Paragraph>
+          ) : null}
+          <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-2">
+            <LibraryProblemsActionMenu kind="draft" item={item} />
           </div>
         </div>
       </AppCard>
@@ -113,6 +154,7 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
   const item = entry.item;
   const unavailable = item.availabilityStatus !== "available";
   const title = problemTitle(item.title, tSaved("unavailablePlaceholderTitle"));
+  const preview = unavailable ? null : answerPreview(item.answer_text);
 
   return (
     <AppCard className={unavailable ? "h-full opacity-40" : "h-full"}>
@@ -121,6 +163,9 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
           <LibraryProblemsQuestionNumber questionNo={item.question_no} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Tag data-testid="library-problems-type-badge">
+            {t("bookmarkTag")}
+          </Tag>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"
@@ -129,7 +174,12 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             </Tag>
           ) : null}
         </div>
-        <Text strong>{title}</Text>
+        <Text strong>{clampTitle(title)}</Text>
+        {preview ? (
+          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+            {preview}
+          </Paragraph>
+        ) : null}
         {unavailable ? (
           <Text
             data-testid="library-problem-unavailable-reason"
@@ -138,11 +188,8 @@ export function LibraryProblemsItemCard({ entry, meta }: Props) {
             {item.availabilityReason ?? tSaved("unavailableDefaultReason")}
           </Text>
         ) : null}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
-          <span className="flex flex-wrap items-center gap-2">
-            <TagChips tags={item.tags} />
-          </span>
-          <LibraryProblemsRetryAction item={item} />
+        <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-2">
+          <LibraryProblemsActionMenu kind="problem" item={item} />
         </div>
       </div>
     </AppCard>

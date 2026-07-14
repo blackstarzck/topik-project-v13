@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import { logStudyEvent } from "@/lib/events/study-events";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
+import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
 import {
   getCharLimit,
   isCountInRecommendedRange,
@@ -143,7 +145,8 @@ export function LongFormWriting53Workspace({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] =
     useState<SubmittedAnalysisState | null>(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { elapsedSeconds, markInputActivity, getTimeMetricsSnapshot } =
+    useWritingTimeMetrics();
   const [composerMode, setComposerMode] = useState<ComposerMode>("write");
   const [activeSection, setActiveSection] = useState<SectionKey>("intro");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -198,13 +201,6 @@ export function LongFormWriting53Workspace({
       payload: { question_no: 53 },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setElapsedSeconds((value) => value + 1);
-    }, 1000);
-    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -291,6 +287,7 @@ export function LongFormWriting53Workspace({
   }
 
   function onSectionChange(key: SectionKey, next: string) {
+    markInputActivity();
     const nextState: Question53State = { ...state, [key]: next };
     setState(nextState);
     setBlurNotice(null);
@@ -332,6 +329,12 @@ export function LongFormWriting53Workspace({
             problemId: problem.id,
             submissionId: result.submissionId,
             payload: { question_no: 53, char_count: charCount },
+          });
+          void recordWritingSubmissionMetrics({
+            submissionId: result.submissionId,
+            problemId: problem.id,
+            questionNo: 53,
+            ...getTimeMetricsSnapshot(),
           });
           setSubmittedAnalysis({
             submissionId: result.submissionId,
@@ -469,6 +472,7 @@ export function LongFormWriting53Workspace({
       }
       isSaving={status === "syncing" && upsert.isPending}
       isSubmitting={submit.isPending}
+      problemBookmark={{ userId, problemId: problem.id }}
       onSave={onManualSave}
       onSubmit={onOpenSubmitConfirm}
       onRequestBack={exitGuard.requestNavigation}

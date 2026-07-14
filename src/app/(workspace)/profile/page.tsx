@@ -38,6 +38,8 @@ export default async function ProfilePage() {
             display_name: settings.display_name,
             nickname: settings.nickname,
             nationality_country_code: settings.nationality_country_code,
+            phone_country_code: settings.phone_country_code,
+            phone_number: settings.phone_number,
             bio: settings.bio,
           }}
           showAccountEmail={false}

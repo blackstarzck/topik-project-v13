@@ -15,14 +15,18 @@ import {
   type SubmissionEnrichment,
 } from "@/components/library/library-enrich-data";
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
 import { writingFeedbackHref, writingProblemHref } from "@/lib/writing/routes";
 
 import { LibraryItemRow } from "./LibraryItemRow";
+import { LibraryProblemsActionMenu } from "./LibraryProblemsActionMenu";
 import { LibraryProblemsQuestionNumber } from "./LibraryProblemsQuestionNumber";
 import {
+  answerPreview,
+  draftTitle,
   isAnalysisPendingStatus,
   problemTitle,
   submissionTitle,
@@ -43,6 +47,7 @@ export function LibraryProblemsSubmissionRow({
   ) as LibraryListTranslate;
   const feedbackStatus = meta?.feedbackStatus ?? "pending";
   const analysisPending = isAnalysisPendingStatus(feedbackStatus);
+  const actionMenuAvailable = feedbackStatus === "complete";
   const fallbackTitle = tSubmissions("problemTitle", {
     id: item.problem_id.slice(0, 8),
   });
@@ -54,6 +59,17 @@ export function LibraryProblemsSubmissionRow({
       showDeleteAction={false}
       tab="submissions"
       tags={item.tags}
+      trailingActions={
+        actionMenuAvailable
+          ? [
+              <LibraryProblemsActionMenu
+                key="actions"
+                kind="submission"
+                item={item}
+              />,
+            ]
+          : undefined
+      }
     >
       <div className="flex w-full flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
@@ -102,9 +118,11 @@ export function LibraryProblemsProblemRow({
 }: {
   item: LibraryProblemView;
 }) {
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSaved = useTranslations("library.saved");
   const unavailable = item.availabilityStatus !== "available";
   const title = problemTitle(item.title, tSaved("unavailablePlaceholderTitle"));
+  const preview = unavailable ? null : answerPreview(item.answer_text);
 
   return (
     <LibraryItemRow
@@ -112,13 +130,18 @@ export function LibraryProblemsProblemRow({
       itemId={item.item_id}
       showDeleteAction={false}
       tab="problems"
-      tags={item.tags}
-      trailingActions={[<LibraryProblemsRetryAction key="retry" item={item} />]}
+      tags={[]}
+      trailingActions={[
+        <LibraryProblemsActionMenu key="actions" kind="problem" item={item} />,
+      ]}
     >
       <div className="flex w-full min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-3">
           <LibraryProblemsQuestionNumber questionNo={item.question_no} />
-          <Text strong>{title}</Text>
+          <Text strong>{clampTitle(title)}</Text>
+          <Tag data-testid="library-problems-type-badge">
+            {t("bookmarkTag")}
+          </Tag>
           {unavailable ? (
             <Tag data-testid="library-problem-unavailable-badge">
               {item.availabilityStatus === "soft_unavailable"
@@ -127,6 +150,11 @@ export function LibraryProblemsProblemRow({
             </Tag>
           ) : null}
         </div>
+        {preview ? (
+          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+            {preview}
+          </Paragraph>
+        ) : null}
         {unavailable ? (
           <Text
             data-testid="library-problem-unavailable-reason"
@@ -173,6 +201,74 @@ export function LibraryProblemsRetryAction({
     >
       <Button type="primary" size="small">
         {tSaved("retry")}
+      </Button>
+    </Link>
+  );
+}
+
+export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
+  const tSubmissions = useTranslations(
+    "library.submissions",
+  ) as LibraryListTranslate;
+  const fallbackTitle = tSubmissions("problemTitle", {
+    id: item.problem_id.slice(0, 8),
+  });
+  const title = draftTitle(item, fallbackTitle);
+
+  return (
+    <LibraryItemRow
+      itemId={item.item_id}
+      showDeleteAction={false}
+      tab="drafts"
+      tags={[]}
+      trailingActions={[
+        <LibraryProblemsActionMenu key="actions" kind="draft" item={item} />,
+      ]}
+    >
+      <div className="flex w-full min-w-0 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <LibraryProblemsQuestionNumber questionNo={item.question_no} />
+          <Text strong>{clampTitle(title)}</Text>
+          <Tag data-testid="library-problems-type-badge">{t("typeDraft")}</Tag>
+        </div>
+        {item.answer_text ? (
+          <Paragraph className="mb-0" ellipsis={{ rows: 2 }} type="secondary">
+            {item.answer_text}
+          </Paragraph>
+        ) : null}
+      </div>
+    </LibraryItemRow>
+  );
+}
+
+export function LibraryProblemsDraftAction({
+  item,
+}: {
+  item: LibraryDraftView;
+}) {
+  const t = useTranslations("library.problemsList") as LibraryListTranslate;
+  const canContinue = item.question_no !== null;
+
+  if (!canContinue) {
+    return (
+      <Button size="small" disabled aria-label={t("continueDraft")}>
+        {t("continueDraft")}
+      </Button>
+    );
+  }
+
+  return (
+    <Link
+      href={
+        writingProblemHref({
+          questionNo: item.question_no,
+          problemId: item.problem_id,
+        }) as never
+      }
+    >
+      <Button type="primary" size="small">
+        {t("continueDraft")}
       </Button>
     </Link>
   );

@@ -1,7 +1,7 @@
 const TOPIK_II_SECTION_COUNT = 3;
 
 // Official TOPIK II total-score cutoffs are out of 300 points.
-// TALKPIK currently scores only the writing section, so the grade target is
+// DOTORE TOPIK currently scores only the writing section, so the grade target is
 // projected onto a 100-point writing scale by dividing by the 3 TOPIK II areas.
 const TOPIK_II_TOTAL_CUTOFF_BY_GRADE = {
   3: 120,

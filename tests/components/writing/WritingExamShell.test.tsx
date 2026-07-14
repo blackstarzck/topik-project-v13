@@ -1,11 +1,139 @@
 // @vitest-environment jsdom
-import { fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { WritingExamShell } from "../../../src/components/writing/WritingExamShell";
 
+const libraryDeleteMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/supabase/browser", () => ({
+  createSupabaseBrowserClient: () => ({
+    rpc: (name: string) => {
+      if (name === "list_user_library_problem_items") {
+        return Promise.resolve({
+          data: [
+            {
+              item_id: "library-writing-51",
+              problem_id: "problem-writing-51",
+              title: "Writing saved problem",
+              question_no: 51,
+              tags: [],
+              saved_at: "2026-07-08T00:00:00.000Z",
+              availability_status: "available",
+              availability_reason: null,
+              can_retry: true,
+            },
+          ],
+          error: null,
+        });
+      }
+      return Promise.resolve({ data: [], error: null });
+    },
+    from: (table: string) => {
+      if (table === "library_items") {
+        return {
+          select: () => ({
+            eq: () => ({
+              order: () =>
+                Promise.resolve({
+                  data: [
+                    {
+                      id: "library-writing-51",
+                      user_id: "user-1",
+                      item_type: "problem",
+                      attempt_id: null,
+                      submission_id: null,
+                      report_id: null,
+                      export_id: null,
+                      problem_id: "problem-writing-51",
+                      note: null,
+                      tags: [],
+                      saved_at: "2026-07-08T00:00:00.000Z",
+                    },
+                  ],
+                  error: null,
+                }),
+            }),
+          }),
+          insert: () => ({
+            select: () => ({
+              single: () =>
+                Promise.resolve({
+                  data: null,
+                  error: null,
+                }),
+            }),
+          }),
+          delete: () => {
+            const builder = {
+              eq: vi.fn((column: string, value: unknown) => {
+                libraryDeleteMock(column, value);
+                if (column === "problem_id") {
+                  return Promise.resolve({ data: null, error: null });
+                }
+                return builder;
+              }),
+            };
+            return builder;
+          },
+        };
+      }
+      return {
+        select: () => ({
+          in: () => Promise.resolve({ data: [], error: null }),
+        }),
+      };
+    },
+  }),
+}));
+
+function renderWithBookmark(node: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return renderWithIntl(
+    <QueryClientProvider client={queryClient}>{node}</QueryClientProvider>,
+  );
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+  libraryDeleteMock.mockReset();
+  cleanup();
+});
+
 describe("WritingExamShell", () => {
+  it("labels the header save action as draft save and delegates it", () => {
+    const onSave = vi.fn();
+    renderWithIntl(
+      <WritingExamShell
+        title="51번 단답형"
+        subtitle="답안을 작성하세요"
+        progressPercent={10}
+        elapsedSeconds={0}
+        autosaveStatus="dirty"
+        lastSavedAt={null}
+        canSave
+        canSubmit={false}
+        isSaving={false}
+        isSubmitting={false}
+        onSave={onSave}
+        onSubmit={vi.fn()}
+        onRequestBack={vi.fn()}
+      >
+        <div>content</div>
+      </WritingExamShell>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "임시 저장" }));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
   it("delegates the header back action to the writing exit guard", () => {
     const onRequestBack = vi.fn();
     const { container } = renderWithIntl(
@@ -34,5 +162,90 @@ describe("WritingExamShell", () => {
     fireEvent.click(back as Element);
 
     expect(onRequestBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the elapsed timer from workspace metrics", () => {
+    const { container } = renderWithIntl(
+      <WritingExamShell
+        title="54"
+        subtitle="subtitle"
+        progressPercent={10}
+        elapsedSeconds={65}
+        autosaveStatus="clean"
+        lastSavedAt={null}
+        canSave={false}
+        canSubmit={false}
+        isSaving={false}
+        isSubmitting={false}
+        onSave={vi.fn()}
+        onSubmit={vi.fn()}
+        onRequestBack={vi.fn()}
+      >
+        <div>content</div>
+      </WritingExamShell>,
+    );
+
+    expect(
+      container.querySelector(".writing-exam-header__timer")?.textContent,
+    ).toContain("00:01:05");
+  });
+
+  it("renders a problem bookmark toggle in the writing header", async () => {
+    const { container } = renderWithBookmark(
+      <WritingExamShell
+        title="51"
+        subtitle="subtitle"
+        progressPercent={10}
+        elapsedSeconds={0}
+        autosaveStatus="clean"
+        lastSavedAt={null}
+        canSave={false}
+        canSubmit={false}
+        isSaving={false}
+        isSubmitting={false}
+        problemBookmark={{
+          userId: "user-1",
+          problemId: "problem-writing-51",
+        }}
+        onSave={vi.fn()}
+        onSubmit={vi.fn()}
+        onRequestBack={vi.fn()}
+      >
+        <div>content</div>
+      </WritingExamShell>,
+    );
+
+    const bookmarkButton = await screen.findByRole("button", {
+      name: "저장됨",
+    });
+
+    expect(bookmarkButton.className).toContain(
+      "problem-bookmark-toggle",
+    );
+    expect(
+      container.querySelector(
+        ".writing-exam-header__title-row .writing-exam-header__bookmark-button",
+      ),
+    ).toBe(bookmarkButton);
+    expect(
+      container.querySelector(
+        ".writing-exam-header__actions .writing-exam-header__bookmark-button",
+      ),
+    ).toBeNull();
+    expect(bookmarkButton.getAttribute("aria-pressed")).toBe("true");
+    expect(bookmarkButton.querySelector("svg.lucide-bookmark")).toBeTruthy();
+    expect(bookmarkButton.querySelector("svg")?.getAttribute("fill")).toBe(
+      "currentColor",
+    );
+
+    fireEvent.click(bookmarkButton);
+
+    await screen.findByText("저장 문제에서 제거했어요.");
+    expect(libraryDeleteMock).toHaveBeenCalledWith("user_id", "user-1");
+    expect(libraryDeleteMock).toHaveBeenCalledWith("item_type", "problem");
+    expect(libraryDeleteMock).toHaveBeenCalledWith(
+      "problem_id",
+      "problem-writing-51",
+    );
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Schema-aligned Supabase type snapshot for TALKPIK AI.
+ * Schema-aligned Supabase type snapshot for DOTORE TOPIK.
  *
  * Source of truth: `supabase/migrations/*.sql` (16 canonical migrations) plus
  * the trigger migration added in Phase 2 (`20260521120000_auth_user_profile_bootstrap.sql`).
@@ -60,8 +60,12 @@ export interface Database {
         Row: {
           id: string;
           display_name: string | null;
+          gender: "male" | "female" | null;
           nationality_country_code: string | null;
           nickname: string | null;
+          phone_country_code: string | null;
+          phone_number: string | null;
+          phone_number_prompt_dismissed_at: string | null;
           avatar_path: string | null;
           ui_locale: "ko" | "en" | "vi";
           ui_locale_source: "legacy" | "default" | "auto" | "manual";
@@ -88,8 +92,12 @@ export interface Database {
         Insert: {
           id: string;
           display_name?: string | null;
+          gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
+          phone_country_code?: string | null;
+          phone_number?: string | null;
+          phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
           ui_locale_source?: "legacy" | "default" | "auto" | "manual";
@@ -112,8 +120,12 @@ export interface Database {
         Update: {
           id?: string;
           display_name?: string | null;
+          gender?: "male" | "female" | null;
           nationality_country_code?: string | null;
           nickname?: string | null;
+          phone_country_code?: string | null;
+          phone_number?: string | null;
+          phone_number_prompt_dismissed_at?: string | null;
           avatar_path?: string | null;
           ui_locale?: "ko" | "en" | "vi";
           ui_locale_source?: "legacy" | "default" | "auto" | "manual";
@@ -1163,6 +1175,64 @@ export interface Database {
           },
         ];
       };
+      writing_submission_metrics: {
+        Row: {
+          /**
+           * PK = submission_id (one immutable row per writing submission).
+           * elapsed_seconds = mounted on-screen timer; active_seconds =
+           * typing-engaged seconds (30s idle window), always <= elapsed.
+           * Missing row means "not collected" — never render as 0.
+           * Contract SoT: migration 20260708113000_writing_submission_metrics.sql.
+           */
+          submission_id: string;
+          user_id: string;
+          problem_id: string | null;
+          question_no: number | null;
+          elapsed_seconds: number;
+          active_seconds: number | null;
+          started_at: string | null;
+          submitted_at: string;
+          created_at: string;
+        };
+        Insert: {
+          submission_id: string;
+          user_id: string;
+          problem_id?: string | null;
+          question_no?: number | null;
+          elapsed_seconds: number;
+          active_seconds?: number | null;
+          started_at?: string | null;
+          submitted_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          submission_id?: string;
+          user_id?: string;
+          problem_id?: string | null;
+          question_no?: number | null;
+          elapsed_seconds?: number;
+          active_seconds?: number | null;
+          started_at?: string | null;
+          submitted_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "writing_submission_metrics_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "writing_submission_metrics_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: true;
+            referencedRelation: "writing_submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       admin_audit_logs: {
         Row: {
           id: string;
@@ -1584,9 +1654,14 @@ export interface Database {
       complete_auth_gate: {
         Args: {
           p_display_name: string | null;
+          p_gender: string | null;
           p_nickname: string | null;
           p_nationality_country_code: string | null;
+          p_phone_country_code: string | null;
+          p_phone_number: string | null;
           p_accept_required_consents: boolean;
+          p_ui_locale?: "ko" | "en" | "vi";
+          p_ui_locale_source?: "auto" | "manual";
         };
         Returns: undefined;
       };
@@ -1620,6 +1695,7 @@ export interface Database {
           problem_id: string | null;
           title: string | null;
           question_no: number | null;
+          answer_text: string | null;
           tags: string[] | null;
           saved_at: string;
           availability_status: string;

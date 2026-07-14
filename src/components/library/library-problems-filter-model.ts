@@ -28,6 +28,7 @@
 import dayjs, { type Dayjs } from "dayjs";
 
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "@/lib/library/types";
@@ -38,7 +39,7 @@ export const LIBRARY_PROBLEMS_QUESTION_NOS = [51, 52, 53, 54] as const;
 export type LibraryProblemsQuestionNo =
   (typeof LIBRARY_PROBLEMS_QUESTION_NOS)[number];
 
-export type LibraryProblemsKind = "submission" | "problem";
+export type LibraryProblemsKind = "submission" | "problem" | "draft";
 export type LibraryProblemsStatus = SubmissionEnrichment["feedbackStatus"];
 export type LibraryProblemsAvailability =
   | "soft_unavailable"
@@ -96,6 +97,10 @@ export type LibraryProblemsFilterEntry =
         LibraryProblemView,
         "availabilityStatus" | "question_no" | "saved_at"
       >;
+    }
+  | {
+      kind: "draft";
+      item: Pick<LibraryDraftView, "id" | "question_no" | "saved_at">;
     };
 
 type EnrichmentMap = ReadonlyMap<string, SubmissionEnrichment>;
@@ -210,7 +215,8 @@ export function matchesLibraryProblemsFilters(
     state.kinds.has("submission") || state.statuses.size > 0;
   const problemBranch =
     state.kinds.has("problem") || state.availability.size > 0;
-  if (submissionBranch || problemBranch) {
+  const draftBranch = state.kinds.has("draft");
+  if (submissionBranch || problemBranch || draftBranch) {
     if (entry.kind === "submission") {
       if (!submissionBranch) return false;
       if (
@@ -219,7 +225,7 @@ export function matchesLibraryProblemsFilters(
       ) {
         return false;
       }
-    } else {
+    } else if (entry.kind === "problem") {
       if (!problemBranch) return false;
       if (state.availability.size > 0) {
         const status = entry.item.availabilityStatus;
@@ -230,6 +236,8 @@ export function matchesLibraryProblemsFilters(
           return false;
         }
       }
+    } else if (!draftBranch) {
+      return false;
     }
   }
 
@@ -293,7 +301,7 @@ export function countLibraryProblemsFacets(
 ): LibraryProblemsFacetCounts {
   const counts: LibraryProblemsFacetCounts = {
     questionNos: { 51: 0, 52: 0, 53: 0, 54: 0 },
-    kinds: { submission: 0, problem: 0 },
+    kinds: { submission: 0, problem: 0, draft: 0 },
     statuses: { pending: 0, analyzing: 0, complete: 0, failed: 0 },
     availability: { soft_unavailable: 0, hard_unavailable: 0 },
   };
@@ -306,12 +314,14 @@ export function countLibraryProblemsFacets(
     if (entry.kind === "submission") {
       counts.kinds.submission += 1;
       counts.statuses[submissionStatus(entry, enrich)] += 1;
-    } else {
+    } else if (entry.kind === "problem") {
       counts.kinds.problem += 1;
       const status = entry.item.availabilityStatus;
       if (status !== "available") {
         counts.availability[status] += 1;
       }
+    } else {
+      counts.kinds.draft += 1;
     }
   }
   return counts;

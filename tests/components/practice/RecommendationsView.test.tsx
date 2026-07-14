@@ -135,14 +135,106 @@ describe("RecommendationsView", () => {
         koMessages.practice.recommendations.reasonSummaryTitle,
       ),
     ).toBeNull();
-    expect(
-      screen.queryByText(koMessages.practice.recommendations.reasonTagGrammar),
-    ).toBeNull();
+    // The fabricated default weakness tags were removed for honesty — assert
+    // the old copy never resurfaces.
+    expect(screen.queryByText("문법 정확도 개선")).toBeNull();
 
     // The type-select cards remain — the honest "pick a type to start" path.
     expect(
       screen.getByText(koMessages.practice.recommendations.typeSelectTitle),
     ).toBeTruthy();
+  });
+
+  it("renders a computed rule-based bundle with resolved reason codes and unique keys", () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const computedItem = (
+      problemId: string,
+      questionNo: number,
+      reasonCode: string,
+      weaknessTags: string[],
+      rank: number,
+    ) => ({
+      itemId: null,
+      problemId,
+      rank,
+      reason: null,
+      reasonCode,
+      estimatedMinutes: null,
+      weaknessTags,
+      title: `규칙 추천 ${questionNo}`,
+      questionNo,
+    });
+    mocks.useRecommendationBundle.mockReturnValue({
+      data: {
+        run: null,
+        source: "computed",
+        summaryCode: "history",
+        items: [
+          computedItem("p-51", 51, "TYPE_ROTATION_NEXT", ["grammar"], 1),
+          computedItem("p-52", 52, "UNATTEMPTED_AVAILABLE", [], 2),
+          computedItem("p-53", 53, "UNATTEMPTED_AVAILABLE", [], 3),
+        ],
+        availableTypes: new Set([51, 52, 53]),
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    renderWithIntl(<RecommendationsView />);
+
+    // Hero + honest computed summary + reason-code copy resolved to locale text.
+    expect(
+      screen.getByText(koMessages.practice.recommendations.primaryBadge),
+    ).toBeTruthy();
+    expect(screen.getByText("규칙 추천 51")).toBeTruthy();
+    expect(
+      screen.getByText(
+        koMessages.practice.recommendations.computedSummary.history,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        koMessages.practice.recommendations.reasonCode.TYPE_ROTATION_NEXT,
+      ),
+    ).toBeTruthy();
+
+    // Measured weakness tag renders as its locale label, never the raw key.
+    expect(
+      screen.getByText(koMessages.practice.recommendations.dimension.grammar),
+    ).toBeTruthy();
+    expect(screen.queryByText("grammar")).toBeNull();
+
+    // Card-level CTAs belong to the Ant Design footer, not the content body.
+    const continueButtons = screen.getAllByRole("button", {
+      name: koMessages.practice.recommendations.continueProblem,
+    });
+    expect(continueButtons).toHaveLength(2);
+    for (const button of continueButtons) {
+      for (const className of [
+        "inline-flex",
+        "items-center",
+        "justify-center",
+        "gap-2",
+      ]) {
+        expect(button.classList.contains(className)).toBe(true);
+      }
+      expect(button.closest(".ant-card-actions")).toBeTruthy();
+      expect(button.closest(".ant-card-body")).toBeNull();
+      expect(
+        button.closest(".ant-card")?.querySelector(".app-card-footer-actions"),
+      ).toBeTruthy();
+    }
+
+    // Two secondary cards with null itemId — keys fall back to problemId, so
+    // React must not log a duplicate-key warning.
+    const keyWarnings = consoleErrorSpy.mock.calls.filter((call) =>
+      String(call[0]).includes("key"),
+    );
+    expect(keyWarnings).toEqual([]);
+    consoleErrorSpy.mockRestore();
   });
 
   it("renders the honest empty state for a type filter with zero items", () => {

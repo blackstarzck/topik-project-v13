@@ -1,17 +1,26 @@
 "use client";
 
 import { Alert, App, Button, Tag, Typography } from "antd";
-import { Mail } from "@/components/shared/AppIcons";
+import { LockKeyhole, Mail } from "@/components/shared/AppIcons";
 import { useEffect, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect-url";
 import {
   buildClientAuthCallbackUrl,
   buildPostAuthPath,
 } from "@/lib/auth/oauth";
+import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
+import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  DEFAULT_COOLDOWN_SECONDS,
+  useEmailCooldown,
+} from "@/lib/auth/use-email-cooldown";
 
 const { Text } = Typography;
+const PASSWORD_RESET_COOLDOWN_STORAGE_KEY =
+  "talkpik:settings-password-reset:cooldown-until";
 
 /** 멀티컬러 Google "G" 브랜드 로고. 브랜드 색은 SVG fill 속성으로 고정한다. */
 function GoogleGlyph() {
@@ -45,6 +54,12 @@ export type AccountLoginMethodsLabels = {
   emailUnavailable: string;
   googleMethod: string;
   googleDescription: string;
+  passwordMethod: string;
+  passwordDescription: string;
+  passwordAction: string;
+  passwordSent: string;
+  passwordRateLimited: string;
+  passwordSendFailed: string;
   connected: string;
   disconnected: string;
   connectGoogle: string;
@@ -143,6 +158,8 @@ export function AccountLoginMethodsCard({
           </span>
         </AppCard>
 
+        <PasswordChangeMethodCard accountEmail={accountEmail} labels={labels} />
+
         <AppCard className="account-login-method">
           <span className="account-login-method-icon">
             <GoogleGlyph />
@@ -177,6 +194,117 @@ export function AccountLoginMethodsCard({
           className="account-login-error"
         />
       ) : null}
+    </section>
+  );
+}
+
+function PasswordChangeMethodCard({
+  accountEmail,
+  labels,
+}: {
+  accountEmail: string | null;
+  labels: AccountLoginMethodsLabels;
+}) {
+  const { message } = App.useApp();
+  const [passwordSending, setPasswordSending] = useState(false);
+  const passwordCooldown = useEmailCooldown(
+    PASSWORD_RESET_COOLDOWN_STORAGE_KEY,
+    DEFAULT_COOLDOWN_SECONDS,
+  );
+
+  async function handleSendPasswordReset() {
+    if (!accountEmail || passwordSending || passwordCooldown.remaining > 0) {
+      return;
+    }
+
+    setPasswordSending(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        accountEmail,
+        {
+          redirectTo: buildAuthCallbackUrl(APP_ROUTES.passwordResetConfirm),
+        },
+      );
+      if (error) {
+        const code = mapSupabaseErrorCode(error.code);
+        const status =
+          "status" in error && typeof error.status === "number"
+            ? error.status
+            : null;
+
+        if (code === "user_not_found") {
+          passwordCooldown.start();
+          message.success(labels.passwordSent);
+          return;
+        }
+        if (
+          code === "over_email_send_rate_limit" ||
+          code === "over_request_rate_limit" ||
+          status === 429
+        ) {
+          passwordCooldown.start();
+          message.error(labels.passwordRateLimited);
+          return;
+        }
+        message.error(labels.passwordSendFailed);
+        return;
+      }
+
+      passwordCooldown.start();
+      message.success(labels.passwordSent);
+    } catch {
+      message.error(labels.passwordSendFailed);
+    } finally {
+      setPasswordSending(false);
+    }
+  }
+
+  const passwordActionLabel =
+    passwordCooldown.remaining > 0
+      ? `${labels.passwordAction} (${passwordCooldown.remaining})`
+      : labels.passwordAction;
+
+  return (
+    <AppCard className="account-login-method account-password-change-card">
+      <span className="account-login-method-icon">
+        <LockKeyhole aria-hidden size={20} strokeWidth={1.75} />
+      </span>
+      <span className="account-login-method-copy">
+        <Text strong>{labels.passwordMethod}</Text>
+        <Text type="secondary">{labels.passwordDescription}</Text>
+      </span>
+      <span className="account-login-method-status">
+        <Button
+          size="small"
+          loading={passwordSending}
+          disabled={
+            !accountEmail || passwordSending || passwordCooldown.remaining > 0
+          }
+          onClick={handleSendPasswordReset}
+          data-testid="account-password-reset-send"
+        >
+          {passwordActionLabel}
+        </Button>
+      </span>
+    </AppCard>
+  );
+}
+
+export function AccountPasswordChangeCard({
+  accountEmail,
+  labels,
+}: {
+  accountEmail: string | null;
+  labels: AccountLoginMethodsLabels;
+}) {
+  return (
+    <section
+      role="region"
+      aria-label={labels.passwordMethod}
+      className="app-cards-bordered"
+    >
+      <PasswordChangeMethodCard accountEmail={accountEmail} labels={labels} />
     </section>
   );
 }

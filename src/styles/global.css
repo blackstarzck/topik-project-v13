@@ -144,6 +144,8 @@ body {
 
 .brand-logo__image {
   display: block;
+  width: auto;
+  height: auto;
   max-width: 100%;
   object-fit: contain;
 }
@@ -768,15 +770,20 @@ body {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
+  align-items: start;
   min-height: 100dvh;
   background: #ffffff;
 }
 
 .signup-prompt-hero {
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: start;
   display: flex;
   min-width: 0;
+  height: 100dvh;
   min-height: 100dvh;
+  max-height: 100dvh;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
@@ -1990,12 +1997,13 @@ body {
   align-items: center;
   flex-shrink: 0;
   height: 68px;
-  max-width: 180px;
+  max-width: 193px;
   line-height: 0;
   text-decoration: none;
 }
 
 .landing-header-logo .brand-logo__image {
+  width: auto;
   height: 68px;
 }
 
@@ -2903,7 +2911,7 @@ body {
   font-weight: 900;
   letter-spacing: 0;
   line-height: 0.8;
-  content: "TALKPIK";
+  content: "DOTORE TOPIK";
   pointer-events: none;
 }
 
@@ -3001,7 +3009,7 @@ body {
   }
 
   .landing-header-logo {
-    max-width: 118px;
+    max-width: 193px;
   }
 
   .landing-header-actions {
@@ -4476,6 +4484,7 @@ body {
 }
 
 .app-workspace-mobile-brand .brand-logo__image {
+  width: auto;
   height: 48px;
 }
 
@@ -5876,6 +5885,11 @@ body {
   display: inline-flex;
 }
 
+.problem-table__actions-compact {
+  display: inline-flex;
+  align-items: center;
+}
+
 .problem-table__action-button.ant-btn {
   min-width: 82px;
   height: 32px;
@@ -5898,6 +5912,35 @@ body {
   background: var(--app-color-bg-container);
   color: var(--app-color-text);
   font-weight: 400;
+}
+
+.problem-table__bookmark-button.ant-btn,
+.writing-exam-header__bookmark-button.ant-btn {
+  flex: 0 0 32px;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  padding-inline: 0;
+  line-height: 1;
+}
+
+.writing-exam-header__bookmark-button.ant-btn {
+  align-self: center;
+}
+
+.problem-bookmark-toggle--saved.ant-btn {
+  border-color: color-mix(in srgb, var(--app-color-primary) 45%, transparent);
+  background: var(--app-color-bg-container);
+  color: var(--app-color-primary);
+}
+
+.problem-bookmark-toggle--saved.ant-btn:not(:disabled):hover,
+.problem-bookmark-toggle--saved.ant-btn:not(:disabled):focus-visible {
+  border-color: var(--app-color-primary);
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-primary);
 }
 
 .problem-table__action-button--primary.ant-btn:not(:disabled):hover,
@@ -6254,6 +6297,7 @@ body {
 }
 
 .app-sidebar-brand__logo .brand-logo__image {
+  width: auto;
   height: 68px;
 }
 
@@ -6707,11 +6751,23 @@ body {
   font-size: 14px;
 }
 
-.app-notification-item__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.institution-invitation-modal__description.ant-typography {
+  word-break: keep-all;
+}
+
+.institution-invitation-modal__code.ant-typography {
+  display: block;
+  width: 100%;
+  margin-block: 20px 18px;
+  background: var(--app-color-bg-layout);
+  padding: 12px 14px;
+  color: var(--app-color-text);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .dashboard-alerts-card .ant-card-head-title {
@@ -6854,6 +6910,7 @@ body {
 }
 
 .writing-exam-header__title {
+  flex: 0 1 auto;
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -8455,9 +8512,9 @@ body {
   }
 
   .writing-exam-header__title-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .writing-exam-header__title,

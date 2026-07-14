@@ -12,14 +12,74 @@ import type { ReactElement } from "react";
 
 import koMessages from "../../../messages/ko.json";
 import type {
+  LibraryDraftView,
   LibraryItemView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
+const exportPdfWithPrintFallbackMock = vi.hoisted(() => vi.fn());
+const routerPushMock = vi.hoisted(() => vi.fn());
+const compareMutateMock = vi.hoisted(() => vi.fn());
+const appApiMocks = vi.hoisted(() => ({
+  notification: {
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+  },
+  message: {
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+  },
+  modal: {},
+}));
+
+const actionMenuLabels = {
+  open: "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30",
+  exportPdf: "PDF \ub0b4\ubcf4\ub0b4\uae30",
+  nextProblem: "\ub2e4\uc74c \ubb38\uc81c \ud480\uae30",
+  compareReport: "\ube44\uad50 \ub9ac\ud3ec\ud2b8",
+  retry: "\ub2e4\uc2dc \ud480\uae30",
+};
+
 vi.mock("@/lib/library/queries", () => ({
   useLibraryItems: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: routerPushMock,
+  }),
+}));
+
+vi.mock("antd", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("antd")>();
+  return {
+    ...actual,
+    App: Object.assign(actual.App, {
+      useApp: () => appApiMocks,
+    }),
+  };
+});
+
+vi.mock("@/lib/export/pdf-export-client", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/export/pdf-export-client")>();
+  return {
+    ...actual,
+    exportPdfWithPrintFallback: exportPdfWithPrintFallbackMock,
+  };
+});
+
+vi.mock("@/lib/writing/mutations", () => ({
+  useCreateComparisonReport: () => ({
+    isPending: false,
+    mutate: compareMutateMock,
+  }),
 }));
 
 vi.mock("@/components/library/library-enrich-data", async (importOriginal) => {
@@ -55,12 +115,27 @@ const problem: LibraryProblemView = {
   id: "problem-52",
   title: "No. 52 - 휴대전화 진동 문장 완성",
   question_no: 52,
+  answer_text: "bookmark answer body",
   item_id: "library-problem-1",
   saved_at: "2026-06-30T10:00:00.000Z",
   tags: ["bookmark"],
   availabilityStatus: "available",
   availabilityReason: null,
   canRetry: true,
+};
+
+const draft: LibraryDraftView = {
+  kind: "draft",
+  id: "draft-51",
+  problem_id: "problem-51",
+  problem_title: "No. 51 - Draft answer problem",
+  question_no: 51,
+  answer_text: "draft body",
+  char_count: 10,
+  autosave_status: "clean",
+  item_id: "draft:draft-51",
+  saved_at: "2026-07-01T10:00:00.000Z",
+  last_saved_at: "2026-07-01T10:00:00.000Z",
 };
 
 function configureQueries({
@@ -90,6 +165,7 @@ function renderList(
     <LibraryProblemsList
       initialSubmissions={[submission]}
       initialProblems={[problem]}
+      initialDrafts={[]}
     />
   ),
 ) {
@@ -138,12 +214,12 @@ describe("LibraryProblemsList", () => {
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
     expect(rows[1].getAttribute("data-library-kind")).toBe("submission");
 
-    const resultsColumn = screen.getByTestId(
-      "library-problems-results-column",
-    );
+    const resultsColumn = screen.getByTestId("library-problems-results-column");
+    const problemRow = rows[0];
     expect(
-      within(resultsColumn).queryByTestId("library-problems-type-badge"),
-    ).toBeNull();
+      within(problemRow).getByTestId("library-problems-type-badge")
+        .textContent,
+    ).toBe("북마크");
     expect(
       within(resultsColumn).queryByText(
         koMessages.library.submissions.statusComplete,
@@ -154,16 +230,21 @@ describe("LibraryProblemsList", () => {
       within(resultsColumn).getAllByTestId("library-problems-question-number")
         .length,
     ).toBeGreaterThan(0);
-    expect(within(resultsColumn).getByText("휴대전화 진동 문장 완성")).toBeTruthy();
+    expect(
+      within(resultsColumn).getByText("휴대전화 진동 문장 완성"),
+    ).toBeTruthy();
     const list = screen.getByTestId("library-item-list");
     expect(within(list).queryAllByText(/2026-06-(29|30)/)).toHaveLength(0);
     expect(within(list).queryAllByText("252자")).toHaveLength(0);
 
     expect(
-      screen
-        .getByRole("link", { name: koMessages.library.saved.retry })
-        .getAttribute("href"),
-    ).toBe("/writing/answer-writing-52?problem=problem-52");
+      within(rows[0]).queryByRole("link", {
+        name: koMessages.library.saved.retry,
+      }),
+    ).toBeNull();
+    expect(
+      within(rows[0]).getByRole("button", { name: actionMenuLabels.open }),
+    ).toBeTruthy();
 
     const feedbackLink = await screen.findByRole("link", {
       name: /문화 소비 다양화 영향/,
@@ -176,6 +257,272 @@ describe("LibraryProblemsList", () => {
       expect(screen.getByText("구조 보완이 필요합니다.")).toBeTruthy();
       expect(screen.getByText(/68\/100/)).toBeTruthy();
     });
+  });
+
+  it("moves saved problem retry into the shared action menu", async () => {
+    renderList();
+
+    const problemRow = screen
+      .getAllByTestId("library-problems-mixed-row")
+      .find((row) => row.getAttribute("data-library-kind") === "problem");
+    if (!problemRow) throw new Error("expected problem row");
+
+    expect(
+      within(problemRow).queryByRole("link", {
+        name: koMessages.library.saved.retry,
+      }),
+    ).toBeNull();
+
+    fireEvent.click(
+      within(problemRow).getByRole("button", {
+        name: actionMenuLabels.open,
+      }),
+    );
+    const menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual([actionMenuLabels.retry]);
+
+    fireEvent.click(
+      within(menu).getByRole("menuitem", { name: actionMenuLabels.retry }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/writing/answer-writing-52?problem=problem-52",
+    );
+  });
+
+  it("renders bookmarked problem title with a bookmark tag and optional answer preview", () => {
+    const problemTitleText = "Festival trash prompt title";
+    const answerText = "ㄱ: bookmark answer preview";
+
+    renderList(
+      <LibraryProblemsList
+        initialSubmissions={[]}
+        initialProblems={[
+          { ...problem, title: problemTitleText, answer_text: answerText },
+        ]}
+        initialDrafts={[]}
+      />,
+    );
+
+    const problemRow = screen.getByTestId("library-problems-mixed-row");
+    expect(
+      within(problemRow).getByText(problemTitleText, { selector: "strong" }),
+    ).toBeTruthy();
+    expect(
+      within(problemRow).getByTestId("library-problems-type-badge")
+        .textContent,
+    ).toBe("북마크");
+
+    const answer = within(problemRow).getByText(answerText);
+    expect(answer.closest(".ant-typography-secondary")).toBeTruthy();
+    expect(within(problemRow).queryByText(answerText, { selector: "strong" }))
+      .toBeNull();
+    expect(
+      within(problemRow).queryByText(problemTitleText, {
+        selector: ".ant-typography-secondary",
+      }),
+    ).toBeNull();
+
+    fireEvent.click(
+      screen.getByTitle(koMessages.library.problemsList.viewCard),
+    );
+
+    const card = screen.getByTestId("library-problems-mixed-row");
+    expect(
+      within(card).getByText(problemTitleText, { selector: "strong" }),
+    ).toBeTruthy();
+    expect(
+      within(card).getByTestId("library-problems-type-badge").textContent,
+    ).toBe("북마크");
+    const cardAnswer = within(card).getByText(answerText);
+    expect(cardAnswer.closest(".ant-typography-secondary")).toBeTruthy();
+    expect(within(card).queryByText(answerText, { selector: "strong" }))
+      .toBeNull();
+  });
+
+  it("shows the four-item action menu for completed submissions", async () => {
+    exportPdfWithPrintFallbackMock.mockResolvedValue({
+      exportId: "export-1",
+      mode: "file",
+    });
+    compareMutateMock.mockImplementation(
+      (
+        _input: unknown,
+        options?: {
+          onSuccess?: (data: { reportId: string }) => void;
+        },
+      ) => {
+        options?.onSuccess?.({ reportId: "report-1" });
+      },
+    );
+
+    renderList();
+    await waitForEnrichment();
+
+    const rows = screen.getAllByTestId("library-problems-mixed-row");
+    const submissionRow = rows.find(
+      (row) => row.getAttribute("data-library-kind") === "submission",
+    );
+    const problemRow = rows.find(
+      (row) => row.getAttribute("data-library-kind") === "problem",
+    );
+    if (!submissionRow || !problemRow) {
+      throw new Error("expected submission and problem rows");
+    }
+
+    expect(
+      within(problemRow).getByRole("button", {
+        name: actionMenuLabels.open,
+      }),
+    ).toBeTruthy();
+    expect(
+      within(problemRow).queryByRole("link", {
+        name: koMessages.library.saved.retry,
+      }),
+    ).toBeNull();
+
+    const trigger = within(submissionRow).getByRole("button", {
+      name: actionMenuLabels.open,
+    });
+    expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
+
+    fireEvent.click(trigger);
+    let menu = await screen.findByRole("menu");
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent),
+    ).toEqual([
+      actionMenuLabels.exportPdf,
+      actionMenuLabels.nextProblem,
+      actionMenuLabels.compareReport,
+      actionMenuLabels.retry,
+    ]);
+
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: actionMenuLabels.exportPdf,
+      }),
+    );
+    await waitFor(() => {
+      expect(exportPdfWithPrintFallbackMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceType: "submission",
+          sourceId: "sub-1",
+        }),
+      );
+    });
+    expect(appApiMocks.message.success).toHaveBeenCalledWith(
+      koMessages.feedback.actions.pdfDownloaded,
+    );
+    expect(appApiMocks.notification.success).not.toHaveBeenCalled();
+
+    fireEvent.click(trigger);
+    menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: actionMenuLabels.nextProblem,
+      }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith("/practice/next");
+
+    fireEvent.click(trigger);
+    menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: actionMenuLabels.compareReport,
+      }),
+    );
+    expect(compareMutateMock).toHaveBeenCalledWith(
+      { current_id: "sub-1" },
+      expect.objectContaining({
+        onError: expect.any(Function),
+        onSuccess: expect.any(Function),
+      }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/writing/reports/report-1/compare",
+    );
+
+    fireEvent.click(trigger);
+    menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", { name: actionMenuLabels.retry }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/writing/long-form-writing-53?problem=problem-53&fresh=1&retrySubmission=sub-1",
+    );
+  });
+
+  it("hides submission action menus while analysis is pending", async () => {
+    mockedFetchSubmissionEnrichment.mockResolvedValue(
+      new Map([
+        [
+          "sub-1",
+          {
+            feedbackStatus: "analyzing",
+            scoreTotal: null,
+            scoreMax: null,
+            summary: null,
+          },
+        ],
+      ]),
+    );
+
+    renderList();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(koMessages.library.submissions.analysisPendingHint),
+      ).toBeTruthy();
+    });
+    const submissionRow = screen
+      .getAllByTestId("library-item-row")
+      .find((row) => row.getAttribute("data-library-tab") === "submissions");
+    if (!submissionRow) throw new Error("submission row not found");
+
+    expect(
+      within(submissionRow).queryByRole("button", {
+        name: actionMenuLabels.open,
+      }),
+    ).toBeNull();
+  });
+
+  it("hides submission action menus when analysis failed", async () => {
+    mockedFetchSubmissionEnrichment.mockResolvedValue(
+      new Map([
+        [
+          "sub-1",
+          {
+            feedbackStatus: "failed",
+            scoreTotal: null,
+            scoreMax: null,
+            summary: "분석 실패 답안은 메뉴를 숨깁니다.",
+          },
+        ],
+      ]),
+    );
+
+    renderList();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("분석 실패 답안은 메뉴를 숨깁니다."),
+      ).toBeTruthy();
+    });
+    const submissionRow = screen
+      .getAllByTestId("library-item-row")
+      .find((row) => row.getAttribute("data-library-tab") === "submissions");
+    if (!submissionRow) throw new Error("submission row not found");
+
+    expect(
+      within(submissionRow).queryByRole("button", {
+        name: actionMenuLabels.open,
+      }),
+    ).toBeNull();
   });
 
   it("does not render delete buttons in the problems list rows", () => {
@@ -220,7 +567,11 @@ describe("LibraryProblemsList", () => {
     configureQueries({ submissions: [], problems: [] });
 
     renderList(
-      <LibraryProblemsList initialSubmissions={[]} initialProblems={[]} />,
+      <LibraryProblemsList
+        initialSubmissions={[]}
+        initialProblems={[]}
+        initialDrafts={[]}
+      />,
     );
 
     expect(
@@ -241,6 +592,7 @@ describe("LibraryProblemsList", () => {
       <LibraryProblemsList
         initialSubmissions={[]}
         initialProblems={problems}
+        initialDrafts={[]}
       />,
     );
 
@@ -280,6 +632,24 @@ describe("LibraryProblemsList", () => {
       screen.getByTestId("library-problems-filter-kind-problem-count")
         .textContent,
     ).toBe("1");
+    expect(
+      screen.getByTestId("library-problems-filter-kind-draft-count")
+        .textContent,
+    ).toBe("0");
+    const itemTypeGroup = screen.getByTestId(
+      "library-problems-filter-group-item-type",
+    );
+    expect(
+      within(itemTypeGroup).queryByTestId(
+        "library-problems-filter-availability-soft_unavailable",
+      ),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("library-problems-filter-group-submission-status"),
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-filter-group-problem-availability"),
+    ).toBeTruthy();
     expect(
       screen.getByTestId("library-problems-filter-question-52-count")
         .textContent,
@@ -350,12 +720,12 @@ describe("LibraryProblemsList", () => {
 
     expect(screen.getByTestId("library-problems-toolbar")).toBeTruthy();
     expect(screen.queryByTestId("library-problems-result-count")).toBeNull();
-    expect(screen.getByTestId("library-problems-toolbar-controls")).toBeTruthy();
+    expect(
+      screen.getByTestId("library-problems-toolbar-controls"),
+    ).toBeTruthy();
     expect(screen.getByTestId("library-problems-sort")).toBeTruthy();
 
-    const viewToggleShell = screen.getByTestId(
-      "library-problems-view-toggle",
-    );
+    const viewToggleShell = screen.getByTestId("library-problems-view-toggle");
     expect(viewToggleShell.className).toContain(
       "library-problems-view-toggle-shell",
     );
@@ -384,6 +754,45 @@ describe("LibraryProblemsList", () => {
     rows = screen.getAllByTestId("library-problems-mixed-row");
     expect(rows).toHaveLength(1);
     expect(rows[0].getAttribute("data-library-kind")).toBe("problem");
+  });
+
+  it("filters temporary drafts separately from saved answers and bookmarked problems", async () => {
+    renderList(
+      <LibraryProblemsList
+        initialSubmissions={[submission]}
+        initialProblems={[problem]}
+        initialDrafts={[draft]}
+      />,
+    );
+
+    expect(
+      screen.getByTestId("library-problems-filter-kind-draft-count")
+        .textContent,
+    ).toBe("1");
+
+    fireEvent.click(screen.getByTestId("library-problems-filter-kind-draft"));
+
+    const rows = screen.getAllByTestId("library-problems-mixed-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].getAttribute("data-library-kind")).toBe("draft");
+    expect(
+      within(rows[0]).queryByRole("link", {
+        name: koMessages.library.problemsList.continueDraft,
+      }),
+    ).toBeNull();
+
+    fireEvent.click(
+      within(rows[0]).getByRole("button", { name: actionMenuLabels.open }),
+    );
+    const menu = await screen.findByRole("menu");
+    fireEvent.click(
+      within(menu).getByRole("menuitem", {
+        name: koMessages.library.problemsList.continueDraft,
+      }),
+    );
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/writing/short-answer-writing-51?problem=problem-51",
+    );
   });
 
   it("combines the question type group with the kind group as AND", () => {
@@ -490,11 +899,13 @@ describe("LibraryProblemsList", () => {
     const cardGrid = screen.getByTestId("library-problems-card-grid");
     expect(cardGrid).toBeTruthy();
     expect(screen.queryByTestId("library-item-list")).toBeNull();
-    expect(within(cardGrid).queryByTestId("library-problems-type-badge")).toBe(
-      null,
-    );
     expect(
-      within(cardGrid).queryByText(koMessages.library.submissions.statusComplete),
+      within(cardGrid).getByTestId("library-problems-type-badge").textContent,
+    ).toBe("북마크");
+    expect(
+      within(cardGrid).queryByText(
+        koMessages.library.submissions.statusComplete,
+      ),
     ).toBeNull();
     expect(within(cardGrid).queryByText(/No\.\s*5[1-4]/)).toBeNull();
     expect(
@@ -503,11 +914,18 @@ describe("LibraryProblemsList", () => {
     ).toBeGreaterThan(0);
     expect(within(cardGrid).queryAllByText(/2026-06-(29|30)/)).toHaveLength(0);
     expect(within(cardGrid).queryAllByText("252자")).toHaveLength(0);
-    // 카드 뷰에서도 행 testid 계약과 다시 풀기 액션이 유지된다.
+    // Card view keeps the mixed-row testid contract and submission-only menu.
     expect(screen.getAllByTestId("library-problems-mixed-row")).toHaveLength(2);
     expect(
-      screen.getByRole("link", { name: koMessages.library.saved.retry }),
-    ).toBeTruthy();
+      within(cardGrid).queryByRole("link", {
+        name: koMessages.library.saved.retry,
+      }),
+    ).toBeNull();
+    expect(
+      within(cardGrid).getAllByRole("button", {
+        name: actionMenuLabels.open,
+      }).length,
+    ).toBe(2);
 
     fireEvent.click(
       screen.getByTitle(koMessages.library.problemsList.viewList),
@@ -519,7 +937,11 @@ describe("LibraryProblemsList", () => {
     configureQueries({ submissions: [], problems: [] });
 
     renderList(
-      <LibraryProblemsList initialSubmissions={[]} initialProblems={[]} />,
+      <LibraryProblemsList
+        initialSubmissions={[]}
+        initialProblems={[]}
+        initialDrafts={[]}
+      />,
     );
 
     expect(

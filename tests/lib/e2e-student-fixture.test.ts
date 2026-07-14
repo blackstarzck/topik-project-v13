@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ensureE2EStudentUser,
+  findE2EStudentUserId,
   resolveE2EStudentConfig,
   type E2EAdminClientLike,
   type E2EStudentConfig,
@@ -174,5 +175,19 @@ describe("e2e student fixture account setup", () => {
         userId: "existing-user-id",
       },
     ]);
+  });
+
+  it("finds the existing e2e student without invalidating its authenticated session", async () => {
+    const { admin, calls } = createAdminDouble([
+      { email: config.email, id: "existing-user-id" },
+    ]);
+
+    await expect(findE2EStudentUserId(admin, config.email)).resolves.toBe(
+      "existing-user-id",
+    );
+
+    expect(calls.createUser).toEqual([]);
+    expect(calls.updateUserById).toEqual([]);
+    expect(calls.profileUpdate).toEqual([]);
   });
 });

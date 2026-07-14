@@ -119,6 +119,16 @@ describe("/auth/post-auth", () => {
     );
   });
 
+  it("sends users with missing required consent to the consent gate", async () => {
+    getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
+      "pending-consent",
+    );
+
+    await expect(renderPostAuth("sign-up")).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/consent?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
+    );
+  });
+
   it("sends users without learning goals to onboarding after auth completion is complete", async () => {
     getAuthCompletionStatusForSessionMock.mockResolvedValueOnce(
       "pending-learning-goal",

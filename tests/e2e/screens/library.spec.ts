@@ -33,9 +33,20 @@ const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+const PROBLEMS_ACTION_MENU_OPEN =
+  "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30";
+const PROBLEMS_ACTION_MENU_ITEMS = [
+  "PDF \ub0b4\ubcf4\ub0b4\uae30",
+  "\ub2e4\uc74c \ubb38\uc81c \ud480\uae30",
+  "\ube44\uad50 \ub9ac\ud3ec\ud2b8",
+  "\ub2e4\uc2dc \ud480\uae30",
+] as const;
+const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 const createdLibraryItemIds: string[] = [];
 const createdSubmissionIds: string[] = [];
 const createdStudyEventIds: string[] = [];
+const createdProblemIds: string[] = [];
+const createdDraftIds: string[] = [];
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -58,6 +69,24 @@ function serviceClient() {
   return createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false },
   });
+}
+
+function q51Materials(marker: string) {
+  return {
+    question_id: `e2e-library-draft-${marker}`,
+    blank_target_giyeok: "draft fixture first blank",
+    blank_target_nieun: "draft fixture second blank",
+    review: {
+      validation: [`Library draft fixture ${marker}`],
+    },
+  };
+}
+
+function q51Rubric() {
+  return {
+    conditions: ["Complete the notice in a natural order."],
+    criteria: ["content", "format", "sentence accuracy"],
+  };
 }
 
 async function createLibraryDashboardFixture() {
@@ -140,6 +169,11 @@ async function createLibraryDashboardFixture() {
     },
   ]);
   if (submissions.error) throw submissions.error;
+  createdSubmissionIds.push(
+    ...completeSubmissionIds,
+    analyzingSubmissionId,
+    failedSubmissionId,
+  );
 
   const feedback = await sb.from("writing_feedback").insert([
     ...completeSubmissionIds.map((submissionId, index) => ({
@@ -198,6 +232,12 @@ async function createLibraryDashboardFixture() {
   ]);
   if (dimensions.error) throw dimensions.error;
 
+  const staleLibraryItems = await sb
+    .from("library_items")
+    .delete()
+    .eq("user_id", user.id);
+  if (staleLibraryItems.error) throw staleLibraryItems.error;
+
   const library = await sb.from("library_items").insert([
     ...completeSubmissionIds.map((submissionId, index) => ({
       id: completeLibraryIds[index],
@@ -233,6 +273,7 @@ async function createLibraryDashboardFixture() {
     },
   ]);
   if (library.error) throw library.error;
+  createdLibraryItemIds.push(...libraryIds);
 
   const events = await sb.from("study_events").insert([
     {
@@ -255,13 +296,6 @@ async function createLibraryDashboardFixture() {
     },
   ]);
   if (events.error) throw events.error;
-
-  createdLibraryItemIds.push(...libraryIds);
-  createdSubmissionIds.push(
-    ...completeSubmissionIds,
-    analyzingSubmissionId,
-    failedSubmissionId,
-  );
   createdStudyEventIds.push(...studyEventIds);
 
   return {
@@ -274,16 +308,75 @@ async function createLibraryDashboardFixture() {
   };
 }
 
+async function createLibraryDraftFixture() {
+  const sb = serviceClient();
+  const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (users.error) throw users.error;
+  const user = users.data.users.find(
+    (candidate) => candidate.email?.toLowerCase() === EMAIL.toLowerCase(),
+  );
+  if (!user) throw new Error(`E2E student user not found: ${EMAIL}`);
+
+  const marker = `f01-draft-${randomUUID().slice(0, 8)}`;
+  const problemId = randomUUID();
+  const draftId = randomUUID();
+  const now = new Date(Date.now() - 10_000).toISOString();
+  const title = `E2E library temporary draft ${marker}`;
+  const answerText = `${marker} temporary draft answer`;
+
+  const problem = await sb.from("problems").insert({
+    id: problemId,
+    source: "curated",
+    domain: "writing",
+    question_no: 51,
+    topik_level: 2,
+    difficulty: 3,
+    title,
+    prompt: "Complete the short-answer writing fixture.",
+    materials: q51Materials(marker),
+    answer_key: null,
+    rubric: q51Rubric(),
+    tags: [marker, "e2e-library-draft"],
+    publish_status: "published",
+    review_status: "approved",
+    visibility: "public",
+    lifecycle_status: "active",
+    created_at: now,
+    updated_at: now,
+  });
+  if (problem.error) throw problem.error;
+  createdProblemIds.push(problemId);
+
+  const draft = await sb.from("writing_drafts").insert({
+    id: draftId,
+    user_id: user.id,
+    problem_id: problemId,
+    question_no: 51,
+    answer_text: answerText,
+    answer_json: null,
+    char_count: answerText.length,
+    autosave_status: "clean",
+    last_saved_at: now,
+    created_at: now,
+    updated_at: now,
+  });
+  if (draft.error) throw draft.error;
+  createdDraftIds.push(draftId);
+
+  return { marker, problemId, title };
+}
+
 async function cleanupLibraryFixtures() {
   if (
     createdLibraryItemIds.length === 0 &&
     createdSubmissionIds.length === 0 &&
-    createdStudyEventIds.length === 0
+    createdStudyEventIds.length === 0 &&
+    createdProblemIds.length === 0 &&
+    createdDraftIds.length === 0
   ) {
     return;
   }
-  const label = (process.env.SUPABASE_ENV_LABEL || "").toLowerCase();
-  if (label === "prod" || label === "production") return;
+  if (ENV_LABEL === "prod" || ENV_LABEL === "production") return;
   const sb = serviceClient();
   for (const id of createdLibraryItemIds) {
     await sb.from("library_items").delete().eq("id", id);
@@ -296,9 +389,19 @@ async function cleanupLibraryFixtures() {
     await sb.from("writing_feedback").delete().eq("submission_id", id);
     await sb.from("writing_submissions").delete().eq("id", id);
   }
+  for (const id of createdDraftIds) {
+    await sb.from("writing_drafts").delete().eq("id", id);
+  }
+  for (const id of createdProblemIds) {
+    await sb.from("library_items").delete().eq("problem_id", id);
+    await sb.from("writing_drafts").delete().eq("problem_id", id);
+    await sb.from("problems").delete().eq("id", id);
+  }
   createdLibraryItemIds.length = 0;
   createdSubmissionIds.length = 0;
   createdStudyEventIds.length = 0;
+  createdProblemIds.length = 0;
+  createdDraftIds.length = 0;
 }
 
 test.afterEach(cleanupLibraryFixtures);
@@ -459,7 +562,45 @@ test("F-01 library dashboard renders study action sections", async ({
   await expect(
     page.locator('a[href*="/writing/feedback/"]').first(),
   ).toBeVisible();
-  await expect(page.locator('a[href*="?problem="]').first()).toBeVisible();
+  const completeSubmissionActionMenuButton = page
+    .locator(
+      '[data-testid="library-problems-mixed-row"][data-library-kind="submission"]',
+    )
+    .filter({ hasText: "F-01 dashboard fixture feedback summary." })
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .first();
+  await expect(completeSubmissionActionMenuButton).toBeVisible();
+  await completeSubmissionActionMenuButton.click();
+  for (const label of PROBLEMS_ACTION_MENU_ITEMS) {
+    await expect(page.getByRole("menuitem", { name: label })).toBeVisible();
+  }
+  await page.keyboard.press("Escape");
+  const savedProblemRow = page
+    .locator(
+      '[data-testid="library-problems-mixed-row"][data-library-kind="problem"]',
+    )
+    .first();
+  await expect(
+    savedProblemRow.getByRole("link", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
+  ).toHaveCount(0);
+  await expect(
+    savedProblemRow.getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }),
+  ).toBeVisible();
+  await savedProblemRow
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .click();
+  const savedProblemActionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: new RegExp(`^${PROBLEMS_ACTION_MENU_ITEMS[3]}$`) });
+  await expect(savedProblemActionMenu).toBeVisible();
+  await expect(
+    savedProblemActionMenu.getByRole("menuitem", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(
     page
       .getByTestId("library-problems-list")
@@ -592,13 +733,81 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
   ).toBeVisible();
   await expect(resultsColumn).not.toContainText(/No\.\s*5[1-4]/);
   await expect(
-    resultsColumn.getByTestId("library-problems-type-badge"),
-  ).toHaveCount(0);
+    resultsColumn.getByTestId("library-problems-type-badge").first(),
+  ).toContainText("북마크");
   await expect(resultsColumn).not.toContainText("분석 완료");
   const list = page.getByTestId("library-item-list");
   await expect(list).toBeVisible();
   await expect(list).not.toContainText(/\d{4}-\d{2}-\d{2}/);
   await expect(list).not.toContainText(/\d+자/);
+
+  const completeSubmissionRow = submissionRows
+    .filter({ hasText: "F-01 dashboard fixture feedback summary." })
+    .first();
+  await expect(completeSubmissionRow).toBeVisible();
+  const submissionActionMenu = completeSubmissionRow.getByRole("button", {
+    name: PROBLEMS_ACTION_MENU_OPEN,
+  });
+  await expect(submissionActionMenu).toBeVisible();
+  const failedSubmissionRow = submissionRows
+    .filter({ hasText: "F-01 dashboard fixture failed feedback." })
+    .first();
+  await expect(failedSubmissionRow).toBeVisible();
+  await expect(
+    failedSubmissionRow.getByRole("button", {
+      name: PROBLEMS_ACTION_MENU_OPEN,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    problemRows.first().getByRole("button", {
+      name: PROBLEMS_ACTION_MENU_OPEN,
+    }),
+  ).toBeVisible();
+  await expect(
+    problemRows.first().getByRole("link", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
+  ).toHaveCount(0);
+  await problemRows
+    .first()
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .click();
+  const problemActionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: new RegExp(`^${PROBLEMS_ACTION_MENU_ITEMS[3]}$`) });
+  await expect(problemActionMenu).toBeVisible();
+  await expect(
+    problemActionMenu.getByRole("menuitem", {
+      name: PROBLEMS_ACTION_MENU_ITEMS[3],
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await submissionActionMenu.click();
+  const actionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: PROBLEMS_ACTION_MENU_ITEMS[0] });
+  await expect(actionMenu).toBeVisible();
+  for (const label of PROBLEMS_ACTION_MENU_ITEMS) {
+    await expect(
+      actionMenu.getByRole("menuitem", { name: label }),
+    ).toBeVisible();
+  }
+  const menuBox = await actionMenu.boundingBox();
+  const viewportBox = page.viewportSize();
+  expect(menuBox).not.toBeNull();
+  expect(viewportBox).not.toBeNull();
+  if (menuBox && viewportBox) {
+    expect(menuBox.x).toBeGreaterThanOrEqual(0);
+    expect(menuBox.y).toBeGreaterThanOrEqual(0);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(
+      viewportBox.width + 1,
+    );
+    expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(
+      viewportBox.height + 1,
+    );
+  }
+  await page.keyboard.press("Escape");
+  await expect(actionMenu).toBeHidden();
 
   if (isDesktop) {
     // 데스크톱: 우측 aside 필터 패널이 보이고 모바일 필터 버튼은 숨겨진다.
@@ -828,6 +1037,9 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     await expect(page.getByTestId("library-problems-mixed-row")).toHaveCount(
       10,
     );
+    await expect(
+      cardGrid.getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }).first(),
+    ).toBeVisible();
     await expect(cardGrid).not.toContainText(/\d{4}-\d{2}-\d{2}/);
     await expect(cardGrid).not.toContainText(/\d+자/);
     await page.getByTitle("리스트 보기").click();
@@ -845,7 +1057,11 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     }).toPass({ timeout: 8_000 });
 
     await expect(drawerPanel).toBeVisible();
-    await drawer.getByTestId("library-problems-filter-kind-problem").click();
+    const drawerProblemKindInput = drawer.getByTestId(
+      "library-problems-filter-kind-problem",
+    );
+    await drawerProblemKindInput.check();
+    await expect(drawerProblemKindInput).toBeChecked();
     await drawer.getByTestId("library-problems-filter-drawer-apply").click();
     await expect(
       drawer.getByTestId("library-problems-filter-panel"),
@@ -858,6 +1074,88 @@ test("F-01 library problems filter panel, sort, and view toggle", async ({
     ).toContainText("1");
   }
 
+  expect(errors).toEqual([]);
+});
+
+test("F-01 library problems temporary draft filter is separate from saved items", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const fixture = await createLibraryDraftFixture();
+
+  await page.goto("/library/problems", { waitUntil: "load" });
+  await expect(page).not.toHaveURL(/\/login/);
+  await expect(page.getByTestId("library-problems-list")).toBeVisible();
+
+  const searchInput = page
+    .getByTestId("library-problems-search")
+    .locator("input");
+  await expect(searchInput).toHaveAttribute("placeholder", /임시 저장/);
+  await searchInput.fill(fixture.marker);
+
+  const rows = page.getByTestId("library-problems-mixed-row");
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toHaveAttribute("data-library-kind", "draft");
+  await expect(
+    rows.first().getByTestId("library-problems-type-badge"),
+  ).toContainText("임시 저장");
+  await expect(rows.first()).toContainText("E2E library temporary draft");
+  await expect(rows.first()).toContainText(fixture.marker);
+  await expect(
+    rows.first().getByRole("link", { name: "이어쓰기" }),
+  ).toHaveCount(0);
+  await rows
+    .first()
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .click();
+  const draftActionMenu = page.getByRole("menu").filter({ hasText: "이어쓰기" });
+  await expect(draftActionMenu).toBeVisible();
+  await expect(
+    draftActionMenu.getByRole("menuitem", { name: "이어쓰기" }),
+  ).toBeVisible();
+  await draftActionMenu.getByRole("menuitem", { name: "이어쓰기" }).click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/writing/short-answer-writing-51\\?problem=${fixture.problemId}`,
+    ),
+  );
+  await page.goto("/library/problems", { waitUntil: "load" });
+  await searchInput.fill(fixture.marker);
+  await expect(rows).toHaveCount(1);
+
+  const viewport = page.viewportSize();
+  const isDesktop = (viewport?.width ?? 0) >= 1024;
+  const panel = isDesktop
+    ? page.getByTestId("library-problems-filter-panel-desktop")
+    : page.locator(".app-drawer").getByTestId("library-problems-filter-panel");
+
+  if (!isDesktop) {
+    await page.getByTestId("library-problems-filter-open").click();
+  }
+  await expect(panel).toBeVisible();
+
+  const itemTypeGroup = panel.getByTestId(
+    "library-problems-filter-group-item-type",
+  );
+  await expect(itemTypeGroup).toContainText("저장 답안");
+  await expect(itemTypeGroup).toContainText("북마크한 문제");
+  await expect(itemTypeGroup).toContainText("임시 저장");
+  await expect(itemTypeGroup).not.toContainText("제공 종료");
+  await expect(itemTypeGroup).not.toContainText("이용 불가");
+  await expect(
+    panel.getByTestId("library-problems-filter-group-problem-availability"),
+  ).toContainText("제공 종료");
+  await expect(
+    panel.getByTestId("library-problems-filter-group-problem-availability"),
+  ).toContainText("이용 불가");
+
+  await panel.getByTestId("library-problems-filter-kind-draft").click();
+  if (!isDesktop) {
+    await page.getByTestId("library-problems-filter-drawer-apply").click();
+  }
+
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toHaveAttribute("data-library-kind", "draft");
   expect(errors).toEqual([]);
 });
 

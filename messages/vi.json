@@ -11,10 +11,17 @@
     "dashboard": "Bảng điều khiển"
   },
   "app": {
-    "brand": "TALKPIK",
+    "brand": "DOTORE TOPIK",
     "openMenu": "Mở menu",
     "menu": "Menu",
-    "userSummary": "Thông tin người dùng"
+    "userSummary": "Thông tin người dùng",
+    "phoneReminder": {
+      "title": "Thêm số điện thoại của bạn",
+      "description": "Thêm số điện thoại trong hồ sơ để bảo vệ tài khoản và nhận thông báo. Đây là tùy chọn và bạn có thể thay đổi bất cứ lúc nào.",
+      "cta": "Đến hồ sơ",
+      "dismiss": "Không hiển thị lại",
+      "dismissError": "Không thể lưu cài đặt. Vui lòng thử lại sau giây lát."
+    }
   },
   "nav": {
     "dashboard": "Trang chủ",
@@ -47,7 +54,7 @@
     "logout": "Đăng xuất"
   },
   "landing": {
-    "logoAria": "Lên đầu trang chủ TALKPIK",
+    "logoAria": "Lên đầu trang chủ DOTORE TOPIK",
     "navAria": "Menu chính",
     "navFeatures": "Tính năng",
     "navPreview": "Xem trước",
@@ -116,7 +123,7 @@
       "quoteSource": "Người học viết TOPIK II",
       "platformEyebrow": "Practice platform",
       "platformTitle": "Tiếp tục viết, nhận phản hồi và ôn tập trong một nền tảng",
-      "platformBody": "TALKPIK AI giữ đề xuất câu hỏi, viết câu trả lời, phân tích AI và gợi ý học tiếp theo trong cùng một luồng.",
+      "platformBody": "DOTORE TOPIK giữ đề xuất câu hỏi, viết câu trả lời, phân tích AI và gợi ý học tiếp theo trong cùng một luồng.",
       "platformListAria": "Các bước chính của luồng học",
       "platformStepGoal": "Đề xuất theo mục tiêu",
       "platformStepGoalBody": "Gợi ý câu tiếp theo dựa trên cấp mục tiêu và vùng yếu.",
@@ -127,7 +134,7 @@
       "platformImage": "Chỗ đặt hình màn hình nền tảng",
       "assistantEyebrow": "AI feedback engine",
       "assistantTitle": "Phân tách điểm yếu của bài viết theo từng tiêu chí",
-      "assistantBody": "Điều quan trọng không chỉ là điểm số, mà là cần cải thiện gì tiếp theo. TALKPIK AI tách cấu trúc và cách diễn đạt của bài viết, rồi nối với hành động học tiếp theo.",
+      "assistantBody": "Điều quan trọng không chỉ là điểm số, mà là cần cải thiện gì tiếp theo. DOTORE TOPIK tách cấu trúc và cách diễn đạt của bài viết, rồi nối với hành động học tiếp theo.",
       "assistantImage": "Chỗ đặt hình phân tích AI",
       "capabilityProblemTitle": "Đề xuất dạng câu",
       "capabilityProblemBody": "Bắt đầu luồng luyện tập từ TOPIK I/II và các dạng câu 51-54.",
@@ -183,19 +190,19 @@
       "footerLegal": "Tài liệu",
       "footerLegalTerms": "Điều khoản",
       "footerLegalPrivacy": "Chính sách bảo mật",
-      "footerNotice": "TALKPIK AI giúp người học TOPIK luyện viết, nhận phản hồi AI và quay lại ôn tập."
+      "footerNotice": "DOTORE TOPIK giúp người học TOPIK luyện viết, nhận phản hồi AI và quay lại ôn tập."
     },
-    "metaTitle": "TALKPIK AI · Học viết TOPIK cùng AI",
-    "heroMascotAlt": "Nhân vật trợ lý học tập TALKPIK"
+    "metaTitle": "DOTORE TOPIK · Học viết TOPIK cùng AI",
+    "heroMascotAlt": "Nhân vật trợ lý học tập DOTORE TOPIK"
   },
   "settings": {
     "learning": {
-      "metaTitle": "Mục tiêu học tập — TALKPIK",
+      "metaTitle": "Mục tiêu học tập — TOPIK",
       "pageHeading": "Mục tiêu học tập",
       "pageSubtitle": "Quản lý kỳ thi mục tiêu và ngày thi. Bạn có thể tiếp tục sang thiết lập đầy đủ để chỉnh thời gian học hàng tuần và điểm yếu."
     },
     "account": {
-      "metaTitle": "Cài đặt tài khoản — TALKPIK",
+      "metaTitle": "Cài đặt tài khoản — TOPIK",
       "pageHeading": "Cài đặt tài khoản",
       "pageSubtitle": "Quản lý phương thức đăng nhập, trạng thái tài khoản và đăng xuất ở cùng một nơi.",
       "dangerZone": {
@@ -254,10 +261,10 @@
       "saveSuccess": "Đã lưu cài đặt ngôn ngữ và nội dung của bạn.",
       "saveError": "Không thể lưu cài đặt của bạn.",
       "learningSettingsLoadError": "Không tải được cài đặt nội dung.",
-      "metaTitle": "Cài đặt ngôn ngữ — TALKPIK"
+      "metaTitle": "Cài đặt ngôn ngữ — TOPIK"
     },
     "notifications": {
-      "metaTitle": "Cài đặt thông báo — TALKPIK",
+      "metaTitle": "Cài đặt thông báo — TOPIK",
       "pageHeading": "Cài đặt thông báo",
       "pageSubtitle": "Nhận thông báo quan trọng mà không làm gián đoạn việc học.",
       "loadError": "Không thể tải cài đặt thông báo của bạn.",
@@ -366,7 +373,7 @@
       "googleLinkedMessage": "Đã kết nối tài khoản Google."
     },
     "login": {
-      "metaTitle": "Đăng nhập — TALKPIK",
+      "metaTitle": "Đăng nhập — TOPIK",
       "pageHeading": "Chào mừng bạn trở lại",
       "mascotCaption": "Chào mừng bạn trở lại. Cùng tiếp tục luyện viết nhé?",
       "noAccountPrompt": "Bạn chưa có tài khoản?",
@@ -398,7 +405,7 @@
       "formSubtitle": "Đăng nhập để tiếp tục học.",
       "heroEyebrow": "AI TOPIK WRITING",
       "heroTitle": "Rất vui được gặp lại bạn!",
-      "heroBody": "Tiếp tục cải thiện kỹ năng viết TOPIK từng bước cùng TALKPIK AI.",
+      "heroBody": "Tiếp tục cải thiện kỹ năng viết TOPIK từng bước cùng DOTORE TOPIK.",
       "mascotTitle": "Mỗi ngày một câu",
       "mascotBody": "Quay lại ngay bài luyện và phản hồi còn dang dở.",
       "benefitStripAria": "Tính năng học tập sau khi đăng nhập",
@@ -413,7 +420,7 @@
       "socialAuthFailed": "Không thể bắt đầu xác thực Google. Vui lòng thử lại sau giây lát."
     },
     "signUp": {
-      "metaTitle": "Đăng ký — TALKPIK",
+      "metaTitle": "Đăng ký — TOPIK",
       "pageHeading": "Đăng ký",
       "pageSubtitle": "Viết TOPIK, nhanh hơn với phản hồi AI. Bắt đầu miễn phí, không áp lực.",
       "benefitFreeTrial": "Dùng thử AI miễn phí",
@@ -428,6 +435,14 @@
       "countryRegionLabel": "Quốc gia/khu vực",
       "countryRegionPlaceholder": "Chọn quốc gia hoặc khu vực",
       "countryRegionRequired": "Vui lòng chọn quốc gia hoặc khu vực",
+      "genderLabel": "Giới tính",
+      "genderFemale": "Nữ",
+      "genderMale": "Nam",
+      "phoneCountryCodeLabel": "Mã quốc gia",
+      "phoneNumberLabel": "Số điện thoại",
+      "phoneNumberPlaceholder": "01012345678",
+      "phoneNumberHelp": "Không bắt buộc.",
+      "phoneNumberInvalid": "Chỉ nhập chữ số cho số điện thoại.",
       "emailLabel": "Email",
       "emailRequired": "Vui lòng nhập email",
       "emailInvalid": "Định dạng email không hợp lệ",
@@ -517,7 +532,7 @@
       "continue": "Tiếp tục"
     },
     "consent": {
-      "metaTitle": "Hoàn tất đăng ký — TALKPIK",
+      "metaTitle": "Hoàn tất đăng ký — TOPIK",
       "heading": "Hoàn tất đăng ký",
       "description": "Xác nhận thông tin bắt buộc và đồng ý cần thiết trước khi bắt đầu.",
       "profileSectionTitle": "Thông tin bắt buộc",
@@ -527,14 +542,15 @@
       "versionLabel": "Phiên bản {version}",
       "agreement": "Tôi đã xem và đồng ý với điều khoản bắt buộc và chính sách bảo mật.",
       "requiredError": "Vui lòng nhập thông tin bắt buộc và đồng ý với tài liệu cần thiết để tiếp tục.",
+      "invalidProfileError": "Vui lòng kiểm tra định dạng thông tin tùy chọn đã nhập.",
       "saveFailedError": "Hiện chưa thể lưu. Vui lòng thử lại sau ít phút.",
       "submit": "Lưu và tiếp tục"
     },
     "passwordReset": {
-      "metaTitle": "Đặt lại mật khẩu — TALKPIK",
+      "metaTitle": "Đặt lại mật khẩu — TOPIK",
       "pageHeading": "Đặt lại mật khẩu",
       "backToLogin": "Quay lại đăng nhập",
-      "intro": "Nhập email bạn đã đăng ký và chúng tôi sẽ gửi cho bạn liên kết đặt lại mật khẩu.",
+      "intro": "Nhập email tài khoản. Nếu địa chỉ này có thể nhận email mật khẩu, chúng tôi sẽ gửi liên kết.",
       "emailLabel": "Email",
       "emailRequired": "Vui lòng nhập email",
       "emailInvalid": "Định dạng email không hợp lệ",
@@ -542,12 +558,12 @@
       "rateLimited": "Đã gửi quá nhiều email. Vui lòng thử lại sau ít phút.",
       "sendFailed": "Gửi thất bại: {message}",
       "sentTitle": "Hãy kiểm tra email của bạn",
-      "sentBody": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến <strong>{email}</strong>. Nhấn vào liên kết trong email để tới màn hình đặt mật khẩu mới.",
+      "sentBody": "Nếu <strong>{email}</strong> có thể nhận email mật khẩu, hãy kiểm tra hộp thư để lấy liên kết đổi mật khẩu.",
       "sentExpiryNote": "Vì lý do bảo mật, liên kết sẽ hết hạn sau khoảng 1 giờ. Nếu hết hạn, bạn có thể gửi lại từ màn hình này."
     },
     "passwordResetConfirm": {
-      "metaTitle": "Đặt mật khẩu mới — TALKPIK",
-      "mascotAlt": "Nhân vật trợ lý bảo mật TALKPIK",
+      "metaTitle": "Đặt mật khẩu mới — TOPIK",
+      "mascotAlt": "Nhân vật trợ lý bảo mật DOTORE TOPIK",
       "title": "Đặt mật khẩu mới",
       "subtitle": "Bạn đã vào từ liên kết trong email. Đây là bước cuối cùng — chỉ cần chọn mật khẩu mới là xong.",
       "guideBase": "8–64 ký tự; kết hợp chữ, số và ký tự đặc biệt sẽ an toàn hơn.",
@@ -569,9 +585,9 @@
       "changeSuccess": "Mật khẩu của bạn đã được thay đổi. Vui lòng đăng nhập lại."
     },
     "verifyEmail": {
-      "metaTitle": "Xác minh email — TALKPIK",
+      "metaTitle": "Xác minh email — TOPIK",
       "srHeading": "Xác minh email",
-      "mascotAlt": "Nhân vật trợ lý học tập TALKPIK",
+      "mascotAlt": "Nhân vật trợ lý học tập DOTORE TOPIK",
       "title": "Chúng tôi đã gửi email xác minh",
       "body": "Chúng tôi đã nhận yêu cầu đăng ký. Nếu đây là tài khoản mới, email xác minh sẽ được gửi đến email bên dưới. Hãy mở liên kết trong email để hoàn tất đăng ký.",
       "existingAccountHeading": "Bạn đã có tài khoản?",
@@ -597,7 +613,7 @@
       "resendCountdown": "Bạn có thể gửi lại sau {label}"
     },
     "error": {
-      "metaTitle": "Lỗi xác thực — TALKPIK",
+      "metaTitle": "Lỗi xác thực — TOPIK",
       "srHeading": "Lỗi xác thực",
       "emailLabel": "Email",
       "emailPlaceholder": "Nhập email bạn đã đăng ký",
@@ -674,7 +690,7 @@
       }
     },
     "callback": {
-      "metaTitle": "Đang xác minh — TALKPIK",
+      "metaTitle": "Đang xác minh — TOPIK",
       "srHeading": "Đang xác minh",
       "checking": "Đang xác minh đăng nhập của bạn…",
       "redirecting": "Đang chuyển hướng…"
@@ -698,8 +714,8 @@
       "ruleSymbol": "Ký tự đặc biệt"
     },
     "mascot": {
-      "loginAlt": "Nhân vật trợ lý học tập TALKPIK",
-      "signUpAlt": "Nhân vật trợ lý học tập TALKPIK"
+      "loginAlt": "Nhân vật trợ lý học tập DOTORE TOPIK",
+      "signUpAlt": "Nhân vật trợ lý học tập DOTORE TOPIK"
     },
     "cooldown": {
       "label": "Bạn có thể gửi lại sau {label}"
@@ -707,7 +723,7 @@
   },
   "dashboard": {
     "page": {
-      "metaTitle": "Bảng điều khiển — TALKPIK",
+      "metaTitle": "Bảng điều khiển — TOPIK",
       "examDdayTitle": "Kỳ thi D-{days}",
       "examDdayDescription": "Còn {days} ngày nữa đến ngày thi mục tiêu.",
       "dirtyDraftsTitle": "Bài viết đang soạn",
@@ -897,7 +913,7 @@
       "typeTabLockedAria": "Câu {no} đã khóa"
     },
     "problems": {
-      "metaTitle": "Danh sách câu hỏi — TALKPIK",
+      "metaTitle": "Danh sách câu hỏi — TOPIK",
       "heading": "Danh sách câu hỏi",
       "subtitle": "Chọn dạng câu và bộ lọc để tìm bài luyện phù hợp.",
       "totalRange": "Hiển thị {start}-{end} trong {total}",
@@ -942,6 +958,12 @@
       "solveAction": "Làm bài",
       "newBadge": "Mới",
       "startProblem": "Bắt đầu",
+      "saveProblem": "Lưu câu hỏi",
+      "savedProblem": "Đã lưu",
+      "saveProblemSuccess": "Đã thêm vào câu hỏi đã lưu.",
+      "saveProblemFailed": "Không thể lưu câu hỏi.",
+      "removeProblemSuccess": "Đã xóa khỏi câu hỏi đã lưu.",
+      "removeProblemFailed": "Không thể xóa câu hỏi đã lưu.",
       "analysisStatusAction": "Xem trạng thái phân tích",
       "analysisPendingBadge": "Đang chờ phân tích",
       "analysisAnalyzingBadge": "Đang phân tích bài nộp",
@@ -955,15 +977,32 @@
       "attemptCount": "{count} lần thử"
     },
     "recommendations": {
-      "metaTitle": "Câu hỏi đề xuất — TALKPIK",
+      "metaTitle": "Câu hỏi đề xuất — TOPIK",
       "heading": "Câu hỏi đề xuất",
       "subtitle": "Đề xuất phù hợp với lộ trình học hiện tại của bạn. Chọn một dạng để nhận đề xuất mới.",
       "reasonSummaryTitle": "Lý do chúng tôi đề xuất",
       "reasonSummaryLoading": "Đang tải lý do đề xuất.",
-      "reasonSummaryFallback": "Phân tích gần đây cho thấy bạn còn có thể cải thiện ngữ pháp và bố cục, nên chúng tôi đề xuất {type} trước.",
-      "reasonTagGrammar": "Cải thiện độ chính xác ngữ pháp",
-      "reasonTagStructure": "Tăng cường mạch bố cục",
-      "reasonTagExpression": "Luyện lại biểu đạt cốt lõi",
+      "reasonSummaryFallback": "Hiện tại, chúng tôi đề xuất bạn bắt đầu luyện tập với {type}.",
+      "reasonCode": {
+        "TYPE_ROTATION_NEXT": "Dạng bạn luyện tập ít hơn — được đề xuất theo thứ tự tiếp theo.",
+        "RECENT_TYPE_CONTINUATION": "Phù hợp để luyện tiếp dạng bạn vừa làm gần đây.",
+        "WEAK_AREA_TAG_MATCH": "Bài luyện cho phần có điểm nhận xét gần đây thấp.",
+        "GOAL_DIFFICULTY_MATCH": "Bài có cấp độ và độ khó gần với mục tiêu bạn đã đặt.",
+        "UNATTEMPTED_AVAILABLE": "Bài đã công khai mà bạn chưa làm."
+      },
+      "computedSummary": {
+        "history": "Được chọn theo quy tắc cố định dựa trên mục tiêu và lịch sử luyện tập hiện có của bạn.",
+        "rotation": "Bạn chưa có nhiều lịch sử luyện tập nên đề được chọn theo vòng xoay dạng 51→54."
+      },
+      "dimension": {
+        "grammar": "Ngữ pháp",
+        "vocab": "Từ vựng",
+        "structure": "Bố cục",
+        "content": "Nội dung",
+        "expression": "Diễn đạt",
+        "topic_fit": "Độ bám đề",
+        "language": "Ngôn ngữ"
+      },
       "loadingTip": "Đang tải đề xuất",
       "loadErrorTitle": "Không thể tải đề xuất",
       "loadErrorDescription": "Yêu cầu đề xuất đang mất quá lâu. Hãy thử lại hoặc chọn một dạng bên dưới để bắt đầu trực tiếp.",
@@ -1002,7 +1041,7 @@
       "typeDescription54": "Viết bài luận lập luận 600-700 ký tự về chủ đề."
     },
     "next": {
-      "metaTitle": "Câu hỏi tiếp theo — TALKPIK",
+      "metaTitle": "Câu hỏi tiếp theo — TOPIK",
       "pageTitle": "Câu hỏi tiếp theo",
       "heading": "Câu hỏi tiếp theo",
       "subtitle": "Đây là câu hỏi phù hợp để bạn học tiếp.",
@@ -1037,7 +1076,7 @@
       "summaryEstimatedTime": "Thời gian học dự kiến"
     },
     "weakness": {
-      "metaTitle": "Luyện điểm yếu — TALKPIK",
+      "metaTitle": "Luyện điểm yếu — TOPIK",
       "pageTitle": "Luyện điểm yếu",
       "lockTitle": "Đề xuất theo điểm yếu đang được chuẩn bị",
       "lockBody": "Khi có đủ dữ liệu bài viết gần đây, chẩn đoán theo từng lĩnh vực và câu hỏi đề xuất sẽ xuất hiện tại đây.",
@@ -1365,7 +1404,7 @@
       "compareFailedTitle": "Tạo báo cáo so sánh thất bại",
       "pdfSuccess": "Hộp thoại in PDF đã mở.",
       "pdfDownloaded": "Đã tải xuống file PDF.",
-      "pdfDefaultFilename": "TALKPIK-bai-lam-phan-hoi",
+      "pdfDefaultFilename": "DOTORE-TOPIK-bai-lam-phan-hoi",
       "pdfFailedTitle": "Lưu PDF thất bại",
       "pdfFailedDescription": "Hãy thử lưu lại từ Thư viện của tôi.",
       "pdfQuotaExceededTitle": "Bạn đã dùng hết lượt xuất PDF",
@@ -1412,7 +1451,7 @@
   },
   "reports": {
     "page": {
-      "metaTitle": "Báo cáo so sánh — TALKPIK"
+      "metaTitle": "Báo cáo so sánh — TOPIK"
     },
     "dimensions": {
       "grammar": "Ngữ pháp",
@@ -1496,7 +1535,7 @@
       "heading": "Báo cáo so sánh",
       "title": "Báo cáo so sánh câu {questionNo}",
       "share": "Chia sẻ",
-      "shareTitle": "Báo cáo so sánh TALKPIK",
+      "shareTitle": "Báo cáo so sánh DOTORE TOPIK",
       "shareCopied": "Đã sao chép liên kết.",
       "shareLink": "Liên kết chia sẻ",
       "narrativeFailedTitle": "Không thể tạo phần tóm tắt",
@@ -1553,9 +1592,9 @@
   },
   "writing": {
     "page": {
-      "metaTitle": "Viết — TALKPIK",
-      "metaTitleFeedbackLong": "Phản hồi bài dài — TALKPIK",
-      "metaTitleFeedbackShort": "Phản hồi câu trả lời ngắn — TALKPIK",
+      "metaTitle": "Viết — TOPIK",
+      "metaTitleFeedbackLong": "Phản hồi bài dài — TOPIK",
+      "metaTitleFeedbackShort": "Phản hồi câu trả lời ngắn — TOPIK",
       "problemLoadFailed": "Không thể tải đề bài cho câu hỏi số {questionNo}.",
       "problemUnavailableTitle": "Câu hỏi số {questionNo} không còn khả dụng.",
       "problemUnavailableDraftPreserved": "Câu trả lời đang viết của bạn vẫn còn trong bản tự động lưu. Hãy chọn câu hỏi khác trong danh sách.",
@@ -1841,7 +1880,7 @@
   },
   "growth": {
     "page": {
-      "metaTitle": "Bảng theo dõi tiến bộ — TALKPIK",
+      "metaTitle": "Bảng theo dõi tiến bộ — TOPIK",
       "goalGrade": "Cấp {grade}",
       "goalUnset": "Chưa đặt"
     },
@@ -1937,7 +1976,7 @@
   },
   "library": {
     "page": {
-      "metaTitle": "Thư viện của tôi — TALKPIK",
+      "metaTitle": "Thư viện của tôi — TOPIK",
       "heading": "Thư viện của tôi",
       "subtitle": "Các bài làm đã lưu được sắp xếp theo hành động học tập nên xem lại."
     },
@@ -2050,17 +2089,20 @@
       "reviewSetFailed": "Không thể tạo bộ ôn tập."
     },
     "problemsPage": {
-      "metaTitle": "Tất cả câu hỏi học tập — TALKPIK",
+      "metaTitle": "Tất cả câu hỏi học tập — TOPIK",
       "heading": "Tất cả câu hỏi học tập",
       "subtitle": "Tìm bài làm và câu hỏi đã lưu ở một nơi, rồi tiếp tục luyện tập.",
       "backToLibrary": "Quay lại thư viện của tôi"
     },
     "problemsList": {
       "loadError": "Không thể tải danh sách câu hỏi học tập",
-      "searchPlaceholder": "Tìm bài làm và câu hỏi đã lưu",
-      "searchAriaLabel": "Tìm bài làm và câu hỏi đã lưu",
+      "searchPlaceholder": "Tìm bài làm đã lưu, câu hỏi đã đánh dấu và bản nháp",
+      "searchAriaLabel": "Tìm bài làm đã lưu, câu hỏi đã đánh dấu và bản nháp",
       "typeSubmission": "Bài làm đã lưu",
-      "typeProblem": "Câu hỏi đã lưu",
+      "typeProblem": "Câu hỏi đã đánh dấu",
+      "typeDraft": "Bản nháp tạm thời",
+      "bookmarkTag": "Đánh dấu",
+      "continueDraft": "Viết tiếp",
       "filterPanelTitle": "Bộ lọc",
       "filterPanelAriaLabel": "Bộ lọc danh sách câu hỏi",
       "filterButton": "Bộ lọc",
@@ -2069,6 +2111,8 @@
       "groupQuestionType": "Loại câu hỏi",
       "questionNoLabel": "Câu {no}",
       "groupItemType": "Loại mục",
+      "groupSubmissionStatus": "Trạng thái phân tích bài làm",
+      "groupProblemAvailability": "Trạng thái cung cấp câu hỏi",
       "groupDate": "Ngày lưu",
       "datePresetAll": "Tất cả",
       "datePresetWeek": "Trong 1 tuần",
@@ -2090,9 +2134,16 @@
       "viewList": "Xem danh sách",
       "viewCard": "Xem dạng thẻ",
       "emptyFiltered": "Không có mục nào khớp với bộ lọc đã chọn.",
-      "emptyNoItems": "Chưa có bài làm hoặc câu hỏi nào được lưu.",
+      "emptyNoItems": "Chưa có bài làm đã lưu, câu hỏi đã đánh dấu hoặc bản nháp.",
       "emptySearch": "Không có kết quả tìm kiếm.",
-      "resetSearch": "Đặt lại tìm kiếm"
+      "resetSearch": "Đặt lại tìm kiếm",
+      "actionMenu": {
+        "open": "Mở menu thao tác câu hỏi",
+        "exportPdf": "Xuất PDF",
+        "nextProblem": "Làm câu tiếp theo",
+        "compareReport": "Báo cáo so sánh",
+        "retry": "Làm lại"
+      }
     },
     "submissions": {
       "loadError": "Không thể tải bài làm đã lưu của bạn",
@@ -2205,8 +2256,8 @@
       "quotaExceeded": "Mỗi bài này có thể xuất PDF tối đa 3 lần trong kỳ hiện tại.",
       "downloaded": "Đã tải xuống file PDF.",
       "fallbackPrint": "Tạo PDF trên máy chủ thất bại nên đã mở hộp thoại in của trình duyệt thay thế.",
-      "defaultFilenameSubmission": "TALKPIK-bai-lam",
-      "defaultFilenameReport": "TALKPIK-bao-cao"
+      "defaultFilenameSubmission": "DOTORE-TOPIK-bai-lam",
+      "defaultFilenameReport": "DOTORE-TOPIK-bao-cao"
     },
     "pdf": {
       "modalTitle": "Cài đặt xuất PDF",
@@ -2265,7 +2316,7 @@
       "excluded": "Không",
       "regeneratePreview": "Tạo lại bản xem trước",
       "previewAriaLabel": "Xem trước PDF",
-      "previewSubtitle": "TALKPIK Thư viện của tôi · {count} mục",
+      "previewSubtitle": "DOTORE TOPIK Thư viện của tôi · {count} mục",
       "previewAnswerTag": " · Bài làm",
       "previewFeedbackTag": " · Phản hồi",
       "previewMore": "…và {count} mục khác (bài làm dài sẽ bị cắt bớt)",
@@ -2288,7 +2339,7 @@
   },
   "onboarding": {
     "page": {
-      "metaTitle": "Thiết lập mục tiêu học tập — TALKPIK",
+      "metaTitle": "Thiết lập mục tiêu học tập — TOPIK",
       "brandSubtitle": "Gia sư viết TOPIK",
       "mascotTitle": "Hãy cho biết mục tiêu và ngôn ngữ của bạn",
       "mascotBody": "Chúng tôi sẽ chuẩn bị câu hỏi và phản hồi phù hợp.",
@@ -2359,7 +2410,7 @@
   },
   "profile": {
     "page": {
-      "metaTitle": "Hồ sơ — TALKPIK",
+      "metaTitle": "Hồ sơ — TOPIK",
       "heading": "Hồ sơ",
       "subtitle": "Quản lý tên, biệt danh, giới thiệu và ảnh hiển thị cho người dùng khác."
     },
@@ -2383,6 +2434,17 @@
       "countryRegionLabel": "Quốc gia/khu vực",
       "countryRegionHelp": "Đây là quốc gia/khu vực bạn đã chọn khi đăng ký. Bạn có thể cập nhật nếu cần.",
       "countryRegionPlaceholder": "Chọn quốc gia hoặc khu vực",
+      "optionalSectionTitle": "Thông tin tùy chọn",
+      "optionalSectionDescription": "Giới tính và số điện thoại không bắt buộc. Bạn có thể để trống và tiếp tục.",
+      "genderLabel": "Giới tính",
+      "genderHelp": "Không bắt buộc.",
+      "genderFemale": "Nữ",
+      "genderMale": "Nam",
+      "phoneCountryCodeLabel": "Mã quốc gia",
+      "phoneNumberLabel": "Số điện thoại",
+      "phoneNumberPlaceholder": "01012345678",
+      "phoneNumberHelp": "Không bắt buộc.",
+      "phoneNumberInvalid": "Chỉ nhập chữ số cho số điện thoại.",
       "bioLabel": "Giới thiệu bản thân",
       "bioCount": "{count}/160 ký tự",
       "bioHelp": "Phần giới thiệu ngắn hiển thị cho người dùng khác. (Tối đa 160 ký tự)",
@@ -2396,11 +2458,17 @@
     "loginMethods": {
       "regionAriaLabel": "Phương thức đăng nhập",
       "title": "Phương thức đăng nhập",
-      "description": "Xem các phương thức đăng nhập đã kết nối và thêm đăng nhập Google.",
-      "emailMethod": "Đăng nhập bằng email",
+      "description": "Xem các phương thức đăng nhập đã kết nối và quản lý đăng nhập Google, mật khẩu.",
+      "emailMethod": "Email tài khoản",
       "emailUnavailable": "Chưa đăng ký email",
       "googleMethod": "Đăng nhập Google",
       "googleDescription": "Dùng Google để đăng nhập vào cùng một tài khoản học tập.",
+      "passwordMethod": "Đổi mật khẩu",
+      "passwordDescription": "Gửi liên kết qua email để đổi mật khẩu cho tài khoản này.",
+      "passwordAction": "Gửi liên kết",
+      "passwordSent": "Đã gửi liên kết đổi mật khẩu.",
+      "passwordRateLimited": "Đã gửi quá nhiều email. Vui lòng thử lại sau.",
+      "passwordSendFailed": "Không thể gửi liên kết đổi mật khẩu.",
       "connected": "Đã kết nối",
       "disconnected": "Chưa kết nối",
       "connectGoogle": "Kết nối Google",
@@ -2474,7 +2542,7 @@
     }
   },
   "subscription": {
-    "metaTitle": "Quản lý gói đăng ký — TALKPIK",
+    "metaTitle": "Quản lý gói đăng ký — TOPIK",
     "comingSoon": {
       "title": "Tính năng gói đăng ký sắp ra mắt",
       "subTitle": "Tính năng quản lý gói đăng ký đang được chuẩn bị. Chúng tôi sẽ thông báo khi ra mắt.",
@@ -2581,7 +2649,7 @@
     }
   },
   "paywall": {
-    "metaTitle": "Đăng ký gói — TALKPIK",
+    "metaTitle": "Đăng ký gói — TOPIK",
     "heading": "Bắt đầu đăng ký",
     "subheading": "So sánh các chu kỳ thanh toán và chọn một gói đăng ký. Bạn có thể xem giá và quyền lợi trong các thẻ bên dưới.",
     "retry": "Thử lại",
@@ -2624,9 +2692,9 @@
   },
   "legal": {
     "terms": {
-      "metaTitle": "Điều khoản dịch vụ — TALKPIK",
+      "metaTitle": "Điều khoản dịch vụ — TOPIK",
       "heading": "Điều khoản dịch vụ",
-      "intro": "Trang này là thông báo điều khoản tạm thời cho dịch vụ TALKPIK AI. Điều khoản dịch vụ chính thức sẽ được công bố riêng trước khi ra mắt, và tại thời điểm đó trang này sẽ được cập nhật thành điều khoản chính thức.",
+      "intro": "Trang này là thông báo điều khoản tạm thời cho dịch vụ DOTORE TOPIK. Điều khoản dịch vụ chính thức sẽ được công bố riêng trước khi ra mắt, và tại thời điểm đó trang này sẽ được cập nhật thành điều khoản chính thức.",
       "placeholderNotice": "Nội dung hiện tại là bản tạm thời đang chờ rà soát pháp lý và không phải là thỏa thuận có hiệu lực pháp lý chính thức.",
       "summaryTitle": "Thông báo tạm thời",
       "summaryTool": "Dịch vụ này là công cụ hỗ trợ luyện viết TOPIK.",
@@ -2641,11 +2709,11 @@
       "linkPrivacy": "Chính sách bảo mật"
     },
     "privacy": {
-      "metaTitle": "Chính sách bảo mật — TALKPIK",
+      "metaTitle": "Chính sách bảo mật — TOPIK",
       "heading": "Chính sách bảo mật",
-      "intro": "Trang này là thông báo tạm thời về việc xử lý thông tin cá nhân của TALKPIK AI. Chính sách bảo mật chính thức sẽ phản ánh việc tuân thủ Luật Bảo vệ Thông tin Cá nhân của Hàn Quốc và được công bố riêng trước khi ra mắt.",
+      "intro": "Trang này là thông báo tạm thời về việc xử lý thông tin cá nhân của DOTORE TOPIK. Chính sách bảo mật chính thức sẽ phản ánh việc tuân thủ Luật Bảo vệ Thông tin Cá nhân của Hàn Quốc và được công bố riêng trước khi ra mắt.",
       "summaryTitle": "Tóm tắt việc xử lý (tạm thời)",
-      "summaryCollect": "<strong>Dữ liệu thu thập:</strong> email, tên, nhật ký hoạt động học tập, bài viết nộp, kết quả đánh giá.",
+      "summaryCollect": "<strong>Dữ liệu thu thập:</strong> email, tên, số điện thoại (tùy chọn), giới tính (tùy chọn), nhật ký hoạt động học tập, bài viết nộp, kết quả đánh giá.",
       "summaryPurpose": "<strong>Mục đích sử dụng:</strong> nhận dạng tài khoản, theo dõi tiến độ học tập, cải thiện chất lượng phản hồi AI.",
       "summaryRetention": "<strong>Thời gian lưu trữ:</strong> bị hủy ngay khi rút khỏi tài khoản. Thống kê học tập có thể được lưu giữ ở dạng ẩn danh sau khi loại bỏ thông tin nhận dạng.",
       "summaryThirdParty": "<strong>Chia sẻ với bên thứ ba:</strong> không có. Tuy nhiên, khi gọi mô hình AI, nội dung bài viết nộp được truyền tạm thời đến nhà cung cấp LLM bên ngoài (chính sách lưu trữ sau khi mô hình phản hồi tuân theo điều khoản của nhà cung cấp mô hình).",

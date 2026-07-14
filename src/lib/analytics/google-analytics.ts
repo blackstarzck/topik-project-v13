@@ -83,6 +83,7 @@ const BLOCKED_PARAM_KEYS = new Set<string>([
   "narrative",
   "overall_summary",
   "phone",
+  "phone_country_code",
   "phone_number",
   "report_id",
   "session_id",

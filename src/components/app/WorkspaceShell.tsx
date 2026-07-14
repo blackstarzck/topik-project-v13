@@ -12,6 +12,7 @@ import { avatarPublicUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
 import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
 
 const { Header, Sider, Content } = Layout;
@@ -34,6 +35,8 @@ type Props = {
   avatarPath?: string | null;
   planLabel?: string | null;
   affiliationCode?: string | null;
+  phoneNumber?: string | null;
+  phoneNumberPromptDismissedAt?: string | null;
   children: ReactNode;
 };
 
@@ -46,6 +49,8 @@ export function WorkspaceShell({
   avatarPath,
   planLabel,
   affiliationCode,
+  phoneNumber,
+  phoneNumberPromptDismissedAt,
   children,
 }: Props) {
   const t = useTranslations("app");
@@ -266,6 +271,22 @@ export function WorkspaceShell({
         )}
         <Content className={contentClassName}>{children}</Content>
       </Layout>
+
+      {/* Rendered for every workspace route (including direct-URL landings); the
+          modal self-gates on route/phone/dismiss state and shows at most once
+          per session. Only mounted once the profile's phone state is actually
+          known (the workspace layout always passes it); `undefined` means the
+          caller did not provide it, so we do not prompt. */}
+      {phoneNumber === undefined ||
+      phoneNumberPromptDismissedAt === undefined ? null : (
+        <PhoneNumberReminderModal
+          key={userId}
+          userId={userId}
+          phoneNumber={phoneNumber}
+          phoneNumberPromptDismissedAt={phoneNumberPromptDismissedAt}
+          pathname={pathname}
+        />
+      )}
 
       {hidesWorkspaceChrome ? null : (
         <AppDrawer

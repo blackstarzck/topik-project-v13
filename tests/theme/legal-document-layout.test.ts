@@ -10,6 +10,10 @@ const termsPage = readFileSync(
   join(process.cwd(), "src", "app", "terms", "page.tsx"),
   "utf8",
 );
+const privacyPage = readFileSync(
+  join(process.cwd(), "src", "app", "privacy", "page.tsx"),
+  "utf8",
+);
 
 function blockFor(selector: string): string {
   const escaped = selector
@@ -34,6 +38,21 @@ describe("Legal document layout", () => {
   test("legal document card fills the 960px container", () => {
     expect(blockFor(".legal-page-container>.legal-document-card")).toContain(
       "width: 100%",
+    );
+  });
+
+  test("privacy page uses the same legal container width contract", () => {
+    expect(privacyPage).toContain(
+      '<PageContainer size="default" className="legal-page-container">',
+    );
+  });
+
+  test("privacy page reads the published privacy document before falling back to placeholder content", () => {
+    expect(privacyPage).toContain(
+      'getPublishedLegalDocument("privacy", locale)',
+    );
+    expect(privacyPage).toContain(
+      '<LegalDocument doc={doc} testIdPrefix="privacy" />',
     );
   });
 });

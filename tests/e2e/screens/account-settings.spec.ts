@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type Browser,
+  type Page,
+  type Request,
+  type Route,
+} from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000";
@@ -8,6 +15,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const PASSWORD =
   process.env.E2E_STUDENT_PASSWORD ?? process.env.SUPABASE_TEST_PASSWORD;
 const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
@@ -37,6 +45,34 @@ function collectErrors(page: Page): string[] {
     }
   });
   return errors;
+}
+
+async function fulfillRecover(route: Route) {
+  await route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    headers: {
+      "access-control-allow-origin": "*",
+    },
+    body: "{}",
+  });
+}
+
+function readRecoverRedirectTo(request: Request): string | null {
+  const urlValue = new URL(request.url()).searchParams.get("redirect_to");
+  if (urlValue) return urlValue;
+  let payload:
+    | { redirect_to?: unknown; redirectTo?: unknown }
+    | undefined;
+  try {
+    payload = request.postDataJSON() as
+      | { redirect_to?: unknown; redirectTo?: unknown }
+      | undefined;
+  } catch {
+    return null;
+  }
+  const bodyValue = payload?.redirect_to ?? payload?.redirectTo;
+  return typeof bodyValue === "string" ? bodyValue : null;
 }
 
 function serviceClient() {
@@ -214,30 +250,106 @@ async function withFreshPage<T>(
 }
 
 test("account settings keeps login methods, account status, and logout", async ({
-  page,
-}) => {
-  const errors = collectErrors(page);
+  browser,
+}, testInfo) => {
+  test.skip(!PASSWORD, "Account settings e2e requires password credentials.");
+  testInfo.setTimeout(60_000);
 
-  await page.goto("/settings/account", { waitUntil: "networkidle" });
-  await expect(page).not.toHaveURL(/\/login/);
-  await expect(page).toHaveURL(/\/settings\/account/);
+  await withFreshPage(browser, testInfo.project.name, async (page) => {
+    await loginTempUser(page, EMAIL);
 
-  await expect(page.getByRole("heading", { name: "계정 설정" })).toBeVisible();
-  // 재설계: 섹션 타이틀("로그인 방법"/"계정 상태")은 제거되고 카드·행만 남는다.
-  await expect(page.getByText("이메일 로그인", { exact: true })).toBeVisible();
-  await expect(page.getByText("Google 로그인", { exact: true })).toBeVisible();
-  // 제거된 요소: 알림/언어 빠른 링크, 탈퇴/학습목표 안내 문구.
-  await expect(page.getByText("알림 설정")).toHaveCount(0);
-  await expect(page.getByText("언어 설정")).toHaveCount(0);
-  await expect(
-    page.getByText("회원 탈퇴는 다음 업데이트에서 지원됩니다."),
-  ).toHaveCount(0);
-  await expect(
-    page.getByText("학습 목표는 프로필에 반영되어 추천·리포트에 사용됩니다."),
-  ).toHaveCount(0);
-  await expect(page.getByTestId("profile-logout")).toBeVisible();
+    const errors = collectErrors(page);
+    const recoverRedirects: string[] = [];
 
-  expect(errors).toEqual([]);
+    await page.route(/\/auth\/v1\/recover(?:\?|$)/, async (route, request) => {
+      const redirectTo = readRecoverRedirectTo(request);
+      if (redirectTo) recoverRedirects.push(redirectTo);
+      await fulfillRecover(route);
+    });
+
+    await page.goto("/settings/account", { waitUntil: "domcontentloaded" });
+    await expect(page).not.toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/settings\/account/);
+
+    await expect(page.getByRole("heading", { name: "계정 설정" })).toBeVisible();
+    // 재설계: 섹션 타이틀("로그인 방법"/"계정 상태")은 제거되고 카드·행만 남는다.
+    const loginMethodsRegion = page.getByRole("region", {
+      name: "로그인 방법",
+    });
+    await expect(
+      loginMethodsRegion.getByText("계정 이메일", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      loginMethodsRegion.getByText("비밀번호 변경", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      loginMethodsRegion.getByText("Google 로그인", { exact: true }),
+    ).toBeVisible();
+    const emailTitle = loginMethodsRegion.getByText("계정 이메일", {
+      exact: true,
+    });
+    const googleTitle = loginMethodsRegion.getByText("Google 로그인", {
+      exact: true,
+    });
+    const logoutButton = page.getByRole("button", { name: "로그아웃" });
+    const passwordChangeTitle = loginMethodsRegion.getByText("비밀번호 변경", {
+      exact: true,
+    });
+    const deleteTitle = page.getByText("회원 탈퇴", { exact: true }).first();
+    await expect(logoutButton).toBeVisible();
+    await expect(deleteTitle).toBeVisible();
+    const emailBox = await emailTitle.boundingBox();
+    const googleBox = await googleTitle.boundingBox();
+    const logoutBox = await logoutButton.boundingBox();
+    const passwordBox = await passwordChangeTitle.boundingBox();
+    const deleteBox = await deleteTitle.boundingBox();
+    expect(emailBox).not.toBeNull();
+    expect(googleBox).not.toBeNull();
+    expect(logoutBox).not.toBeNull();
+    expect(passwordBox).not.toBeNull();
+    expect(deleteBox).not.toBeNull();
+    expect(passwordBox!.y).toBeGreaterThan(emailBox!.y);
+    expect(googleBox!.y).toBeGreaterThan(passwordBox!.y);
+    expect(logoutBox!.y).toBeGreaterThan(googleBox!.y);
+    expect(deleteBox!.y).toBeGreaterThan(logoutBox!.y);
+    await page.evaluate(() => {
+      window.localStorage.removeItem(
+        "talkpik:settings-password-reset:cooldown-until",
+      );
+    });
+    const passwordResetButton = page.getByTestId("account-password-reset-send");
+    await expect(passwordResetButton).toHaveText("링크 보내기");
+    await passwordResetButton.click();
+    await expect.poll(() => recoverRedirects.length).toBe(1);
+    const redirectUrl = new URL(recoverRedirects[0]);
+    expect(redirectUrl.pathname).toBe("/auth/callback");
+    expect(redirectUrl.searchParams.get("next")).toBe(
+      "/password-reset/confirm",
+    );
+    await expect(
+      page.locator(".ant-message-notice").getByText(
+        "비밀번호 변경 링크를 보냈어요.",
+      ),
+    ).toBeVisible();
+    await expect(passwordResetButton).toHaveText(/링크 보내기 \(\d+\)/);
+    await expect(
+      page
+        .getByTestId("workspace-page-body")
+        .getByText("비밀번호 변경 링크를 보냈어요."),
+    ).toHaveCount(0);
+    // 제거된 요소: 알림/언어 빠른 링크, 탈퇴/학습목표 안내 문구.
+    await expect(page.getByText("알림 설정")).toHaveCount(0);
+    await expect(page.getByText("언어 설정")).toHaveCount(0);
+    await expect(
+      page.getByText("회원 탈퇴는 다음 업데이트에서 지원됩니다."),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("학습 목표는 프로필에 반영되어 추천·리포트에 사용됩니다."),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("profile-logout")).toBeVisible();
+
+    expect(errors).toEqual([]);
+  });
 });
 
 // 회원 탈퇴 danger-zone. ⚠ 이 테스트는 절대 실제 제출하지 않는다 — 공유 E2E
@@ -249,7 +361,7 @@ test("account settings exposes a guarded 회원 탈퇴 danger zone (no submit)",
 }) => {
   const errors = collectErrors(page);
 
-  await page.goto("/settings/account", { waitUntil: "networkidle" });
+  await page.goto("/settings/account", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/settings\/account/);
 
   const openButton = page.getByTestId("account-delete-open");

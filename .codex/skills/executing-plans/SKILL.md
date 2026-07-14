@@ -23,9 +23,11 @@ Load plan, review critically, execute all tasks, report when complete.
 
 ### Step 2: Execute Tasks
 
+A plan never grants Git authority. Before executing a plan step that stages, commits, pushes, creates a PR, merges, creates a branch, or changes a worktree, check whether the current user or project contract grants the exact action. If it does not, convert that step into a verified diff checkpoint: preserve the task-owned changes, record verification evidence and intended Git scope, then continue with authorized local work. Plan approval, "follow exactly", passing verification, and finishing-skill handoff do not expand authority.
+
 For each task:
 1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
+2. Follow each authorized step exactly; convert unauthorized Git steps into a verified diff checkpoint
 3. Run verifications as specified
 4. Mark as completed
 

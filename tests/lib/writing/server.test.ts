@@ -26,7 +26,11 @@ type QueryRow = {
 };
 
 type Call =
+  | { type: "from"; table: string }
+  | { type: "select"; table: string; columns: string }
   | { type: "eq"; column: string; value: unknown }
+  | { type: "neq"; column: string; value: unknown }
+  | { type: "in"; column: string; values: unknown[] }
   | { type: "limit"; count: number }
   | { type: "order"; column: string }
   | { type: "range"; from: number; to: number };
@@ -55,6 +59,7 @@ type NextProblemCall =
 // 걸려 explicit-id 케이스가 무의미해진다).
 const INCOMPLETE_51_ID = "11111111-1111-4111-8111-111111111151";
 const COMPLETE_51_ID = "22222222-2222-4222-8222-222222222251";
+const UNTOUCHED_51_ID = "44444444-4444-4444-8444-444444444451";
 
 const incomplete51: QueryRow = {
   id: INCOMPLETE_51_ID,
@@ -85,6 +90,20 @@ const complete51: QueryRow = {
   lifecycle_reason: null,
 };
 
+function complete51Problem(id: string, title = `Complete ${id}`): QueryRow {
+  return {
+    ...complete51,
+    id,
+    title,
+  };
+}
+
+function uuidFor51(index: number): string {
+  return `${index.toString(16).padStart(8, "0")}-5151-4000-8000-${index
+    .toString()
+    .padStart(12, "0")}`;
+}
+
 const SEED_51_ID = "33333333-3333-4333-8333-333333333351";
 
 const seed51: QueryRow = {
@@ -106,20 +125,108 @@ const seed51: QueryRow = {
   lifecycle_reason: null,
 };
 
-function makeClient(rows: QueryRow[]) {
+type WritingSubmissionHistoryRow = {
+  user_id: string;
+  problem_id: string;
+  feedback_status?: string | null;
+};
+
+type WritingDraftHistoryRow = {
+  user_id: string;
+  problem_id: string;
+  autosave_status?: string | null;
+};
+
+type MakeClientInput =
+  | QueryRow[]
+  | {
+      problems: QueryRow[];
+      writingSubmissions?: WritingSubmissionHistoryRow[];
+      writingDrafts?: WritingDraftHistoryRow[];
+      visibleProblemIds?: string[];
+    };
+
+function makeClient(input: MakeClientInput) {
+  const rows = Array.isArray(input) ? input : input.problems;
+  const writingSubmissions = Array.isArray(input)
+    ? []
+    : (input.writingSubmissions ?? []);
+  const writingDrafts = Array.isArray(input) ? [] : (input.writingDrafts ?? []);
+  const visibleProblemIds = Array.isArray(input)
+    ? rows.map((row) => row.id)
+    : (input.visibleProblemIds ?? rows.map((row) => row.id));
   const calls: Call[] = [];
   const client = {
     rpc: async () => ({
-      data: rows.map((row) => ({ problem_id: row.id })),
+      data: visibleProblemIds.map((problem_id) => ({ problem_id })),
       error: null,
     }),
-    from: () => {
+    from: (table: string) => {
+      calls.push({ type: "from", table });
       const filters: Array<{ column: string; value: unknown }> = [];
+      const neqFilters: Array<{ column: string; value: unknown }> = [];
+      const inFilters: Array<{ column: string; values: unknown[] }> = [];
+      let limitCount: number | null = null;
+
+      const applyProblemFilters = () =>
+        rows.filter((row) =>
+          filters.every((filter) => {
+            if (!(filter.column in row)) return true;
+            return row[filter.column as keyof QueryRow] === filter.value;
+          }),
+        );
+
+      const applyHistoryFilters = <
+        T extends WritingSubmissionHistoryRow | WritingDraftHistoryRow,
+      >(
+        historyRows: T[],
+      ) =>
+        historyRows
+          .filter((row) =>
+            filters.every(
+              (filter) => row[filter.column as keyof T] === filter.value,
+            ),
+          )
+          .filter((row) =>
+            neqFilters.every(
+              (filter) => row[filter.column as keyof T] !== filter.value,
+            ),
+          )
+          .filter((row) =>
+            inFilters.every((filter) =>
+              filter.values.includes(row[filter.column as keyof T]),
+            ),
+          );
+
+      const resolveData = () => {
+        if (table === "writing_submissions") {
+          return applyHistoryFilters(writingSubmissions);
+        }
+        if (table === "writing_drafts") {
+          return applyHistoryFilters(writingDrafts);
+        }
+        const data = applyProblemFilters();
+        return limitCount == null ? data : data.slice(0, limitCount);
+      };
+
       const query = {
-        select: () => query,
+        select: (columns: string) => {
+          calls.push({ type: "select", table, columns });
+          return query;
+        },
         eq: (column: string, value: unknown) => {
           calls.push({ type: "eq", column, value });
           filters.push({ column, value });
+          return query;
+        },
+        neq: (column: string, value: unknown) => {
+          calls.push({ type: "neq", column, value });
+          neqFilters.push({ column, value });
+          return query;
+        },
+        in: (column: string, values: unknown[]) => {
+          calls.push({ type: "in", column, values });
+          inFilters.push({ column, values });
           return query;
         },
         order: (column: string) => {
@@ -128,21 +235,24 @@ function makeClient(rows: QueryRow[]) {
         },
         limit: (count: number) => {
           calls.push({ type: "limit", count });
+          limitCount = count;
           return query;
         },
         range: (from: number, to: number) => {
           calls.push({ type: "range", from, to });
-          const data = rows.slice(from, to + 1);
+          const data = applyProblemFilters().slice(from, to + 1);
           return Promise.resolve({ data, error: null });
         },
         then: (
-          resolve: (value: { data: QueryRow[]; error: null }) => unknown,
+          resolve: (value: {
+            data: Array<
+              QueryRow | WritingSubmissionHistoryRow | WritingDraftHistoryRow
+            >;
+            error: null;
+          }) => unknown,
           reject?: (reason: unknown) => unknown,
         ) => {
-          const idFilter = filters.find((filter) => filter.column === "id");
-          const data = idFilter
-            ? rows.filter((row) => row.id === idFilter.value)
-            : rows;
+          const data = resolveData();
           return Promise.resolve({ data, error: null }).then(resolve, reject);
         },
       };
@@ -410,6 +520,219 @@ describe("getWritingProblem", () => {
     expect(problem?.id).toBe(COMPLETE_51_ID);
     expect(problem?.submitBlockedReason).toBeNull();
     expect(calls).toContainEqual({ type: "range", from: 0, to: 24 });
+  });
+
+  it("prefers the first untouched candidate for a user's default writing route", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client } = makeClient({
+      problems: [complete51, untouched51],
+      writingSubmissions: [
+        {
+          user_id: "user-1",
+          problem_id: COMPLETE_51_ID,
+          feedback_status: "failed",
+        },
+      ],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(UNTOUCHED_51_ID);
+  });
+
+  it("treats any draft row, including superseded, as touched for default selection", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client } = makeClient({
+      problems: [complete51, untouched51],
+      writingDrafts: [
+        {
+          user_id: "user-1",
+          problem_id: COMPLETE_51_ID,
+          autosave_status: "superseded",
+        },
+      ],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(UNTOUCHED_51_ID);
+  });
+
+  it("ignores other users' submissions and drafts for untouched selection", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client } = makeClient({
+      problems: [complete51, untouched51],
+      writingSubmissions: [
+        {
+          user_id: "user-2",
+          problem_id: COMPLETE_51_ID,
+          feedback_status: "complete",
+        },
+      ],
+      writingDrafts: [
+        {
+          user_id: "user-2",
+          problem_id: COMPLETE_51_ID,
+          autosave_status: "dirty",
+        },
+      ],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(COMPLETE_51_ID);
+  });
+
+  it("continues scanning after the first candidate page when all visible candidates are touched", async () => {
+    const touchedRows = Array.from({ length: 25 }, (_, index) =>
+      complete51Problem(uuidFor51(index + 1), `Touched ${index + 1}`),
+    );
+    const untouched51 = complete51Problem(uuidFor51(26), "Untouched page 2");
+    const { client, calls } = makeClient({
+      problems: [...touchedRows, untouched51],
+      writingSubmissions: touchedRows.map((row) => ({
+        user_id: "user-1",
+        problem_id: row.id,
+        feedback_status: "complete",
+      })),
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(untouched51.id);
+    expect(calls).toContainEqual({ type: "range", from: 25, to: 49 });
+    expect(
+      calls.filter(
+        (call) => call.type === "from" && call.table === "writing_submissions",
+      ),
+    ).toHaveLength(1);
+    expect(
+      calls.filter(
+        (call) => call.type === "from" && call.table === "writing_drafts",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("skips untouched candidates that are not submittable", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client } = makeClient({
+      problems: [incomplete51, untouched51],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(UNTOUCHED_51_ID);
+    expect(problem?.submitBlockedReason).toBeNull();
+  });
+
+  it("falls back to the existing default when no untouched candidate remains", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client } = makeClient({
+      problems: [complete51, untouched51],
+      writingSubmissions: [
+        {
+          user_id: "user-1",
+          problem_id: COMPLETE_51_ID,
+          feedback_status: "pending",
+        },
+      ],
+      writingDrafts: [
+        {
+          user_id: "user-1",
+          problem_id: UNTOUCHED_51_ID,
+          autosave_status: "clean",
+        },
+      ],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(COMPLETE_51_ID);
+  });
+
+  it("does not apply untouched filtering to an explicit problem id", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client, calls } = makeClient({
+      problems: [complete51, untouched51],
+      writingSubmissions: [
+        {
+          user_id: "user-1",
+          problem_id: COMPLETE_51_ID,
+          feedback_status: "complete",
+        },
+      ],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      COMPLETE_51_ID,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(COMPLETE_51_ID);
+    expect(calls).not.toContainEqual({
+      type: "from",
+      table: "writing_submissions",
+    });
+    expect(calls).not.toContainEqual({ type: "from", table: "writing_drafts" });
+  });
+
+  it("keeps the existing default behavior when no user id is supplied", async () => {
+    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
+    const { client, calls } = makeClient({
+      problems: [complete51, untouched51],
+      writingSubmissions: [
+        {
+          user_id: "user-1",
+          problem_id: COMPLETE_51_ID,
+          feedback_status: "complete",
+        },
+      ],
+    });
+
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+    );
+
+    expect(problem?.id).toBe(COMPLETE_51_ID);
+    expect(calls).not.toContainEqual({
+      type: "from",
+      table: "writing_submissions",
+    });
+    expect(calls).not.toContainEqual({ type: "from", table: "writing_drafts" });
   });
 
   it("does not return a seed fixture even when explicitly requested", async () => {

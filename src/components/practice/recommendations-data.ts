@@ -27,9 +27,12 @@ import type { QuestionNo } from "@/lib/practice/types";
 
 export type { RecommendationItemCard, RecommendationRunSummary };
 
-export type RecommendationBundle = {
-  run: RecommendationRunSummary | null;
-  items: RecommendationItemCard[];
+// Mirrors the server bundle (source / summaryCode / reasonCode flow through
+// untouched); only availableTypes changes shape for client-side lookups.
+export type RecommendationBundle = Omit<
+  ServerRecommendationBundle,
+  "availableTypes"
+> & {
   /** question_no values that currently have at least one active recommendation. */
   availableTypes: Set<QuestionNo>;
 };

@@ -9,9 +9,9 @@ dayjs.extend(timezone);
 const KST = "Asia/Seoul";
 
 /**
- * Dashboard KPI summary. Phase 6 collapses the four fetches into a single
+ * Dashboard KPI summary. The four fetches are collapsed into a single
  * `get_dashboard_kpi()` RPC that runs the same KST day-boundary math in SQL
- * (see migration 20260521140000_phase_6_rpc_and_admin.sql §5). The `userId`
+ * (see the latest dashboard KPI migration). The `userId`
  * parameter is retained for caller compatibility but is intentionally
  * ignored — the RPC derives identity from `auth.uid()` to avoid cross-user
  * leak (Codex Round 1 P1-1).
@@ -25,7 +25,7 @@ export type DashboardKpi = {
   totalAttempts: number;
   /** Days until `learning_goals.exam_date`. Null when no exam date set or date is in the past. */
   examDaysLeft: number | null;
-  /** Consecutive distinct KST dates with at least one attempt, ending today or yesterday. */
+  /** Consecutive distinct KST dates with at least one study event, ending today or yesterday. */
   streakDays: number;
   /** Placeholder — populated when writing_feedback signals are surfaced on the dashboard. */
   recentFeedback: null;

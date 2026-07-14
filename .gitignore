@@ -44,6 +44,9 @@
 !.claude/settings.json
 !.claude/skills/
 .claude/skills/*
+!.claude/skills/*/
+.claude/skills/*/*
+!.claude/skills/*/SKILL.md
 
 # Local test/session artifacts (gitignored).
 tests/e2e/auth-state/

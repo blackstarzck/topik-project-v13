@@ -16,6 +16,16 @@ const notificationBell = readFileSync(
   ),
   "utf8",
 );
+const institutionInvitationModal = readFileSync(
+  join(
+    process.cwd(),
+    "src",
+    "components",
+    "notifications",
+    "InstitutionInvitationModal.tsx",
+  ),
+  "utf8",
+);
 const appProviders = readFileSync(
   join(process.cwd(), "src", "app", "providers.tsx"),
   "utf8",
@@ -171,6 +181,31 @@ describe("In-app notification inbox item styles", () => {
     expect(blockFor(".app-notification-item__body.ant-typography")).toContain(
       "font-size: 14px",
     );
+  });
+
+  test("institution invitation code uses a plain 26px display style", () => {
+    expect(institutionInvitationModal).not.toContain(
+      "institution-invitation-modal__body",
+    );
+    expect(institutionInvitationModal).toContain(
+      'className="institution-invitation-modal__description"',
+    );
+    expect(institutionInvitationModal).toContain(
+      'className="institution-invitation-modal__code"',
+    );
+    expect(blockFor(".institution-invitation-modal__body")).toBe("");
+    expect(
+      blockFor(".institution-invitation-modal__description.ant-typography"),
+    ).toContain("word-break: keep-all");
+    const codeBlock = blockFor(
+      ".institution-invitation-modal__code.ant-typography",
+    );
+    expect(codeBlock).toContain("font-size: 26px");
+    expect(codeBlock).toContain("margin-block: 20px 18px");
+    expect(codeBlock).toContain("padding: 12px 14px");
+    expect(codeBlock).toContain("background: var(--app-color-bg-layout)");
+    expect(codeBlock).not.toContain("border:");
+    expect(codeBlock).toContain("text-align: center");
   });
 
   test("unread dot and mark-all action match the notification badge affordance", () => {

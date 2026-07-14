@@ -1,57 +1,55 @@
 #!/usr/bin/env node
 
-import { cp, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
-import path from 'node:path';
-import process from 'node:process';
+import { lstat, mkdir, readFile, readdir, realpath, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
 
 const repoRoot = process.cwd();
-const sourceRoot = path.join(repoRoot, '.codex', 'skills');
-const mirrorRoots = [path.join(repoRoot, '.claude', 'skills')];
+const sourceRoot = path.join(repoRoot, ".codex", "skills");
+const mirrorRoot = path.join(repoRoot, ".claude", "skills");
+const GENERATED_MARKER = "<!-- GENERATED CANONICAL SKILL PROXY: DO NOT EDIT -->";
 
 const skillGroups = [
   {
-    label: 'Superpowers',
+    label: "Superpowers",
     names: [
-      'brainstorming',
-      'dispatching-parallel-agents',
-      'executing-plans',
-      'finishing-a-development-branch',
-      'receiving-code-review',
-      'requesting-code-review',
-      'subagent-driven-development',
-      'systematic-debugging',
-      'test-driven-development',
-      'using-git-worktrees',
-      'using-superpowers',
-      'verification-before-completion',
-      'writing-plans',
-      'writing-skills',
+      "brainstorming",
+      "dispatching-parallel-agents",
+      "executing-plans",
+      "finishing-a-development-branch",
+      "receiving-code-review",
+      "requesting-code-review",
+      "subagent-driven-development",
+      "systematic-debugging",
+      "test-driven-development",
+      "using-git-worktrees",
+      "using-superpowers",
+      "verification-before-completion",
+      "writing-plans",
+      "writing-skills",
     ],
   },
 ];
 
-if (await exists(path.join(sourceRoot, 'gstack'))) {
-  skillGroups.push({
-    label: 'GStack',
-    names: ['gstack'],
-  });
+if (await exists(path.join(sourceRoot, "gstack"))) {
+  skillGroups.push({ label: "GStack", names: ["gstack"] });
 }
 
 const args = new Set(process.argv.slice(2));
-const checkOnly = args.has('--check');
-const listOnly = args.has('--list');
+const checkOnly = args.has("--check");
+const listOnly = args.has("--list");
 const failures = [];
 const synced = [];
 
-if (args.has('--help') || args.has('-h')) {
+if (args.has("--help") || args.has("-h")) {
   console.log(`Usage: node scripts/sync-agent-skills.mjs [--check|--list]
 
-Copies canonical Superpowers and optional gstack skills from .codex/skills into
-host-specific mirrors. Product, stack, and implementation guidance lives in
-AGENTS.md and docs/ instead of extra Codex runtime skills.
+Generates tracked Claude SKILL.md entrypoints that load the canonical skills
+from .codex/skills. Relative references remain anchored to the canonical skill
+directory instead of being duplicated into host-specific mirrors.
 
 Options:
-  --check  verify mirrors are in sync without writing files
+  --check  verify proxies are in sync without writing files
   --list   print canonical skill names
 `);
   process.exit(0);
@@ -60,7 +58,7 @@ Options:
 if (listOnly) {
   for (const group of skillGroups) {
     console.log(`# ${group.label}`);
-    console.log(group.names.join('\n'));
+    console.log(group.names.join("\n"));
   }
   process.exit(0);
 }
@@ -74,109 +72,149 @@ async function exists(targetPath) {
   }
 }
 
-async function listFiles(root, current = root, options = {}) {
-  const { recordMissing = true } = options;
-  let entries;
+function extractFrontmatter(content, skillName) {
+  const match = content.match(/^---\r?\n[\s\S]*?\r?\n---/u);
+  if (!match || !new RegExp(`^name:\\s*${skillName}\\s*$`, "mu").test(match[0])) {
+    throw new Error(`Invalid canonical frontmatter: .codex/skills/${skillName}/SKILL.md`);
+  }
+  return match[0].replaceAll("\r\n", "\n");
+}
+
+function renderProxy(frontmatter, skillName) {
+  const canonicalPath = `../../../.codex/skills/${skillName}/SKILL.md`;
+  return `${frontmatter}\n\n${GENERATED_MARKER}\n\n# Canonical skill entrypoint\n\nBefore taking any task action, read the canonical SKILL.md completely at \`${canonicalPath}\` and follow it as the authoritative instruction body. Resolve every relative reference, script, template, and asset from \`../../../.codex/skills/${skillName}/\`, not from this proxy directory.\n`;
+}
+
+async function canonicalSkill(skillName) {
+  const sourcePath = path.join(sourceRoot, skillName, "SKILL.md");
+  const sourceStat = await lstat(sourcePath);
+  const sourceReal = await realpath(sourcePath);
+  const rootReal = await realpath(sourceRoot);
+  if (
+    !sourceStat.isFile() ||
+    sourceStat.isSymbolicLink() ||
+    !sourceReal.startsWith(`${rootReal}${path.sep}`)
+  ) {
+    throw new Error(`Unsafe canonical skill: .codex/skills/${skillName}/SKILL.md`);
+  }
+  const content = await readFile(sourcePath, "utf8");
+  return renderProxy(extractFrontmatter(content, skillName), skillName);
+}
+
+function isWithin(root, candidate) {
+  return candidate === root || candidate.startsWith(`${root}${path.sep}`);
+}
+
+async function safeMirrorSkillDirectory(skillName) {
+  const repoReal = await realpath(repoRoot);
+  const claudeRoot = path.join(repoRoot, ".claude");
+  for (const directory of [claudeRoot, mirrorRoot]) {
+    if (!(await exists(directory))) {
+      if (checkOnly) throw new Error(`Missing Claude skill root: ${path.relative(repoRoot, directory)}`);
+      await mkdir(directory);
+    }
+    const directoryStat = await lstat(directory);
+    const directoryReal = await realpath(directory);
+    if (
+      !directoryStat.isDirectory() ||
+      directoryStat.isSymbolicLink() ||
+      !isWithin(repoReal, directoryReal)
+    ) {
+      throw new Error(`Unsafe Claude skill root: ${path.relative(repoRoot, directory)}`);
+    }
+  }
+
+  const mirrorReal = await realpath(mirrorRoot);
+  const skillDirectory = path.join(mirrorRoot, skillName);
+  if (!(await exists(skillDirectory))) {
+    if (checkOnly) throw new Error(`Missing Claude skill directory: .claude/skills/${skillName}`);
+    await mkdir(skillDirectory);
+  }
+  const skillStat = await lstat(skillDirectory);
+  const skillReal = await realpath(skillDirectory);
+  if (
+    !skillStat.isDirectory() ||
+    skillStat.isSymbolicLink() ||
+    !isWithin(mirrorReal, skillReal)
+  ) {
+    throw new Error(`Unsafe Claude skill directory: .claude/skills/${skillName}`);
+  }
+  return skillDirectory;
+}
+
+async function syncProxy(skillName) {
+  let expected;
   try {
-    entries = await readdir(current, { withFileTypes: true });
+    expected = await canonicalSkill(skillName);
   } catch (error) {
-    if (recordMissing) {
-      failures.push(`Missing skill directory: ${path.relative(repoRoot, current)} (${error.code ?? error.message})`);
-    }
-    return null;
-  }
-
-  const files = [];
-  for (const entry of entries) {
-    const entryPath = path.join(current, entry.name);
-    if (entry.isDirectory()) {
-      const nested = await listFiles(root, entryPath, options);
-      if (nested === null) {
-        return null;
-      }
-      files.push(...nested);
-      continue;
-    }
-
-    if (entry.isFile()) {
-      files.push(path.relative(root, entryPath).split(path.sep).join('/'));
-    }
-  }
-
-  files.sort();
-  return files;
-}
-
-async function assertLegacySkillRootsRemoved() {
-  const legacyRoots = [
-    path.join(repoRoot, '.agents', 'skills'),
-    path.join(repoRoot, '.agents', 'superpowers'),
-  ];
-
-  for (const legacyRoot of legacyRoots) {
-    if (await exists(legacyRoot)) {
-      failures.push(`Legacy skill root still exists: ${path.relative(repoRoot, legacyRoot)}`);
-    }
-  }
-}
-
-async function syncDirectory(skillName, mirrorRoot) {
-  const sourceDir = path.join(sourceRoot, skillName);
-  const mirrorDir = path.join(mirrorRoot, skillName);
-  const sourceFiles = await listFiles(sourceDir);
-
-  if (sourceFiles === null) {
+    failures.push(error.message);
     return;
   }
 
-  const mirrorFiles = await listFiles(mirrorDir, mirrorDir, { recordMissing: false });
-  let inSync = mirrorFiles !== null && sourceFiles.length === mirrorFiles.length;
-
-  if (inSync) {
-    for (let index = 0; index < sourceFiles.length; index += 1) {
-      if (sourceFiles[index] !== mirrorFiles[index]) {
-        inSync = false;
-        break;
-      }
-
-      const sourceContent = await readFile(path.join(sourceDir, sourceFiles[index]));
-      const mirrorContent = await readFile(path.join(mirrorDir, mirrorFiles[index]));
-      if (!sourceContent.equals(mirrorContent)) {
-        inSync = false;
-        break;
-      }
-    }
-  }
-
-  if (inSync) {
-    synced.push(`ok ${path.relative(repoRoot, mirrorDir)}`);
+  let skillDirectory;
+  try {
+    skillDirectory = await safeMirrorSkillDirectory(skillName);
+  } catch (error) {
+    failures.push(error.message);
     return;
   }
+  const proxyPath = path.join(skillDirectory, "SKILL.md");
+  let actual = null;
+  try {
+    const proxyStat = await lstat(proxyPath);
+    if (!proxyStat.isFile() || proxyStat.isSymbolicLink()) {
+      failures.push(`Unsafe proxy: .claude/skills/${skillName}/SKILL.md`);
+      return;
+    }
+    actual = await readFile(proxyPath, "utf8");
+  } catch {
+    // A missing proxy is handled below.
+  }
 
+  if (actual === expected) {
+    synced.push(`ok .claude/skills/${skillName}/SKILL.md`);
+    return;
+  }
   if (checkOnly) {
-    failures.push(`Out of sync: ${path.relative(repoRoot, mirrorDir)}`);
+    failures.push(`Out of sync: .claude/skills/${skillName}/SKILL.md`);
     return;
   }
-
-  await rm(mirrorDir, { recursive: true, force: true });
-  await mkdir(path.dirname(mirrorDir), { recursive: true });
-  await cp(sourceDir, mirrorDir, { recursive: true });
-  synced.push(`wrote ${path.relative(repoRoot, mirrorDir)}`);
+  await writeFile(proxyPath, expected, "utf8");
+  synced.push(`wrote .claude/skills/${skillName}/SKILL.md`);
 }
 
-await assertLegacySkillRootsRemoved();
-
-for (const group of skillGroups) {
-  for (const skillName of group.names) {
-    for (const mirrorRoot of mirrorRoots) {
-      await syncDirectory(skillName, mirrorRoot);
+async function assertNoStaleGeneratedProxies(canonicalNames) {
+  let entries = [];
+  try {
+    entries = await readdir(mirrorRoot, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory() || canonicalNames.has(entry.name)) continue;
+    const skillPath = path.join(mirrorRoot, entry.name, "SKILL.md");
+    try {
+      const content = await readFile(skillPath, "utf8");
+      if (content.includes(GENERATED_MARKER)) {
+        failures.push(`Stale generated proxy: .claude/skills/${entry.name}/SKILL.md`);
+      }
+    } catch {
+      // Unrelated local Claude skill content is outside this sync contract.
     }
   }
 }
+
+for (const legacyRoot of [path.join(repoRoot, ".agents", "skills"), path.join(repoRoot, ".agents", "superpowers")]) {
+  if (await exists(legacyRoot)) failures.push(`Legacy skill root still exists: ${path.relative(repoRoot, legacyRoot)}`);
+}
+
+const canonicalNames = new Set(skillGroups.flatMap((group) => group.names));
+for (const skillName of canonicalNames) await syncProxy(skillName);
+await assertNoStaleGeneratedProxies(canonicalNames);
 
 if (failures.length > 0) {
-  console.error(failures.join('\n'));
+  console.error(failures.join("\n"));
   process.exit(1);
 }
 
-console.log(checkOnly ? 'PASS agent skill mirrors are in sync' : synced.join('\n'));
+console.log(checkOnly ? "PASS agent skill proxies are in sync" : synced.join("\n"));

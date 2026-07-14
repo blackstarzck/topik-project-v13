@@ -9,7 +9,7 @@ import { SettingsPageSkeleton } from "@/components/shared/SettingsPageSkeleton";
 
 /**
  * `/settings/account` route loading skeleton — mirrors the account screen
- * (two bordered login-method cards + account-status rows + logout + 회원 탈퇴 카드)
+ * (three bordered login-method cards + account-status rows + logout + 회원 탈퇴 카드)
  * so navigation shows a layout-matched skeleton instead of the shared AppLoading
  * spinner. The account page has no subtitle, so the header skeleton omits it.
  */
@@ -17,9 +17,14 @@ export default function AccountSettingsLoading() {
   return (
     <SettingsPageSkeleton subtitle={false}>
       <div className="account-settings-redesign">
-        {/* 로그인 방법: 개별 테두리 카드 2개 */}
+        {/* 로그인 방법: 개별 테두리 카드 3개 */}
         <section className="app-cards-bordered">
           <div className="account-login-methods">
+            <AppCard className="account-login-method">
+              <div className="w-full">
+                <Skeleton active avatar paragraph={{ rows: 1 }} />
+              </div>
+            </AppCard>
             <AppCard className="account-login-method">
               <div className="w-full">
                 <Skeleton active avatar paragraph={{ rows: 1 }} />

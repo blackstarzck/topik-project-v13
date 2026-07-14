@@ -1,5 +1,5 @@
 // F-M1 서버 PDF 템플릿 — 간단 1안 (owner 확정 2026-06-12, 브리프 §3-D):
-// 표지 없음, [제목 → 점수 → 답안 → 피드백] 순서, 상단 TALKPIK 로고 텍스트만.
+// 표지 없음, [제목 → 점수 → 답안 → 피드백] 순서, 상단 DOTORE TOPIK 로고 텍스트만.
 // 본문 언어는 한국어 고정(§3-E) — NanumGothic(OFL)만 임베딩한다.
 //
 // 서버 전용 모듈이다(Node 런타임 route handler에서만 import). 클라이언트
@@ -296,14 +296,14 @@ function PageChrome({
   return (
     <>
       <View style={styles.brandRow} fixed>
-        <Text style={styles.brand}>TALKPIK AI</Text>
+        <Text style={styles.brand}>DOTORE TOPIK</Text>
         <Text style={styles.brandMeta}>답안 및 피드백 리포트</Text>
       </View>
       <Text style={styles.docTitle}>{title}</Text>
       <Text style={styles.docSubtitle}>생성일 {generatedAtLabel}</Text>
       {children}
       <View style={styles.footer} fixed>
-        <Text>TALKPIK · 학습용 리포트</Text>
+        <Text>DOTORE TOPIK · 학습용 리포트</Text>
         <Text
           render={({ pageNumber, totalPages }) =>
             `${pageNumber} / ${totalPages}`

@@ -8,11 +8,13 @@ import { Trash2 } from "@/components/shared/AppIcons";
 import { useDeleteLibraryItem } from "@/lib/library/mutations";
 import type { LibraryTab } from "@/lib/library/types";
 
+type LibraryRowTab = LibraryTab | "drafts";
+
 type Props = {
   children: ReactNode;
   className?: string;
   itemId: string;
-  tab: LibraryTab;
+  tab: LibraryRowTab;
   tags: string[];
   /**
    * Optional right-hand action (e.g. "다시 풀기" link, "다시 인쇄" button)
@@ -46,6 +48,7 @@ export function LibraryItemRow({
   const deleteItem = useDeleteLibraryItem();
 
   function handleDelete() {
+    if (tab === "drafts") return;
     deleteItem.mutate(
       { itemId, tab },
       {

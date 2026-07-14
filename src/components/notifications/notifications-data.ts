@@ -101,7 +101,7 @@ export type InstitutionInvitationErrorKind =
 
 const INSTITUTION_INVITATION_KEY = "institution_invitation";
 const ISO_UTC_TIMESTAMP_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$/;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(?:Z|\+00:00)$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -166,9 +166,26 @@ function normalizeTimestamp(value: unknown): string | null {
   if (typeof value !== "string") return null;
 
   const timestamp = value.trim();
+  const match = ISO_UTC_TIMESTAMP_PATTERN.exec(timestamp);
+  const parsedTime = Date.parse(timestamp);
+  if (!match || !Number.isFinite(parsedTime)) return null;
+
+  const parsed = new Date(parsedTime);
+  const expectedMilliseconds = Number(
+    (match[7] ?? "").padEnd(3, "0").slice(0, 3),
+  );
+  const expectedParts = match.slice(1, 7).map(Number);
+  const parsedParts = [
+    parsed.getUTCFullYear(),
+    parsed.getUTCMonth() + 1,
+    parsed.getUTCDate(),
+    parsed.getUTCHours(),
+    parsed.getUTCMinutes(),
+    parsed.getUTCSeconds(),
+  ];
   if (
-    !ISO_UTC_TIMESTAMP_PATTERN.test(timestamp) ||
-    !Number.isFinite(Date.parse(timestamp))
+    parsedParts.some((part, index) => part !== expectedParts[index]) ||
+    parsed.getUTCMilliseconds() !== expectedMilliseconds
   ) {
     return null;
   }

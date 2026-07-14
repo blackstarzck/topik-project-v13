@@ -46,9 +46,16 @@ import {
   DEFAULT_COOLDOWN_SECONDS,
   useEmailCooldown,
 } from "@/lib/auth/use-email-cooldown";
+import {
+  normalizeOptionalProfileInput,
+  type ProfileGender,
+} from "@/lib/auth/profile-completion";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import { asLocale, DEFAULT_LOCALE, LOCALE_COOKIE } from "@/i18n/locales";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { GenderRadioGroup } from "@/components/shared/GenderRadioGroup";
+import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
 
 // 2026-07-03 sign-up-explicit-duplicate-email 제안: 중복 이메일은 숨기지 않고
 // 이메일 필드 인라인 오류 + 로그인/비밀번호 재설정 CTA Alert로 명시한다.
@@ -142,10 +149,12 @@ function formatCountdown(totalSeconds: number, tc: CountdownTranslate): string {
 
 type SignUpFields = {
   email: string;
+  gender?: ProfileGender;
   password: string;
   passwordConfirm: string;
   displayName: string;
   nationalityCountryCode: string;
+  phoneNumber?: string;
   terms: boolean;
 };
 
@@ -182,6 +191,9 @@ export function SignUpForm({
   );
   // password-strength meter는 실시간으로 입력값을 추적해야 하므로 watch.
   const [passwordValue, setPasswordValue] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState(
+    DEFAULT_PHONE_COUNTRY_CODE,
+  );
   const [form] = Form.useForm<SignUpFields>();
   const displayNameValue = Form.useWatch("displayName", form);
   const nationalityCountryCodeValue = Form.useWatch(
@@ -220,9 +232,7 @@ export function SignUpForm({
     if (hasValidName && hasValidCountryRegion) {
       return STEP_EMAIL;
     }
-    if (hasValidName) {
-      return STEP_COUNTRY_REGION;
-    }
+    if (hasValidName) return STEP_COUNTRY_REGION;
     return STEP_NAME;
   }, [hasValidCountryRegion, hasValidEmail, hasValidName, hasValidPassword]);
   const currentVisibleStep = Math.max(visibleStep, autoVisibleStep);
@@ -230,6 +240,8 @@ export function SignUpForm({
   const showEmailStep = currentVisibleStep >= STEP_EMAIL;
   const showPasswordStep = currentVisibleStep >= STEP_PASSWORD;
   const showTermsStep = currentVisibleStep >= STEP_TERMS;
+  const showGenderStep = showTermsStep;
+  const showPhoneStep = showTermsStep;
   const showSubmitButton = showTermsStep;
 
   useEffect(() => {
@@ -325,15 +337,30 @@ export function SignUpForm({
     try {
       const supabase = createSupabaseBrowserClient();
       const affiliationMetadata = buildAffiliationMetadata();
+      const optionalProfileMetadata = normalizeOptionalProfileInput({
+        gender: values.gender,
+        phone_country_code: phoneCountryCode,
+        phone_number: values.phoneNumber,
+      });
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           data: {
             display_name: values.displayName,
+            ...(optionalProfileMetadata.gender
+              ? { gender: optionalProfileMetadata.gender }
+              : {}),
             nationality_country_code: normalizeCountryCode(
               values.nationalityCountryCode,
             ),
+            ...(optionalProfileMetadata.phone_number
+              ? {
+                  phone_country_code:
+                    optionalProfileMetadata.phone_country_code,
+                  phone_number: optionalProfileMetadata.phone_number,
+                }
+              : {}),
             ui_locale: locale,
             ui_locale_source: hasSupportedLocaleCookie() ? "manual" : "auto",
             ...affiliationMetadata,
@@ -431,7 +458,7 @@ export function SignUpForm({
         onFinish={handleSignUp}
         requiredMark={false}
       >
-        {/* description §3 입력 순서: 이름, 국가/지역, 이메일, 비밀번호 */}
+        {/* description 3 input order: name, country, email, password, optional gender/phone, terms */}
         <Form.Item
           label={t("nameLabel")}
           name="displayName"
@@ -461,10 +488,10 @@ export function SignUpForm({
               rules={[{ required: true, message: t("countryRegionRequired") }]}
             >
               <CountryRegionSelect
-                locale={locale}
                 id="nationalityCountryCode"
                 ariaLabel={t("countryRegionLabel")}
                 dataTestId="country-region-select"
+                locale={locale}
                 placeholder={t("countryRegionPlaceholder")}
                 onFocus={() => onTypingChange?.(true)}
                 onBlur={() => onTypingChange?.(false)}
@@ -564,6 +591,39 @@ export function SignUpForm({
                   handleStepCompletion(STEP_PASSWORD);
                 }}
                 onKeyDown={(event) => handleStepKeyDown(event, STEP_PASSWORD)}
+              />
+            </Form.Item>
+          </div>
+        )}
+
+        {showGenderStep && (
+          <div className="auth-progressive-step">
+            <Form.Item label={t("genderLabel")} name="gender">
+              <GenderRadioGroup
+                id="gender"
+                ariaLabel={t("genderLabel")}
+                femaleLabel={t("genderFemale")}
+                maleLabel={t("genderMale")}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
+              />
+            </Form.Item>
+          </div>
+        )}
+
+        {showPhoneStep && (
+          <div className="auth-progressive-step">
+            <Form.Item label={t("phoneNumberLabel")} name="phoneNumber">
+              <PhoneNumberInput
+                id="phoneNumber"
+                ariaLabel={t("phoneNumberLabel")}
+                callingCodeAriaLabel={t("phoneCountryCodeLabel")}
+                countryCode={phoneCountryCode}
+                locale={locale}
+                placeholder={t("phoneNumberPlaceholder")}
+                onCountryCodeChange={setPhoneCountryCode}
+                onFocus={() => onTypingChange?.(true)}
+                onBlur={() => onTypingChange?.(false)}
               />
             </Form.Item>
           </div>

@@ -6,6 +6,9 @@ type RowShape = {
   display_name: string | null;
   nickname: string | null;
   nationality_country_code?: string | null;
+  phone_country_code?: string | null;
+  phone_number?: string | null;
+  bio?: string | null;
   ui_locale: "ko" | "en" | "vi";
   ui_locale_source: "legacy" | "default" | "auto" | "manual";
   notification_prefs: unknown;
@@ -39,6 +42,8 @@ describe("getProfileSettings", () => {
     const row = {
       display_name: "Chan",
       nickname: "찬",
+      phone_country_code: "KR",
+      phone_number: "01012345678",
       // Phase 7-E Task 10 — bio column.
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko" as const,
@@ -52,6 +57,8 @@ describe("getProfileSettings", () => {
       display_name: "Chan",
       nickname: "찬",
       nationality_country_code: null,
+      phone_country_code: "KR",
+      phone_number: "01012345678",
       bio: "TOPIK II 4급 목표로 학습 중입니다.",
       ui_locale: "ko",
       ui_locale_source: "manual",

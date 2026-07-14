@@ -27,6 +27,7 @@ type LibraryProblemRpcRow = {
   problem_id: string | null;
   title: string | null;
   question_no: number | null;
+  answer_text: string | null;
   tags: string[] | null;
   saved_at: string;
   availability_status: string | null;
@@ -208,6 +209,7 @@ async function joinProblems(
       id: problemId,
       title: row.title ?? null,
       question_no: typeof row.question_no === "number" ? row.question_no : null,
+      answer_text: row.answer_text ?? null,
       item_id: row.item_id,
       saved_at: row.saved_at,
       tags: Array.isArray(row.tags) ? row.tags : [],

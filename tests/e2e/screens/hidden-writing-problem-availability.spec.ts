@@ -34,6 +34,9 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
+const PROBLEMS_ACTION_MENU_OPEN =
+  "\ubb38\uc81c \uc791\uc5c5 \uba54\ub274 \uc5f4\uae30";
+const SAVED_PROBLEM_RETRY = "\ub2e4\uc2dc \ud480\uae30";
 const createdLibraryItemIds: string[] = [];
 const createdProblemIds: string[] = [];
 
@@ -196,7 +199,7 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   await expect(page.getByTestId("library-item-row")).toHaveCount(2);
 
   const listText = await page.getByTestId("library-item-list").innerText();
-  expect(listText).toContain(fixture.marker);
+  expect(listText).toContain("E2E soft unavailable");
   expect(listText).toContain(fixture.reason);
   expect(listText).not.toContain(fixture.hardTitle);
 
@@ -225,12 +228,12 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
   await expect(
     page.getByTestId("library-problem-unavailable-badge"),
   ).toHaveCount(2);
-  expect(
-    await page
-      .getByTestId("library-item-row")
-      .locator("button[disabled]")
-      .count(),
-  ).toBeGreaterThanOrEqual(2);
+  await expect(
+    page.getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN }),
+  ).toHaveCount(2);
+  await expect(
+    page.getByRole("link", { name: SAVED_PROBLEM_RETRY }),
+  ).toHaveCount(0);
 
   mkdirSync(path.join(process.cwd(), "output", "playwright"), {
     recursive: true,
@@ -244,6 +247,14 @@ test("hidden saved writing problems fade the entire row without leaking hard-hid
     ),
     fullPage: true,
   });
+
+  await page
+    .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
+    .first()
+    .click();
+  await expect(
+    page.getByRole("menuitem", { name: SAVED_PROBLEM_RETRY }),
+  ).toHaveAttribute("aria-disabled", "true");
 
   expect(errors).toEqual([]);
 });

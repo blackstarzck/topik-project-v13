@@ -24,6 +24,11 @@ const DEFAULT_MINUTES_BY_QUESTION: Record<number, number> = {
   54: 50,
 };
 
+const secondaryCardClassNames = {
+  body: "flex-1",
+  actions: "app-card-footer-actions [&>li]:!px-3 [&>li]:!pb-3",
+};
+
 function ctaHref(card: RecommendationItemCard): string {
   return writingProblemHref({
     questionNo: card.questionNo,
@@ -72,6 +77,30 @@ function RecommendationMetaTile({
   );
 }
 
+/**
+ * weakness_tags hold raw feedback dimension keys (grammar, vocab, …). Known
+ * dimensions render as locale labels; anything else (future/custom tags)
+ * passes through untouched.
+ */
+const WEAKNESS_DIMENSION_TAGS = new Set([
+  "grammar",
+  "vocab",
+  "structure",
+  "content",
+  "expression",
+  "topic_fit",
+  "language",
+]);
+
+export function weaknessTagLabel(
+  t: ReturnType<typeof useTranslations<"practice.recommendations">>,
+  tag: string,
+): string {
+  return WEAKNESS_DIMENSION_TAGS.has(tag)
+    ? t(`dimension.${tag}` as Parameters<typeof t>[0])
+    : tag;
+}
+
 /** C-01 §3 — 취약 태그 근거 (recommendation_items.weakness_tags). */
 function WeaknessTags({ tags }: { tags: string[] }) {
   const t = useTranslations("practice.recommendations");
@@ -82,7 +111,9 @@ function WeaknessTags({ tags }: { tags: string[] }) {
         {t("weaknessTagsLabel")}
       </Text>
       {tags.slice(0, 4).map((tag) => (
-        <RecommendationBadge key={tag}>{tag}</RecommendationBadge>
+        <RecommendationBadge key={tag}>
+          {weaknessTagLabel(t, tag)}
+        </RecommendationBadge>
       ))}
     </div>
   );
@@ -173,7 +204,23 @@ export function SecondaryRecommendationCard({
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
     <AppCard
-      className="h-full"
+      className="flex h-full flex-col"
+      classNames={secondaryCardClassNames}
+      actions={[
+        <Link
+          key="continue"
+          href={ctaHref(card) as never}
+          className="block w-full"
+        >
+          <Button
+            className="inline-flex items-center justify-center gap-2"
+            block
+          >
+            {t("continueProblem")}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Button>
+        </Link>,
+      ]}
       size="small"
       title={
         card.questionNo
@@ -195,14 +242,6 @@ export function SecondaryRecommendationCard({
         </Paragraph>
       ) : null}
       <WeaknessTags tags={card.weaknessTags} />
-      <div className="mt-3">
-        <Link href={ctaHref(card) as never}>
-          <Button block>
-            {t("continueProblem")}
-            <ArrowRight size={16} aria-hidden="true" />
-          </Button>
-        </Link>
-      </div>
     </AppCard>
   );
 }

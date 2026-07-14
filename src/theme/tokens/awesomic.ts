@@ -28,7 +28,7 @@ export const awesomicThemeTokens = {
     linkSecondary: "#3254F2",
   },
   radius: {
-    // The raw Awesomic reference uses very soft 28-36px surfaces. TALKPIK's
+    // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
     base: 6,
     badge: 4,

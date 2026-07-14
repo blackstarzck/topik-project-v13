@@ -5,13 +5,13 @@
 ## Summary
 
 - Pages: 36
-- Tables: 36 (35 v13 + 1 topik-ai shared)
+- Tables: 37 (36 v13 + 1 topik-ai shared)
 - RPC/functions: 41
 - Storage buckets: 3
-- Page data links: 129
+- Page data links: 136
 - Unclassified DB objects: 0
 
-> 집계 기준: Tables는 현재 v13 forward migration 테이블 35개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. v13 테이블 수에는 2026-07-08에 accepted된 PDF quota 테이블 4개가 포함된다. RPC/functions에는 PDF quota RPC 3개가 포함된다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
+> 집계 기준: Tables는 현재 v13 forward migration 테이블 36개와 topik-ai 소유 공유 테이블 `notification_delivery_attempts` 1개를 합산한다. v13 테이블 수에는 2026-07-08에 accepted된 PDF quota 테이블 4개와 `writing_submission_metrics`가 포함된다. RPC/functions에는 PDF quota RPC 3개가 포함된다. Page data links는 fallback/schema-supported/deprecated 행까지 포함한 화면 데이터 계약 행 수다.
 
 ## avatars
 
@@ -168,7 +168,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| A-01 | Sign-up | table | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. |
+| A-01 | Sign-up | table | `id`, `email`, `display_name`, `app_role`, `plan_label`, `status`, `gender`, `phone_country_code`, `phone_number` | triggered-write | 회원가입 후 auth.users 트리거가 프로필 기본 row를 만든다. `gender`/`phone_country_code`/`phone_number`는 `/sign-up`에서 선택 입력한 값이 Auth signup metadata로 전달되면 `handle_new_user()`가 함께 저장한다(선택 항목, 미입력 시 null). |
 | A-02 | Login | table | `id`, `status`, `app_role` | read | 로그인 후 세션 사용자의 상태와 권한을 확인한다. |
 | A-03 | Learning goal setup | table | `id`, `ui_locale`, `status` | read | 사용자 기본 설정과 onboarding 상태 판단에 사용한다. |
 | B-01 | Home dashboard | table | `id`, `display_name`, `plan_label`, `status` | read | 대시보드 사용자 표시와 권한 상태에 사용한다. |
@@ -177,12 +177,12 @@
 | X-01 | Product landing | table | `plan_label` | derived-read | 랜딩의 플랜/권한 CTA fallback과 사용자 상태 분기에 연결될 수 있다. |
 | X-03 | Paywall | table | `plan_label`, `status` | fallback read | 현재 플랜과 접근 제한 안내의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`와 `subscriptions`다. |
 | X-04 | Subscription management | table | `plan_label`, `status` | fallback read | 구독 상태 셸의 fallback 분기에 연결될 수 있다. 기본 결제 근거는 `subscription_plans`, `subscriptions`, `payment_history`다. |
-| X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. |
+| X-05 | Profile editing | table | `display_name`, `nickname`, `avatar_path`, `bio`, `ui_locale`, `plan_label`, `status`, `phone_country_code`, `phone_number`, `phone_number_prompt_dismissed_at` | read/write | 프로필 편집, 160자 자기소개, 아바타 경로에 사용한다. `phone_country_code`/`phone_number`는 선택 입력 전화번호 조회·수정·삭제에 사용한다. `phone_number_prompt_dismissed_at`은 전화번호 없는 사용자에게 workspace 공통 shell에서 뜨는 비차단 안내 모달의 "다시 보지 않기"(영구 dismiss) 시각을 기록한다. |
 | X-06 | Password reset | table | `id`, `email`, `status` | read | 비밀번호 재설정 성공 후 사용자 상태 확인에 연결될 수 있다. |
 | X-09 | Notification settings | table | `notification_prefs` | read/write | 알림 채널과 조건 설정을 JSON object로 저장한다. |
 | X-11 | Auth error | table | `id`, `status` | read | 인증 오류 후 계정 상태 안내와 재시도 분기에 연결될 수 있다. |
 | X-12 | Auth verify-email | table | `id`, `email`, `status` | read | 가입 직후 이메일 인증 안내와 인증 상태 확인에 연결된다. |
-| X-18 | Auth consent | table | `id`, `ui_locale` | read/bootstrap | 소셜 로그인 후 사용자 locale 기준으로 필수 법적 문서 동의 게이트를 구성한다. |
+| X-18 | Auth consent | table | `id`, `ui_locale`, `gender`, `phone_country_code`, `phone_number` | read/bootstrap + write via RPC | 소셜 로그인 후 사용자 locale 기준으로 필수 법적 문서 동의 게이트를 구성한다. 게이트 완료 시 `complete_auth_gate` RPC가 선택 입력한 `gender`/`phone_country_code`/`phone_number`를 같은 트랜잭션에서 저장한다(선택 항목). |
 
 ## subscription_plans
 
@@ -211,6 +211,7 @@
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
 | X-18 | Auth consent | table | `id`, `doc_type`, `version`, `locale`, `title`, `summary`, `body`, `effective_at`, `status`, `requires_consent` | read | 최신 published required 약관/개인정보 문서를 조회해 누락 동의 목록을 만든다. |
+| X-14 | Privacy policy | table | `id`, `doc_type`, `version`, `locale`, `title`, `summary`, `body`, `effective_at`, `status`, `is_placeholder`, `source_policy_id` | read | 발행된 privacy 문서를 locale 기준으로 조회해 표시하고, 없거나 placeholder면 정적 fallback 카드를 렌더링한다. |
 
 ## user_consents
 
@@ -246,8 +247,8 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| B-01 | Home dashboard | rpc | - | rpc | 대시보드 KPI 요약을 만든다. |
-| X-02 | Growth dashboard | rpc | - | rpc | 성장 지표 일부를 재사용할 수 있다. |
+| B-01 | Home dashboard | rpc | - | rpc | Dashboard/growth KPI submission counts. Source: `writing_submissions.submitted_at` for `today_attempts`/`total_attempts`; source: `study_events.occurred_at` KST learning days for `streak_days`. |
+| X-02 | Growth dashboard | rpc | - | rpc | Dashboard/growth KPI submission counts. Source: `writing_submissions.submitted_at` via `total_attempts`; source: `study_events.occurred_at` via `streak_days`. |
 
 ## public.handle_new_user
 
@@ -295,7 +296,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
-| B-01 | Home dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 연속성, 오늘 활동, 이벤트 기반 KPI에 사용한다. |
+| B-01 | Home dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 연속 학습일과 학습 활동 이벤트에 사용한다. 제출 수 KPI 원천은 `writing_submissions.submitted_at`이다. |
 | D-01 | Short-answer writing 51 | table | `event_type`, `problem_id`, `submission_id`, `payload` | write | 작성 시작과 제출 이벤트를 기록한다. |
 | D-02 | Answer writing 52 | table | `event_type`, `problem_id`, `submission_id`, `payload` | write | 작성 시작과 제출 이벤트를 기록한다. |
 | D-03 | Long-form writing 53 | table | `event_type`, `problem_id`, `submission_id`, `payload` | write | 작성 시작과 제출 이벤트를 기록한다. |
@@ -306,7 +307,7 @@
 | F-01 | My library | table | `event_type`, `occurred_at`, `payload` | read | 학습 활동 기록에 사용한다. |
 | F-M1 | PDF export modal | table | `event_type`, `export_file_id`, `payload` | write | PDF 다운로드 이벤트를 기록한다. |
 | D-M3 | Autosave warning | table | `event_type`, `payload`, `occurred_at` | write | 자동저장 이벤트를 기록한다. |
-| X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세와 활동 그래프에 사용한다. |
+| X-02 | Growth dashboard | table | `event_type`, `occurred_at`, `payload` | derived-read | 학습 추세, 활동 그래프, 연속 학습일에 사용한다. 누적 제출 수 KPI 원천은 `writing_submissions.submitted_at`이다. |
 
 ## user_notifications
 
@@ -345,6 +346,7 @@
 
 | IA | Screen | Type | Columns/fields | Usage | Page feature |
 | --- | --- | --- | --- | --- | --- |
+| B-01 | Home dashboard | table | `user_id`, `submitted_at` | derived-read via `public.get_dashboard_kpi` | 오늘 제출 수와 전체 제출 수 KPI의 원천이다. |
 | D-01 | Short-answer writing 51 | table | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. |
 | D-02 | Answer writing 52 | table | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. |
 | D-03 | Long-form writing 53 | table | `problem_id`, `answer_text`, `answer_json`, `char_count`, `feedback_status` | write/read | 최종 제출과 제출 상태 확인에 사용한다. |
@@ -356,6 +358,16 @@
 | R-01 | Comparison report | table | `id`, `answer_text`, `char_count`, `submitted_at` | read | 비교 대상 제출본을 불러온다. |
 | R-02 | Next problem recommendation | table | `problem_id`, `submitted_at` | derived-read | 최근 제출 흐름을 추천 근거로 사용한다. |
 | F-01 | My library | table | `id`, `problem_id`, `submitted_at`, `char_count` | read | 제출 이력 탭에 사용한다. |
+| X-02 | Growth dashboard | table | `user_id`, `submitted_at` | derived-read via `public.get_dashboard_kpi` | 누적 제출 수 KPI의 원천이다. |
+
+## writing_submission_metrics
+
+| IA | Screen | Type | Columns/fields | Usage | Page feature |
+| --- | --- | --- | --- | --- | --- |
+| D-01 | Short-answer writing 51 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 51번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
+| D-02 | Answer writing 52 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 52번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
+| D-03 | Long-form writing 53 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 53번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
+| D-04 | Essay writing 54 | table | `submission_id`, `user_id`, `problem_id`, `question_no`, `elapsed_seconds`, `active_seconds`, `started_at`, `submitted_at` | write | 제출 성공 후 54번 쓰기 소요 시간과 활성 입력 시간을 기록한다. 답안 본문은 저장하지 않는다. |
 
 ## Unmapped Or Infrastructure DB Objects
 

@@ -49,7 +49,7 @@ const THIRTY_MINUTES_MS = 30 * 60 * 1000;
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
 const renderInApp = renderWithIntl;
 
-async function fillAndBlur(label: string, value: string) {
+async function fillAndBlur(label: string | RegExp, value: string) {
   const input = screen.getByLabelText(label);
   fireEvent.change(input, { target: { value } });
   fireEvent.blur(input);
@@ -71,6 +71,16 @@ async function selectCountryRegion(countryName = "베트남") {
   }
   fireEvent.click(option);
   await screen.findByLabelText("이메일");
+}
+
+async function selectGender(genderLabel = "여성") {
+  fireEvent.click(screen.getByRole("radio", { name: genderLabel }));
+  await screen.findByLabelText(/전화번호/);
+}
+
+async function fillOptionalPhoneNumber(phoneNumber = "1012345678") {
+  await fillAndBlur(/전화번호/, phoneNumber);
+  await screen.findByLabelText("국가/지역");
 }
 
 async function fillValidEmail(email = "valid@example.com") {
@@ -168,6 +178,13 @@ describe("SignUpForm", () => {
 
     await fillAndBlur("이름", "홍길동");
     expect(await screen.findByLabelText("국가/지역")).toBeTruthy();
+    expect(screen.queryByRole("radio", { name: "남성" })).toBeNull();
+    expect(screen.queryByRole("radio", { name: "여성" })).toBeNull();
+    expect(document.querySelector("#phoneNumber")).toBeNull();
+    const countryStep = screen
+      .getByLabelText("국가/지역")
+      .closest(".auth-progressive-step");
+    expect(countryStep).toBeTruthy();
     expect(screen.queryByLabelText("이메일")).toBeNull();
     expect(screen.queryByLabelText("비밀번호")).toBeNull();
 
@@ -183,6 +200,13 @@ describe("SignUpForm", () => {
 
     await fillAndBlur("비밀번호", "password123");
     await fillAndBlur("비밀번호 확인", "password123");
+    expect(await screen.findByRole("radio", { name: "남성" })).toBeTruthy();
+    expect(await screen.findByRole("radio", { name: "여성" })).toBeTruthy();
+    expect(await screen.findByLabelText(/전화번호/)).toBeTruthy();
+    expect(
+      screen.getByTestId("phone-country-code-select").textContent,
+    ).toContain("+82");
+    expect(screen.queryByText("선택 안 함")).toBeNull();
     expect(await screen.findByRole("checkbox")).toBeTruthy();
     expect(submitButton().disabled).toBe(true);
   });
@@ -194,6 +218,10 @@ describe("SignUpForm", () => {
     expect(screen.queryByLabelText("국가/지역")).toBeNull();
 
     await fillValidName();
+    expect(screen.queryByLabelText("이메일")).toBeNull();
+    expect(document.querySelector("#phoneNumber")).toBeNull();
+    expect(screen.queryByRole("radio", { name: "남성" })).toBeNull();
+    expect(screen.getByLabelText("국가/지역")).toBeTruthy();
     expect(screen.queryByLabelText("이메일")).toBeNull();
 
     await selectCountryRegion();
@@ -267,6 +295,63 @@ describe("SignUpForm", () => {
     expect(call.options.emailRedirectTo).toBe(
       "https://talkpik.example.com/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
+  });
+
+  it("includes optional gender and phone metadata when provided", async () => {
+    renderInApp(<SignUpForm />);
+
+    await fillValidName();
+    await selectCountryRegion();
+    await fillValidEmail("optional-profile@example.com");
+    await fillValidPassword();
+    await selectGender("여성");
+    await fillOptionalPhoneNumber("1012345678");
+    fireEvent.click(screen.getByRole("checkbox"));
+    await waitFor(() => {
+      expect(submitButton().disabled).toBe(false);
+    });
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signUpMock.mock.calls[0][0].options.data).toMatchObject({
+      display_name: "홍길동",
+      gender: "female",
+      nationality_country_code: "VN",
+      phone_country_code: "KR",
+      phone_number: "1012345678",
+    });
+  });
+
+  it("submits successfully when optional gender and phone are left blank", async () => {
+    renderInApp(<SignUpForm />);
+
+    await fillValidName();
+    await selectCountryRegion();
+    await fillValidEmail("blank-optional@example.com");
+    await fillValidPassword();
+    fireEvent.click(screen.getByRole("checkbox"));
+    await waitFor(() => {
+      expect(submitButton().disabled).toBe(false);
+    });
+
+    await act(async () => {
+      fireEvent.click(submitButton());
+    });
+
+    await waitFor(() => {
+      expect(signUpMock).toHaveBeenCalledTimes(1);
+    });
+    expect(signUpMock.mock.calls[0][0].options.data).toEqual({
+      display_name: "홍길동",
+      nationality_country_code: "VN",
+      ui_locale: "ko",
+      ui_locale_source: "auto",
+    });
   });
 
   it("stores the rendered locale as an auto-detected sign-up locale", async () => {

@@ -8,7 +8,7 @@ import type { ThemeAppearance } from "@/theme/types";
  * Returns "light" for any missing, invalid, or unexpected value.
  *
  * NOTE (T1): Using cookies() makes this layout dynamically rendered (no static
- * caching). For TALKPIK AI, which requires Supabase Auth on all workspace
+ * caching). For DOTORE TOPIK, which requires Supabase Auth on all workspace
  * routes, the root layout is already dynamic, so this is an accepted tradeoff.
  */
 export async function resolveInitialAppearance(): Promise<ThemeAppearance> {

@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
+  LibraryDraftView,
   LibraryProblemView,
   LibrarySubmissionView,
 } from "../../../src/lib/library/types";
@@ -38,12 +39,27 @@ const problem: LibraryProblemView = {
   id: "problem-52",
   title: "휴대전화 진동 문장 완성",
   question_no: 52,
+  answer_text: null,
   item_id: "library-problem-1",
   saved_at: "2026-06-30T10:00:00.000Z",
   tags: [],
   availabilityStatus: "available",
   availabilityReason: null,
   canRetry: true,
+};
+
+const draft: LibraryDraftView = {
+  kind: "draft",
+  id: "draft-51",
+  problem_id: "problem-51",
+  problem_title: "No. 51 - Draft answer problem",
+  question_no: 51,
+  answer_text: "draft body",
+  char_count: 10,
+  autosave_status: "clean",
+  item_id: "draft:draft-51",
+  saved_at: "2026-07-01T10:00:00.000Z",
+  last_saved_at: "2026-07-01T10:00:00.000Z",
 };
 
 afterEach(cleanup);
@@ -54,6 +70,7 @@ describe("LibraryProblemsWorkspace", () => {
       <LibraryProblemsWorkspace
         initialSubmissions={[submission]}
         initialProblems={[problem]}
+        initialDrafts={[draft]}
       />,
     );
 

@@ -19,10 +19,14 @@ import {
   normalizeCountryCode,
 } from "@/components/shared/CountryRegionSelect";
 import { AppCard } from "@/components/shared/AppCard";
+import { GenderRadioGroup } from "@/components/shared/GenderRadioGroup";
+import { PhoneNumberInput } from "@/components/shared/PhoneNumberInput";
+import { DEFAULT_PHONE_COUNTRY_CODE } from "@/lib/geo/country-calling-codes";
 import {
   DISPLAY_NAME_MAX_LENGTH,
   NICKNAME_MAX_LENGTH,
   PROFILE_NAME_MIN_LENGTH,
+  type ProfileGender,
   type RequiredProfileField,
   type RequiredProfileShape,
 } from "@/lib/auth/profile-completion";
@@ -42,6 +46,7 @@ export type AuthConsentPanelDocument = {
 
 export type AuthConsentPanelError =
   | "required"
+  | "invalid-profile"
   | "nickname-taken"
   | "save-failed";
 
@@ -120,6 +125,13 @@ export function AuthConsentPanel({
     );
     return normalized.length > 0 ? normalized : null;
   });
+  const [gender, setGender] = useState<ProfileGender | null>(
+    profile.gender ?? null,
+  );
+  const [phoneCountryCode, setPhoneCountryCode] = useState(
+    profile.phone_country_code ?? DEFAULT_PHONE_COUNTRY_CODE,
+  );
+  const [phoneNumber, setPhoneNumber] = useState(profile.phone_number ?? "");
   const [nicknameAvailability, setNicknameAvailability] =
     useState<NicknameAvailability>("idle");
   const nicknameCheckSeqRef = useRef(0);
@@ -155,9 +167,47 @@ export function AuthConsentPanel({
       ? tProfile("nicknameTaken")
       : error === "save-failed"
         ? t("saveFailedError")
-        : error === "required" || showRequiredError
-          ? t("requiredError")
-          : null;
+        : error === "invalid-profile"
+          ? t("invalidProfileError")
+          : error === "required" || showRequiredError
+            ? t("requiredError")
+            : null;
+
+  function renderOptionalProfileFields(phoneItemClassName = "!mb-4") {
+    return (
+      <>
+        <Form.Item
+          className="!mb-4"
+          label={tProfile("genderLabel")}
+          extra={tProfile("genderHelp")}
+        >
+          <GenderRadioGroup
+            ariaLabel={tProfile("genderLabel")}
+            femaleLabel={tProfile("genderFemale")}
+            maleLabel={tProfile("genderMale")}
+            value={gender}
+            onChange={setGender}
+          />
+        </Form.Item>
+
+        <Form.Item
+          className={phoneItemClassName}
+          label={tProfile("phoneNumberLabel")}
+        >
+          <PhoneNumberInput
+            ariaLabel={tProfile("phoneNumberLabel")}
+            callingCodeAriaLabel={tProfile("phoneCountryCodeLabel")}
+            countryCode={phoneCountryCode}
+            locale={locale}
+            value={phoneNumber}
+            placeholder={tProfile("phoneNumberPlaceholder")}
+            onChange={setPhoneNumber}
+            onCountryCodeChange={setPhoneCountryCode}
+          />
+        </Form.Item>
+      </>
+    );
+  }
 
   useEffect(() => {
     if (!needsNickname) return;
@@ -208,6 +258,13 @@ export function AuthConsentPanel({
 
         <form action={action}>
           <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="gender" value={gender ?? ""} />
+          <input
+            type="hidden"
+            name="phone_country_code"
+            value={phoneCountryCode}
+          />
+          <input type="hidden" name="phone_number" value={phoneNumber} />
           <input
             type="hidden"
             name="nationality_country_code"
@@ -240,6 +297,8 @@ export function AuthConsentPanel({
                       />
                     </Form.Item>
                   ) : null}
+
+                  {renderOptionalProfileFields()}
 
                   {needsNickname ? (
                     <Form.Item
@@ -286,7 +345,21 @@ export function AuthConsentPanel({
               </section>
             ) : null}
 
-            {needsProfile && needsConsent ? <Divider className="!m-0" /> : null}
+            {!needsProfile ? (
+              <section className="flex flex-col gap-4">
+                <div>
+                  <Text strong>{tProfile("optionalSectionTitle")}</Text>
+                  <Paragraph type="secondary" className="!mb-0">
+                    {tProfile("optionalSectionDescription")}
+                  </Paragraph>
+                </div>
+                <Form layout="vertical" component={false}>
+                  {renderOptionalProfileFields("!mb-0")}
+                </Form>
+              </section>
+            ) : null}
+
+            {needsConsent ? <Divider className="!m-0" /> : null}
 
             {needsConsent ? (
               <section className="flex flex-col gap-4">

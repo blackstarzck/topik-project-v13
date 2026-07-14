@@ -174,7 +174,15 @@ describe("resolveInstitutionInvitationExpiry", () => {
     ).toEqual({ status: "expired" });
   });
 
-  it.each([null, "", "not-a-date", "2026-07-14", "2026-07-14T14:59:59"])(
+  it.each([
+    null,
+    "",
+    "not-a-date",
+    "2026-07-14",
+    "2026-07-14T14:59:59",
+    "2026-02-30T00:00:00Z",
+    "2026-04-31T00:00:00+00:00",
+  ])(
     "does not infer a state for a missing or invalid expiry (%s)",
     (expiresAt) => {
       expect(resolveInstitutionInvitationExpiry(expiresAt, now)).toEqual({

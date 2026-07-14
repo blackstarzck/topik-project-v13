@@ -38,6 +38,15 @@ export default async function WorkspaceLayout({
     redirect(POST_AUTH_LOGIN_PATH);
   }
   const { user, profile } = session;
+  const hasPhoneNumberField = Object.prototype.hasOwnProperty.call(
+    profile,
+    "phone_number",
+  );
+  const hasPhoneNumberPromptDismissedField =
+    Object.prototype.hasOwnProperty.call(
+      profile,
+      "phone_number_prompt_dismissed_at",
+    );
 
   return (
     <WorkspaceShell
@@ -49,6 +58,12 @@ export default async function WorkspaceLayout({
       avatarPath={profile.avatar_path}
       planLabel={profile.plan_label}
       affiliationCode={profile.affiliation_code}
+      phoneNumber={hasPhoneNumberField ? profile.phone_number : undefined}
+      phoneNumberPromptDismissedAt={
+        hasPhoneNumberPromptDismissedField
+          ? profile.phone_number_prompt_dismissed_at
+          : undefined
+      }
     >
       {children}
     </WorkspaceShell>

@@ -1,9 +1,9 @@
 // M5 — build hygiene preflight.
 //
-// Running `pnpm build` (`next build`) while a `next dev` server is alive mixes
-// dev + prod artifacts in `.next` → stale/500 chunks → fake runtime errors
-// (e.g. "next-intl context not found"). See memory:
-// project-pnpm-build-clobbers-dev-server and PLAN.md §강제성 게이트 표 (M5).
+// Legacy Next versions could mix `next dev` + `next build` artifacts in `.next`
+// and produce stale/500 chunks. Next 16's isolatedDevBuild separates development
+// output into `.next/dev`; the project must opt into that contract explicitly
+// before this preflight permits a build while any dev port is alive.
 //
 // This preflight runs *before* `build` in the integration gate sequence. It
 // detects a server on the dev port and BLOCKS the build (non-zero exit) unless
@@ -20,10 +20,24 @@ import { pathToFileURL } from "node:url";
  * Pure decision: given whether a dev server was detected and whether the user
  * forced the build, decide whether to block and with what exit code/message.
  *
- * @param {{ devServerDetected: boolean, force?: boolean }} input
+ * @param {{ devServerDetected: boolean, isolatedDevBuild?: boolean, force?: boolean }} input
  * @returns {{ block: boolean, code: number, message: string, warn?: boolean }}
  */
-export function evaluateBuildPreflight({ devServerDetected, force = false }) {
+export function evaluateBuildPreflight({
+  devServerDetected,
+  isolatedDevBuild = false,
+  force = false,
+}) {
+  if (devServerDetected && isolatedDevBuild) {
+    return {
+      block: false,
+      code: 0,
+      warn: true,
+      message:
+        "dev server detected; proceeding because isolatedDevBuild keeps " +
+        "development output in .next/dev and production output in .next.",
+    };
+  }
   if (devServerDetected && !force) {
     return {
       block: true,
@@ -99,6 +113,56 @@ export function normalizePort(value) {
   return n;
 }
 
+export function supportsIsolatedDevBuild(nextVersion) {
+  if (typeof nextVersion !== "string") return false;
+  const major = Number.parseInt(nextVersion.split(".")[0], 10);
+  return major === 16;
+}
+
+export function hasIsolatedDevBuildOptOut(nextConfigSource) {
+  if (typeof nextConfigSource !== "string") return true;
+  const mentions = nextConfigSource.match(/\bisolatedDevBuild\b/g) ?? [];
+  if (mentions.length === 0) return false;
+
+  const literalSettings = [
+    ...nextConfigSource.matchAll(
+      /["']?isolatedDevBuild["']?\s*:\s*(true|false)\b/g,
+    ),
+  ];
+  if (literalSettings.length !== mentions.length) return true;
+  return literalSettings.some((match) => match[1] !== "true");
+}
+
+function readInstalledNextVersion(rootDir = process.cwd()) {
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(rootDir, "node_modules", "next", "package.json"), "utf8"),
+    );
+    return typeof packageJson.version === "string" ? packageJson.version : null;
+  } catch {
+    return null;
+  }
+}
+
+function readNextConfigSource(rootDir = process.cwd()) {
+  for (const filename of [
+    "next.config.ts",
+    "next.config.mts",
+    "next.config.js",
+    "next.config.mjs",
+    "next.config.cjs",
+  ]) {
+    const configPath = path.join(rootDir, filename);
+    if (!fs.existsSync(configPath)) continue;
+    try {
+      return fs.readFileSync(configPath, "utf8");
+    } catch {
+      return null;
+    }
+  }
+  return "";
+}
+
 // Ports dev actually uses: 3000 (Next default), its auto-retry range (3001+ when
 // 3000 is busy), and 3100 (this project's verify scripts + the 2026-06-02
 // incident). Probing only 3000 missed the founding incident (cross-audit P0).
@@ -171,6 +235,13 @@ async function main() {
   const argv = process.argv.slice(2);
   const force =
     argv.includes("--force") || process.env.AI_BUILD_PREFLIGHT_FORCE === "1";
+  const isolatedDevBuildRequested = argv.includes("--isolated-dev-build");
+  const nextVersion = readInstalledNextVersion();
+  const nextConfigSource = readNextConfigSource();
+  const isolatedDevBuild =
+    isolatedDevBuildRequested &&
+    supportsIsolatedDevBuild(nextVersion) &&
+    !hasIsolatedDevBuildOptOut(nextConfigSource);
   const supabaseBoundary = evaluateSupabaseRemoteApplyBoundary({
     env: process.env,
     supabaseTempExists: fs.existsSync(path.join(process.cwd(), "supabase", ".temp")),
@@ -181,9 +252,15 @@ async function main() {
   }
   const ports = resolveProbePorts(argv, process.env);
   const { detected, port } = await detectAnyDevServer(ports);
-  const result = evaluateBuildPreflight({ devServerDetected: detected, force });
+  const result = evaluateBuildPreflight({
+    devServerDetected: detected,
+    isolatedDevBuild,
+    force,
+  });
   const tag = "[M5 build-preflight]";
-  const where = `probed ${ports.join(",")}${detected ? ` — alive on ${port}` : ""}`;
+  const where =
+    `probed ${ports.join(",")}${detected ? ` — alive on ${port}` : ""}; ` +
+    `Next ${nextVersion ?? "unknown"}; isolated dev output ${isolatedDevBuild ? "enabled" : "disabled"}`;
   if (result.block) {
     console.error(
       `${tag} BLOCK (${where}): ${result.message} (if that port is NOT a dev server, use --force.)`,

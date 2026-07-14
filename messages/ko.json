@@ -11,10 +11,17 @@
     "dashboard": "대시보드"
   },
   "app": {
-    "brand": "TALKPIK",
+    "brand": "DOTORE TOPIK",
     "openMenu": "메뉴 열기",
     "menu": "메뉴",
-    "userSummary": "사용자 정보"
+    "userSummary": "사용자 정보",
+    "phoneReminder": {
+      "title": "전화번호를 등록해 주세요",
+      "description": "프로필에서 전화번호를 추가하면 계정 보호와 안내에 활용할 수 있어요. 선택 입력이며 언제든 변경할 수 있습니다.",
+      "cta": "프로필로 이동",
+      "dismiss": "다시 보지 않기",
+      "dismissError": "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+    }
   },
   "nav": {
     "dashboard": "홈",
@@ -47,7 +54,7 @@
     "logout": "로그아웃"
   },
   "landing": {
-    "logoAria": "TALKPIK 홈 상단으로 이동",
+    "logoAria": "DOTORE TOPIK 홈 상단으로 이동",
     "navAria": "주요 메뉴",
     "navFeatures": "기능",
     "navPreview": "미리보기",
@@ -116,7 +123,7 @@
       "quoteSource": "TOPIK II 쓰기 학습자",
       "platformEyebrow": "Practice platform",
       "platformTitle": "하나의 플랫폼에서 쓰기, 첨삭, 복습을 이어갑니다",
-      "platformBody": "TALKPIK AI는 문제 추천과 답안 작성, AI 분석, 다음 학습 제안을 같은 흐름 안에서 제공합니다.",
+      "platformBody": "DOTORE TOPIK은 문제 추천과 답안 작성, AI 분석, 다음 학습 제안을 같은 흐름 안에서 제공합니다.",
       "platformListAria": "학습 흐름 핵심 단계",
       "platformStepGoal": "목표 기반 추천",
       "platformStepGoalBody": "목표 급수와 약점 영역을 기준으로 다음 문제를 제안합니다.",
@@ -127,7 +134,7 @@
       "platformImage": "플랫폼 화면 이미지 자리",
       "assistantEyebrow": "AI feedback engine",
       "assistantTitle": "답안의 약점을 차원별로 분해합니다",
-      "assistantBody": "단순 점수보다 중요한 것은 다음에 무엇을 고칠지입니다. TALKPIK AI는 답안 구조와 표현을 나눠 보여주고, 보강할 학습 행동으로 연결합니다.",
+      "assistantBody": "단순 점수보다 중요한 것은 다음에 무엇을 고칠지입니다. DOTORE TOPIK은 답안 구조와 표현을 나눠 보여주고, 보강할 학습 행동으로 연결합니다.",
       "assistantImage": "AI 분석 이미지 자리",
       "capabilityProblemTitle": "문제 유형 추천",
       "capabilityProblemBody": "TOPIK I/II와 51~54번 유형을 기준으로 연습 흐름을 시작합니다.",
@@ -183,19 +190,19 @@
       "footerLegal": "문서",
       "footerLegalTerms": "이용약관",
       "footerLegalPrivacy": "개인정보처리방침",
-      "footerNotice": "TALKPIK AI는 TOPIK 학습자의 쓰기 연습, AI 피드백, 복습 흐름을 돕는 학습 서비스입니다."
+      "footerNotice": "DOTORE TOPIK은 TOPIK 학습자의 쓰기 연습, AI 피드백, 복습 흐름을 돕는 학습 서비스입니다."
     },
-    "metaTitle": "TALKPIK AI · TOPIK 글쓰기 AI 학습",
-    "heroMascotAlt": "TALKPIK 학습 도우미 캐릭터"
+    "metaTitle": "DOTORE TOPIK · TOPIK 글쓰기 AI 학습",
+    "heroMascotAlt": "DOTORE TOPIK 학습 도우미 캐릭터"
   },
   "settings": {
     "learning": {
-      "metaTitle": "학습 목표 — TALKPIK",
+      "metaTitle": "학습 목표 — TOPIK",
       "pageHeading": "학습 목표",
       "pageSubtitle": "목표 시험과 시험일을 관리합니다. 주당 학습 시간과 취약 영역은 전체 목표 설정에서 이어서 조정할 수 있어요."
     },
     "account": {
-      "metaTitle": "계정 설정 — TALKPIK",
+      "metaTitle": "계정 설정 — TOPIK",
       "pageHeading": "계정 설정",
       "pageSubtitle": "로그인 방법, 계정 상태, 로그아웃 같은 계정 관리 기능을 모았습니다.",
       "dangerZone": {
@@ -254,10 +261,10 @@
       "saveSuccess": "언어·콘텐츠 설정이 저장되었습니다.",
       "saveError": "설정 저장에 실패했어요.",
       "learningSettingsLoadError": "콘텐츠 설정을 불러오지 못했어요.",
-      "metaTitle": "언어 설정 — TALKPIK"
+      "metaTitle": "언어 설정 — TOPIK"
     },
     "notifications": {
-      "metaTitle": "알림 설정 — TALKPIK",
+      "metaTitle": "알림 설정 — TOPIK",
       "pageHeading": "알림 설정",
       "pageSubtitle": "중요한 알림은 놓치지 않고, 방해되지 않게 받아보세요.",
       "loadError": "알림 설정을 불러오지 못했어요.",
@@ -366,7 +373,7 @@
       "googleLinkedMessage": "Google 계정이 연결됐어요."
     },
     "login": {
-      "metaTitle": "로그인 — TALKPIK",
+      "metaTitle": "로그인 — TOPIK",
       "pageHeading": "다시 오신 걸 환영해요",
       "mascotCaption": "다시 오신 걸 환영해요. 이어서 글쓰기를 연습해볼까요?",
       "noAccountPrompt": "계정이 없으신가요?",
@@ -398,7 +405,7 @@
       "formSubtitle": "이어서 학습하려면 계정에 로그인하세요.",
       "heroEyebrow": "AI TOPIK WRITING",
       "heroTitle": "다시 만나서 반가워요!",
-      "heroBody": "TALKPIK AI와 함께 TOPIK 쓰기 실력을 차근차근 성장시켜 보세요.",
+      "heroBody": "DOTORE TOPIK과 함께 TOPIK 쓰기 실력을 차근차근 성장시켜 보세요.",
       "mascotTitle": "오늘도 한 문장씩",
       "mascotBody": "이어 쓰던 문제와 피드백으로 바로 돌아갈 수 있어요.",
       "benefitStripAria": "로그인 후 이용할 수 있는 학습 기능",
@@ -413,7 +420,7 @@
       "socialAuthFailed": "Google 인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요."
     },
     "signUp": {
-      "metaTitle": "회원가입 — TALKPIK",
+      "metaTitle": "회원가입 — TOPIK",
       "pageHeading": "회원가입",
       "pageSubtitle": "TOPIK 글쓰기, AI 첨삭으로 더 빠르게. 부담 없이 무료로 시작해보세요.",
       "benefitFreeTrial": "AI 첨삭 무료 체험",
@@ -428,6 +435,14 @@
       "countryRegionLabel": "국가/지역",
       "countryRegionPlaceholder": "국가 또는 지역을 선택하세요",
       "countryRegionRequired": "국가/지역을 선택하세요",
+      "genderLabel": "성별",
+      "genderFemale": "여성",
+      "genderMale": "남성",
+      "phoneCountryCodeLabel": "국가번호",
+      "phoneNumberLabel": "전화번호",
+      "phoneNumberPlaceholder": "01012345678",
+      "phoneNumberHelp": "선택 입력입니다.",
+      "phoneNumberInvalid": "전화번호는 숫자만 입력해 주세요.",
       "emailLabel": "이메일",
       "emailRequired": "이메일을 입력하세요",
       "emailInvalid": "올바른 이메일 형식이 아닙니다",
@@ -517,7 +532,7 @@
       "continue": "계속하기"
     },
     "consent": {
-      "metaTitle": "가입 마무리 — TALKPIK",
+      "metaTitle": "가입 마무리 — TOPIK",
       "heading": "가입을 마무리해 주세요",
       "description": "서비스를 시작하기 전에 필요한 정보와 필수 동의를 확인해 주세요.",
       "profileSectionTitle": "필수 정보",
@@ -527,14 +542,15 @@
       "versionLabel": "버전 {version}",
       "agreement": "위 필수 약관과 개인정보처리방침을 확인했고 동의합니다.",
       "requiredError": "계속하려면 필수 정보를 입력하고 필요한 동의에 체크해야 합니다.",
+      "invalidProfileError": "입력한 선택 정보 형식을 확인해 주세요.",
       "saveFailedError": "저장에 실패했어요. 잠시 후 다시 시도해 주세요.",
       "submit": "저장하고 계속"
     },
     "passwordReset": {
-      "metaTitle": "비밀번호 재설정 — TALKPIK",
+      "metaTitle": "비밀번호 재설정 — TOPIK",
       "pageHeading": "비밀번호 재설정",
       "backToLogin": "로그인으로 돌아가기",
-      "intro": "가입하신 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.",
+      "intro": "계정 이메일을 입력하세요. 이 주소로 비밀번호 메일을 받을 수 있으면 링크를 보내드립니다.",
       "emailLabel": "이메일",
       "emailRequired": "이메일을 입력하세요",
       "emailInvalid": "올바른 이메일 형식이 아닙니다",
@@ -542,12 +558,12 @@
       "rateLimited": "메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.",
       "sendFailed": "전송 실패: {message}",
       "sentTitle": "이메일을 확인하세요",
-      "sentBody": "<strong>{email}</strong> 로 비밀번호 재설정 링크를 보냈습니다. 메일 안의 링크를 누르면 새 비밀번호 설정 화면으로 이동합니다.",
+      "sentBody": "<strong>{email}</strong> 로 비밀번호 메일을 받을 수 있다면 받은편지함에서 변경 링크를 확인하세요.",
       "sentExpiryNote": "보안을 위해 링크는 약 1시간 후 만료돼요. 만료되면 이 화면에서 다시 보낼 수 있어요."
     },
     "passwordResetConfirm": {
-      "metaTitle": "새 비밀번호 설정 — TALKPIK",
-      "mascotAlt": "TALKPIK 보안 도우미 캐릭터",
+      "metaTitle": "새 비밀번호 설정 — TOPIK",
+      "mascotAlt": "DOTORE TOPIK 보안 도우미 캐릭터",
       "title": "새 비밀번호 설정",
       "subtitle": "이메일 링크로 들어오셨어요. 마지막 단계예요 — 새 비밀번호만 정하면 끝나요.",
       "guideBase": "8-64자, 영문·숫자·특수문자를 섞으면 더 안전해요.",
@@ -569,9 +585,9 @@
       "changeSuccess": "비밀번호가 변경되었습니다. 다시 로그인하세요."
     },
     "verifyEmail": {
-      "metaTitle": "이메일 인증 — TALKPIK",
+      "metaTitle": "이메일 인증 — TOPIK",
       "srHeading": "이메일 인증",
-      "mascotAlt": "TALKPIK 학습 도우미 캐릭터",
+      "mascotAlt": "DOTORE TOPIK 학습 도우미 캐릭터",
       "title": "인증 메일을 보냈어요",
       "body": "가입 요청을 확인했어요. 새 계정이면 아래 이메일로 인증 메일이 도착해요. 메일의 링크를 눌러 가입을 마무리해주세요.",
       "existingAccountHeading": "이미 계정이 있나요?",
@@ -597,7 +613,7 @@
       "resendCountdown": "{label} 후 다시 보낼 수 있어요"
     },
     "error": {
-      "metaTitle": "인증 오류 — TALKPIK",
+      "metaTitle": "인증 오류 — TOPIK",
       "srHeading": "인증 오류",
       "emailLabel": "이메일",
       "emailPlaceholder": "가입한 이메일을 입력해주세요",
@@ -674,7 +690,7 @@
       }
     },
     "callback": {
-      "metaTitle": "인증 확인 중 — TALKPIK",
+      "metaTitle": "인증 확인 중 — TOPIK",
       "srHeading": "인증 확인 중",
       "checking": "인증을 확인 중이에요…",
       "redirecting": "이동 중이에요…"
@@ -698,8 +714,8 @@
       "ruleSymbol": "특수문자"
     },
     "mascot": {
-      "loginAlt": "TALKPIK 학습 도우미 캐릭터",
-      "signUpAlt": "TALKPIK 학습 도우미 캐릭터"
+      "loginAlt": "DOTORE TOPIK 학습 도우미 캐릭터",
+      "signUpAlt": "DOTORE TOPIK 학습 도우미 캐릭터"
     },
     "cooldown": {
       "label": "{label} 후 다시 보낼 수 있어요"
@@ -707,7 +723,7 @@
   },
   "dashboard": {
     "page": {
-      "metaTitle": "대시보드 — TALKPIK",
+      "metaTitle": "대시보드 — TOPIK",
       "examDdayTitle": "시험 D-{days}",
       "examDdayDescription": "목표 시험일까지 {days}일 남았습니다.",
       "dirtyDraftsTitle": "작성 중인 답안",
@@ -897,7 +913,7 @@
       "typeTabLockedAria": "{no}번 잠김"
     },
     "problems": {
-      "metaTitle": "문제 목록 — TALKPIK",
+      "metaTitle": "문제 목록 — TOPIK",
       "heading": "문제 목록",
       "subtitle": "유형과 조건을 선택하고, 나에게 맞는 문제를 찾아보세요.",
       "totalRange": "총 {total}개 중 {start}-{end}개 표시",
@@ -942,6 +958,12 @@
       "solveAction": "풀이",
       "newBadge": "신규",
       "startProblem": "시작하기",
+      "saveProblem": "문제 저장",
+      "savedProblem": "저장됨",
+      "saveProblemSuccess": "저장 문제에 추가했어요.",
+      "saveProblemFailed": "문제를 저장하지 못했어요.",
+      "removeProblemSuccess": "저장 문제에서 제거했어요.",
+      "removeProblemFailed": "저장 문제에서 제거하지 못했어요.",
       "analysisStatusAction": "분석 상태 보기",
       "analysisPendingBadge": "분석 대기 중",
       "analysisAnalyzingBadge": "제출 답안 분석 중",
@@ -955,15 +977,32 @@
       "attemptCount": "시도 {count}회"
     },
     "recommendations": {
-      "metaTitle": "추천 문제 — TALKPIK",
+      "metaTitle": "추천 문제 — TOPIK",
       "heading": "추천 문제",
       "subtitle": "현재 학습 흐름에 맞춘 추천이에요. 유형을 골라 다시 추천을 받을 수 있어요.",
       "reasonSummaryTitle": "이렇게 추천했어요",
       "reasonSummaryLoading": "추천 이유를 불러오는 중이에요.",
-      "reasonSummaryFallback": "최근 분석 결과, 문법·구성에서 개선 여지가 보여 {type}을 최우선으로 추천했어요.",
-      "reasonTagGrammar": "문법 정확도 개선",
-      "reasonTagStructure": "구성 흐름 강화",
-      "reasonTagExpression": "핵심 표현 반복",
+      "reasonSummaryFallback": "지금은 {type} 유형부터 연습을 시작하도록 추천했어요.",
+      "reasonCode": {
+        "TYPE_ROTATION_NEXT": "아직 덜 연습한 유형이라 다음 순서로 추천해요.",
+        "RECENT_TYPE_CONTINUATION": "최근에 풀던 유형을 이어서 연습하기 좋아요.",
+        "WEAK_AREA_TAG_MATCH": "최근 첨삭 점수가 낮았던 영역의 연습 문제예요.",
+        "GOAL_DIFFICULTY_MATCH": "설정한 목표 수준과 난이도가 비슷한 문제예요.",
+        "UNATTEMPTED_AVAILABLE": "아직 풀지 않은 공개 문제예요."
+      },
+      "computedSummary": {
+        "history": "학습 목표와 최근 기록 등 사용 가능한 신호를 정해진 규칙으로 반영해 고른 문제예요.",
+        "rotation": "아직 풀이 기록이 적어 51→54 유형 순환 순서로 골랐어요."
+      },
+      "dimension": {
+        "grammar": "문법",
+        "vocab": "어휘",
+        "structure": "구성",
+        "content": "내용",
+        "expression": "표현",
+        "topic_fit": "주제 적합성",
+        "language": "언어"
+      },
       "loadingTip": "추천을 불러오는 중이에요",
       "loadErrorTitle": "추천을 불러오지 못했어요",
       "loadErrorDescription": "추천 요청이 지연되고 있어요. 다시 시도하거나 아래에서 유형을 직접 선택해 시작해 주세요.",
@@ -1002,7 +1041,7 @@
       "typeDescription54": "주제에 대한 600~700자 논리 에세이를 작성해요."
     },
     "next": {
-      "metaTitle": "다음 문제 — TALKPIK",
+      "metaTitle": "다음 문제 — TOPIK",
       "pageTitle": "다음 문제",
       "heading": "다음 문제",
       "subtitle": "이어 풀기 좋은 문제를 추천해 드릴게요.",
@@ -1037,7 +1076,7 @@
       "summaryEstimatedTime": "예상 학습 시간"
     },
     "weakness": {
-      "metaTitle": "약점 보강 — TALKPIK",
+      "metaTitle": "약점 보강 — TOPIK",
       "pageTitle": "약점 보강",
       "lockTitle": "약점 기반 맞춤 추천을 준비하고 있어요",
       "lockBody": "최근 글쓰기 데이터가 충분해지면 영역별 진단과 추천 문제가 열립니다.",
@@ -1365,7 +1404,7 @@
       "compareFailedTitle": "비교 리포트 생성 실패",
       "pdfSuccess": "PDF 출력 대화상자가 열렸습니다.",
       "pdfDownloaded": "PDF 파일을 다운로드했어요.",
-      "pdfDefaultFilename": "TALKPIK-답안-피드백",
+      "pdfDefaultFilename": "DOTORE-TOPIK-답안-피드백",
       "pdfFailedTitle": "PDF 저장에 실패했어요",
       "pdfFailedDescription": "내 보관함에서 다시 저장해 보세요.",
       "pdfQuotaExceededTitle": "PDF 내보내기 횟수를 모두 사용했어요",
@@ -1412,7 +1451,7 @@
   },
   "reports": {
     "page": {
-      "metaTitle": "비교 리포트 — TALKPIK"
+      "metaTitle": "비교 리포트 — TOPIK"
     },
     "dimensions": {
       "grammar": "문법",
@@ -1496,7 +1535,7 @@
       "heading": "비교 리포트",
       "title": "{questionNo}번 비교 리포트",
       "share": "공유",
-      "shareTitle": "TALKPIK 비교 리포트",
+      "shareTitle": "DOTORE TOPIK 비교 리포트",
       "shareCopied": "링크를 복사했어요.",
       "shareLink": "공유 링크",
       "narrativeFailedTitle": "요약을 생성하지 못했어요",
@@ -1553,9 +1592,9 @@
   },
   "writing": {
     "page": {
-      "metaTitle": "쓰기 — TALKPIK",
-      "metaTitleFeedbackLong": "장문 피드백 — TALKPIK",
-      "metaTitleFeedbackShort": "단답 피드백 — TALKPIK",
+      "metaTitle": "쓰기 — TOPIK",
+      "metaTitleFeedbackLong": "장문 피드백 — TOPIK",
+      "metaTitleFeedbackShort": "단답 피드백 — TOPIK",
       "problemLoadFailed": "{questionNo}번 문제 지문을 불러오지 못했어요.",
       "problemUnavailableTitle": "{questionNo}번 문제를 더 이상 열 수 없어요.",
       "problemUnavailableDraftPreserved": "작성 중이던 답안은 자동 저장 기록으로 남아 있어요. 문제 목록에서 다른 문제를 선택해 주세요.",
@@ -1841,7 +1880,7 @@
   },
   "growth": {
     "page": {
-      "metaTitle": "성장 대시보드 — TALKPIK",
+      "metaTitle": "성장 대시보드 — TOPIK",
       "goalGrade": "{grade}급",
       "goalUnset": "미설정"
     },
@@ -1937,7 +1976,7 @@
   },
   "library": {
     "page": {
-      "metaTitle": "내 서재 — TALKPIK",
+      "metaTitle": "내 서재 — TOPIK",
       "heading": "내 서재",
       "subtitle": "저장한 답안 중 다시 볼 만한 항목을 학습 행동 기준으로 정리했어요"
     },
@@ -2050,17 +2089,20 @@
       "reviewSetFailed": "복습 세트 생성에 실패했어요."
     },
     "problemsPage": {
-      "metaTitle": "학습 문제 전체보기 — TALKPIK",
+      "metaTitle": "학습 문제 전체보기 — TOPIK",
       "heading": "학습 문제 전체보기",
       "subtitle": "저장한 답안과 문제를 한 곳에서 검색하고 다시 학습해요",
       "backToLibrary": "내 서재로 돌아가기"
     },
     "problemsList": {
       "loadError": "학습 문제 목록을 불러오지 못했어요",
-      "searchPlaceholder": "저장 답안과 문제 검색",
-      "searchAriaLabel": "저장 답안과 문제 검색",
+      "searchPlaceholder": "저장 답안, 북마크한 문제, 임시 저장 검색",
+      "searchAriaLabel": "저장 답안, 북마크한 문제, 임시 저장 검색",
       "typeSubmission": "저장 답안",
-      "typeProblem": "저장 문제",
+      "typeProblem": "북마크한 문제",
+      "typeDraft": "임시 저장",
+      "bookmarkTag": "북마크",
+      "continueDraft": "이어쓰기",
       "filterPanelTitle": "필터",
       "filterPanelAriaLabel": "문제 목록 필터",
       "filterButton": "필터",
@@ -2069,6 +2111,8 @@
       "groupQuestionType": "문제 유형",
       "questionNoLabel": "{no}번",
       "groupItemType": "항목 유형",
+      "groupSubmissionStatus": "답안 분석 상태",
+      "groupProblemAvailability": "문제 제공 상태",
       "groupDate": "저장일",
       "datePresetAll": "전체",
       "datePresetWeek": "1주일 이내",
@@ -2090,9 +2134,16 @@
       "viewList": "리스트 보기",
       "viewCard": "카드 보기",
       "emptyFiltered": "선택한 조건에 맞는 항목이 없어요",
-      "emptyNoItems": "저장한 답안이나 문제가 아직 없어요",
+      "emptyNoItems": "저장 답안, 북마크한 문제, 임시 저장이 아직 없어요",
       "emptySearch": "검색 결과가 없어요",
-      "resetSearch": "검색 초기화"
+      "resetSearch": "검색 초기화",
+      "actionMenu": {
+        "open": "문제 작업 메뉴 열기",
+        "exportPdf": "PDF 내보내기",
+        "nextProblem": "다음 문제 풀기",
+        "compareReport": "비교 리포트",
+        "retry": "다시 풀기"
+      }
     },
     "submissions": {
       "loadError": "저장한 답안을 불러오지 못했어요",
@@ -2205,8 +2256,8 @@
       "quotaExceeded": "이 문제는 이번 기간 3회까지 PDF로 내보낼 수 있어요.",
       "downloaded": "PDF 파일을 다운로드했어요.",
       "fallbackPrint": "서버 PDF 생성에 실패해서 브라우저 인쇄 창으로 대신 열었어요.",
-      "defaultFilenameSubmission": "TALKPIK-답안",
-      "defaultFilenameReport": "TALKPIK-리포트"
+      "defaultFilenameSubmission": "DOTORE-TOPIK-답안",
+      "defaultFilenameReport": "DOTORE-TOPIK-리포트"
     },
     "pdf": {
       "modalTitle": "PDF 출력 설정",
@@ -2265,7 +2316,7 @@
       "excluded": "제외",
       "regeneratePreview": "미리보기 재생성",
       "previewAriaLabel": "PDF 미리보기",
-      "previewSubtitle": "TALKPIK 내 서재 · {count}개 항목",
+      "previewSubtitle": "DOTORE TOPIK 내 서재 · {count}개 항목",
       "previewAnswerTag": " · 답안",
       "previewFeedbackTag": " · 피드백",
       "previewMore": "…외 {count}개 (긴 답안은 일부만 표시)",
@@ -2288,7 +2339,7 @@
   },
   "onboarding": {
     "page": {
-      "metaTitle": "학습 목표 설정 — TALKPIK",
+      "metaTitle": "학습 목표 설정 — TOPIK",
       "brandSubtitle": "TOPIK Writing Tutor",
       "mascotTitle": "목표와 언어를 알려주시면",
       "mascotBody": "맞춤 문제와 피드백을 준비할게요.",
@@ -2359,7 +2410,7 @@
   },
   "profile": {
     "page": {
-      "metaTitle": "프로필 — TALKPIK",
+      "metaTitle": "프로필 — TOPIK",
       "heading": "프로필",
       "subtitle": "다른 사용자에게 보이는 이름, 닉네임, 자기소개, 이미지를 관리합니다."
     },
@@ -2383,6 +2434,17 @@
       "countryRegionLabel": "국가/지역",
       "countryRegionHelp": "회원가입 때 선택한 국가/지역입니다. 필요하면 수정할 수 있어요.",
       "countryRegionPlaceholder": "국가 또는 지역을 선택하세요",
+      "optionalSectionTitle": "선택 정보",
+      "optionalSectionDescription": "성별과 전화번호는 선택 입력이며, 비워 두어도 계속할 수 있습니다.",
+      "genderLabel": "성별",
+      "genderHelp": "선택 입력입니다.",
+      "genderFemale": "여성",
+      "genderMale": "남성",
+      "phoneCountryCodeLabel": "국가번호",
+      "phoneNumberLabel": "전화번호",
+      "phoneNumberPlaceholder": "01012345678",
+      "phoneNumberHelp": "선택 입력입니다.",
+      "phoneNumberInvalid": "전화번호는 숫자만 입력해 주세요.",
       "bioLabel": "자기소개",
       "bioCount": "{count}/160자",
       "bioHelp": "다른 사용자에게 보여지는 간단한 소개입니다. (최대 160자)",
@@ -2396,11 +2458,17 @@
     "loginMethods": {
       "regionAriaLabel": "로그인 방법",
       "title": "로그인 방법",
-      "description": "계정에 연결된 로그인 방법을 확인하고 Google 로그인을 추가할 수 있어요.",
-      "emailMethod": "이메일 로그인",
+      "description": "계정에 연결된 로그인 방법을 확인하고 Google 로그인과 비밀번호 로그인을 관리할 수 있어요.",
+      "emailMethod": "계정 이메일",
       "emailUnavailable": "등록된 이메일 없음",
       "googleMethod": "Google 로그인",
       "googleDescription": "Google 계정으로 같은 학습 계정에 로그인합니다.",
+      "passwordMethod": "비밀번호 변경",
+      "passwordDescription": "이 계정의 비밀번호 변경 링크를 이메일로 보냅니다.",
+      "passwordAction": "링크 보내기",
+      "passwordSent": "비밀번호 변경 링크를 보냈어요.",
+      "passwordRateLimited": "메일을 너무 많이 보냈어요. 잠시 후 다시 시도해주세요.",
+      "passwordSendFailed": "비밀번호 변경 링크를 보내지 못했어요.",
       "connected": "연결됨",
       "disconnected": "연결되지 않음",
       "connectGoogle": "Google 연결하기",
@@ -2474,7 +2542,7 @@
     }
   },
   "subscription": {
-    "metaTitle": "구독 관리 — TALKPIK",
+    "metaTitle": "구독 관리 — TOPIK",
     "comingSoon": {
       "title": "구독 기능을 준비하고 있어요",
       "subTitle": "구독 관리 기능은 현재 준비 중입니다. 정식 오픈 시 안내드릴게요.",
@@ -2581,7 +2649,7 @@
     }
   },
   "paywall": {
-    "metaTitle": "구독 가입 — TALKPIK",
+    "metaTitle": "구독 가입 — TOPIK",
     "heading": "구독 시작하기",
     "subheading": "결제 주기를 비교하고 하나의 구독을 선택하세요. 가격과 혜택은 아래 카드에서 확인할 수 있어요.",
     "retry": "다시 시도",
@@ -2624,9 +2692,9 @@
   },
   "legal": {
     "terms": {
-      "metaTitle": "이용약관 — TALKPIK",
+      "metaTitle": "이용약관 — TOPIK",
       "heading": "이용약관",
-      "intro": "본 페이지는 TALKPIK AI 서비스의 임시 이용약관 안내입니다. 정식 이용약관은 운영 시작 전 별도 게시 예정이며, 그 시점에 본 페이지가 공식 약관으로 갱신됩니다.",
+      "intro": "본 페이지는 DOTORE TOPIK 서비스의 임시 이용약관 안내입니다. 정식 이용약관은 운영 시작 전 별도 게시 예정이며, 그 시점에 본 페이지가 공식 약관으로 갱신됩니다.",
       "placeholderNotice": "현재 문구는 법무 검토 전 placeholder이며, 확정된 법적 효력을 갖는 약관이 아닙니다.",
       "summaryTitle": "임시 안내",
       "summaryTool": "본 서비스는 TOPIK 글쓰기 학습을 보조하는 도구입니다.",
@@ -2641,11 +2709,11 @@
       "linkPrivacy": "개인정보처리방침"
     },
     "privacy": {
-      "metaTitle": "개인정보처리방침 — TALKPIK",
+      "metaTitle": "개인정보처리방침 — TOPIK",
       "heading": "개인정보처리방침",
-      "intro": "본 페이지는 TALKPIK AI 의 임시 개인정보 처리 안내입니다. 정식 개인정보처리방침은 한국 개인정보보호법 준수 사항을 반영해 운영 시작 전 별도 게시 예정입니다.",
+      "intro": "본 페이지는 DOTORE TOPIK 의 임시 개인정보 처리 안내입니다. 정식 개인정보처리방침은 한국 개인정보보호법 준수 사항을 반영해 운영 시작 전 별도 게시 예정입니다.",
       "summaryTitle": "처리 항목 요약 (임시)",
-      "summaryCollect": "<strong>수집 항목:</strong> 이메일, 이름, 학습 활동 로그, 글쓰기 제출물, 평가 결과.",
+      "summaryCollect": "<strong>수집 항목:</strong> 이메일, 이름, 전화번호(선택), 성별(선택), 학습 활동 로그, 글쓰기 제출물, 평가 결과.",
       "summaryPurpose": "<strong>이용 목적:</strong> 계정 식별, 학습 진도 추적, AI 피드백 품질 개선.",
       "summaryRetention": "<strong>보관 기간:</strong> 회원 탈퇴 시 즉시 파기. 학습 통계는 식별 정보 제거 후 익명 형태로 보관 가능.",
       "summaryThirdParty": "<strong>제3자 제공:</strong> 없음. 단 AI 모델 호출 시 글쓰기 제출 본문은 외부 LLM 제공자에게 일시 전송됨 (모델 응답 후 보관 정책은 모델 제공자 약관 적용).",

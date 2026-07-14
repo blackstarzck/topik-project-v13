@@ -1,8 +1,8 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const NOTIFICATIONS_ROUTE = "**/rest/v1/user_notifications**";
-const FIXED_NOW = "2026-07-13T15:00:00.000Z";
 const INVITATION_ID = "2a2ff7b8-cc31-4f4d-a455-283aaad28f30";
+const DAY_MS = 86_400_000;
 
 type NotificationRow = {
   id: string;
@@ -90,9 +90,13 @@ function collectErrors(page: Page) {
 }
 
 async function openNotifications(page: Page) {
-  await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+  await page.goto("/settings/notifications", { waitUntil: "domcontentloaded" });
   await expect(page).not.toHaveURL(/\/login/);
   await page.waitForLoadState("networkidle");
+  await openNotificationPopover(page);
+}
+
+async function openNotificationPopover(page: Page) {
   await expect(page.locator(".app-notification-bell")).toBeVisible({
     timeout: 15_000,
   });
@@ -104,14 +108,23 @@ async function openNotifications(page: Page) {
   });
 }
 
+function getInvitationModal(page: Page) {
+  return page.locator(".ant-modal").filter({
+    has: page.locator(".institution-invitation-modal__code"),
+  });
+}
+
 test("institution invitation expiry states work in the list and modal", async ({
   page,
 }) => {
   test.setTimeout(45_000);
   const errors = collectErrors(page);
-  let rows = [makeInvitationRow("2026-07-15T14:59:59.000Z"), makeOrdinaryRow()];
+  const startedAt = Date.now();
+  let rows = [
+    makeInvitationRow(new Date(startedAt + DAY_MS).toISOString()),
+    makeOrdinaryRow(),
+  ];
 
-  await page.clock.install({ time: FIXED_NOW });
   await page.route(NOTIFICATIONS_ROUTE, (route) =>
     fulfillNotifications(route, rows),
   );
@@ -140,15 +153,14 @@ test("institution invitation expiry states work in the list and modal", async ({
   await invitationItem
     .getByRole("button")
     .evaluate((button) => (button as HTMLButtonElement).click());
-  await expect(page.locator(".ant-modal")).toBeVisible();
-  await expect(page.locator(".ant-modal")).toContainText(
-    /Expiry date:|만료일:/,
-  );
+  const invitationModal = getInvitationModal(page);
+  await expect(invitationModal).toBeVisible();
+  await expect(invitationModal).toContainText(/Expiry date:|만료일:/);
 
-  await page.locator(".ant-modal-footer button").first().click();
-  await expect(page.locator(".ant-modal")).toBeHidden();
-  rows = [makeInvitationRow("2026-07-13T14:59:59.000Z")];
-  await openNotifications(page);
+  await invitationModal.locator(".ant-modal-footer button").first().click();
+  await expect(invitationModal).toBeHidden();
+  rows = [makeInvitationRow(new Date(startedAt - 60_000).toISOString())];
+  await openNotificationPopover(page);
 
   const expiredItem = page
     .locator(".app-notification-panel:visible .app-notification-item")
@@ -163,12 +175,12 @@ test("institution invitation expiry states work in the list and modal", async ({
   );
 
   await expiredItem.getByRole("button").click();
-  await expect(page.locator(".ant-modal .ant-alert-warning")).toBeVisible();
+  await expect(invitationModal.locator(".ant-alert-warning")).toBeVisible();
   await expect(
-    page.locator(".ant-modal-footer .ant-btn-primary"),
+    invitationModal.locator(".ant-modal-footer .ant-btn-primary"),
   ).toBeDisabled();
   await expect(
-    page.locator(
+    invitationModal.locator(
       ".ant-modal-footer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous)",
     ),
   ).toBeEnabled();
@@ -180,9 +192,8 @@ test("expired institution invitation is labeled and cannot be accepted", async (
 }) => {
   test.setTimeout(45_000);
   const errors = collectErrors(page);
-  const rows = [makeInvitationRow("2026-07-13T14:59:59.000Z")];
+  const rows = [makeInvitationRow(new Date(Date.now() - 60_000).toISOString())];
 
-  await page.clock.install({ time: FIXED_NOW });
   await page.route(NOTIFICATIONS_ROUTE, (route) =>
     fulfillNotifications(route, rows),
   );
@@ -197,14 +208,15 @@ test("expired institution invitation is labeled and cannot be accepted", async (
   await invitationItem
     .getByRole("button")
     .evaluate((button) => (button as HTMLButtonElement).click());
-  await expect(page.locator(".ant-modal")).toContainText(
+  const invitationModal = getInvitationModal(page);
+  await expect(invitationModal).toContainText(
     /This invitation has expired\.|만료된 초대입니다\./,
   );
   await expect(
-    page.getByRole("button", { name: /Accept|수락/ }),
+    invitationModal.getByRole("button", { name: /Accept|수락/ }),
   ).toBeDisabled();
   await expect(
-    page.locator(
+    invitationModal.locator(
       ".ant-modal-footer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous)",
     ),
   ).toBeEnabled();

@@ -41,7 +41,7 @@ type Props = {
   affiliationCode?: string | null;
 };
 
-type InvitationSubmitAction = "accept" | "decline";
+type InvitationSubmitAction = "accept";
 
 type InvitationModalState = {
   invitation: InstitutionInvitationPayload;
@@ -158,14 +158,24 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
     }
   }
 
-  async function handleInvitationResponse(accept: boolean) {
+  async function handleInvitationResponse() {
     const invitationId = invitationModal?.invitation.invitationId;
     if (!invitationId) return;
+    if (
+      resolveInstitutionInvitationExpiry(
+        invitationModal.invitation.expiresAt,
+        new Date(),
+      ).status === "expired"
+    ) {
+      setInvitationModal((prev) =>
+        prev ? { ...prev, status: "expired" } : prev,
+      );
+      return;
+    }
 
-    const submitAction: InvitationSubmitAction = accept ? "accept" : "decline";
-    setInvitationSubmitting(submitAction);
+    setInvitationSubmitting("accept");
     try {
-      const result = await respondInstitutionInvitation(invitationId, accept);
+      const result = await respondInstitutionInvitation(invitationId, true);
       const status = resolveInstitutionInvitationStatus(result);
       setInvitationModal((prev) => {
         if (!prev) return prev;
@@ -315,7 +325,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
                     >
                       {item.body}
                     </Paragraph>
-                    <span className="app-notification-item__meta">
+                    <span className="app-notification-item__meta flex min-w-0 items-center gap-2">
                       <Text
                         type="secondary"
                         className="app-notification-item__time"
@@ -381,8 +391,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
         affiliationCode={affiliationCode}
         status={invitationModal?.status ?? null}
         submitting={invitationSubmitting}
-        onAccept={() => void handleInvitationResponse(true)}
-        onDecline={() => void handleInvitationResponse(false)}
+        onAccept={() => void handleInvitationResponse()}
         onSignIn={() => router.push(APP_ROUTES.login as never)}
         onClose={() => {
           setInvitationModal(null);

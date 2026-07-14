@@ -27,6 +27,7 @@
 - 사용자별 미동의 문서만 표시
 - 필수 동의 체크박스 검증
 - `user_consents.source='signup'`으로 동의 기록
+- 선택 입력(성별/전화번호) 섹션 표시: 비어 있어도 계속 가능하며, 입력 시 complete_auth_gate로 함께 저장
 - 저장 후 `next` 경로 복귀
 - 체크 누락 시 `error=required` 상태로 재시도 안내
 
@@ -56,7 +57,7 @@
 
 - `legal_documents`: 최신 published required 약관/개인정보 문서 조회
 - `user_consents`: 사용자별 동의 이력 조회와 insert
-- `profiles`: 사용자 locale 확인과 profile bootstrap
+- `profiles`: 사용자 locale 확인·profile bootstrap 및 게이트 완료 시 선택 입력 성별/전화번호(`gender`, `phone_country_code`, `phone_number`) 저장(complete_auth_gate RPC)
 
 ### DB 데이터 사용 명세
 
@@ -64,7 +65,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `legal_documents` | `id`, `doc_type`, `version`, `locale`, `title`, `summary`, `body`, `effective_at`, `status`, `requires_consent` | select | 표시할 최신 필수 문서 계산 | published read | `src/lib/legal/consent.ts` | 정식 법무 문구는 placeholder 이후 교체 필요 |
 | `user_consents` | `user_id`, `document_id`, `doc_type`, `version`, `source`, `accepted_at` | select/insert | 미동의 여부 확인 및 동의 기록 | owner read + owner insert | `src/lib/legal/consent.ts`, `supabase/migrations/20260608120000_legal_documents_and_consents.sql` | 없음 |
-| `profiles` | `id`, `ui_locale` | select/bootstrap | 사용자 locale 기준 문서 조회 | owner/server auth 흐름 | `src/app/auth/consent/actions.ts` | 없음 |
+| `profiles` | `id`, `ui_locale`, `gender`, `phone_country_code`, `phone_number` | select/bootstrap + update via RPC | 사용자 locale 기준 문서 조회 및 게이트 완료 시 선택 입력 성별/전화번호 저장 | owner/server auth 흐름; `complete_auth_gate`(SECURITY DEFINER, authenticated) | `src/app/auth/consent/actions.ts`<br>`supabase/migrations/20260709153000_profiles_optional_gender_phone.sql`<br>`supabase/migrations/20260709165000_profiles_split_phone_country_code.sql` | 없음 |
 
 ## 현재 구현 상태
 

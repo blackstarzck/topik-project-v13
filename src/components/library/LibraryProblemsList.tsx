@@ -16,6 +16,7 @@ import {
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { useLibraryItems } from "@/lib/library/queries";
 import type {
+  LibraryDraftView,
   LibraryItemView,
   LibraryProblemView,
   LibrarySubmissionView,
@@ -25,6 +26,7 @@ import { APP_ROUTES } from "@/lib/routes";
 import { LibraryProblemsFilterPanel } from "./LibraryProblemsFilterPanel";
 import { LibraryProblemsItemCard } from "./LibraryProblemsItemCard";
 import {
+  LibraryProblemsDraftRow,
   LibraryProblemsProblemRow,
   LibraryProblemsSubmissionRow,
 } from "./LibraryProblemsRows";
@@ -41,6 +43,7 @@ import {
   type LibraryProblemsFilterState,
 } from "./library-problems-filter-model";
 import {
+  draftTitle,
   submissionTitle,
   type LibraryListTranslate,
   type MixedLibraryProblemItem,
@@ -57,6 +60,7 @@ const EMPTY_ENRICHMENT: ReadonlyMap<string, SubmissionEnrichment> = new Map();
 type Props = {
   initialSubmissions: LibrarySubmissionView[];
   initialProblems: LibraryProblemView[];
+  initialDrafts: LibraryDraftView[];
 };
 
 type EnrichmentResult = {
@@ -75,6 +79,7 @@ function isProblem(item: LibraryItemView): item is LibraryProblemView {
 export function LibraryProblemsList({
   initialSubmissions,
   initialProblems,
+  initialDrafts,
 }: Props) {
   const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSubmissions = useTranslations(
@@ -105,6 +110,7 @@ export function LibraryProblemsList({
     () => (problemQuery.data ?? initialProblems).filter(isProblem),
     [initialProblems, problemQuery.data],
   );
+  const drafts = useMemo(() => initialDrafts, [initialDrafts]);
 
   useEffect(() => {
     const ids = submissions.map((item) => item.id);
@@ -150,8 +156,13 @@ export function LibraryProblemsList({
         item,
         savedAt: item.saved_at,
       })),
+      ...drafts.map((item) => ({
+        kind: "draft" as const,
+        item,
+        savedAt: item.saved_at,
+      })),
     ],
-    [problems, submissions],
+    [drafts, problems, submissions],
   );
 
   const searchFiltered = useMemo(
@@ -173,13 +184,30 @@ export function LibraryProblemsList({
           ]);
         }
 
+        if (entry.kind === "draft") {
+          const item = entry.item;
+          const fallbackTitle = tSubmissions("problemTitle", {
+            id: item.problem_id.slice(0, 8),
+          });
+          return matchesLibrarySearch(searchTerm, [
+            draftTitle(item, fallbackTitle),
+            item.problem_id,
+            item.question_no != null ? `${item.question_no}` : null,
+            item.question_no != null ? `${item.question_no}踰?` : null,
+            item.answer_text,
+            t("typeDraft"),
+          ]);
+        }
+
         const item = entry.item;
         return matchesLibrarySearch(searchTerm, [
           item.title,
           item.id,
           item.question_no != null ? `${item.question_no}` : null,
           item.question_no != null ? `${item.question_no}번` : null,
+          item.answer_text,
           item.availabilityReason,
+          t("bookmarkTag"),
           t("typeProblem"),
           ...item.tags,
         ]);
@@ -215,7 +243,8 @@ export function LibraryProblemsList({
     problemQuery.isLoading &&
     mixed.length === 0 &&
     initialSubmissions.length === 0 &&
-    initialProblems.length === 0;
+    initialProblems.length === 0 &&
+    initialDrafts.length === 0;
   const queryError = submissionQuery.error ?? problemQuery.error;
   // 분석 상태/점수 필터는 enrichment 도착 전에 0건 오탐이 나므로 로딩을 보여준다.
   const enrichSensitiveFilter =
@@ -374,8 +403,10 @@ export function LibraryProblemsList({
                           item={entry.item}
                           meta={enrich.get(entry.item.id)}
                         />
-                      ) : (
+                      ) : entry.kind === "problem" ? (
                         <LibraryProblemsProblemRow item={entry.item} />
+                      ) : (
+                        <LibraryProblemsDraftRow item={entry.item} />
                       )}
                     </div>
                   ))}

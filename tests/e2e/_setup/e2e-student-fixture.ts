@@ -159,6 +159,17 @@ async function findUserByEmail(
   );
 }
 
+export async function findE2EStudentUserId(
+  admin: E2EAdminClientLike,
+  email: string,
+): Promise<string> {
+  const user = await findUserByEmail(admin, email);
+  if (!user) {
+    throw new Error("E2E student user must exist after auth setup.");
+  }
+  return user.id;
+}
+
 async function waitForProfile(
   admin: E2EAdminClientLike,
   userId: string,

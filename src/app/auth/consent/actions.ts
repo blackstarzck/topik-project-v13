@@ -12,13 +12,18 @@ import { requireVerifiedActiveSession } from "@/lib/auth/access-gate";
 import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
 import {
   getMissingRequiredProfileFields,
+  isOptionalProfileInputValid,
   isRequiredProfileInputValid,
   normalizeAuthCompletionProfileInput,
 } from "@/lib/auth/profile-completion";
 import { getMissingRequiredConsentDocuments } from "@/lib/legal/consent";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-type AuthConsentActionError = "required" | "nickname-taken" | "save-failed";
+type AuthConsentActionError =
+  | "required"
+  | "invalid-profile"
+  | "nickname-taken"
+  | "save-failed";
 type SupabaseRpcErrorLike = {
   code?: unknown;
   details?: unknown;
@@ -60,6 +65,15 @@ function isRequiredCompletionError(error: unknown): boolean {
   return text.includes("auth_completion_required");
 }
 
+function isInvalidProfileCompletionError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { message?: unknown; details?: unknown };
+  const text = `${String(candidate.message ?? "")} ${String(
+    candidate.details ?? "",
+  )}`.toLowerCase();
+  return text.includes("auth_completion_invalid");
+}
+
 function getRpcFailureCategory(error: unknown): string {
   if (!error || typeof error !== "object") {
     return "auth_completion_rpc_failed";
@@ -77,6 +91,9 @@ function getRpcFailureCategory(error: unknown): string {
   }
   if (isRequiredCompletionError(error)) {
     return "auth_completion_required";
+  }
+  if (isInvalidProfileCompletionError(error)) {
+    return "auth_completion_invalid";
   }
   if (isNicknameUniqueError(error)) {
     return "auth_completion_nickname_conflict";
@@ -150,13 +167,17 @@ export async function completeAuthGateAction(formData: FormData) {
 
   const { user, profile } = await requireVerifiedActiveSession();
   const missingProfileFields = getMissingRequiredProfileFields(profile);
-  const input = normalizeAuthCompletionProfileInput({
+  const rawProfileInput = {
     display_name: formData.get("display_name")?.toString(),
+    gender: formData.get("gender")?.toString(),
     nickname: formData.get("nickname")?.toString(),
     nationality_country_code: formData
       .get("nationality_country_code")
       ?.toString(),
-  });
+    phone_country_code: formData.get("phone_country_code")?.toString(),
+    phone_number: formData.get("phone_number")?.toString(),
+  };
+  const input = normalizeAuthCompletionProfileInput(rawProfileInput);
   const fieldsToValidate = new Set(missingProfileFields);
   if (formData.has("nickname")) {
     fieldsToValidate.add("nickname");
@@ -167,6 +188,9 @@ export async function completeAuthGateAction(formData: FormData) {
   );
   if (hasInvalidProfileInput) {
     redirect(buildConsentRetryPath(next, "required"));
+  }
+  if (!isOptionalProfileInputValid(rawProfileInput)) {
+    redirect(buildConsentRetryPath(next, "invalid-profile"));
   }
 
   const supabase = await createSupabaseServerClient();
@@ -189,15 +213,21 @@ export async function completeAuthGateAction(formData: FormData) {
 
   const rpcInput: {
     p_display_name: string | null;
+    p_gender: string | null;
     p_nickname: string | null;
     p_nationality_country_code: string | null;
+    p_phone_country_code: string | null;
+    p_phone_number: string | null;
     p_accept_required_consents: boolean;
     p_ui_locale?: Locale;
     p_ui_locale_source?: RequestLocaleSource;
   } = {
     p_display_name: input.display_name,
+    p_gender: input.gender,
     p_nickname: input.nickname,
     p_nationality_country_code: input.nationality_country_code,
+    p_phone_country_code: input.phone_country_code,
+    p_phone_number: input.phone_number,
     p_accept_required_consents: acceptRequiredConsents,
   };
   if (localeSeed) {
@@ -219,6 +249,9 @@ export async function completeAuthGateAction(formData: FormData) {
     }
     if (isRequiredCompletionError(error)) {
       redirect(buildConsentRetryPath(next, "required"));
+    }
+    if (isInvalidProfileCompletionError(error)) {
+      redirect(buildConsentRetryPath(next, "invalid-profile"));
     }
     redirect(buildConsentRetryPath(next, "save-failed"));
   }

@@ -94,6 +94,8 @@ export async function updateProfile(
     display_name?: string | null;
     nickname?: string | null;
     nationality_country_code?: string | null;
+    phone_country_code?: string | null;
+    phone_number?: string | null;
     bio?: string | null;
   } = {};
   if (Object.prototype.hasOwnProperty.call(input, "display_name")) {
@@ -104,6 +106,18 @@ export async function updateProfile(
   }
   if (Object.prototype.hasOwnProperty.call(input, "nationality_country_code")) {
     patch.nationality_country_code = input.nationality_country_code ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(input, "phone_country_code")) {
+    patch.phone_country_code = input.phone_country_code ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(input, "phone_number")) {
+    patch.phone_number = input.phone_number ?? null;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(input, "phone_number") &&
+    input.phone_number === null
+  ) {
+    patch.phone_country_code = null;
   }
   // Phase 7-E Task 10 (P1-6) — bio mutation.
   if (Object.prototype.hasOwnProperty.call(input, "bio")) {
@@ -128,6 +142,25 @@ export function useUpdateProfile(userId: string) {
       qc.invalidateQueries({ queryKey: profileSettingsQueryKey(userId) });
     },
   });
+}
+
+/**
+ * Permanently dismiss the workspace "add your phone number" reminder banner by
+ * stamping `profiles.phone_number_prompt_dismissed_at`. RLS limits the update
+ * to the auth.uid() row; the protected-column trigger does not guard this
+ * column. Intentionally a plain async function (not a react-query hook) so the
+ * banner can call it from `WorkspaceShell` without a QueryClientProvider.
+ */
+export async function dismissPhoneNumberPrompt(
+  userId: string,
+  createClient: ClientFactory = createSupabaseBrowserClient,
+): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ phone_number_prompt_dismissed_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) throw error;
 }
 
 /**

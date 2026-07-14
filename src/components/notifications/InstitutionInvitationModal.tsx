@@ -19,7 +19,7 @@ export type InstitutionInvitationModalStatus =
   | InstitutionInvitationErrorKind
   | null;
 
-type InvitationSubmitAction = "accept" | "decline";
+type InvitationSubmitAction = "accept";
 
 type Props = {
   open: boolean;
@@ -28,7 +28,6 @@ type Props = {
   status: InstitutionInvitationModalStatus;
   submitting: InvitationSubmitAction | null;
   onAccept: () => void;
-  onDecline: () => void;
   onSignIn?: () => void;
   onClose: () => void;
 };
@@ -50,7 +49,6 @@ export function InstitutionInvitationModal({
   status,
   submitting,
   onAccept,
-  onDecline,
   onSignIn,
   onClose,
 }: Props) {
@@ -58,8 +56,7 @@ export function InstitutionInvitationModal({
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
 
-  const code = invitation?.code ?? t("unknownCode");
-  const codeLabel = invitation?.codeLabel ?? t("unknownLabel");
+  const code = invitation?.code?.trim() || t("unknownCode");
   const currentAffiliation = affiliationCode?.trim() ?? "";
   const invitationId = invitation?.invitationId?.trim() ?? "";
   const invitedAffiliation = invitation?.code?.trim() ?? "";
@@ -72,7 +69,8 @@ export function InstitutionInvitationModal({
     ? resolveInstitutionInvitationExpiry(invitation.expiresAt, now)
     : null;
   const invitationExpired =
-    status === "expired" || (!status && invitationExpiry?.status === "expired");
+    status === "expired" ||
+    (!resolvedStatuses.has(status) && invitationExpiry?.status === "expired");
   const expiryDate = invitation?.expiresAt
     ? new Date(invitation.expiresAt)
     : null;
@@ -84,7 +82,7 @@ export function InstitutionInvitationModal({
           timeZone: "Asia/Seoul",
         })
       : null;
-  const displayStatus = status ?? (invitationExpired ? "expired" : null);
+  const displayStatus = invitationExpired ? "expired" : status;
   const actionsDisabled =
     !invitationId ||
     submitting !== null ||
@@ -107,33 +105,27 @@ export function InstitutionInvitationModal({
               {t("signInAgain")}
             </Button>
           ) : (
-            <>
-              <Button
-                danger
-                disabled={actionsDisabled}
-                loading={submitting === "decline"}
-                onClick={onDecline}
-              >
-                {t("decline")}
-              </Button>
-              <Button
-                type="primary"
-                disabled={actionsDisabled}
-                loading={submitting === "accept"}
-                onClick={onAccept}
-              >
-                {t("accept")}
-              </Button>
-            </>
+            <Button
+              type="primary"
+              disabled={actionsDisabled}
+              loading={submitting === "accept"}
+              onClick={onAccept}
+            >
+              {t("accept")}
+            </Button>
           )}
         </div>
       }
     >
       <div className="grid gap-3">
         <div className="grid gap-1">
-          <Text type="secondary">{t("description")}</Text>
-          <Text strong>{codeLabel}</Text>
-          <Text code>{code}</Text>
+          <Text
+            type="secondary"
+            className="institution-invitation-modal__description"
+          >
+            {t("description")}
+          </Text>
+          <Text className="institution-invitation-modal__code">{code}</Text>
           {expiryDateLabel ? (
             <Text type="secondary">
               {t("expiryDate", { date: expiryDateLabel })}

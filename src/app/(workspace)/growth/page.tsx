@@ -11,7 +11,6 @@ import {
   calculateGoalProgress,
   normalizeFeedbackScoreTo100,
 } from "@/lib/growth/goalProgress";
-import { mergeAttemptCounts } from "@/lib/growth/activityMetrics";
 import { kstDayKey } from "@/lib/growth/kstDay";
 import { throwIfQueryError } from "@/lib/supabase/query-error";
 import {
@@ -140,7 +139,6 @@ async function loadGrowthData(
       eventsRes,
       recentRes,
       recentVolRes,
-      totalEventVolRes,
     ] = await Promise.all([
       getDashboardKpi(userId, supabase),
       getWeakDimensions(userId),
@@ -173,11 +171,6 @@ async function loadGrowthData(
         .eq("user_id", userId)
         .in("event_type", ["attempt_submitted", "submission_submitted"])
         .gte("occurred_at", recentVolumeSince),
-      supabase
-        .from("study_events")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .in("event_type", ["attempt_submitted", "submission_submitted"]),
     ]);
 
     // supabase-js는 쿼리 실패 시 throw하지 않고 error를 반환한다. 여기서 확인해
@@ -186,7 +179,6 @@ async function loadGrowthData(
     throwIfQueryError("loadGrowthData(study_events)", eventsRes);
     throwIfQueryError("loadGrowthData(recent_feedback)", recentRes);
     throwIfQueryError("loadGrowthData(recent_volume)", recentVolRes);
-    throwIfQueryError("loadGrowthData(total_volume)", totalEventVolRes);
 
     const feedbacks = (feedbackRes.data ?? []) as FeedbackPoint[];
     const events = (eventsRes.data ?? []) as {
@@ -243,10 +235,7 @@ async function loadGrowthData(
       recentVolume: recentVolRes.count ?? 0,
       kpi: {
         averageScore,
-        totalAttempts: mergeAttemptCounts({
-          problemAttemptCount: kpi.totalAttempts,
-          studyEventCount: totalEventVolRes.count,
-        }),
+        totalAttempts: kpi.totalAttempts,
         improvementPct,
         goalAchievementPct,
         goalLabel: formatGoalLabel(goal ? goal.target_grade : null),

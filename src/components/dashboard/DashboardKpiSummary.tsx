@@ -31,15 +31,17 @@ function KpiTile({
   title,
   value,
   suffix,
+  testId,
   isPrompt = false,
 }: {
   title: string;
   value: string | number;
   suffix?: string;
+  testId?: string;
   isPrompt?: boolean;
 }) {
   return (
-    <AppCard size="small" className="h-full">
+    <AppCard data-testid={testId} size="small" className="h-full">
       <div className="grid gap-2">
         <span className="text-sm font-medium text-text-secondary">{title}</span>
         <span
@@ -79,12 +81,14 @@ export function DashboardKpiSummary({ kpi }: Props) {
           title={t("todaySubmissionsTitle")}
           value={todayIsEmpty ? startPrompt : kpi.todayAttempts}
           suffix={t("todaySubmissionsSuffix")}
+          testId="dashboard-kpi-today-submissions"
           isPrompt={todayIsEmpty}
         />
         <KpiTile
           title={t("recentFeedbackTitle")}
           value={feedbackIsEmpty ? startPrompt : kpi.recentFeedbackCount}
           suffix={t("recentFeedbackSuffix")}
+          testId="dashboard-kpi-recent-feedback"
           isPrompt={feedbackIsEmpty}
         />
         <KpiTile
@@ -93,12 +97,14 @@ export function DashboardKpiSummary({ kpi }: Props) {
             goalIsEmpty ? startPrompt : (kpi.goalAchievementPct ?? startPrompt)
           }
           suffix={goalIsEmpty ? undefined : "%"}
+          testId="dashboard-kpi-goal-achievement"
           isPrompt={goalIsEmpty}
         />
         <KpiTile
           title={t("streakTitle")}
           value={streakIsEmpty ? startPrompt : kpi.streakDays}
           suffix={t("streakSuffix")}
+          testId="dashboard-kpi-streak"
           isPrompt={streakIsEmpty}
         />
       </div>

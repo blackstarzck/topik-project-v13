@@ -6,6 +6,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { App as AntdApp } from "antd";
 import { NextIntlClientProvider } from "next-intl";
@@ -22,6 +23,28 @@ const navState = vi.hoisted(() => ({
 }));
 
 const rpcMock = vi.hoisted(() => vi.fn());
+const libraryInsertMock = vi.hoisted(() => vi.fn());
+const libraryDeleteMock = vi.hoisted(() => vi.fn());
+const libraryInsertState = vi.hoisted(() => ({
+  error: null as {
+    code: string;
+    message: string;
+    details?: string | null;
+  } | null,
+}));
+const libraryDeleteState = vi.hoisted(() => ({
+  error: null as { message: string } | null,
+}));
+const libraryRowsState = vi.hoisted(() => ({
+  rows: [] as Array<{
+    id: string;
+    item_id?: string;
+    problem_id: string;
+    title: string;
+    question_no: number | null;
+    saved_at: string;
+  }>,
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -33,12 +56,105 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
-    rpc: (...args: unknown[]) => rpcMock(...args),
-    from: () => ({
-      select: () => ({
-        in: () => Promise.resolve({ data: [], error: null }),
-      }),
-    }),
+    rpc: (name: string, args?: unknown) => {
+      if (name === "list_user_library_problem_items") {
+        return Promise.resolve({
+          data: libraryRowsState.rows.map((row) => ({
+            item_id: row.item_id ?? row.id,
+            problem_id: row.problem_id,
+            title: row.title,
+            question_no: row.question_no,
+            tags: [],
+            saved_at: row.saved_at,
+            availability_status: "available",
+            availability_reason: null,
+            can_retry: true,
+          })),
+          error: null,
+        });
+      }
+      return rpcMock(name, args);
+    },
+    from: (table: string) => {
+      if (table === "library_items") {
+        return {
+          select: () => ({
+            eq: () => ({
+              order: () =>
+                Promise.resolve({
+                  data: libraryRowsState.rows.map((row) => ({
+                    id: row.item_id ?? row.id,
+                    user_id: "user-1",
+                    item_type: "problem",
+                    attempt_id: null,
+                    submission_id: null,
+                    report_id: null,
+                    export_id: null,
+                    problem_id: row.problem_id,
+                    note: null,
+                    tags: [],
+                    saved_at: row.saved_at,
+                  })),
+                  error: null,
+                }),
+            }),
+          }),
+          insert: (payload: unknown) => {
+            libraryInsertMock(payload);
+            return {
+              select: () => ({
+                single: () =>
+                  Promise.resolve({
+                    data: libraryInsertState.error
+                      ? null
+                      : {
+                          id: "library-new",
+                          user_id: "user-1",
+                          item_type: "problem",
+                          attempt_id: null,
+                          submission_id: null,
+                          report_id: null,
+                          export_id: null,
+                          problem_id:
+                            typeof payload === "object" && payload !== null
+                              ? (
+                                  payload as {
+                                    problem_id?: string;
+                                  }
+                                ).problem_id ?? null
+                              : null,
+                          note: null,
+                          tags: [],
+                          saved_at: "2026-07-08T00:00:00.000Z",
+                        },
+                    error: libraryInsertState.error,
+                  }),
+              }),
+            };
+          },
+          delete: () => {
+            const builder = {
+              eq: vi.fn((column: string, value: unknown) => {
+                libraryDeleteMock(column, value);
+                if (column === "problem_id") {
+                  return Promise.resolve({
+                    data: null,
+                    error: libraryDeleteState.error,
+                  });
+                }
+                return builder;
+              }),
+            };
+            return builder;
+          },
+        };
+      }
+      return {
+        select: () => ({
+          in: () => Promise.resolve({ data: [], error: null }),
+        }),
+      };
+    },
   }),
 }));
 
@@ -107,6 +223,11 @@ beforeEach(() => {
   navState.replace.mockReset();
   navState.search = "";
   rpcMock.mockReset();
+  libraryInsertMock.mockReset();
+  libraryDeleteMock.mockReset();
+  libraryInsertState.error = null;
+  libraryDeleteState.error = null;
+  libraryRowsState.rows = [];
   rpcMock.mockResolvedValue({ data: [], error: null });
 });
 
@@ -265,39 +386,31 @@ describe("ProblemListView", () => {
       error: null,
     });
 
-    renderInApp(<ProblemListView userId="user-1" />, "ko");
+    const { container } = renderInApp(
+      <ProblemListView userId="user-1" />,
+      "ko",
+    );
 
     await screen.findByText("51-128_동의어 어휘 빈칸");
 
+    const tableHeader = within(container.querySelector("thead")!);
     expect(
-      screen.getByRole("columnheader", {
-        name: koMessages.practice.problems.problemColumnLabel,
-      }),
+      tableHeader.getByText(koMessages.practice.problems.problemColumnLabel),
     ).toBeTruthy();
     expect(
-      screen.getByRole("columnheader", {
-        name: koMessages.practice.problems.difficultyLabel,
-      }),
+      tableHeader.getByText(koMessages.practice.problems.difficultyLabel),
     ).toBeTruthy();
     expect(
-      screen.getByRole("columnheader", {
-        name: koMessages.practice.problems.estimatedTimeLabel,
-      }),
+      tableHeader.getByText(koMessages.practice.problems.estimatedTimeLabel),
     ).toBeTruthy();
     expect(
-      screen.getByRole("columnheader", {
-        name: koMessages.practice.problems.previousScoreLabel,
-      }),
+      tableHeader.getByText(koMessages.practice.problems.previousScoreLabel),
     ).toBeTruthy();
     expect(
-      screen.queryByRole("columnheader", {
-        name: koMessages.practice.problems.solveStatusLabel,
-      }),
+      tableHeader.queryByText(koMessages.practice.problems.solveStatusLabel),
     ).toBeNull();
     expect(
-      screen.queryByRole("columnheader", {
-        name: koMessages.practice.problems.solveAction,
-      }),
+      tableHeader.queryByText(koMessages.practice.problems.solveAction),
     ).toBeNull();
 
     expect(screen.getByText("신규")).toBeTruthy();
@@ -317,10 +430,12 @@ describe("ProblemListView", () => {
     expect(screen.queryByText("완료")).toBeNull();
     expect(screen.queryByText("오답 노트")).toBeNull();
     expect(screen.queryByText("복습 필요")).toBeNull();
-    expect(screen.getAllByRole("button", { name: /시작하기/ })).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: /다시 풀기/ })).toHaveLength(
-      4,
-    );
+    expect(
+      screen.getAllByText(koMessages.practice.problems.startProblem),
+    ).toHaveLength(2);
+    expect(
+      screen.getAllByText(koMessages.practice.problems.retryAttempt),
+    ).toHaveLength(4);
   }, 45_000);
 
   it("adds the matching neon background class to each writing question number", async () => {
@@ -441,6 +556,197 @@ describe("ProblemListView", () => {
     );
   });
 
+  it("saves an unsolved problem to the saved problem library without opening the row", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-save-51",
+            title: "Save this problem",
+            difficulty: 3,
+            tags: ["save"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    const { container } = renderInApp(
+      <ProblemListView userId="user-1" />,
+      "ko",
+    );
+
+    await screen.findByText("Save this problem");
+    const bookmarkButton = screen.getByRole("button", {
+      name: "문제 저장",
+    }) as HTMLButtonElement;
+    expect(
+      container.querySelector(".problem-table__overflow-button"),
+    ).toBeNull();
+    expect(bookmarkButton.className).toContain(
+      "problem-table__bookmark-button",
+    );
+    expect(bookmarkButton.querySelector("svg.lucide-bookmark")).toBeTruthy();
+    expect(bookmarkButton.querySelector("svg")?.getAttribute("fill")).toBe(
+      "none",
+    );
+    expect(bookmarkButton.getAttribute("aria-pressed")).toBe("false");
+    expect(bookmarkButton.textContent).toBe("");
+    expect(
+      container.querySelector(".problem-table__actions-compact"),
+    ).toBeTruthy();
+    await waitFor(() => {
+      expect(bookmarkButton.disabled).toBe(false);
+    });
+    fireEvent.click(bookmarkButton);
+
+    await waitFor(() => {
+      expect(libraryInsertMock).toHaveBeenCalledWith({
+        user_id: "user-1",
+        item_type: "problem",
+        problem_id: "problem-save-51",
+      });
+    });
+    await waitFor(() => {
+      expect(document.querySelector(".ant-message-notice")).toBeTruthy();
+    });
+    expect(
+      screen.getByText(koMessages.practice.problems.saveProblemSuccess),
+    ).toBeTruthy();
+    expect(document.querySelector(".ant-notification-notice")).toBeNull();
+    expect(navState.push).not.toHaveBeenCalled();
+  });
+
+  it("toggles already saved problems off without inserting duplicates", async () => {
+    libraryRowsState.rows = [
+      {
+        id: "library-saved-51",
+        problem_id: "problem-saved-51",
+        title: "Already saved problem",
+        question_no: 51,
+        saved_at: "2026-07-08T00:00:00.000Z",
+      },
+    ];
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-saved-51",
+            title: "Already saved problem",
+            difficulty: 3,
+            tags: ["saved"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    const { container } = renderInApp(
+      <ProblemListView userId="user-1" />,
+      "ko",
+    );
+
+    await screen.findByText("Already saved problem");
+
+    const savedButton = screen.getByRole("button", {
+      name: "저장됨",
+    }) as HTMLButtonElement;
+    expect(
+      container.querySelector(".problem-table__overflow-button"),
+    ).toBeNull();
+    expect(savedButton.className).toContain(
+      "problem-table__bookmark-button",
+    );
+    expect(savedButton.disabled).toBe(false);
+    expect(savedButton.getAttribute("aria-pressed")).toBe("true");
+    expect(savedButton.querySelector("svg.lucide-bookmark")).toBeTruthy();
+    expect(savedButton.querySelector("svg")?.getAttribute("fill")).toBe(
+      "currentColor",
+    );
+    fireEvent.click(savedButton);
+
+    expect(libraryInsertMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(libraryDeleteMock).toHaveBeenCalledWith("user_id", "user-1");
+      expect(libraryDeleteMock).toHaveBeenCalledWith("item_type", "problem");
+      expect(libraryDeleteMock).toHaveBeenCalledWith(
+        "problem_id",
+        "problem-saved-51",
+      );
+    });
+    await waitFor(() => {
+      expect(savedButton.getAttribute("aria-pressed")).toBe("false");
+      expect(savedButton.querySelector("svg")?.getAttribute("fill")).toBe(
+        "none",
+      );
+    });
+  });
+
+  it("treats duplicate problem save errors as an already saved state", async () => {
+    libraryInsertState.error = {
+      code: "23505",
+      message:
+        'duplicate key value violates unique constraint "library_items_user_problem_uniq"',
+      details: "Key (user_id, problem_id)=(user-1, problem-dup-51) already exists.",
+    };
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-dup-51",
+            title: "Duplicate save problem",
+            difficulty: 3,
+            tags: ["saved"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    renderInApp(<ProblemListView userId="user-1" />, "ko");
+
+    await screen.findByText("Duplicate save problem");
+    const bookmarkButton = screen.getByRole("button", {
+      name: "문제 저장",
+    }) as HTMLButtonElement;
+    expect(
+      document.querySelector(".problem-table__overflow-button"),
+    ).toBeNull();
+    expect(bookmarkButton.className).toContain(
+      "problem-table__bookmark-button",
+    );
+    await waitFor(() => {
+      expect(bookmarkButton.disabled).toBe(false);
+    });
+    fireEvent.click(bookmarkButton);
+
+    await waitFor(() => {
+      expect(libraryInsertMock).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      const savedButton = screen.getByRole("button", {
+        name: "저장됨",
+      }) as HTMLButtonElement;
+      expect(savedButton.disabled).toBe(false);
+      expect(savedButton.getAttribute("aria-pressed")).toBe("true");
+      expect(savedButton.querySelector("svg")?.getAttribute("fill")).toBe(
+        "currentColor",
+      );
+    });
+  });
+
   it("opens the retry modal when the learner selects a row with prior work", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [
@@ -472,6 +778,110 @@ describe("ProblemListView", () => {
     expect(navState.push).not.toHaveBeenCalled();
   });
 
+  it("renders the bookmark save control as an icon beside the retry action", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-retry-save-51",
+            title: "Retry row bookmark action",
+            difficulty: 2,
+            tags: ["retry"],
+            attempt_count: 1,
+            is_solved: true,
+            solve_state: "submitted",
+          },
+          0,
+        ),
+      ],
+      error: null,
+    });
+
+    const { container } = renderInApp(
+      <ProblemListView userId="user-1" />,
+      "ko",
+    );
+
+    await screen.findByText("Retry row bookmark action");
+    const retryButton = screen.getByText("다시 풀기").closest("button");
+    const bookmarkButton = screen.getByRole("button", {
+      name: "문제 저장",
+    });
+    expect(
+      container.querySelector(".problem-table__overflow-button"),
+    ).toBeNull();
+    expect(bookmarkButton.className).toContain(
+      "problem-table__bookmark-button",
+    );
+    if (!retryButton) {
+      throw new Error("Expected retry button to render.");
+    }
+
+    const actions = bookmarkButton.closest(".problem-table__actions-compact");
+    expect(bookmarkButton.textContent).toBe("");
+    expect(actions).toBeTruthy();
+    expect(actions?.contains(retryButton)).toBe(true);
+    expect(actions?.contains(bookmarkButton)).toBe(true);
+    fireEvent.click(bookmarkButton);
+    await waitFor(() => {
+      expect(libraryInsertMock).toHaveBeenCalledWith({
+        user_id: "user-1",
+        item_type: "problem",
+        problem_id: "problem-retry-save-51",
+      });
+    });
+  });
+
+  it("matches the Start and Solve again action button sizing", async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [
+        rpcRow(
+          {
+            problem_id: "problem-start-size-51",
+            title: "Start button size row",
+            difficulty: 3,
+            tags: ["size"],
+            attempt_count: 0,
+            is_solved: false,
+            solve_state: "none",
+          },
+          0,
+        ),
+        rpcRow(
+          {
+            problem_id: "problem-retry-size-51",
+            title: "Retry button size row",
+            difficulty: 2,
+            tags: ["size"],
+            attempt_count: 1,
+            is_solved: true,
+            solve_state: "submitted",
+          },
+          1,
+        ),
+      ],
+      error: null,
+    });
+
+    const { container } = renderInApp(
+      <ProblemListView userId="user-1" />,
+      "en",
+    );
+
+    await screen.findByText("Start button size row");
+    const startButton = container.querySelector<HTMLButtonElement>(
+      '[data-row-key="problem-start-size-51"] .problem-table__action-button',
+    );
+    const retryButton = container.querySelector<HTMLButtonElement>(
+      '[data-row-key="problem-retry-size-51"] .problem-table__action-button',
+    );
+
+    expect(startButton?.className).toContain("problem-table__action-button");
+    expect(retryButton?.className).toContain("problem-table__action-button");
+    expect(startButton?.className).not.toContain("ant-btn-lg");
+    expect(retryButton?.className).not.toContain("ant-btn-lg");
+  });
+
   it("keeps submitted rows with pending analysis on the problem list", async () => {
     rpcMock.mockResolvedValueOnce({
       data: [
@@ -498,16 +908,13 @@ describe("ProblemListView", () => {
     renderInApp(<ProblemListView userId="user-1" />, "en");
 
     expect(await screen.findByText("Pending analysis problem")).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "View analysis status" }),
-    ).toBeTruthy();
+    const analysisStatusAction = screen.getByText("View analysis status");
+    expect(analysisStatusAction).toBeTruthy();
 
     fireEvent.click(
       screen.getByText("Pending analysis problem").closest("tr")!,
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "View analysis status" }),
-    );
+    fireEvent.click(analysisStatusAction);
 
     expect(navState.push).not.toHaveBeenCalled();
   });
