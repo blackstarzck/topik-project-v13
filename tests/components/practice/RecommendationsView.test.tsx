@@ -213,6 +213,14 @@ describe("RecommendationsView", () => {
     });
     expect(continueButtons).toHaveLength(2);
     for (const button of continueButtons) {
+      for (const className of [
+        "inline-flex",
+        "items-center",
+        "justify-center",
+        "gap-2",
+      ]) {
+        expect(button.classList.contains(className)).toBe(true);
+      }
       expect(button.closest(".ant-card-actions")).toBeTruthy();
       expect(button.closest(".ant-card-body")).toBeNull();
       expect(
