@@ -212,7 +212,7 @@ export function SecondaryRecommendationCard({
           href={ctaHref(card) as never}
           className="block w-full"
         >
-          <Button block>
+          <Button className="recommendation-card__continue-button" block>
             {t("continueProblem")}
             <ArrowRight size={16} aria-hidden="true" />
           </Button>

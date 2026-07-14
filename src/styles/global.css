@@ -4595,6 +4595,13 @@ body {
   text-decoration: none;
 }
 
+.recommendation-card__continue-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .library-page-header.app-page-header {
   margin-bottom: 16px;
 }

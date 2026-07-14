@@ -133,12 +133,17 @@ test("C-01 computed bundle renders an honest rule-based recommendation", async (
     ),
   ).toHaveCount(0);
   const [bodyPadding, actionPadding] = await Promise.all([
-    cardBody.evaluate((element) => getComputedStyle(element).paddingInlineStart),
+    cardBody.evaluate(
+      (element) => getComputedStyle(element).paddingInlineStart,
+    ),
     cardActions
       .locator(":scope > li")
       .evaluate((element) => getComputedStyle(element).paddingInlineStart),
   ]);
   expect(actionPadding).toBe(bodyPadding);
+
+  await expect(continueButton).toHaveCSS("display", "inline-flex");
+  await expect(continueButton).toHaveCSS("align-items", "center");
 
   // Both cards link into the writing workspace with their problem ids.
   await expect(
@@ -181,9 +186,9 @@ test("C-01 shows loading skeletons while the computed bundle is in flight", asyn
   release?.();
 
   await expect(page.getByText(STRINGS.primaryBadge)).toBeVisible();
-  await expect(
-    page.getByTestId("recommendation-results-skeleton"),
-  ).toHaveCount(0);
+  await expect(page.getByTestId("recommendation-results-skeleton")).toHaveCount(
+    0,
+  );
 });
 
 test("C-01 surfaces the error state on a 500 and recovers via retry", async ({
