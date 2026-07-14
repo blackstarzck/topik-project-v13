@@ -22,7 +22,7 @@
  *
  * 패싯 카운트는 체크박스 12종(유형4+kind2+상태4+가용성2)에만 제공하며,
  * 기존 규칙 그대로 "검색 적용 후 · 패널 필터 적용 전" 집합을 넣는다.
- * (근거: docs/sot-change-proposals/2026-07-04-library-problems-filter-panel.md)
+ * Filter model tests가 facet 계산의 실행 계약을 고정한다.
  */
 
 import dayjs, { type Dayjs } from "dayjs";

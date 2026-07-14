@@ -23,7 +23,7 @@ export type DifficultyBucket = "low" | "mid" | "high";
  * User/admin shared display contract: `problems.difficulty` remains a 1-5
  * integer, while compact problem-list labels collapse it to low/mid/high.
  *
- * Source: docs/admin-integration-plan.md, D-G
+ * Source: DESIGN.md "Tokens - Difficulty Scale"
  *   - low = 1-2
  *   - mid = 3
  *   - high = 4-5

@@ -181,9 +181,9 @@ describe("mapInstitutionInvitationError", () => {
         new Error("already affiliated with another institution"),
       ),
     ).toBe("alreadyAffiliatedOther");
-    expect(
-      mapInstitutionInvitationError(new Error("profile_not_found")),
-    ).toBe("invalid");
+    expect(mapInstitutionInvitationError(new Error("profile_not_found"))).toBe(
+      "invalid",
+    );
   });
 });
 
@@ -215,7 +215,7 @@ describe("respondInstitutionInvitation", () => {
     });
   });
 
-  it("declines an invitation through the institution invitation response RPC", async () => {
+  it("preserves the shared RPC false argument for non-modal compatibility", async () => {
     rpcMock.mockResolvedValue({
       data: {
         status: "declined",

@@ -5,7 +5,7 @@
 실제 SQL 파일은 **Supabase CLI 호환을 위해 `supabase/migrations/` 디렉토리 바로 아래에 flat 으로 위치**합니다 (CLI는 하위 폴더 SQL을 스캔하지 않음). 본 문서는 가독성을 위한 메타 정리입니다.
 
 명명 규칙·idempotency·CLI 적용 명령은 [`../README.md`](../README.md) 참조.
-테이블 컬럼·RLS·ER 등 스키마 상세는 각 migration SQL 본문, 본 인덱스, 관련 Wireframe 기능명세와 `docs/Wireframe/data-usage-index.md`를 함께 참조.
+테이블 컬럼·RLS·RPC의 실행 가능한 정본은 timestamp 순으로 재생한 migration SQL 본문이다. 사람이 읽는 도메인·보안 계약은 `docs/supabase/`를 함께 참조한다.
 
 ---
 
@@ -156,7 +156,7 @@
 
 #### 22 (월) — 회원 탈퇴 소프트 삭제 (self-service 계정 삭제)
 
-> 구현 브리프: `docs/sot-change-proposals/2026-06-22-account-deletion-self-service.md`. 확정 SOT(`01-core-decisions` "탈퇴 30일 복구 유예") 기준. *소프트 삭제* 단계만. 하드 삭제 cron/storage 파기·복구 RPC는 후속(비-6·22-blocking). down 미러 동반.
+> 사용자 앱의 계정 탈퇴 소프트 삭제와 30일 복구 유예를 추가했다. 하드 삭제 cron, Storage 파기와 복구 RPC는 이 migration에 포함하지 않는다. 실제 계약은 SQL 본문과 `docs/supabase/security-and-ownership.md`를 따른다.
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
@@ -171,7 +171,7 @@
 2. **파일 작성**: `supabase/migrations/<timestamp>_<짧은_설명>.sql` 로 flat 위치에 둠. 하위 폴더 만들지 말 것 — Supabase CLI가 못 본다.
 3. **본 INDEX.md 갱신**: 해당 날짜 섹션에 표 한 줄 추가. 새 연/월/일이면 트리 헤더 (`### 06`, `#### 05`) 부터 추가.
 4. **`supabase/README.md`** 의 요약 정보가 영향받으면 같이 갱신.
-5. 관련 Wireframe 기능명세, `docs/Wireframe/data-usage-index.md`, 그리고 필요한 경우 `README.md`/`AGENTS.md`의 경계 규칙도 같이 갱신.
+5. `docs/supabase/`의 사람용 계약과 필요한 경우 `README.md`/`AGENTS.md`의 경계 규칙도 같이 갱신.
 
 ## 빠른 검증 체크리스트
 
@@ -180,7 +180,7 @@
 - [ ] SQL이 idempotent (`if not exists`, `or replace`, `drop ... if exists`)?
 - [ ] FK 참조 테이블이 이전 timestamp 파일에 존재하는가?
 - [ ] RLS-적용 대상이라면 RLS enable + force + 정책이 같은 또는 후속 마이그레이션에 있는가?
-- [ ] INDEX.md / 관련 Wireframe 기능명세 / data-usage-index / README.md 또는 AGENTS.md 중 영향받는 곳을 모두 갱신했는가?
+- [ ] INDEX.md / `docs/supabase/` / 관련 source·tests / 필요시 README.md 또는 AGENTS.md 중 영향받는 owner를 모두 갱신했는가?
 ## 2026-06-23 추가 migration
 
 | # | timestamp | file | scope |

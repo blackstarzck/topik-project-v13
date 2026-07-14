@@ -6,7 +6,7 @@
 // query 없는 callback 요청을 본 page로 redirect → 브라우저가 RFC 7231에 따라
 // fragment를 자동 보존 → client component가 window.location.hash 파싱.
 //
-// Spec: docs/Wireframe/33-X-11-auth-error/description.md (implicit flow fragment fallback)
+// APP_ROUTES auth error flow에서 사용하는 implicit-flow fragment fallback.
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";

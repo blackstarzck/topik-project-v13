@@ -1,95 +1,50 @@
 # supabase/
 
-TALKPIK AI의 Supabase 관련 파일이 모이는 디렉토리입니다. 현재는 `migrations/`(스키마 마이그레이션) 만 존재합니다. 적용 환경(`config.toml`, `seed.sql`, `functions/`)은 프로젝트 부트스트랩 단계에서 추가됩니다.
+이 디렉터리는 TALKPIK AI의 로컬 Supabase 재현 자료를 보관한다. 원격 운영 DB 적용 공간이 아니다.
 
-## 디렉토리 구조
+## 현재 구조
 
-```
+```text
 supabase/
-  README.md            ← 이 문서
-  migrations/
-    INDEX.md           ← 연/월/일 트리 시각적 인덱스
-    20260520120000_*.sql
-    20260520120100_*.sql
-    ...                ← Supabase CLI 호환을 위해 flat 구조
+├── config.toml          local Auth, API, DB, Storage 설정
+├── seed.sql             migration 후 적용되는 user-independent seed
+├── migrations/
+│   ├── INDEX.md         날짜별 변경 설명
+│   └── *.sql            schema, RLS, RPC의 실행 가능한 정본
+└── README.md
 ```
 
-> ⚠ `migrations/` 는 **flat 구조 강제**. `migrations/2026/05/20/` 같은 하위 폴더로 옮기면 Supabase CLI 가 SQL을 스캔하지 못해 적용이 깨집니다. 연/월/일 가독성은 [`migrations/INDEX.md`](./migrations/INDEX.md) 가 책임집니다.
+`migrations/`는 Supabase CLI가 순서대로 읽을 수 있도록 flat 구조를 유지한다. 파일명은 `YYYYMMDDHHMMSS_<snake_case_description>.sql` 형식이며 timestamp 순서가 의존 순서다.
 
-## 마이그레이션 파일 명명 규칙
+## 계약 소유권
 
-`YYYYMMDDHHMMSS_<짧은_설명>.sql` 형식. Supabase CLI 표준 컨벤션.
+- 실제 schema, grant, RLS, policy, trigger, function/RPC: timestamp 순으로 재생한 `migrations/*.sql`
+- 날짜별 변경 요약: [`migrations/INDEX.md`](./migrations/INDEX.md)
+- 사람이 읽는 데이터·보안 계약: [`docs/supabase/README.md`](../docs/supabase/README.md)
+- 생성된 TypeScript 타입: `src/lib/supabase/types.ts`
 
-예) `20260520120100_profiles_goals.sql` = "2026-05-20 12:01:00에 만든 profiles + learning_goals 마이그레이션".
+사람이 읽는 문서가 SQL과 다르면 SQL replay 결과가 우선하며, 같은 변경 묶음에서 문서와 타입을 고친다. Supabase Data API의 object 접근은 grants, row 접근은 RLS가 담당하므로 둘을 함께 검토한다.
 
-### 왜 timestamp prefix를 쓰나?
-
-마이그레이션 도구가 파일을 **알파벳순으로 정렬해서 차례대로 실행**합니다. timestamp가 prefix면 자연스럽게 **시간순 = 의존순** 정렬이 됩니다.
-
-구체적으로:
-
-1. **적용 순서 보장.** `profiles`가 먼저 만들어져야 `writing_submissions.user_id` FK가 가능. 파일명 정렬로 `120100_profiles_goals.sql` → `120400_writing.sql` → `121100_rls_policies.sql` 순으로 실행되도록 강제.
-2. **history 추적.** Supabase CLI가 적용된 마이그레이션을 `supabase_migrations.schema_migrations` 테이블에 timestamp로 기록 → 다음 적용 시 "이미 실행됨" 판단. timestamp가 unique key 역할.
-3. **충돌 방지.** 여러 명이 동시에 마이그레이션을 작성해도 timestamp가 다르면 파일명 충돌이 안 남.
-
-본 저장소의 16개 초기 마이그레이션은 모두 같은 날짜(`20260520`)에 작성됐기 때문에, 시간 부분만 100초 간격으로 증가시켜 순차 정렬되도록 했습니다.
-
-## 현재 마이그레이션 인덱스
-
-연/월/일 트리로 정리한 시각적 인덱스는 [`migrations/INDEX.md`](./migrations/INDEX.md) 에 있습니다.
-컬럼/RLS/ER 등 스키마 상세는 [`docs/development/database-schema.md`](../docs/development/database-schema.md) 에 있습니다.
-
-> 실제 `*.sql` 파일은 Supabase CLI 호환을 위해 `migrations/` 디렉토리 바로 아래에 **flat 으로 위치**합니다. 하위 폴더(`migrations/2026/05/20/`) 로 옮기면 CLI 가 스캔하지 못해 적용이 깨집니다. INDEX.md 는 그 한계를 우회한 시각적 메타 인덱스입니다.
-
-## 로컬 적용 방법
-
-v13 사용자 앱 repo의 Supabase 파일은 로컬 재현과 타입 생성용입니다. 원격 Supabase schema/data 적용은 v13 작업면에서 하지 않습니다.
+## 로컬 재현
 
 ```bash
-# Supabase CLI 초기화 (한 번)
-pnpm dlx supabase init
-
-# 로컬 인스턴스 시작
 pnpm dlx supabase start
-
-# 깨끗한 재적용 (로컬)
 pnpm dlx supabase db reset
-
-# TypeScript 타입 생성 (정본 위치: src/lib/supabase/types.ts)
 pnpm dlx supabase gen types typescript --local > src/lib/supabase/types.ts
 ```
 
-> 생성된 타입은 `src/lib/supabase/types.ts`로 저장합니다. Supabase 클라이언트와 같은 폴더에 두어 응집도를 유지합니다. `src/types/`는 hand-written shared domain types 용도로 남깁니다.
-> 원격 DB 변경이 필요하면 v13 안에서 처리하지 않고, 해당 schema 소유 repo 또는 운영 절차에서 migration을 작성·검증·적용합니다.
+`db reset`은 migration을 timestamp 순으로 적용한 뒤 `seed.sql`을 실행한다. seed는 auth user UUID에 의존하지 않는 개발 자료만 포함한다. user-owned fixture는 테스트가 별도로 만들고 정리한다.
 
-## 새 마이그레이션 추가하기
+v13 작업면에서는 원격 Supabase schema/data apply를 실행하지 않는다. 원격 변경은 별도 운영 절차와 소유 저장소에서 검토·적용한다.
 
-1. 다음 timestamp를 정한다. 본 저장소의 마지막 파일은 `20260520121500_*`. 다음 마이그레이션은 **현재 시각 UTC 또는 KST 기준 timestamp**를 쓰는 게 가장 안전 (예: `20260605093000_...`).
-2. 파일명은 `YYYYMMDDHHMMSS_<짧은_설명>.sql`. 설명은 snake_case로 도메인을 표현 (`add_organizations`, `extend_problems_with_audio`).
-3. SQL은 **idempotent**하게 작성:
-   - `create table if not exists ...`
-   - `create index if not exists ...`
-   - `drop policy if exists ... ; create policy ...`
-   - `insert ... on conflict do nothing`
-   - 함수는 `create or replace function ...`
-4. 의존하는 테이블/함수가 이전 timestamp 파일에 있는지 확인. 없으면 같은 마이그레이션 안에서 먼저 정의하거나, 이전 파일에 합치는 게 안전.
-5. 정본 spec(`docs/development/database-schema.md`)도 같이 갱신. 인덱스 표, 컬럼 표, RLS/Invariants 섹션.
-6. [`migrations/INDEX.md`](./migrations/INDEX.md) 의 해당 연/월/일 섹션에 한 줄 추가 (새 날짜면 트리 헤더부터 추가).
+## migration 작성 원칙
 
-## Idempotency 컨벤션
+- Supabase CLI의 migration 생성 명령으로 timestamp 파일을 만든다.
+- 기존 migration을 수정해 배포 이력을 바꾸지 않고 새 migration으로 보강한다.
+- table과 function의 Data API grant, RLS, RPC execute 권한을 최소 권한으로 명시한다.
+- public table은 RLS와 owner 조건을 확인하고, `SECURITY DEFINER`는 필요한 경우에만 인증·소유권 검증, 고정 `search_path`, 명시적 execute grant와 함께 사용한다.
+- 재시도 가능한 작업은 unique constraint, conflict handling 또는 RPC transaction으로 idempotency를 보장한다.
+- Storage 변경은 bucket 공개 여부, object path owner, upload/read/update/delete policy를 함께 검토한다.
+- [`migrations/INDEX.md`](./migrations/INDEX.md)와 필요한 `docs/supabase/` 계약을 같은 변경에 갱신한다.
 
-본 디렉토리의 모든 마이그레이션은 **재실행 가능**하게 작성되어 있습니다. 이유:
-
-- `supabase db reset` 으로 깨끗한 재적용 시 오류 없이 통과해야 함.
-- 동일 마이그레이션을 다른 환경(local/preview/prod)에 적용할 때 한 곳에서만 실패하면 안 됨.
-
-규칙 요약:
-- 모든 `create` 는 `if not exists` 또는 `or replace`.
-- 모든 `policy` 는 `drop policy if exists` 후 재생성.
-- 모든 `trigger` 는 `drop trigger if exists` 후 재생성.
-- `insert` 는 `on conflict do nothing` (lookup data, storage buckets 등).
-
-## 관련 문서
-
-- **스키마 정본**: [`docs/development/database-schema.md`](../docs/development/database-schema.md) — Tier 1 MVP 테이블 컬럼/RLS/인덱스/ER
-- **Auth/RLS 정책**: [`docs/development/backend-auth.md`](../docs/development/backend-auth.md)
+검증 방법은 [`TESTING.md`](../TESTING.md)를 따른다. secret과 service-role key는 출력하거나 문서화하지 않는다.

@@ -10,7 +10,6 @@ const eslintConfig = defineConfig([
     ".agents/**",
     ".claude/**",
     ".codex/**",
-    ".omx/**",
     "out/**",
     "build/**",
     "coverage/**",

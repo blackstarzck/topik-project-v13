@@ -1,64 +1,75 @@
 # AGENTS.md
 
-이 저장소는 TOPIK 학습자를 위한 `TALKPIK AI` 사용자 앱이다. Codex와 모든 AI 에이전트는 이 문서를 프로젝트 constitution이자 작업 진입점으로 따른다.
+이 저장소는 TOPIK 학습자를 위한 `TALKPIK AI` 사용자 앱이다. Codex와 Claude를 포함한 모든 AI 에이전트는 이 문서를 공통 작업 계약이자 유일한 workflow owner로 따른다.
 
-## 응답과 근거
+## 소유권과 우선순위
 
-- 답변과 작업 보고는 한국어로 한다. 코드, 명령어, 파일명, 패키지명, route는 원문을 유지한다.
-- 객관적 사실, 실행 결과, active SOT, current source, 공식 문서와 테스트를 우선한다.
-- 추정은 `가정`으로 표시하고, 모르는 내용은 모른다고 말한다.
-- 사용자-facing 보고는 `docs/user-communication-style.md`를 따른다.
+충돌하면 아래 순서로 판단하고, 조용히 우회하지 말고 충돌을 보고한다.
 
-## 정책 진입점과 우선순위
+1. 사용자의 현재 명시 요청
+2. 제품 약속과 범위: `docs/prd.md`
+3. 데이터베이스·RLS·RPC의 실행 가능한 정본: timestamp 순으로 재생한 `supabase/migrations/*.sql`
+4. 사람이 읽는 데이터 계약: `docs/supabase/`
+5. 현재 동작: `src/`, `src/lib/routes.ts`, tests
+6. UI 계약: `DESIGN.md`
+7. 검증 계약: `TESTING.md`
+8. 외부 백엔드 참고: `docs/swagger-api/`
 
-작업 전 이 파일, `README.md`, `docs/INDEX.md`를 확인하고 요청 범위의 active SOT와 current source만 추가로 읽는다. `docs/INDEX.md`는 `docs/sot-registry.json`에서 생성되며 직접 편집하지 않는다.
+`README.md`는 문서 지도이며 정책 owner가 아니다. `docs/qa/`의 날짜별 계획과 보고서는 당시 상태를 보여주는 historical evidence이지 SOT가 아니다. 과거 보고서의 삭제된 경로는 기록 당시 baseline을 가리킨다.
 
-충돌 시 우선순위와 상세 실행 계약은 다음 문서를 따른다.
+제품 동작·데이터 규칙·UX·보안 범위를 상상으로 만들지 않는다. 사용자가 제품 변경을 승인하면 별도 proposal을 누적하지 않고 같은 변경 묶음에서 `docs/prd.md`, source, tests를 함께 갱신한다. 작업 중 임시 spec·plan·UI evidence는 ignored 경로인 `.codex/work/<slug>/` 아래에 둔다.
 
-1. `docs/agent-workflow/core.md` — 정책 우선순위, 위험 등급, SOT lifecycle, 권한, 검증과 보고
-2. `docs/agent-workflow/codex.md` — task/worktree/branch/PR/cleanup lifecycle
-3. `docs/agent-workflow/ui.md` — 공통 레이아웃, Ant Design/Tailwind/theme/CSS 소유권
+## 사용자와 대화하는 방식
 
-현재 source와 tests는 이미 구현된 동작의 관찰 기준이다. active SOT와 다르면 조용히 한쪽을 우회하지 않고 defect 또는 SOT 변경으로 분리한다.
+- 답변과 작업 보고는 한국어로 한다. 코드, 명령어, 파일명, package, route는 원문을 유지한다.
+- 결론부터 비개발자도 이해할 수 있는 쉬운 말로 설명한다.
+- 복잡한 관계는 필요한 경우 표, 체크리스트, Mermaid 흐름도나 다이어그램으로 보여준다.
+- 비유를 쓰면 짧게 쓰고 곧바로 실제 의미를 설명한다.
+- 객관적 사실, 실행 결과, 가정, 미확인 항목을 구분한다. 모르면 모른다고 말한다.
+- 고정 보고 템플릿, 신호등 상태표, 불필요한 장문 형식을 강제하지 않는다.
 
-제품 동작, 데이터 규칙, UX flow, security rule, framework stack을 active SOT 밖에서 새로 만들지 않는다. 변경이 필요하면 `docs/sot-change-proposals/`에 근거·대안·acceptance criteria를 기록하고, 사용자 승인과 검증 뒤 registry와 owner 문서를 같은 promotion 묶음에서 갱신한다.
+## 7단계 작업 흐름
 
-## 비협상 경계
+1. **기준 확인**: 이 문서와 `README.md`를 읽고 요청에 필요한 최소 owner, source, tests만 확인한다.
+2. **영향도와 계획**: 제품·코드·데이터·UI·테스트·문서 영향을 나누고, 목적·범위·TODO·검증 방법을 정한다.
+3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
+4. **구현과 TDD**: 실패하는 관련 테스트를 먼저 만들거나 확인하고, 프로젝트 구조를 유지한 최소 변경으로 통과시킨다.
+5. **비판적 리뷰**: critic 관점에서 요구사항 누락, 회귀, 권한·secret·RLS, 실패 복구와 불필요한 확장을 확인한다. 가능하면 독립 에이전트 리뷰를 사용한다.
+6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
+7. **보고와 Git 승인**: 바뀐 내용, 검증 결과, 남은 위험과 Git 상태를 쉽게 설명한다. stage, commit, push, PR, merge는 사용자가 요청했거나 결과 보고 뒤 승인한 범위에서만 수행한다.
 
-- 이 저장소는 user-facing app이다. admin 기능을 새로 만들거나 확장하지 않는다.
-- `docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md`의 AI·외부 연동·MVP 보류 결정을 우선한다.
-- billing SDK, 실제 결제 흐름, deferred 외부 연동은 active scope가 명시적으로 열리기 전까지 추가하지 않는다.
-- Supabase server-only key와 secret을 browser-visible 변수, 로그, 문서, commit에 노출하지 않는다.
-- v13 작업면에서 원격 Supabase schema/data apply를 실행하지 않는다.
-- 기존 사용자·다른 task 변경을 임의로 되돌리지 않는다.
-- 승인 없이 파괴적 작업, branch/worktree 삭제, production/collab 변경을 수행하지 않는다.
+작업 방식은 Superpowers만 사용한다. OMX와 gstack을 사용하지 않는다. UI 컴포넌트·페이지 styling 작업에는 프로젝트 로컬 `frontend-design`을 함께 사용하되, 이는 domain skill이며 `DESIGN.md`, 기존 Ant Design/theme 구조, Superpowers workflow보다 우선하지 않는다.
 
-## Git과 worktree
+## Git과 worktree 안전
 
-- 기본 원칙은 `한 task = 한 의미 있는 slug = 한 branch = 한 worktree 소유권`이다.
-- Codex Desktop이 이미 linked worktree를 제공했다면 중첩 worktree를 만들지 않는다.
-- 수정 전 CWD, branch/detached 상태, tracked/untracked 변경, worktree 목록과 소유권을 확인한다.
+- 수정 전 CWD, branch/detached 상태, tracked/untracked 변경, remote와 worktree 소유권을 확인한다.
 - 공유 기준 checkout에서 다른 task를 위해 `switch`, `checkout`, `reset`, `rebase`, `merge`하지 않는다.
-- worktree는 포트, dev server, 로컬 DB, `.env.local`, test data를 격리하지 않으므로 runtime owner도 확인한다.
-- 작업 완료 후 clean/owner/PR/process 조건을 모두 확인하기 전 worktree나 branch를 삭제하지 않는다. `--force` cleanup은 사용하지 않는다.
-- stage, commit, push, PR, merge는 사용자가 publish를 요청했거나 검증 결과 보고 뒤 승인한 경우에만 수행한다.
+- Codex branch는 `codex/<slug>`, Claude가 만든 branch는 `claude/<slug>`를 기본값으로 쓴다.
+- worktree는 포트, dev server, 로컬 DB, `.env.local`, test data를 격리하지 않는다. 병렬 runtime은 고유 loopback port와 분리된 test data를 사용한다.
+- 다른 사용자의 변경을 되돌리지 않는다. dirty·untracked·ignored-sensitive 파일이나 미게시 commit이 있으면 소유자를 확인하기 전 삭제하지 않는다.
+- 완료된 branch/worktree도 publish·merge·소유권·runtime 종료를 확인하기 전 삭제하지 않는다. 강제 정리는 하지 않는다.
 
-`collab`은 Vercel 배포 브랜치다. 사용자가 정확히 `collab`과 즉시 배포 의도를 명시하지 않으면 merge, rebase, push, PR target으로 사용하지 않는다. 명시된 경우에도 변경 범위, 검증, secret 점검과 즉시 노출 경고 뒤 별도 확인을 받는다.
+`collab` remote의 `main`은 Vercel production에 즉시 노출된다. 사용자가 정확히 `collab`과 배포 의도를 명시하지 않으면 merge, rebase, push 또는 PR target으로 사용하지 않는다. 명시된 경우에도 변경 범위, 검증, secret 점검과 즉시 노출 위험을 먼저 보고하고 별도 확인을 받는다.
 
-## 구현 진입점
+## 구현 경계
 
-- 제품/기능: `docs/prd.md`, `docs/ia.md`, `docs/flow/user-flow.md`, 관련 Wireframe과 current source
-- 화면/route/navigation: `docs/flow/sitemap.md`, `docs/Wireframe/README.md`, `src/app/`, `src/lib/routes.ts`
-- UI/style: `DESIGN.md`, `docs/ant-design/README.md`, `docs/ant-design/07-review-checklist.md`, `docs/agent-workflow/ui.md`
-- Supabase/Auth: `supabase/migrations/INDEX.md`, 관련 migration/Wireframe, `src/lib/supabase/`, auth source
-- 검증: `TESTING.md`, 관련 tests, `docs/agent-workflow/core.md`
+- Next.js App Router와 기존 project wrapper를 유지한다.
+- 이 저장소는 user-facing app이다. admin 화면을 새로 만들거나 확장하지 않는다. 필요한 admin 운영 계약은 별도 소유 앱과의 경계로만 기록한다.
+- 실제 LLM 첨삭·문제 생성, billing provider, 외부 알림 전송, 정식 법무 확정 기능은 `docs/prd.md`에서 scope가 열리기 전까지 완료 기능으로 만들지 않는다.
+- framework-level dependency 추가·교체는 사용자 승인과 관련 owner 갱신이 필요하다.
+- secret, token, private key, service-role key를 browser-visible 변수, terminal output, 로그, 문서, commit에 노출하지 않는다.
+- v13 작업면에서 원격 Supabase schema/data apply를 실행하지 않는다. DB 변경이 필요하면 migration과 계약을 로컬에서 검증하고 별도 운영 절차로 넘긴다.
+- UI는 Ant Design 또는 기존 wrapper를 우선하고 `DESIGN.md`의 theme·Tailwind 경계를 따른다. user-facing 변경에는 관련 loading, empty, success, error, disabled 상태와 desktop/mobile을 포함한다.
 
-Next.js App Router와 기존 project wrapper를 유지한다. UI는 기존 Page Recipe와 공통 layout, Ant Design props/token, Tailwind layout utility 순서로 해결한다. page-specific `global.css`, broad `.ant-*` override, 정적 inline style을 새로 추가하지 않는다.
+## 검증과 완료 기준
 
-user-facing 화면은 변경 범위와 관련된 loading, empty, success, error, disabled 상태를 포함한다. UI 변경은 desktop/mobile 실제 렌더링과 관련 Playwright 범위를 검증한다.
+완료라고 말하기 전에 실제 명령 출력과 runtime 결과를 읽는다. 실패하거나 미실행한 검증이 있으면 완료로 표현하지 않고 원인, 재현 명령과 남은 위험을 남긴다.
 
-## 완료 기준
+UI 변경은 다음 두 증거가 모두 있어야 merge-ready다.
 
-완료라고 말하기 전에 변경 범위에 맞는 registry/path 검사, 관련 test, lint, typecheck, build, UI runtime 검증을 실행하고 실제 출력을 읽는다. 실패하거나 미실행한 검증이 있으면 완료로 보고하지 않고 원인, 재현 방법과 남은 위험을 남긴다.
+1. 영향 범위의 Playwright CLI test
+2. 현재 worktree의 고유 loopback runtime을 Playwright MCP로 열어 desktop/mobile, 주요 상호작용과 관련 상태를 직접 확인한 결과
 
-완료 보고에는 `읽은 active SOT / 확인한 요구사항 / 충돌 여부 / 갱신한 owner 문서 / 검증 결과 / Git 반영 상태`를 포함한다.
+MCP가 없거나 현재 worktree runtime임을 증명하지 못하면 해당 UI 검증은 미완료다. 원격 Supabase를 연결한 브라우저 검증은 승인 없는 create/update/delete/submission을 하지 않는다.
+
+완료 보고에는 읽은 owner, 확인한 요구사항과 충돌 여부, 변경 파일, 검증 결과, 미확인·남은 위험, Git 반영 상태를 필요한 만큼만 포함한다.

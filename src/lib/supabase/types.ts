@@ -40,9 +40,8 @@
  *
  * Shared DB contract exception: `respond_institution_invitation` is owned by
  * the topik-ai admin migration home, not v13 migrations. Keep the type here so
- * the v13 client call is typed, and see
- * `docs/sot-change-proposals/2026-07-08-institution-invitation-modal-contract.md`
- * for the ownership and smoke evidence.
+ * the v13 client call is typed. Ownership and the client contract live in
+ * `docs/supabase/database-api-contract.md`.
  */
 
 export type Json =

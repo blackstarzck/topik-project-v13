@@ -4,8 +4,14 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { chromium } from "playwright";
 import { createClient } from "@supabase/supabase-js";
+import {
+  prepareEvidenceOutputDirectory,
+  resolveEvidenceOutput,
+  requireEvidenceSlug,
+} from "./evidence-paths.mjs";
 
 const cwd = process.cwd();
+const evidenceSlug = requireEvidenceSlug(process.env.UI_EVIDENCE_SLUG);
 const baseUrl = "http://127.0.0.1:3000";
 const viewports = [
   { name: "mobile", width: 360, height: 900 },
@@ -17,7 +23,12 @@ const pad = (n) => String(n).padStart(2, "0");
 const runId = `${startedAt.getFullYear()}${pad(startedAt.getMonth() + 1)}${pad(startedAt.getDate())}-${pad(startedAt.getHours())}${pad(startedAt.getMinutes())}${pad(startedAt.getSeconds())}`;
 const marker = `full-ui-capture-${runId}-${randomUUID().slice(0, 8)}`;
 const authStatePath = path.join(cwd, "tests", "e2e", "auth-state", "student.json");
-const reportDir = path.join(cwd, "docs", "qa", "reports", `full-ui-state-capture-${runId}`);
+const reportChild = `full-ui-state-capture-${runId}`;
+const reportDir = resolveEvidenceOutput({
+  cwd,
+  slug: evidenceSlug,
+  child: reportChild,
+});
 const manifestPath = path.join(reportDir, `manifest-${runId}.json`);
 const reportPath = path.join(reportDir, `report-${runId}.md`);
 
@@ -952,8 +963,11 @@ async function runPreAction(page, item, fixtures) {
 }
 
 async function captureItem(browser, item, viewport, fixtures) {
-  const outDir = path.join(cwd, "docs", "Wireframe", item.folder);
-  await fs.mkdir(outDir, { recursive: true });
+  const outDir = prepareEvidenceOutputDirectory({
+    cwd,
+    slug: evidenceSlug,
+    child: path.join(reportChild, "screens", item.folder),
+  });
   const baseName = `browser-screenshot--${item.state}--${viewport.name}`;
   const screenshotPath = path.join(outDir, `${baseName}.png`);
   const sidecarPath = path.join(outDir, `${baseName}.json`);
@@ -1100,12 +1114,20 @@ function reportMarkdown(results, cleanupErrors) {
   lines.push("## Output");
   lines.push("");
   lines.push(`- Manifest: ${path.relative(cwd, manifestPath).replaceAll("\\", "/")}`);
-  lines.push("- Screenshots: docs/Wireframe/<screen-folder>/browser-screenshot--<state>--<viewport>.png");
-  lines.push("- Sidecars: docs/Wireframe/<screen-folder>/browser-screenshot--<state>--<viewport>.json");
+  lines.push(
+    `- Screenshots: .codex/work/${evidenceSlug}/ui-evidence/full-ui-state-capture-${runId}/screens/<screen-folder>/browser-screenshot--<state>--<viewport>.png`,
+  );
+  lines.push(
+    `- Sidecars: .codex/work/${evidenceSlug}/ui-evidence/full-ui-state-capture-${runId}/screens/<screen-folder>/browser-screenshot--<state>--<viewport>.json`,
+  );
   return lines.join("\n");
 }
 
-await fs.mkdir(reportDir, { recursive: true });
+prepareEvidenceOutputDirectory({
+  cwd,
+  slug: evidenceSlug,
+  child: reportChild,
+});
 emit("start", {
   runId,
   marker,

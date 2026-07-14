@@ -6,7 +6,7 @@
 | 상태 | 코드 수정 완료 · 정적 검증 GREEN · 런타임(E2E/build) 검증 대기 |
 | 출처 보고서 | `docs/qa/reports/qa-report-20260702-1055.html` (Blocked 판정: P1 1건, P2 8건) |
 | 작업 위치 | `v13-before-convention` worktree, branch `before-convention` |
-| 기준 문서 | `AGENTS.md`, `docs/scope-decisions/2026-06-17-ai-deferred-and-mvp-scope.md`, `docs/sot-change-proposals/2026-06-22-legal-documents-admin-html-rendering.md`, `TESTING.md`, `playwright.config.ts` |
+| 기준 문서 | `AGENTS.md`, `docs/prd.md`, `DESIGN.md`, `TESTING.md`, `playwright.config.ts` |
 
 ## Context
 
@@ -114,8 +114,8 @@ pnpm test:e2e tests/e2e/screens/terms.spec.ts
 - 런타임 실행 중 추가 편집(2026-07-03): `src/lib/legal/html.ts`(엔티티 보존 escapeText — QA-03 후속), `tests/e2e/flows/auth-page-switch.spec.ts`·`tests/e2e/flows/landing-auth-cta.spec.ts`(익명 로케일 ko-KR 고정 — ① 클러스터), `tests/e2e/screens/hidden-writing-problem-availability.spec.ts`(search 입력 가시성 대기)
 - 포맷 전용: 위와 별개로 prettier `--write`가 src/·tests/ 등 약 200개 파일의 코드 스타일을 정리(기능 변경 없음). **커밋은 기능 변경과 포맷 전용을 분리한다.**
 
-## SOT 체크
+## 당시 기준 체크
 
-- **읽은 SOT/기준**: `AGENTS.md`, `CLAUDE.md`, `package.json`, QA 보고서(2026-07-02), `scripts/check-admin-boundary{,-proposal}.mjs`, `src/lib/legal/*`, `playwright.config.ts`, 관련 e2e 스펙, `docs/scope-decisions/2026-06-17-...`, `docs/user-communication-style.md`, `docs/qa/plan` 규약, `supabase/migrations`(writing 스키마·solve_state 예측자)
-- **충돌 여부**: 없음. QA-05 빈 상태는 2026-06-17 스코프 결정과 정합. QA-01 allowlist는 기존 proposal(2026-06-22)에 문서화된 구조의 주석 예외 등록.
-- **갱신 필요 문서**: 이 문서(신규). SOT 본문 직접 수정 없음. X-13 Wireframe functional-spec의 stale 기재는 기존 proposal 2026-06-22가 커버.
+- **읽은 기준**: `AGENTS.md`, `CLAUDE.md`, `package.json`, QA 보고서(2026-07-02), `scripts/check-admin-boundary.mjs`, `src/lib/legal/*`, `playwright.config.ts`, 관련 e2e 스펙, `docs/prd.md`, `DESIGN.md`, `TESTING.md`, `supabase/migrations`(writing 스키마·solve_state 예측자)
+- **충돌 여부**: 없음. 당시 구현 범위와 코드 allowlist를 대조했다.
+- **현재 해석**: 이 문서는 당시 실행 기록이며, 현재 제품·UI·검증 판정은 `docs/prd.md`, `DESIGN.md`, `TESTING.md`와 active source/tests가 소유한다.

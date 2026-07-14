@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -46,13 +46,13 @@ describe("v13 Supabase remote-apply boundary", () => {
     expect(migrationSql).not.toMatch(
       /alter\s+table\s+public\.topik_writing_question_institution_exposure/,
     );
-    expect(
-      existsSync(
-        join(
-          root,
-          "docs/todo/v13-institution-question-exposure-handoff-2026-06-26.md",
-        ),
-      ),
-    ).toBe(false);
+    const contract = readFileSync(
+      join(root, "docs", "supabase", "database-api-contract.md"),
+      "utf8",
+    );
+    expect(contract).toContain(
+      "`topik_writing_question_institution_exposure`",
+    );
+    expect(contract).toContain("v13 migration은 이 table을 생성하거나 변경하지 않는다");
   });
 });

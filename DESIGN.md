@@ -7,9 +7,10 @@
 > Source map:
 > - `DESIGN.md`: canonical visual intent and semantic token meaning.
 > - `DESIGN/tokens.json`: machine-readable imported token source.
-> - `docs/ant-design/08-theme-architecture.md`: runtime binding contract.
-> - `src/theme`: implementation that projects values into AntD and Tailwind
->   adapters.
+> - `src/theme`: runtime owner that normalizes values and projects them into
+>   AntD and Tailwind adapters.
+> - `src/styles/global.css`: Tailwind v4 `@theme inline` bridge and approved
+>   global runtime styles.
 
 > Runtime policy: one project theme source is projected into two adapters. AntD
 > receives values through `ConfigProvider`, `theme.token`, and
@@ -20,7 +21,7 @@
 > Runtime exception: the raw Awesomic reference favors very soft 28-36px
 > surfaces, but TALKPIK runtime intentionally reduces app workspace radii to
 > 4-8px so study dashboards read as panels instead of bubbles. Keep this
-> exception documented in `docs/ant-design/08-theme-architecture.md`.
+> exception in this document and `src/theme/tokens/awesomic.ts`.
 
 > Do not paste raw CSS custom properties or raw Tailwind `@theme` values from
 > this file into app CSS. Normalize selected values through `src/theme`, then
@@ -35,6 +36,31 @@ passages must stay readable, each task area should present one clear primary
 action, and the UI should avoid loud game-like or generic AI-gradient identity.
 Color carries meaning, never decoration; pair every color signal with text or
 icon.
+
+## Runtime Theme 소유권
+
+- `src/theme/config.ts`가 active preset을 선택한다. 현재 product preset은 `awesomic`이고 stock Ant Design은 fallback이다.
+- `DESIGN/tokens.json`은 가져온 machine-readable source이고 `src/theme/tokens/awesomic.ts`는 이를 정규화한 runtime mapping이다.
+- Ant Design은 component adapter다. 전역 값과 component state 값은 `ConfigProvider`, `theme.token`, `theme.components` 또는 scoped provider가 소유한다.
+- Tailwind는 layout·responsive adapter다. `src/theme/tailwind-bridge.ts`와 `src/styles/global.css`의 `@theme inline`을 통해 계산된 `--app-*` 값을 사용하며, 별도의 palette, font, radius, shadow scale을 소유하지 않는다.
+- 새 `--app-*` 변수에는 source token, 실제 Tailwind/plain-CSS consumer, theme contract test가 모두 필요하다. 계산된 값은 first render에 존재해야 하고 `var(--ant-*)`를 다시 가리키면 안 된다.
+- 기존 project wrapper와 AntD props를 우선한다. 프로젝트가 작성한 visual inline style, 광범위한 `.ant-*` override, 생성된 AntD class selector, page-specific global CSS를 추가하지 않는다.
+
+### 공통 layout과 card 진입점
+
+- 인증 workspace의 전역 chrome은 `src/components/app/WorkspaceShell.tsx`가 소유하고, 안쪽 content 폭은 `src/components/app/WorkspaceBody.tsx`의 실제 `size` 값(`form`, `task`, `workspace`, `wide`, `full`)으로 정한다. `src/components/shared/PageContainer.tsx`는 `narrow`, `default`, `wide` 폭과 단일 `<main>` landmark가 필요한 일반 page용이므로 다른 `<main>` 안에 중첩하지 않는다.
+- `src/components/shared/AppCard.tsx`는 AntD `CardProps`를 그대로 전달하며 별도의 project card header/footer component는 없다. 전체 card의 title·status는 AntD `title`·`extra`, card 단위의 반복 action은 `actions`를 사용하고, 화면 구조상 다른 위치가 더 자연스러우면 억지로 footer를 만들지 않는다.
+
+## UI 검토 체크리스트
+
+- [ ] 대상 route가 `WorkspaceShell` chrome 안에 있는지 숨김 route인지 확인하고, content 폭에는 `WorkspaceBody` 또는 단일-main `PageContainer` 중 실제 구조에 맞는 primitive를 사용했다.
+- [ ] `AppCard`의 전체 title·status와 card 단위 action에 AntD `title`·`extra`·`actions` 계약을 일관되게 적용했다.
+- [ ] AntD hover, active, selected, disabled, border, radius state는 Tailwind로 다시 만들지 않고 props 또는 token으로 제어했다.
+- [ ] color, typography, spacing, responsive layout은 shared theme에서 가져오며, hardcoded visual value가 있다면 이유를 기록했다.
+- [ ] loading, empty, success, error, disabled state가 같은 page 구조를 유지하고 다음 action을 분명하게 제공한다.
+- [ ] form에는 label이 있고 icon-only control에는 accessible name이 있으며, focus가 보이고 color만으로 의미를 전달하지 않는다.
+- [ ] desktop과 mobile에서 겹침이나 horizontal overflow가 없고, 긴 한국어 text가 읽기 좋은 폭과 line height를 유지한다.
+- [ ] 관련 test, `pnpm check:ui-contract`, Playwright CLI, Playwright MCP 직접 browser 검증이 변경한 UI 범위에서 통과했다.
 
 Awesomic operates on a white-and-near-black canvas with maximum roundness — 36px cards and pill-shaped containers dominate every surface, creating a soft, approachable tension against the very dark #09090b fills used for primary actions. The neutral scale is dense and graduated (gray-50 through gray-950), but only 3-4 steps appear in any single view, keeping contrast high without complexity. The single custom typeface, Cosmica, spans the entire system from 10px badge labels to 64px display headlines — its weight range (300–700) does all tonal work that color doesn't. Accent color is almost entirely absent from the UI layer: vivid orange (#ff5a00) surfaces only on YC badge labels, and the vivid pink (#fe45e2) is a single decorative card wash — the system's restraint makes these moments land harder.
 

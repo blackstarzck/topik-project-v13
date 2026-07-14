@@ -8,7 +8,7 @@ import {
 // 문장별 첨삭 라벨은 외부 채점 API가 주지 않는다(annotations는 가변 개수의
 // 인라인 첨삭 배열). 순서로 서론/본론/결론·ㄱㄴㄷㄹ을 지어 붙이는 대신,
 // 첨삭 원문(original_text)을 제출 답안에 대조(anchor)해 그룹으로 묶는다.
-// 결정 기록: docs/sot-change-proposals/2026-07-04-sentence-feedback-anchored-groups.md
+// 실행 계약: tests/lib/writing/sentence-feedback-grouping.test.ts
 
 export type SentenceFeedbackGroupKind =
   | "blank"
@@ -130,7 +130,12 @@ function groupShortRows(
       rows: buckets.get(anchor.label) ?? [],
     }));
   if (general.length > 0) {
-    groups.push({ key: "general", kind: "general", blankLabel: null, rows: general });
+    groups.push({
+      key: "general",
+      kind: "general",
+      blankLabel: null,
+      rows: general,
+    });
   }
   return groups;
 }
@@ -139,8 +144,10 @@ function groupLongRows(
   input: SentenceFeedbackGroupInput,
 ): SentenceFeedbackGroup[] {
   const sections = longSections(input);
-  const buckets: Record<(typeof LONG_SECTION_ORDER)[number], SentenceFeedbackRow[]> =
-    { intro: [], body: [], conclusion: [] };
+  const buckets: Record<
+    (typeof LONG_SECTION_ORDER)[number],
+    SentenceFeedbackRow[]
+  > = { intro: [], body: [], conclusion: [] };
   const general: SentenceFeedbackRow[] = [];
 
   for (const row of input.rows) {
@@ -165,7 +172,12 @@ function groupLongRows(
     rows: buckets[key],
   }));
   if (general.length > 0) {
-    groups.push({ key: "general", kind: "general", blankLabel: null, rows: general });
+    groups.push({
+      key: "general",
+      kind: "general",
+      blankLabel: null,
+      rows: general,
+    });
   }
   return groups;
 }
