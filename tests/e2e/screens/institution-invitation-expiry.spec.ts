@@ -90,8 +90,15 @@ function collectErrors(page: Page) {
 }
 
 async function openNotifications(page: Page) {
+  const notificationBellReady = page.waitForResponse(
+    (response) =>
+      response.request().method() === "HEAD" &&
+      response.url().includes("/rest/v1/user_notifications"),
+    { timeout: 15_000 },
+  );
   await page.goto("/settings/notifications", { waitUntil: "domcontentloaded" });
   await expect(page).not.toHaveURL(/\/login/);
+  await notificationBellReady;
   await page.waitForLoadState("networkidle");
   await openNotificationPopover(page);
 }
@@ -102,7 +109,7 @@ async function openNotificationPopover(page: Page) {
   });
   const bell = page.locator(".app-notification-bell");
   await expect(bell).toBeEnabled();
-  await bell.evaluate((button) => (button as HTMLButtonElement).click());
+  await bell.click();
   await expect(page.locator(".app-notification-panel:visible")).toBeVisible({
     timeout: 15_000,
   });

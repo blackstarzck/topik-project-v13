@@ -74,7 +74,8 @@ export type NotificationAction =
 export type InstitutionInvitationResponseStatus =
   | "accepted"
   | "declined"
-  | "canceled";
+  | "canceled"
+  | "expired";
 
 export type InstitutionInvitationResponse = {
   status: InstitutionInvitationResponseStatus;
@@ -300,7 +301,10 @@ export function resolveNotificationAction(
 function normalizeRpcStatus(
   status: unknown,
 ): InstitutionInvitationResponseStatus | null {
-  return status === "accepted" || status === "declined" || status === "canceled"
+  return status === "accepted" ||
+    status === "declined" ||
+    status === "canceled" ||
+    status === "expired"
     ? status
     : null;
 }

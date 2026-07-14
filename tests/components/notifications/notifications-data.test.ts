@@ -284,6 +284,30 @@ describe("respondInstitutionInvitation", () => {
     });
   });
 
+  it("preserves the RPC expired result as the final server status", async () => {
+    rpcMock.mockResolvedValue({
+      data: {
+        status: "expired",
+        error: "invitation_expired",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      },
+      error: null,
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        true,
+      ),
+    ).resolves.toEqual({
+      status: "expired",
+      error: "invitation_expired",
+      code: "CAMPAIGN-01",
+      code_label: "Campaign",
+    });
+  });
+
   it("passes RPC errors through for handled modal mapping", async () => {
     rpcMock.mockResolvedValue({
       data: null,
