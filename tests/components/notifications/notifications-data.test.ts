@@ -174,6 +174,12 @@ describe("resolveInstitutionInvitationExpiry", () => {
     ).toEqual({ status: "expired" });
   });
 
+  it("accepts Postgres-style microsecond precision", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-15T14:59:59.123456Z", now),
+    ).toEqual({ status: "active", daysRemaining: 1 });
+  });
+
   it.each([
     null,
     "",
