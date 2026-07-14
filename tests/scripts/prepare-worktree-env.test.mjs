@@ -24,6 +24,7 @@ import {
 } from "../../scripts/prepare-worktree-env.mjs";
 
 const secretSentinel = "TOP_SECRET_SENTINEL_MUST_NOT_LEAK";
+const highPrivilegeSentinel = "HIGH_PRIVILEGE_SECRET_MUST_NOT_COPY";
 const tempDirs = [];
 
 function tempRoot(prefix = "talkpik-env-") {
@@ -209,8 +210,14 @@ describe("dotenv parsing and git ignore result handling", () => {
 });
 
 describe("prepareWorktreeEnvironment", () => {
-  it("copies an ignored destination exclusively and preserves every byte", async () => {
-    const input = appEnv({ EXTRA_BYTES: "한글-and-spaces" });
+  it("copies only app-profile keys and omits unrelated or privileged values", async () => {
+    const input = appEnv({
+      NEXT_PUBLIC_SITE_URL: "https://app.example.test",
+      SUPABASE_SERVICE_ROLE_KEY: highPrivilegeSentinel,
+      SMTP_PASS: highPrivilegeSentinel,
+      NOTIFICATION_WORKER_SECRET: highPrivilegeSentinel,
+      EXTRA_BYTES: "한글-and-spaces",
+    });
     const { currentRoot, dependencies } = fixture({ sourceContent: input });
 
     const result = await prepareWorktreeEnvironment({
@@ -221,8 +228,42 @@ describe("prepareWorktreeEnvironment", () => {
 
     const destination = path.join(currentRoot, ".env.local");
     expect(result).toMatchObject({ action: "copied", profile: "app" });
-    expect(readFileSync(destination)).toEqual(Buffer.from(input));
+    expect([...parseEnvironment(readFileSync(destination, "utf8")).keys()]).toEqual([
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "NEXT_PUBLIC_SITE_URL",
+    ]);
+    expect(readFileSync(destination, "utf8")).not.toContain(
+      highPrivilegeSentinel,
+    );
     expect(lstatSync(destination).isFile()).toBe(true);
+  });
+
+  it("copies test credentials for e2e but omits SMTP and worker secrets", async () => {
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: appEnv({
+        SUPABASE_SERVICE_ROLE_KEY: "service-role",
+        E2E_STUDENT_EMAIL: "student@example.com",
+        E2E_STUDENT_PASSWORD: '"password # preserved"',
+        SMTP_PASS: highPrivilegeSentinel,
+        NOTIFICATION_WORKER_SECRET: highPrivilegeSentinel,
+      }),
+    });
+
+    await prepareWorktreeEnvironment({
+      currentRoot,
+      profile: "e2e",
+      dependencies,
+    });
+
+    const copied = parseEnvironment(
+      readFileSync(path.join(currentRoot, ".env.local"), "utf8"),
+    );
+    expect(copied.get("SUPABASE_SERVICE_ROLE_KEY")).toBe("service-role");
+    expect(copied.get("E2E_STUDENT_EMAIL")).toBe("student@example.com");
+    expect(copied.get("E2E_STUDENT_PASSWORD")).toBe("password # preserved");
+    expect(copied.has("SMTP_PASS")).toBe(false);
+    expect(copied.has("NOTIFICATION_WORKER_SECRET")).toBe(false);
   });
 
   it("validates an existing destination without overwriting or merging it", async () => {
@@ -592,7 +633,7 @@ describe("prepareWorktreeEnvironment", () => {
     expect(existsSync(path.join(currentRoot, ".env.local"))).toBe(true);
   });
 
-  it("writes the already-verified source bytes even if the source path changes before create", async () => {
+  it("writes the already-verified profile bytes even if the source path changes before create", async () => {
     const original = appEnv({ SOURCE_VERSION: "verified-original" });
     const { currentRoot, dependencies, mainRoot } = fixture({
       sourceContent: original,
@@ -608,7 +649,7 @@ describe("prepareWorktreeEnvironment", () => {
       prepareWorktreeEnvironment({ currentRoot, profile: "app", dependencies }),
     ).resolves.toMatchObject({ action: "copied" });
     expect(readFileSync(path.join(currentRoot, ".env.local"), "utf8")).toBe(
-      original,
+      appEnv(),
     );
   });
 
@@ -638,7 +679,7 @@ describe("prepareWorktreeEnvironment", () => {
     ).resolves.toMatchObject({ action: "copied" });
     expect(writes).toBeGreaterThan(1);
     expect(readFileSync(path.join(currentRoot, ".env.local"), "utf8")).toBe(
-      original,
+      appEnv(),
     );
   });
 

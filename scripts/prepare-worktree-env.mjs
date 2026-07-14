@@ -21,6 +21,29 @@ const appRequiredKeys = [
 ];
 const e2eRequiredKeys = ["SUPABASE_SERVICE_ROLE_KEY", "E2E_STUDENT_EMAIL"];
 const e2ePasswordKeys = ["E2E_STUDENT_PASSWORD", "SUPABASE_TEST_PASSWORD"];
+const appAllowedKeys = [
+  ...appRequiredKeys,
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "NEXT_PUBLIC_SITE_URL",
+  "NEXT_PUBLIC_GA_MEASUREMENT_ID",
+  "SUPABASE_ENV_LABEL",
+  "SUPABASE_LOCAL_STACK",
+  "TALKPIK_API_BASE_URL",
+  "TALKPIK_WRITING_API_BASE_URL",
+];
+const e2eAllowedKeys = [
+  ...appAllowedKeys,
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_SECRET_KEY",
+  "E2E_STUDENT_EMAIL",
+  "E2E_STUDENT_PASSWORD",
+  "SUPABASE_TEST_PASSWORD",
+  "E2E_BASE_URL",
+  "E2E_DISABLE_EXTERNAL_WRITING_API",
+  "E2E_EXISTING_INSTITUTION_EXPECTED_WRITING_COUNT",
+  "E2E_EXISTING_INSTITUTION_USER_ID",
+  "E2E_NTF_PASSWORD",
+];
 
 function normalizedPath(value) {
   const resolved = path.resolve(value);
@@ -186,7 +209,7 @@ function readStableRegularFile(file, label) {
   }
 }
 
-function unquote(value) {
+function stripInlineComment(value) {
   let quote = null;
   let commentAt = -1;
   for (let index = 0; index < value.length; index += 1) {
@@ -200,7 +223,11 @@ function unquote(value) {
       break;
     }
   }
-  const trimmed = (commentAt >= 0 ? value.slice(0, commentAt) : value).trim();
+  return (commentAt >= 0 ? value.slice(0, commentAt) : value).trim();
+}
+
+function unquote(value) {
+  const trimmed = stripInlineComment(value);
   if (
     trimmed.length >= 2 &&
     ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
@@ -226,6 +253,33 @@ export function parseEnvironment(content) {
     values.set(key, unquote(normalized.slice(separator + 1)));
   }
   return values;
+}
+
+function selectProfileEnvironment(content, profile) {
+  const allowedKeys = profile === "e2e" ? e2eAllowedKeys : appAllowedKeys;
+  const allowed = new Set(allowedKeys);
+  const assignments = new Map();
+
+  for (const line of content.split(/\r?\n/u)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const normalized = trimmed.startsWith("export ")
+      ? trimmed.slice(7).trimStart()
+      : trimmed;
+    const separator = normalized.indexOf("=");
+    if (separator <= 0) continue;
+    const key = normalized.slice(0, separator).trim();
+    if (!allowed.has(key)) continue;
+    assignments.set(
+      key,
+      `${key}=${stripInlineComment(normalized.slice(separator + 1))}`,
+    );
+  }
+
+  const selected = allowedKeys
+    .filter((key) => assignments.has(key))
+    .map((key) => assignments.get(key));
+  return `${selected.join("\n")}\n`;
 }
 
 function validateEnvironment(content, profile) {
@@ -369,7 +423,13 @@ export async function prepareWorktreeEnvironment({
   }
 
   const sourceBytes = readStableRegularFile(source, "Source");
-  validateEnvironment(sourceBytes.toString("utf8"), profile);
+  const sourceContent = sourceBytes.toString("utf8");
+  validateEnvironment(sourceContent, profile);
+  const profileBytes = Buffer.from(
+    selectProfileEnvironment(sourceContent, profile),
+    "utf8",
+  );
+  validateEnvironment(profileBytes.toString("utf8"), profile);
   if (!(await isIgnored(destination, currentRoot))) {
     throw new Error("Destination .env.local must be ignored by Git.");
   }
@@ -389,10 +449,10 @@ export async function prepareWorktreeEnvironment({
     throw new Error("Unable to create destination .env.local exclusively.");
   }
 
-  const sourceHash = sha256(sourceBytes);
+  const profileHash = sha256(profileBytes);
   try {
     const writer = dependencies.writeDestination ?? writeSync;
-    writeAllBytes(state.fileDescriptor, sourceBytes, writer);
+    writeAllBytes(state.fileDescriptor, profileBytes, writer);
     fsyncSync(state.fileDescriptor);
     const inspectDestination =
       dependencies.inspectDestination ?? inspectHandleAndPath;
@@ -400,7 +460,7 @@ export async function prepareWorktreeEnvironment({
     state.originalIdentity = fileIdentity(initialStatus);
     if (
       sha256(readHandleBytes(state.fileDescriptor, initialStatus)) !==
-      sourceHash
+      profileHash
     ) {
       throw new Error(
         "Copied destination .env.local failed the content hash check.",
@@ -414,7 +474,7 @@ export async function prepareWorktreeEnvironment({
     if (
       !sameIdentity(fileIdentity(afterCopyStatus), state.originalIdentity) ||
       sha256(readHandleBytes(state.fileDescriptor, afterCopyStatus)) !==
-        sourceHash
+        profileHash
     ) {
       throw new Error("Copied destination .env.local changed after copy.");
     }
@@ -424,7 +484,7 @@ export async function prepareWorktreeEnvironment({
     const finalStatus = inspectHandleAndPath(destination, state.fileDescriptor);
     if (
       !sameIdentity(fileIdentity(finalStatus), state.originalIdentity) ||
-      sha256(readHandleBytes(state.fileDescriptor, finalStatus)) !== sourceHash
+      sha256(readHandleBytes(state.fileDescriptor, finalStatus)) !== profileHash
     ) {
       throw new Error(
         "Copied destination .env.local changed during post-copy verification.",

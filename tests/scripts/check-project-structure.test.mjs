@@ -782,5 +782,22 @@ describe("package interface", () => {
     expect(packageJson.scripts["check:project-structure"]).toBe(
       "node scripts/check-project-structure.mjs",
     );
+    expect(packageJson.scripts["test:supabase:local"]).toContain(
+      "tests/integration/pdf-export-quota-rpc.test.ts",
+    );
+
+    const pdfQuotaIntegration = await import("node:fs/promises").then(
+      ({ readFile }) =>
+        readFile(
+          path.join(
+            process.cwd(),
+            "tests/integration/pdf-export-quota-rpc.test.ts",
+          ),
+          "utf8",
+        ),
+    );
+    expect(pdfQuotaIntegration).toMatch(
+      /process\.env\.E2E_STUDENT_PASSWORD\s*\?\?\s*process\.env\.SUPABASE_TEST_PASSWORD/u,
+    );
   });
 });
