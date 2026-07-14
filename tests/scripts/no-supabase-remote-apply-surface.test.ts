@@ -30,6 +30,18 @@ describe("v13 Supabase remote-apply boundary", () => {
     expect(violations).toEqual([]);
   });
 
+  it("guards the mutating PDF quota integration behind an explicit loopback local stack", () => {
+    const integrationTest = readFileSync(
+      join(root, "tests", "integration", "pdf-export-quota-rpc.test.ts"),
+      "utf8",
+    );
+
+    expect(integrationTest).toContain(
+      'process.env.SUPABASE_LOCAL_STACK === "1"',
+    );
+    expect(integrationTest).toContain("isLoopbackUrl(SUPABASE_URL)");
+  });
+
   it("does not carry institution exposure schema ownership in v13 migrations", () => {
     const migrationSql = [
       "supabase/migrations/20260626110000_writing_institution_visibility_predicate.sql",

@@ -35,8 +35,25 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const EMAIL = process.env.E2E_STUDENT_EMAIL;
 const PASSWORD = process.env.SUPABASE_TEST_PASSWORD;
+
+function isLoopbackUrl(value: string | undefined) {
+  if (!value) return false;
+  try {
+    return new Set(["localhost", "127.0.0.1", "::1", "[::1]"]).has(
+      new URL(value).hostname.toLowerCase(),
+    );
+  } catch {
+    return false;
+  }
+}
+
 const canRun = Boolean(
-  SUPABASE_URL && PUBLISHABLE_KEY && SERVICE_KEY && EMAIL && PASSWORD,
+  process.env.SUPABASE_LOCAL_STACK === "1" &&
+    isLoopbackUrl(SUPABASE_URL) &&
+    PUBLISHABLE_KEY &&
+    SERVICE_KEY &&
+    EMAIL &&
+    PASSWORD,
 );
 
 type ClaimResponse = {
