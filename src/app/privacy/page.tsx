@@ -9,11 +9,11 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { getPublishedLegalDocument } from "@/lib/legal/documents";
 
-// X-14 개인정보처리방침 — 기존 34개 Wireframe 이후 추가된 공개 정적 legal 화면.
+// X-14 개인정보처리방침 — 공개 정적 legal 화면.
 // /sign-up 동의 라벨(new tab)·/terms 에서 연결되는 placeholder. 정식 처리방침은
 // 법무/개인정보 검토 후 운영 진입 전 별도 작업. 데이터 읽기/쓰기 없는 server
 // component (정적 legal 페이지 house convention: home/terms 와 동일하게 antd 미사용).
-// docs/Wireframe/36-X-14-privacy-policy/{description,functional-spec}.md 참고.
+// 제품 범위는 docs/prd.md, route ownership은 src/lib/routes.ts를 따른다.
 
 // 개인정보처리방침은 관리자 발행 시 즉시 반영되어야 하므로 매 요청마다 최신 DB
 // 상태를 읽는다.

@@ -2,8 +2,9 @@
 /.github/CODEOWNERS @blackstarzck
 /.github/workflows/ci.yml @blackstarzck
 /AGENTS.md @blackstarzck
-/docs/sot-registry.json @blackstarzck
-/scripts/check-sot-registry.mjs @blackstarzck
+/docs/prd.md @blackstarzck
+/docs/supabase/ @blackstarzck
+/scripts/check-project-structure.mjs @blackstarzck
 /.codex/skills/ @blackstarzck
 /.claude/skills/ @blackstarzck
 /CLAUDE.md @blackstarzck

@@ -1,6 +1,0 @@
-﻿{
-    "conceptId":  "concept-03",
-    "page":  "02-A-02-login",
-    "state":  "session-expired",
-    "prompt":  "Use case: ui-mockup\nAsset type: TALKPIK AI session recovery login UI\nInput image role: the visible source screenshot is a reference image for layout, state, and information architecture, not an edit target that must be pixel-preserved.\nPrimary request: Redesign 02-A-02-login/session-expired.\nDirection: calm re-auth handoff.\nComposition/framing: desktop 1280x900 web app screenshot, no browser chrome and no OS window frame. The state should feel like a gentle re-auth handoff: form remains primary, notice explains why login is needed, and navigation remains clear. Include login CTA disabled/ready state affordance, social login option, password reset, and sign-up link.\nStyle/medium: high-fidelity web UI mockup, Ant Design Alert/Form/Input/Button patterns.\nColor palette: Obsidian #09090b only for the main CTA; all other surfaces neutral Mist/Snow/Fog.\nTypography: Cosmica-like single-family, weight-driven, compact density, no letter spacing.\nConstraints: do not show raw provider messages, token/session identifiers, or scary security language; Korean UI copy is not final source.\nAvoid: browser chrome, OS window frame, AI gradients, saturated accent blocks, colorful CTAs, oversized bubble cards, watermark."
-}

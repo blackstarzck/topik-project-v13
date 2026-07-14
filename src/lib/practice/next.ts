@@ -382,7 +382,7 @@ function sortByQuestionRotation(
 }
 
 // Phase 7-D Task 6 (P1-2) — getNextProblemBundle.
-// IA spec (docs/Wireframe/17-R-02-next-problem-recommendation/description.md) requires:
+// docs/prd.md의 다음 문제 추천 흐름과 practice tests가 요구하는 계약:
 //   - primary (existing getNextProblem result)
 //   - summary (recent submissions count + average score + weakest dimensions)
 //   - alternatives (3 problems user can pick instead)

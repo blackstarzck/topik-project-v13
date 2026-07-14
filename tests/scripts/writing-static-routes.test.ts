@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
 describe("writing route inventory", () => {
-  test("ships D-01 through D-04 as four static Wireframe-slug app routes", () => {
+  test("ships D-01 through D-04 as four static question-specific app routes", () => {
     for (const segment of [
       "short-answer-writing-51",
       "answer-writing-52",

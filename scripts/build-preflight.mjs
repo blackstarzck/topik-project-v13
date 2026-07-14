@@ -68,14 +68,21 @@ export function evaluateBuildPreflight({
 
 export function evaluateSupabaseRemoteApplyBoundary({
   env = {},
+  tempInspection,
   supabaseTempExists = false,
 } = {}) {
   const violations = [];
   if (env.SUPABASE_ACCESS_TOKEN) {
     violations.push("SUPABASE_ACCESS_TOKEN");
   }
-  if (supabaseTempExists) {
-    violations.push("supabase/.temp");
+
+  const inspectedViolations = Array.isArray(tempInspection?.violations)
+    ? tempInspection.violations
+    : supabaseTempExists
+      ? ["supabase/.temp"]
+      : [];
+  for (const violation of inspectedViolations) {
+    violations.push(sanitizeSupabaseTempLabel(violation));
   }
 
   if (violations.length > 0) {
@@ -94,6 +101,110 @@ export function evaluateSupabaseRemoteApplyBoundary({
     code: 0,
     message: "no remote Supabase apply surface detected.",
   };
+}
+
+const SUPABASE_TEMP_LABEL = "supabase/.temp";
+const ALLOWED_SUPABASE_TEMP_ENTRY = "cli-latest";
+
+function sanitizeSupabaseTempLabel(value) {
+  if (value === SUPABASE_TEMP_LABEL) return value;
+  if (
+    typeof value === "string" &&
+    /^supabase\/\.temp\/[A-Za-z0-9._-]+$/.test(value)
+  ) {
+    return value;
+  }
+  return SUPABASE_TEMP_LABEL;
+}
+
+function safeSupabaseTempEntryLabel(entryName) {
+  if (
+    typeof entryName === "string" &&
+    /^[A-Za-z0-9._-]+$/.test(entryName)
+  ) {
+    return `${SUPABASE_TEMP_LABEL}/${entryName}`;
+  }
+  return SUPABASE_TEMP_LABEL;
+}
+
+function normalizedRealPath(value) {
+  const resolved = path.resolve(value);
+  return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+}
+
+/**
+ * Inspect Supabase CLI metadata without reading file content. A regular
+ * `cli-latest` file is harmless version metadata. Every other entry, linked
+ * path, non-regular file, or inspection error fails closed.
+ *
+ * @param {{ rootDir?: string, fsApi?: typeof fs }} input
+ * @returns {{ violations: string[] }}
+ */
+export function inspectSupabaseTempBoundary({
+  rootDir = process.cwd(),
+  fsApi = fs,
+} = {}) {
+  const tempPath = path.join(rootDir, "supabase", ".temp");
+  let tempStats;
+  try {
+    tempStats = fsApi.lstatSync(tempPath);
+  } catch (error) {
+    if (error?.code === "ENOENT") return { violations: [] };
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  if (tempStats.isSymbolicLink() || !tempStats.isDirectory()) {
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  let tempRealPath;
+  try {
+    const rootRealPath = fsApi.realpathSync(rootDir);
+    tempRealPath = fsApi.realpathSync(tempPath);
+    const expectedTempPath = path.join(rootRealPath, "supabase", ".temp");
+    if (
+      normalizedRealPath(tempRealPath) !== normalizedRealPath(expectedTempPath)
+    ) {
+      return { violations: [SUPABASE_TEMP_LABEL] };
+    }
+  } catch {
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  let entryNames;
+  try {
+    entryNames = fsApi.readdirSync(tempPath);
+  } catch {
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  const violations = [];
+  for (const entryName of entryNames) {
+    const entryLabel = safeSupabaseTempEntryLabel(entryName);
+    if (entryName !== ALLOWED_SUPABASE_TEMP_ENTRY) {
+      violations.push(entryLabel);
+      continue;
+    }
+
+    const entryPath = path.join(tempPath, entryName);
+    try {
+      const entryStats = fsApi.lstatSync(entryPath);
+      const entryRealPath = fsApi.realpathSync(entryPath);
+      const expectedEntryPath = path.join(tempRealPath, entryName);
+      if (
+        entryStats.isSymbolicLink() ||
+        !entryStats.isFile() ||
+        normalizedRealPath(entryRealPath) !==
+          normalizedRealPath(expectedEntryPath)
+      ) {
+        violations.push(entryLabel);
+      }
+    } catch {
+      violations.push(entryLabel);
+    }
+  }
+
+  return { violations: [...new Set(violations)] };
 }
 
 /**
@@ -244,7 +355,7 @@ async function main() {
     !hasIsolatedDevBuildOptOut(nextConfigSource);
   const supabaseBoundary = evaluateSupabaseRemoteApplyBoundary({
     env: process.env,
-    supabaseTempExists: fs.existsSync(path.join(process.cwd(), "supabase", ".temp")),
+    tempInspection: inspectSupabaseTempBoundary(),
   });
   if (supabaseBoundary.block) {
     console.error(`[M5 build-preflight] BLOCK: ${supabaseBoundary.message}`);

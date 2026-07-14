@@ -104,7 +104,7 @@ describe("writing flow — route guards", () => {
   } as const;
 
   it.each([51, 52, 53, 54] as const)(
-    "/writing route for question %i uses its own static Wireframe-slug page",
+    "/writing route for question %i uses its own static question-specific page",
     async (questionNo) => {
       helpers.getWritingProblemMock.mockResolvedValue(null);
       const page = await writingPages[questionNo]();

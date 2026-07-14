@@ -5,15 +5,15 @@
 | 작성일 | 2026-07-02 |
 | 상태 | 실행 계획 |
 | 실행 모드 | `$ultraqa` 기반 반복 QA: 실행 → 판정 → 진단 → 보정/재실행 → 증거 보고 |
-| 기준 문서 | `docs/qa/qa-execution-plan.md` rev6, `TESTING.md`, `docs/ia.md`, `docs/flow/user-flow.md`, `docs/Wireframe/README.md`, `docs/ant-design/07-review-checklist.md` |
+| 기준 문서 | `docs/qa/README.md`, `TESTING.md`, `docs/prd.md`, `DESIGN.md`, `src/lib/routes.ts` |
 | 계획 파일 | `docs/qa/plan/2026-07-02-ultraqa-deep-qa-execution-plan.md` |
 | 보고서 위치 | `docs/qa/reports/qa-report-YYYYMMDD-HHMM.html` |
 | 증거 위치 | `docs/qa/reports/qa-report-YYYYMMDD-HHMM-evidence/` |
 
 ## 결론
 
-오늘 QA는 기존 `docs/qa/qa-execution-plan.md`를 대체하지 않는다. 이 문서는
-2026-07-02 실행자가 그대로 따라갈 **오늘자 운영 계획**이다.
+이 문서는 2026-07-02 실행자가 사용한 **당시 운영 계획**이다. 현재 실행 기준은
+`docs/qa/README.md`, `TESTING.md`, `docs/prd.md`, `DESIGN.md`와 active source/tests다.
 
 핵심 목표는 세 가지다.
 
@@ -155,11 +155,11 @@ flowchart LR
 
 ### Phase 0. 문서와 라우트 기준 고정
 
-- [ ] `docs/qa/qa-execution-plan.md` rev6를 오늘 QA의 상세 기준으로 둔다.
+- [ ] `docs/qa/README.md`와 `TESTING.md`를 QA 실행 기준으로 둔다.
 - [ ] `src/lib/routes.ts`의 `APP_ROUTE_SPECS`, `PUBLIC_PATHS`, `PROTECTED_ROUTE_CASES`, `FLOW_ROUTE_SPECS`를 route 단일 출처로 둔다.
-- [ ] `docs/Wireframe/README.md`의 36개 화면 목록과 결번 21/30/32/37을 확인한다.
-- [ ] 화면별 깊은 판정이 필요한 경우 해당 `description.md`, `functional-spec.md`, `screen-data-summary.md`를 읽는다.
-- [ ] UI/스타일 판정은 `docs/ant-design/07-review-checklist.md`를 기준으로 한다.
+- [ ] 제품 약속과 화면 범위는 `docs/prd.md`, 현재 route source와 route contract tests를 대조한다.
+- [ ] 화면별 깊은 판정이 필요한 경우 현재 component와 관련 unit/e2e test를 읽는다.
+- [ ] UI/스타일 판정은 `DESIGN.md`를 기준으로 한다.
 
 ### Phase 1. 자동화 게이트
 
@@ -286,15 +286,15 @@ UNVERIFIED는 PASS에 포함하지 않는다. 핵심 학습 경로가 UNVERIFIED
 
 - `AGENTS.md` — 한국어 보고, SOT, Supabase/secret, QA 완료 기준, collab 보호
 - `README.md` — 프로젝트 목적, 기술 스택, 문서 진입점
-- `docs/qa/qa-execution-plan.md` — 기존 브라우저 중심 QA rev6 기준
+- `docs/qa/README.md` — 현재 QA 문서 지도와 역사 기록 해석 기준
 - `docs/qa/plan/first-remediation-execution-plan-20260612.md` — 이전 QA 후속 처리 방식
 - `TESTING.md` — Vitest/Playwright/Supabase local stack 기준
 - `package.json` — scripts, engines, dependency 기준
 - `playwright.config.ts` — project, viewport, trace, auth-state 구조
 - `src/lib/routes.ts` — route 단일 출처
-- `docs/ia.md`, `docs/flow/user-flow.md`, `docs/Wireframe/README.md` — IA/flow/screen 기준
-- `docs/ant-design/07-review-checklist.md` — UI/상태/접근성 체크 기준
-- `supabase/migrations/INDEX.md`, `docs/Wireframe/data-usage-index.md` — 데이터/RLS 검증 기준
+- `docs/prd.md`, `src/lib/routes.ts`, route contract tests — 제품/route/flow 기준
+- `DESIGN.md` — UI/상태/접근성 체크 기준
+- `supabase/migrations/INDEX.md`, `docs/supabase/` — 데이터/RLS 검증 기준
 - `scripts/build-preflight.mjs` — dev/prod build 오염 방지와 Supabase remote apply 표면 차단
 
 ## 외부 근거

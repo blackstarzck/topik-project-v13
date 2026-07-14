@@ -13,8 +13,8 @@ import { QUESTION_NOS, type QuestionNo } from "./types";
 import { getWeakDimensions, type WeakDimensionSummary } from "./weakness";
 
 /**
- * C-01 rule-based transient recommendations (implementation brief:
- * docs/sot-change-proposals/2026-07-09-c01-rule-fallback-recommendations-implementation-brief.md).
+ * C-01 rule-based transient recommendations. The executable contract lives in
+ * this module and its recommendation fallback tests.
  *
  * Runs ONLY when the user has zero stored recommendation_items. Candidates
  * are scored with fixed rule weights over the user's own signals (writing
@@ -74,7 +74,7 @@ export type ComputedRecommendations = {
   summaryCode: ComputedSummaryCode | null;
 };
 
-// Score table — docs/todo/codex-recommendation-logic-design.html §6.4 subset.
+// Score table — executable fallback scoring subset covered by module tests.
 // Signals the design lists but this app cannot observe (avoid_repeat_keys,
 // spaced-review, same-type over-repetition) are intentionally absent; see the
 // implementation brief's out-of-scope section.
@@ -198,7 +198,10 @@ function scoreCandidate(
 
   if (candidate.questionNo === rotation[0]) {
     score += SCORE_ROTATION_NEXT;
-    components.push({ code: "TYPE_ROTATION_NEXT", points: SCORE_ROTATION_NEXT });
+    components.push({
+      code: "TYPE_ROTATION_NEXT",
+      points: SCORE_ROTATION_NEXT,
+    });
   }
   if (
     signals.latestQuestionNo != null &&

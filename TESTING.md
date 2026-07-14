@@ -1,72 +1,60 @@
 # Testing
 
-TALKPIK AI uses **Vitest** for unit/integration tests and **Playwright** for end-to-end browser tests (introduced incrementally per phase).
+테스트는 변경 영향에 맞게 선택하고, 실행하지 않은 검증을 성공으로 표현하지 않는다.
 
-## Commands
+## 기본 명령
 
 ```bash
-pnpm test           # Vitest, headless. Unit + mock-based integration. Default run.
-pnpm test:watch     # Vitest watch mode.
-pnpm test:e2e       # Playwright (introduced in later phases as routes ship).
-pnpm format         # Prettier check.
+pnpm test             # Vitest unit/integration
+pnpm test:watch       # Vitest watch
+pnpm test:e2e         # Playwright e2e
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm format           # Prettier check
 ```
 
-## Supabase-dependent integration tests
+작은 변경은 관련 test 파일이나 `-g` filter부터 실행한다. auth, middleware, app shell, route guard, global theme처럼 여러 route에 영향을 주거나 범위를 좁히기 어려우면 전체 관련 suite를 실행한다.
 
-A small number of integration tests require a running **Supabase local stack** (docker-based) and the live schema applied. They are **skipped by default** so `pnpm test` stays green on machines without docker.
+## UI 변경
 
-Affected files:
-- `tests/integration/profile-trigger.test.ts` — verifies the `on_auth_user_created` trigger added in `supabase/migrations/20260521120000_auth_user_profile_bootstrap.sql`.
-- `tests/integration/rls-smoke.test.ts` — verifies anonymous read blocking and user-A/user-B row isolation under RLS.
+route, component, layout, theme, global style 또는 interaction을 바꾸면 다음 두 검증을 모두 수행한다.
 
-### Enabling them locally
+1. 영향 범위의 Playwright CLI test
+2. 현재 worktree runtime을 Playwright MCP로 직접 열어 확인
 
-Prerequisites: Docker Desktop (or compatible) and the Supabase CLI on PATH (`pnpm dlx supabase --version`).
+MCP 확인에는 고유 loopback port, isolated browser session, desktop/mobile viewport, 주요 interaction과 관련 loading/empty/success/error/disabled 상태, console/network 오류 확인이 포함된다. Playwright CLI 통과만으로 직접 확인을 대신하지 않는다. UI에 영향이 없는 정책·문서·server-only 변경은 그 경계를 diff로 확인한 뒤 브라우저 검증을 생략할 수 있다.
+
+## Supabase local integration
+
+Supabase 의존 test는 Docker 기반 local stack과 실제 migration replay가 필요해 기본 `pnpm test`에서는 skip될 수 있다.
 
 ```bash
-# 1. Start the local stack (first run pulls images).
 pnpm dlx supabase start
-
-# 2. Apply migrations to a clean DB.
 pnpm dlx supabase db reset
-
-# 3. Run the gated tests. The env var unlocks the describe.skipIf gates.
 pnpm test:supabase:local
 ```
 
-### How they are gated
+현재 local config는 `supabase/config.toml`, user-independent seed는 `supabase/seed.sql`, schema/RLS/RPC 정본은 `supabase/migrations/*.sql`이다. `src/lib/supabase/env.ts`는 development에서 `http://127.0.0.1`과 `http://localhost` local stack 연결을 허용하고, production/test runtime에서는 HTTPS URL을 요구한다.
 
-Each Supabase-dependent test wraps its `describe` in `describe.skipIf(process.env.SUPABASE_LOCAL_STACK !== "1", ...)`. Without the env var, vitest reports them as `skipped` (not failed). With `SUPABASE_LOCAL_STACK=1`, they execute against the local stack listening on `http://127.0.0.1:54321` and use the publishable anon key Supabase CLI prints after `supabase start`.
+local integration test는 변수를 `process.env`로 직접 읽는다. 현재 test command가 `.env.test.local`을 자동으로 읽는다고 가정하지 말고, 다음처럼 실행할 terminal session에 local 값을 주입한다. `.env.test.local`을 값 보관용으로 사용한다면 별도 loader를 명시적으로 구성해야 한다.
 
-Put the local URL and anon key in `.env.test.local` (this file is git-ignored):
-
-```
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<value printed by `supabase start`>
-```
-
-> **Note**: this HTTP URL is **only** for the SUPABASE_LOCAL_STACK-gated tests, which call `createClient(url, anonKey)` directly and bypass `getPublicEnv()`. The app's own runtime env validator (`src/lib/supabase/env.ts`) rejects any non-HTTPS URL — do not point `NEXT_PUBLIC_SUPABASE_URL` at `http://127.0.0.1:54321` in `.env.local` for normal `pnpm dev`; use the project's HTTPS URL there.
-
-### CI
-
-CI does **not** run these tests by default — Supabase local stack inside GitHub Actions would slow every PR. Run them locally before any PR that touches `supabase/migrations/*.sql` or the auth/RLS code path.
-
-## Test layout
-
-```
-tests/
-  lib/
-    supabase/env.test.ts             # zod env validation
-    auth/session.test.ts             # getCurrentUser / requireUser
-    auth/profile.test.ts             # bootstrapProfile
-    auth/profile-getCurrentProfile.test.ts  # getCurrentProfile / requireRole
-  middleware/middleware.test.ts      # proxy.ts (renamed from middleware.ts in cleanup PR)
-  integration/
-    route-matrix.test.ts             # PUBLIC_PATHS/PROTECTED_ROUTE_CASES × anon/auth
-    profile-trigger.test.ts          # SUPABASE_LOCAL_STACK gated
-    rls-smoke.test.ts                # SUPABASE_LOCAL_STACK gated
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54321"
+$env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="<supabase start가 출력한 local key>"
+pnpm test:supabase:local
 ```
 
-Admin UI routes are intentionally absent from this repository. Admin-role
-preservation infrastructure is covered through route/RLS smoke tests and
-Supabase migration review, not an active admin page matrix.
+`test:supabase:local`은 `SUPABASE_LOCAL_STACK=1`을 설정하며, 이 값은 loopback local API에만 사용한다. service-role key와 테스트 계정 비밀번호는 terminal output, report, screenshot, commit에 남기지 않는다. migration 또는 auth/RLS 경로를 바꾸면 local stack test를 실행하고, v13에서 원격 Supabase schema/data apply는 하지 않는다.
+
+## 검증 선택 기준
+
+| 변경 | 최소 검증 |
+| --- | --- |
+| 문서·checker | 해당 contract test, dead-reference 검사, `git diff --check` |
+| 순수 TypeScript 로직 | 관련 Vitest, lint, typecheck |
+| route·auth·middleware | 관련 unit/integration, scoped 또는 전체 e2e, build |
+| UI | 관련 test, lint, typecheck, Playwright CLI + MCP 직접 확인 |
+| migration·RLS·RPC | SQL review, local reset/integration, migration index·`docs/supabase/` 일치 검사 |
+
+실패 시에는 실패 명령, 핵심 오류, 재현 조건과 남은 위험을 기록한다.

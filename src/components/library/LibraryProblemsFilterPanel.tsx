@@ -5,7 +5,7 @@
  * 데스크톱 aside와 모바일 Drawer가 같은 콘텐츠를 공유한다. 필터 의미론
  * (그룹 간 AND, 항목 유형 트리의 브랜치 합집합)은 library-problems-filter-model
  * 이 단일 소스이고, 이 컴포넌트는 상태 표시와 onChange 위임만 담당한다.
- * (근거: docs/sot-change-proposals/2026-07-04-library-problems-filter-panel.md)
+ * Component tests가 표시와 onChange 위임의 실행 계약을 고정한다.
  */
 
 import {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import sample51 from "../../../docs/Wireframe/08-D-01-short-answer-writing-51/sample-51.json";
-import sample52 from "../../../docs/Wireframe/09-D-02-answer-writing-52/sample-52.json";
-import sample53 from "../../../docs/Wireframe/10-D-03-long-form-writing-53/sample-53.json";
-import sample54 from "../../../docs/Wireframe/11-D-04-essay-writing-54/sample-54.json";
-import sample542 from "../../../docs/Wireframe/11-D-04-essay-writing-54/sample-54-2.json";
+import sample51 from "../../fixtures/writing/sample-51.json";
+import sample52 from "../../fixtures/writing/sample-52.json";
+import sample53 from "../../fixtures/writing/sample-53.json";
+import sample54 from "../../fixtures/writing/sample-54.json";
+import sample542 from "../../fixtures/writing/sample-54-2.json";
 import {
   normalizeWritingProblem,
   type WritingProblemNormalizerInput,
@@ -57,7 +57,7 @@ function inputFromFixture(
 }
 
 describe("normalizeWritingProblem", () => {
-  it("smoke-normalizes every 08~11 wireframe fixture", () => {
+  it("smoke-normalizes every canonical writing fixture", () => {
     const all: Array<[QuestionNo, FixtureRecord[]]> = [
       [51, sample51 as FixtureRecord[]],
       [52, sample52 as FixtureRecord[]],

@@ -490,13 +490,17 @@ describe("NotificationBell", () => {
         true,
       );
     });
+    expect(respondInstitutionInvitationMock).not.toHaveBeenCalledWith(
+      "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      false,
+    );
     expect(routerRefreshMock).toHaveBeenCalledTimes(1);
     expect(messageSuccessMock).toHaveBeenCalledWith(
       koMessages.notifications.institutionInvitation.accepted,
     );
   });
 
-  it("keeps institution invitations dismissible without rendering a decline action", async () => {
+  it("closes an invitation without sending a response or rendering a decline action", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification(),
     ]);
