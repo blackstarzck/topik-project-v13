@@ -6707,6 +6707,13 @@ body {
   font-size: 14px;
 }
 
+.app-notification-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .dashboard-alerts-card .ant-card-head-title {
   font-size: 14px;
 }

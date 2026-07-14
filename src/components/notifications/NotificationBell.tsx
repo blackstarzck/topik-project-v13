@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  App,
-  Badge,
-  Button,
-  Empty,
-  Popover,
-  Skeleton,
-  Typography,
-} from "antd";
+import { App, Badge, Button, Empty, Popover, Skeleton, Typography } from "antd";
 import { Bell } from "@/components/shared/AppIcons";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -22,6 +14,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
   resolveInstitutionInvitationStatus,
+  resolveInstitutionInvitationExpiry,
   resolveNotificationAction,
   respondInstitutionInvitation,
   type InstitutionInvitationPayload,
@@ -181,6 +174,7 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
             invitationId,
             code: result.code ?? prev.invitation.code,
             codeLabel: result.code_label ?? prev.invitation.codeLabel,
+            expiresAt: prev.invitation.expiresAt,
           },
           status,
         };
@@ -270,6 +264,25 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
           {items.map((item) => {
             const unread = !item.read_at;
             const isPendingRead = pendingReadIds.has(item.id);
+            const action = resolveNotificationAction(item);
+            const institutionInvitation =
+              action.kind === "institutionInvitation"
+                ? action.invitation
+                : null;
+            const invitationExpiry = institutionInvitation
+              ? resolveInstitutionInvitationExpiry(
+                  institutionInvitation.expiresAt,
+                  now,
+                )
+              : null;
+            const expiryLabel =
+              invitationExpiry?.status === "expired"
+                ? tInvitation("expiredLabel")
+                : invitationExpiry?.status === "active"
+                  ? tInvitation("expiresInDays", {
+                      days: invitationExpiry.daysRemaining,
+                    })
+                  : null;
             return (
               <div
                 key={item.id}
@@ -302,12 +315,34 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
                     >
                       {item.body}
                     </Paragraph>
-                    <Text
-                      type="secondary"
-                      className="app-notification-item__time"
-                    >
-                      {format.relativeTime(new Date(item.created_at), now)}
-                    </Text>
+                    <span className="app-notification-item__meta">
+                      <Text
+                        type="secondary"
+                        className="app-notification-item__time"
+                      >
+                        {format.relativeTime(new Date(item.created_at), now)}
+                      </Text>
+                      {expiryLabel ? (
+                        <>
+                          <span
+                            aria-hidden="true"
+                            className="app-notification-item__separator"
+                          >
+                            ·
+                          </span>
+                          <Text
+                            type={
+                              invitationExpiry?.status === "expired"
+                                ? "danger"
+                                : "secondary"
+                            }
+                            className="app-notification-item__expiry"
+                          >
+                            {expiryLabel}
+                          </Text>
+                        </>
+                      ) : null}
+                    </span>
                   </span>
                 </button>
               </div>

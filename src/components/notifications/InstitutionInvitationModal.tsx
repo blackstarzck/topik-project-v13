@@ -2,9 +2,10 @@
 
 import { Alert, Button, Typography } from "antd";
 import type { AlertProps } from "antd";
-import { useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { AppModal } from "@/components/shared/AppModal";
+import { resolveInstitutionInvitationExpiry } from "./notifications-data";
 import type {
   InstitutionInvitationErrorKind,
   InstitutionInvitationPayload,
@@ -54,6 +55,8 @@ export function InstitutionInvitationModal({
   onClose,
 }: Props) {
   const t = useTranslations("notifications.institutionInvitation");
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
 
   const code = invitation?.code ?? t("unknownCode");
   const codeLabel = invitation?.codeLabel ?? t("unknownLabel");
@@ -62,14 +65,32 @@ export function InstitutionInvitationModal({
   const invitedAffiliation = invitation?.code?.trim() ?? "";
   const replacesAffiliation = Boolean(
     currentAffiliation &&
-      invitedAffiliation &&
-      currentAffiliation !== invitedAffiliation,
+    invitedAffiliation &&
+    currentAffiliation !== invitedAffiliation,
   );
+  const invitationExpiry = invitation
+    ? resolveInstitutionInvitationExpiry(invitation.expiresAt, now)
+    : null;
+  const invitationExpired =
+    status === "expired" || (!status && invitationExpiry?.status === "expired");
+  const expiryDate = invitation?.expiresAt
+    ? new Date(invitation.expiresAt)
+    : null;
+  const expiryDateLabel =
+    expiryDate && Number.isFinite(expiryDate.getTime())
+      ? format.dateTime(expiryDate, {
+          dateStyle: "medium",
+          timeStyle: "short",
+          timeZone: "Asia/Seoul",
+        })
+      : null;
+  const displayStatus = status ?? (invitationExpired ? "expired" : null);
   const actionsDisabled =
     !invitationId ||
     submitting !== null ||
     resolvedStatuses.has(status) ||
-    status === "unauthenticated";
+    status === "unauthenticated" ||
+    invitationExpired;
   const needsSignIn = status === "unauthenticated" && onSignIn;
 
   return (
@@ -113,6 +134,11 @@ export function InstitutionInvitationModal({
           <Text type="secondary">{t("description")}</Text>
           <Text strong>{codeLabel}</Text>
           <Text code>{code}</Text>
+          {expiryDateLabel ? (
+            <Text type="secondary">
+              {t("expiryDate", { date: expiryDateLabel })}
+            </Text>
+          ) : null}
         </div>
         {!invitationId ? (
           <Alert type="error" showIcon title={t("invalid")} />
@@ -120,11 +146,11 @@ export function InstitutionInvitationModal({
         {replacesAffiliation ? (
           <Alert type="warning" showIcon title={t("overwriteWarning")} />
         ) : null}
-        {status ? (
+        {displayStatus ? (
           <Alert
-            type={statusToAlertType(status)}
+            type={statusToAlertType(displayStatus)}
             showIcon
-            title={t(status)}
+            title={t(displayStatus)}
           />
         ) : null}
       </div>

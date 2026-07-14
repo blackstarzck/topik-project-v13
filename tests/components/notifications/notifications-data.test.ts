@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   mapInstitutionInvitationError,
+  resolveInstitutionInvitationExpiry,
   resolveInstitutionInvitationStatus,
   respondInstitutionInvitation,
   resolveNotificationAction,
@@ -106,6 +107,7 @@ describe("resolveNotificationAction", () => {
       invitation: {
         invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
         code: "CAMPAIGN-01",
+        expiresAt: null,
         codeLabel: "캠페인 유입 유저",
       },
     });
@@ -144,10 +146,42 @@ describe("resolveNotificationAction", () => {
       invitation: {
         invitationId: null,
         code: "CAMPAIGN-01",
+        expiresAt: null,
         codeLabel: "캠페인 유입 유저",
       },
     });
   });
+});
+
+describe("resolveInstitutionInvitationExpiry", () => {
+  const now = new Date("2026-07-13T15:00:00.000Z");
+
+  it("returns the Seoul calendar-day difference for a future expiry", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-15T14:59:59.000Z", now),
+    ).toEqual({ status: "active", daysRemaining: 1 });
+  });
+
+  it("returns D-0 while the invitation expires later on the same Seoul date", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-14T14:59:59.000Z", now),
+    ).toEqual({ status: "active", daysRemaining: 0 });
+  });
+
+  it("returns expired at the exact expiry instant", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-13T15:00:00.000Z", now),
+    ).toEqual({ status: "expired" });
+  });
+
+  it.each([null, "", "not-a-date", "2026-07-14", "2026-07-14T14:59:59"])(
+    "does not infer a state for a missing or invalid expiry (%s)",
+    (expiresAt) => {
+      expect(resolveInstitutionInvitationExpiry(expiresAt, now)).toEqual({
+        status: "unknown",
+      });
+    },
+  );
 });
 
 describe("mapInstitutionInvitationError", () => {
@@ -181,9 +215,9 @@ describe("mapInstitutionInvitationError", () => {
         new Error("already affiliated with another institution"),
       ),
     ).toBe("alreadyAffiliatedOther");
-    expect(
-      mapInstitutionInvitationError(new Error("profile_not_found")),
-    ).toBe("invalid");
+    expect(mapInstitutionInvitationError(new Error("profile_not_found"))).toBe(
+      "invalid",
+    );
   });
 });
 
