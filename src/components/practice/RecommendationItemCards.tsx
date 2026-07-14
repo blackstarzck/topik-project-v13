@@ -212,7 +212,10 @@ export function SecondaryRecommendationCard({
           href={ctaHref(card) as never}
           className="block w-full"
         >
-          <Button block>
+          <Button
+            className="inline-flex items-center justify-center gap-2"
+            block
+          >
             {t("continueProblem")}
             <ArrowRight size={16} aria-hidden="true" />
           </Button>
