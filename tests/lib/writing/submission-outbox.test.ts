@@ -27,10 +27,7 @@ const submission: WritingSubmissionIntentPayload = {
   },
 };
 
-function view(
-  state: string,
-  overrides: Record<string, unknown> = {},
-) {
+function view(state: string, overrides: Record<string, unknown> = {}) {
   return {
     intent_id: INTENT_ID,
     state,
@@ -56,8 +53,10 @@ function clientWithRpc(
 }
 
 const classifyFailure = (error: unknown) => ({
-  disposition: error instanceof TypeError ? ("ambiguous" as const) : ("failed" as const),
-  reasonCode: error instanceof TypeError ? "provider_network_error" : "provider_http_400",
+  disposition:
+    error instanceof TypeError ? ("ambiguous" as const) : ("failed" as const),
+  reasonCode:
+    error instanceof TypeError ? "provider_network_error" : "provider_http_400",
 });
 
 describe("dispatchWritingSubmissionIntent", () => {
@@ -262,10 +261,40 @@ describe("dispatchWritingSubmissionIntent", () => {
         dispatchProvider: vi.fn().mockRejectedValue(providerError),
         classifyProviderFailure: classifyFailure,
       }),
-    ).rejects.toBe(providerError);
+    ).rejects.toThrow("writing_submission_dispatch_failed");
     expect(client.rpc).toHaveBeenCalledWith(
       "mark_writing_submission_intent_failed",
       expect.objectContaining({ p_reason_code: "provider_http_400" }),
+    );
+  });
+
+  it("quarantines a deterministic rejection when the failed marker cannot be saved", async () => {
+    const providerError = new Error("bad request");
+    const client = clientWithRpc((name) => {
+      if (name === "prepare_writing_submission_intent") return view("pending");
+      if (name === "claim_writing_submission_intent") {
+        return view("dispatching", { should_dispatch: true });
+      }
+      if (name === "mark_writing_submission_intent_failed") {
+        return new Error("database unavailable");
+      }
+      return null;
+    });
+
+    await expect(
+      dispatchWritingSubmissionIntent({
+        client,
+        intentId: INTENT_ID,
+        submission,
+        dispatchProvider: vi.fn().mockRejectedValue(providerError),
+        classifyProviderFailure: classifyFailure,
+      }),
+    ).rejects.toThrow("writing_submission_dispatch_ambiguous");
+    expect(client.rpc).toHaveBeenCalledWith(
+      "mark_writing_submission_intent_ambiguous",
+      expect.objectContaining({
+        p_reason_code: "provider_failure_persistence_unknown",
+      }),
     );
   });
 

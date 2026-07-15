@@ -122,7 +122,9 @@ export function useUpsertDraft() {
 // Those keys have no mounted query at the time of invalidation (the caller
 // navigates to /feedback/[id] right after, and that page mounts fresh), so the
 // invalidations were dead. Drop them.
-export function useSubmitWriting() {
+export function useSubmitWriting(
+  action: SubmitWritingAction = submitWritingAction,
+) {
   const intentRef = useRef<{ fingerprint: string; intentId: string } | null>(
     null,
   );
@@ -135,13 +137,24 @@ export function useSubmitWriting() {
           intentId: crypto.randomUUID(),
         };
       }
-      return submitWriting({
-        ...input,
-        submission_intent_id: intentRef.current.intentId,
-      });
+      return submitWriting(
+        {
+          ...input,
+          submission_intent_id: intentRef.current.intentId,
+        },
+        action,
+      );
     },
     onSuccess: () => {
       intentRef.current = null;
+    },
+    onError: (error) => {
+      // A confirmed provider rejection is terminal for this intent, but safe
+      // to retry with a new one. Ambiguous/accepted states must retain the
+      // original intent so they can never dispatch the provider twice.
+      if (error.message.includes("writing_submission_dispatch_failed")) {
+        intentRef.current = null;
+      }
     },
   });
 }

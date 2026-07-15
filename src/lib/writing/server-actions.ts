@@ -85,10 +85,10 @@ export type ReplaceStaleWritingDraftInput = {
   payloadHash: string;
 };
 
-function hashWritingIdentifier(value: string | null | undefined): string | null {
-  return value
-    ? createHash("sha256").update(value).digest("hex")
-    : null;
+function hashWritingIdentifier(
+  value: string | null | undefined,
+): string | null {
+  return value ? createHash("sha256").update(value).digest("hex") : null;
 }
 
 function reportWritingVersionConflict({
@@ -295,23 +295,6 @@ async function fetchSubmitProfileContext(
   };
 }
 
-// Q51/Q52 빈칸형 답안: answer_json.blanks({라벨ㄱ/ㄴ → 답})를 외부 API의 blanks로 전달한다.
-// 빈칸 구조가 없으면(Q53/Q54, 또는 단일 텍스트로 저장된 Q52) null → 호출부에서 text 폴백.
-function extractBlanksFromAnswerJson(
-  answerJson: SubmitWritingInput["answer_json"],
-): Record<string, string> | null {
-  if (!answerJson || typeof answerJson !== "object") return null;
-  const blanks = (answerJson as { blanks?: unknown }).blanks;
-  if (!blanks || typeof blanks !== "object" || Array.isArray(blanks))
-    return null;
-  const out: Record<string, string> = {};
-  for (const [label, value] of Object.entries(blanks)) {
-    if (typeof value === "string" && value.trim().length > 0)
-      out[label] = value;
-  }
-  return Object.keys(out).length > 0 ? out : null;
-}
-
 export async function submitWritingAction(
   input: SubmitWritingInput,
 ): Promise<SubmitWritingActionResult> {
@@ -382,20 +365,12 @@ export async function submitWritingAction(
     throw new Error("submitWriting: missing session token");
   }
 
-  const blanks = extractBlanksFromAnswerJson(input.answer_json);
-  const externalPayload = blanks
-    ? {
-        task_type: toExternalTaskType(input.question_no),
-        question_id: canonicalContext.questionId,
-        blanks,
-        lang: profileContext.locale,
-      }
-    : {
-        task_type: toExternalTaskType(input.question_no),
-        question_id: canonicalContext.questionId,
-        text: input.answer_text,
-        lang: profileContext.locale,
-      };
+  const externalPayload = {
+    task_type: toExternalTaskType(input.question_no),
+    question_id: canonicalContext.questionId,
+    text: input.answer_text,
+    lang: profileContext.locale,
+  };
 
   const localSubmissionId = await dispatchWritingSubmissionIntent({
     client: serviceSupabase,

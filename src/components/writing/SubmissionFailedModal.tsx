@@ -70,20 +70,20 @@ export function SubmissionFailedModal({
               ? t("submissionBlockedDescription")
               : submissionAmbiguous
                 ? t("submissionAmbiguousDescription")
-              : t(
-                  problemUnavailable
-                    ? "submitUnavailableDescription"
-                    : "submitFailedDescription",
-                  { submitError: submitError ?? "" },
-                )
+                : t(
+                    problemUnavailable
+                      ? "submitUnavailableDescription"
+                      : "submitFailedDescription",
+                    { submitError: submitError ?? "" },
+                  )
           }
         />
 
         <div
           className={
-            retryBlocked
+            submissionBlocked
               ? "grid grid-cols-1 gap-3"
-              : "grid grid-cols-[2fr_3fr] gap-3"
+              : "grid grid-cols-1 gap-3 sm:grid-cols-[2fr_3fr]"
           }
         >
           <Button
@@ -95,7 +95,19 @@ export function SubmissionFailedModal({
           >
             {tCommon("cancel")}
           </Button>
-          {retryBlocked ? null : problemUnavailable ? (
+          {submissionBlocked ? null : submissionAmbiguous ? (
+            <Button
+              block
+              size="large"
+              type="primary"
+              href={APP_ROUTES.library as never}
+              icon={<ListChecks aria-hidden size={16} />}
+              disabled={loading}
+              data-testid="submission-failed-history"
+            >
+              {t("checkSubmissionHistory")}
+            </Button>
+          ) : problemUnavailable ? (
             <Link href={APP_ROUTES.practiceProblems as never}>
               <Button
                 block

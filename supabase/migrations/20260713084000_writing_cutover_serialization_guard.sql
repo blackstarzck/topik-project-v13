@@ -205,11 +205,17 @@ revoke all on function private.guard_writing_cron_retirement_snapshot() from ano
 revoke all on function private.guard_writing_cron_retirement_snapshot() from authenticated;
 revoke all on function private.guard_writing_cron_retirement_snapshot() from service_role;
 
-drop trigger if exists writing_cron_retirement_snapshot_guard
-  on private.writing_cron_definition_snapshot;
-create trigger writing_cron_retirement_snapshot_guard
-before insert or update on private.writing_cron_definition_snapshot
-for each row execute function private.guard_writing_cron_retirement_snapshot();
+do $$
+begin
+  if to_regclass('private.writing_cron_definition_snapshot') is not null then
+    execute 'drop trigger if exists writing_cron_retirement_snapshot_guard
+      on private.writing_cron_definition_snapshot';
+    execute 'create trigger writing_cron_retirement_snapshot_guard
+      before insert or update on private.writing_cron_definition_snapshot
+      for each row execute function private.guard_writing_cron_retirement_snapshot()';
+  end if;
+end
+$$;
 
 create or replace function private.verify_writing_cron_retirement_event()
 returns trigger
@@ -264,11 +270,17 @@ revoke all on function private.verify_writing_cron_retirement_event() from anon;
 revoke all on function private.verify_writing_cron_retirement_event() from authenticated;
 revoke all on function private.verify_writing_cron_retirement_event() from service_role;
 
-drop trigger if exists writing_cron_retirement_event_guard
-  on private.writing_scheduler_event;
-create trigger writing_cron_retirement_event_guard
-before insert on private.writing_scheduler_event
-for each row execute function private.verify_writing_cron_retirement_event();
+do $$
+begin
+  if to_regclass('private.writing_scheduler_event') is not null then
+    execute 'drop trigger if exists writing_cron_retirement_event_guard
+      on private.writing_scheduler_event';
+    execute 'create trigger writing_cron_retirement_event_guard
+      before insert on private.writing_scheduler_event
+      for each row execute function private.verify_writing_cron_retirement_event()';
+  end if;
+end
+$$;
 
 -- Already-cut-over dev environments must pass the corrected gate immediately.
 do $$

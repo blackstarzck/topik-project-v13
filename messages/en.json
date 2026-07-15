@@ -1818,6 +1818,7 @@
       "submissionBlockedDescription": "A system transition check is in progress. Your draft remains saved, and you can submit after submissions resume.",
       "submissionAmbiguousTitle": "We are checking your submission",
       "submissionAmbiguousDescription": "We cannot yet confirm whether the grading service received the request. To prevent a duplicate, it will not be sent again automatically. Check your submission history shortly.",
+      "checkSubmissionHistory": "Check submission history",
       "submitFailedDescription": "{submitError} — press 'Submit again' to retry, or copy your answer somewhere safe.",
       "submitUnavailableDescription": "{submitError} Your current answer is still preserved. Choose another question from the problem list.",
       "chooseAnotherProblem": "Choose another question",

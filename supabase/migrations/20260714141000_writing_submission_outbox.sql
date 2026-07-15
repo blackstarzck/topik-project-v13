@@ -154,7 +154,7 @@ create table private.writing_submission_intents (
   local_submission_id uuid not null unique,
   provider_dispatch_key text not null unique,
   materialization_token uuid not null default gen_random_uuid() unique,
-  dedup_key text not null unique,
+  dedup_key text not null,
   user_id uuid not null references public.profiles(id) on delete cascade,
   problem_id uuid not null
     references private.problem_identities(problem_id) on delete restrict,
@@ -227,6 +227,9 @@ create index writing_submission_intents_state_created_idx
   on private.writing_submission_intents (state, created_at);
 create index writing_submission_intents_user_created_idx
   on private.writing_submission_intents (user_id, created_at desc);
+create unique index writing_submission_intents_active_dedup_unique
+  on private.writing_submission_intents (dedup_key)
+  where state <> 'failed';
 
 alter table private.writing_submission_intents enable row level security;
 alter table private.writing_submission_intents force row level security;
@@ -299,7 +302,7 @@ immutable
 set search_path = pg_catalog
 as $$
   select encode(sha256(convert_to(
-    'writing-outbox-v1|prepare|claim-once|accepted-recovery|ambiguous-no-retry|external-text-id|local-intent-uuid',
+    'writing-outbox-v2|prepare|claim-once|accepted-recovery|ambiguous-no-retry|confirmed-failure-new-intent|external-text-id|local-intent-uuid',
     'UTF8'
   )), 'hex')
 $$;
@@ -664,7 +667,10 @@ begin
     from private.writing_submission_intents intent
     where intent.intent_id = p_intent_id
        or intent.dedup_key = v_dedup_key
-    order by (intent.intent_id = p_intent_id) desc
+    order by
+      (intent.intent_id = p_intent_id) desc,
+      (intent.state <> 'failed') desc,
+      intent.created_at desc
     limit 1
     for update;
     if not found then
@@ -702,7 +708,16 @@ as $$
 declare
   v_intent private.writing_submission_intents%rowtype;
   v_old_state text;
+  v_submission_mode text;
 begin
+  -- Linearize emergency blocking before claiming an intent. The state setter
+  -- takes an UPDATE lock on the same singleton, so whichever transaction
+  -- acquires the control row first defines whether this claim is authorized.
+  select control.submission_mode into v_submission_mode
+  from private.writing_submission_control control
+  where control.singleton
+  for share;
+
   select * into v_intent
   from private.writing_submission_intents intent
   where intent.intent_id = p_intent_id
@@ -712,13 +727,13 @@ begin
   end if;
 
   if v_intent.state <> 'pending'
-     or private.get_writing_submission_mode() not in (
+     or v_submission_mode not in (
        'verification',
        'canonical'
      ) then
     return private.writing_submission_intent_result(v_intent, false);
   end if;
-  if private.get_writing_submission_mode() = 'canonical' then
+  if v_submission_mode = 'canonical' then
     perform private.assert_current_writing_outbox_activation();
   end if;
 
@@ -1523,7 +1538,7 @@ revoke all on function private.assert_current_writing_outbox_activation() from s
 -- have passed and the immutable report artifact has been hashed.
 create or replace function public.record_writing_submission_contract_evidence(
   p_evidence_id text,
-  p_verification_report_hash text,
+  p_verification_report jsonb,
   p_verified_by text,
   p_reason text
 )
@@ -1534,7 +1549,8 @@ set search_path = pg_catalog, private
 as $$
 declare
   v_evidence_id text := nullif(btrim(p_evidence_id), '');
-  v_report_hash text := lower(btrim(p_verification_report_hash));
+  v_contract_digest text := private.writing_outbox_contract_digest();
+  v_report_hash text;
   v_verified_by text := nullif(btrim(p_verified_by), '');
   v_reason text := nullif(btrim(p_reason), '');
 begin
@@ -1542,9 +1558,30 @@ begin
      or v_evidence_id !~ '^[a-z0-9][a-z0-9._:-]{7,127}$'
      or v_verified_by is null
      or v_reason is null
-     or v_report_hash !~ '^[0-9a-f]{64}$' then
+     or jsonb_typeof(p_verification_report) is distinct from 'object'
+     or p_verification_report->>'contract' is distinct from 'writing-outbox-v2'
+     or p_verification_report->>'schemaVersion' is distinct from '2'
+     or p_verification_report->>'contractDigest' is distinct from v_contract_digest
+     or p_verification_report->>'cleanup' is distinct from 'complete'
+     or jsonb_typeof(p_verification_report->'scenarios') is distinct from 'object'
+     or p_verification_report#>>'{scenarios,concurrentDuplicate,oneFulfilled}' is distinct from 'true'
+     or p_verification_report#>>'{scenarios,concurrentDuplicate,providerDispatches}' is distinct from '1'
+     or p_verification_report#>>'{scenarios,timeout,quarantined}' is distinct from 'true'
+     or p_verification_report#>>'{scenarios,timeout,providerDispatches}' is distinct from '1'
+     or p_verification_report#>>'{scenarios,deterministicFailure,failed}' is distinct from 'true'
+     or p_verification_report#>>'{scenarios,deterministicFailure,retrySucceededWithNewIntent}' is distinct from 'true'
+     or p_verification_report#>>'{scenarios,deterministicFailure,providerDispatches}' is distinct from '2'
+     or p_verification_report#>>'{scenarios,acceptedMarkerFailure,quarantined}' is distinct from 'true'
+     or p_verification_report#>>'{scenarios,acceptedMarkerFailure,providerDispatches}' is distinct from '1'
+     or p_verification_report#>>'{scenarios,materializationRecovery,recovered}' is distinct from 'true'
+     or p_verification_report#>>'{scenarios,materializationRecovery,providerDispatches}' is distinct from '1' then
     raise exception 'writing_submission_verification_evidence_invalid';
   end if;
+
+  v_report_hash := encode(
+    sha256(convert_to(p_verification_report::text, 'UTF8')),
+    'hex'
+  );
 
   insert into private.writing_submission_contract_evidence (
     evidence_id,
@@ -1556,7 +1593,7 @@ begin
   ) values (
     v_evidence_id,
     'local_outbox_verified',
-    private.writing_outbox_contract_digest(),
+    v_contract_digest,
     v_report_hash,
     v_verified_by,
     encode(sha256(convert_to(v_reason, 'UTF8')), 'hex')
@@ -1567,16 +1604,16 @@ end;
 $$;
 
 revoke all on function public.record_writing_submission_contract_evidence(
-  text, text, text, text
+  text, jsonb, text, text
 ) from public;
 revoke all on function public.record_writing_submission_contract_evidence(
-  text, text, text, text
+  text, jsonb, text, text
 ) from anon;
 revoke all on function public.record_writing_submission_contract_evidence(
-  text, text, text, text
+  text, jsonb, text, text
 ) from authenticated;
 grant execute on function public.record_writing_submission_contract_evidence(
-  text, text, text, text
+  text, jsonb, text, text
 ) to service_role;
 
 create or replace function private.guard_writing_submission_control()
@@ -1719,5 +1756,5 @@ comment on column private.writing_submission_control.submission_mode is
   'blocked disables submission, verification permits service-only outbox drills, and canonical requires immutable local_outbox_verified evidence.';
 comment on function public.materialize_writing_submission_intent(uuid) is
   'Service-only accepted-intent recovery and materialization. Safe to retry after provider success without another provider request.';
-comment on function public.record_writing_submission_contract_evidence(text, text, text, text) is
-  'Service-only registration of a hashed live verification report. Installation alone never certifies or activates submissions.';
+comment on function public.record_writing_submission_contract_evidence(text, jsonb, text, text) is
+  'Service-only registration of a validated and hashed v2 live verification report. Installation alone never certifies or activates submissions.';

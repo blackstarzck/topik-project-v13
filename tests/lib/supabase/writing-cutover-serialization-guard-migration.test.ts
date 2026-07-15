@@ -15,6 +15,17 @@ const down = readFileSync(
 )
   .replace(/\s+/g, " ")
   .toLowerCase();
+const retirement = readFileSync(
+  join(
+    process.cwd(),
+    "supabase",
+    "migrations",
+    "20260713084500_retire_writing_problem_mirror_cron.sql",
+  ),
+  "utf8",
+)
+  .replace(/\s+/g, " ")
+  .toLowerCase();
 
 describe("writing cutover serialization guard migration", () => {
   it("validates only the latest matching reconciliation evidence", () => {
@@ -58,6 +69,19 @@ describe("writing cutover serialization guard migration", () => {
   it("verifies unschedule success before accepting retirement evidence", () => {
     expect(sql).toContain("writing_cron_retirement_event_requires_absent_job");
     expect(sql).toContain("before insert on private.writing_scheduler_event");
+  });
+
+  it("installs Cron guards only after their target tables exist", () => {
+    expect(sql).toContain(
+      "if to_regclass('private.writing_cron_definition_snapshot') is not null",
+    );
+    expect(sql).toContain(
+      "if to_regclass('private.writing_scheduler_event') is not null",
+    );
+    expect(retirement.indexOf("create table if not exists private.writing_cron_definition_snapshot"))
+      .toBeLessThan(retirement.indexOf("create trigger writing_cron_retirement_snapshot_guard"));
+    expect(retirement.indexOf("create table if not exists private.writing_scheduler_event"))
+      .toBeLessThan(retirement.indexOf("create trigger writing_cron_retirement_event_guard"));
   });
 
   it("removes only the corrective interfaces on schema rollback", () => {

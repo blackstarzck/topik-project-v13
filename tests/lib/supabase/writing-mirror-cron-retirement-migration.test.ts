@@ -73,6 +73,11 @@ describe("writing mirror cron retirement migration", () => {
 
   it("restores the captured definition without hardcoded schedule or command", () => {
     expect(down).toContain(
+      "perform private.set_writing_runtime_state( 'legacy', 'blocked', 'unverified', 'down_migration', 'explicit_schema_rollback', null )",
+    );
+    expect(down.indexOf("perform private.set_writing_runtime_state("))
+      .toBeLessThan(down.indexOf("perform cron.schedule_in_database("));
+    expect(down).toContain(
       "perform cron.schedule_in_database( 'sync-writing-problems', v_schedule, v_command, v_database_name, null, v_active )",
     );
     expect(down).toContain(

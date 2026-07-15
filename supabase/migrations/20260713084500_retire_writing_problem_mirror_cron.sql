@@ -52,6 +52,18 @@ revoke all on table private.writing_cron_definition_snapshot from anon;
 revoke all on table private.writing_cron_definition_snapshot from authenticated;
 revoke all on table private.writing_cron_definition_snapshot from service_role;
 
+drop trigger if exists writing_cron_retirement_snapshot_guard
+  on private.writing_cron_definition_snapshot;
+create trigger writing_cron_retirement_snapshot_guard
+before insert or update on private.writing_cron_definition_snapshot
+for each row execute function private.guard_writing_cron_retirement_snapshot();
+
+drop trigger if exists writing_cron_retirement_event_guard
+  on private.writing_scheduler_event;
+create trigger writing_cron_retirement_event_guard
+before insert on private.writing_scheduler_event
+for each row execute function private.verify_writing_cron_retirement_event();
+
 do $$
 declare
   v_job_count integer;

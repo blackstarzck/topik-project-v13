@@ -46,6 +46,17 @@ declare
   v_actual_nodeport integer;
   v_restored boolean := false;
 begin
+  -- The serialization guard from 08:40 is still active during reverse-order
+  -- rollback and permits a restoration event only in legacy + blocked mode.
+  perform private.set_writing_runtime_state(
+    'legacy',
+    'blocked',
+    'unverified',
+    'down_migration',
+    'explicit_schema_rollback',
+    null
+  );
+
   select
     snapshot.schedule,
     snapshot.command,

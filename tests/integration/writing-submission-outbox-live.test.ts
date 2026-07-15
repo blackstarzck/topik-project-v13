@@ -26,6 +26,11 @@ const SAFE_ENV_LABELS = new Set([
 ]);
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const OUTBOX_CONTRACT =
+  "writing-outbox-v2|prepare|claim-once|accepted-recovery|ambiguous-no-retry|confirmed-failure-new-intent|external-text-id|local-intent-uuid";
+const OUTBOX_CONTRACT_DIGEST = createHash("sha256")
+  .update(OUTBOX_CONTRACT)
+  .digest("hex");
 
 type CanonicalRow = {
   canonical_import_id: number | string;
@@ -439,19 +444,52 @@ describe.runIf(LIVE)("writing submission outbox live fault verification", () => 
       draftIds.push(failedDraft.draftId);
       const failedIntent = randomUUID();
       intentIds.push(failedIntent);
+      let failedDispatches = 0;
       await expect(
         dispatchWritingSubmissionIntent({
           classifyProviderFailure,
           client: realClient,
           dispatchProvider: async () => {
+            failedDispatches += 1;
             throw new Error("simulated provider 400");
           },
           intentId: failedIntent,
           submission: failedDraft.payload,
         }),
-      ).rejects.toThrow("simulated provider 400");
+      ).rejects.toThrow("writing_submission_dispatch_failed");
       expect((await prepareWritingSubmissionIntent(realClient, failedIntent, failedDraft.payload)).state).toBe("failed");
-      scenarios.deterministicFailure = { failed: true, providerDispatches: 1 };
+
+      const retryIntent = randomUUID();
+      intentIds.push(retryIntent);
+      await dispatchWritingSubmissionIntent({
+        classifyProviderFailure,
+        client: realClient,
+        dispatchProvider: async () => {
+          failedDispatches += 1;
+          return {
+            externalSubmissionId: `dev-retry-${randomUUID()}`,
+            providerStatus: "processing",
+          };
+        },
+        intentId: retryIntent,
+        submission: failedDraft.payload,
+      });
+      await dispatchWritingSubmissionIntent({
+        classifyProviderFailure,
+        client: realClient,
+        dispatchProvider: async () => {
+          failedDispatches += 1;
+          throw new Error("must not redispatch a materialized retry");
+        },
+        intentId: retryIntent,
+        submission: failedDraft.payload,
+      });
+      expect(failedDispatches).toBe(2);
+      scenarios.deterministicFailure = {
+        failed: true,
+        providerDispatches: failedDispatches,
+        retrySucceededWithNewIntent: true,
+      };
 
       const acceptedMarkerDraft = await createDraftAndPayload({
         answer: "Live outbox accepted marker persistence verification answer.",
@@ -572,9 +610,9 @@ describe.runIf(LIVE)("writing submission outbox live fault verification", () => 
       const liveEvidence = liveCounts[0]?.evidence as
         | Record<string, unknown>
         | undefined;
-      expect(Number(liveEvidence?.intents)).toBe(5);
-      expect(Number(liveEvidence?.submissions)).toBe(2);
-      expect(Number(liveEvidence?.audit_rows)).toBeGreaterThanOrEqual(17);
+      expect(Number(liveEvidence?.intents)).toBe(6);
+      expect(Number(liveEvidence?.submissions)).toBe(3);
+      expect(Number(liveEvidence?.audit_rows)).toBe(21);
       expect(liveEvidence?.answer_columns_in_audit).toBe(false);
 
       await cleanupRun(config, draftIds, intentIds);
@@ -607,12 +645,13 @@ describe.runIf(LIVE)("writing submission outbox live fault verification", () => 
 
       const report = {
         cleanup: "complete",
-        contract: "writing-outbox-v1",
+        contract: "writing-outbox-v2",
+        contractDigest: OUTBOX_CONTRACT_DIGEST,
         projectRefHash: createHash("sha256")
           .update(config.expectedProjectRef)
           .digest("hex"),
         scenarios,
-        schemaVersion: 1,
+        schemaVersion: 2,
         verifiedAt: new Date().toISOString(),
       };
       mkdirSync(dirname(config.reportPath), { recursive: true });

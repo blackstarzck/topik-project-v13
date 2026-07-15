@@ -1801,7 +1801,7 @@ export interface Database {
       record_writing_submission_contract_evidence: {
         Args: {
           p_evidence_id: string;
-          p_verification_report_hash: string;
+          p_verification_report: Json;
           p_verified_by: string;
           p_reason: string;
         };

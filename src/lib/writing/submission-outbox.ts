@@ -313,12 +313,22 @@ export async function dispatchWritingSubmissionIntent({
       );
       throw new Error("writing_submission_dispatch_ambiguous");
     }
-    await markWritingSubmissionIntentFailed(
-      client,
-      claimed.intentId,
-      failure.reasonCode,
-    );
-    throw error;
+    try {
+      await markWritingSubmissionIntentFailed(
+        client,
+        claimed.intentId,
+        failure.reasonCode,
+      );
+    } catch {
+      await markAmbiguousBestEffort(
+        client,
+        claimed.intentId,
+        "provider_failure_persistence_unknown",
+        onTransitionError,
+      );
+      throw new Error("writing_submission_dispatch_ambiguous");
+    }
+    throw new Error("writing_submission_dispatch_failed");
   }
 
   try {

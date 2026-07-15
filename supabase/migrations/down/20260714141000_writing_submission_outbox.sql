@@ -57,7 +57,7 @@ drop function if exists public.list_writing_submission_intents_for_reconciliatio
 drop function if exists public.list_writing_submission_intent_audit(uuid);
 drop function if exists public.materialize_writing_submission_intent(uuid);
 drop function if exists public.record_writing_submission_contract_evidence(
-  text, text, text, text
+  text, jsonb, text, text
 );
 
 -- Restore the exact pre-outbox control/insert guards captured by the forward

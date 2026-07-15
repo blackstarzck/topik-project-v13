@@ -48,9 +48,7 @@ import {
   submitWritingAction,
 } from "../../../src/lib/writing/server-actions";
 import { setWritingSubmissionControlForTests } from "../../../src/lib/writing/canonical-source";
-import {
-  WRITING_SUBMISSION_BLOCKED_MESSAGE,
-} from "../../../src/lib/writing/submit-errors";
+import { WRITING_SUBMISSION_BLOCKED_MESSAGE } from "../../../src/lib/writing/submit-errors";
 
 type ComparisonRow = Record<string, unknown>;
 type ComparisonStore = {
@@ -404,9 +402,9 @@ describe("submitWritingAction", () => {
     });
     const fetchMock = vi.spyOn(globalThis, "fetch");
 
-    await expect(
-      submitWritingAction(canonicalSubmitInput()),
-    ).rejects.toThrow("canonical_question_version_conflict");
+    await expect(submitWritingAction(canonicalSubmitInput())).rejects.toThrow(
+      "canonical_question_version_conflict",
+    );
     expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -437,7 +435,7 @@ describe("submitWritingAction", () => {
     expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
   });
 
-  it("submits Q51 blanks instead of raw answer text", async () => {
+  it("submits Q51 through the provider's required text contract", async () => {
     setWritingSubmissionControlForTests({
       submissionMode: "canonical",
       submissionContractState: "local_outbox_verified",
@@ -466,17 +464,17 @@ describe("submitWritingAction", () => {
       canonicalSubmitInput({
         question_no: 51,
         canonical_question_id: "topik-writing-51-0001",
-        answer_json: { blanks: { "ㄱ": "첫째", "ㄴ": "둘째" } },
+        answer_json: { blanks: { ㄱ: "첫째", ㄴ: "둘째" } },
       }),
     );
 
     const providerBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
     expect(providerBody).toMatchObject({
       task_type: "Q51",
-      blanks: { "ㄱ": "첫째", "ㄴ": "둘째" },
+      text: "Canonical answer",
       lang: "ko",
     });
-    expect(providerBody).not.toHaveProperty("text");
+    expect(providerBody).not.toHaveProperty("blanks");
   });
 });
 

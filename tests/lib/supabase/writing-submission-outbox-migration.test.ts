@@ -11,8 +11,18 @@ const rawDown = readFileSync(
   join(process.cwd(), "supabase", "migrations", "down", migrationName),
   "utf8",
 ).toLowerCase();
+const rawLiveTest = readFileSync(
+  join(
+    process.cwd(),
+    "tests",
+    "integration",
+    "writing-submission-outbox-live.test.ts",
+  ),
+  "utf8",
+).toLowerCase();
 const sql = rawSql.replace(/\s+/g, " ");
 const down = rawDown.replace(/\s+/g, " ");
+const liveTest = rawLiveTest.replace(/\s+/g, " ");
 
 describe("writing submission outbox migration", () => {
   it("keeps provider intents and their answer payload private", () => {
@@ -78,9 +88,14 @@ describe("writing submission outbox migration", () => {
     expect(sql).toContain(
       "perform private.assert_writing_submission_snapshot_matches_catalog",
     );
-    expect(sql).toContain("dedup_key text not null unique");
+    expect(sql).toContain("dedup_key text not null");
+    expect(sql).toContain(
+      "create unique index writing_submission_intents_active_dedup_unique on private.writing_submission_intents (dedup_key) where state <> 'failed'",
+    );
+    expect(sql).not.toContain("dedup_key text not null unique");
     expect(sql).toContain("writing_submission_intent_id_conflict");
     expect(sql).toContain("or intent.dedup_key = v_dedup_key");
+    expect(sql).toContain("(intent.state <> 'failed') desc");
   });
 
   it("claims pending work once and never authorizes automatic redispatch", () => {
@@ -93,7 +108,13 @@ describe("writing submission outbox migration", () => {
       ),
     );
     expect(claimFunction).toContain("v_intent.state <> 'pending'");
-    expect(claimFunction).toContain("private.get_writing_submission_mode()");
+    expect(claimFunction).toContain(
+      "from private.writing_submission_control control",
+    );
+    expect(claimFunction).toContain("for share");
+    expect(claimFunction.indexOf("for share")).toBeLessThan(
+      claimFunction.indexOf("for update"),
+    );
     expect(claimFunction).toContain("return private.writing_submission_intent_result(v_intent, false)");
     expect(claimFunction).toContain("set state = 'dispatching'");
     expect(claimFunction).toContain("attempt_count = attempt_count + 1");
@@ -217,6 +238,37 @@ describe("writing submission outbox migration", () => {
     expect(sql).toContain(
       "create or replace function public.record_writing_submission_contract_evidence",
     );
+    expect(sql).toContain("p_verification_report jsonb");
+    expect(sql).toContain(
+      "p_verification_report->>'contract' is distinct from 'writing-outbox-v2'",
+    );
+    expect(sql).toContain(
+      "p_verification_report->>'schemaversion' is distinct from '2'",
+    );
+    expect(sql).toContain(
+      "p_verification_report->>'contractdigest' is distinct from v_contract_digest",
+    );
+    expect(sql).toContain(
+      "p_verification_report#>>'{scenarios,concurrentduplicate,onefulfilled}' is distinct from 'true'",
+    );
+    expect(sql).toContain(
+      "p_verification_report#>>'{scenarios,timeout,quarantined}' is distinct from 'true'",
+    );
+    expect(sql).toContain(
+      "p_verification_report#>>'{scenarios,deterministicfailure,retrysucceededwithnewintent}' is distinct from 'true'",
+    );
+    expect(sql).toContain(
+      "p_verification_report#>>'{scenarios,deterministicfailure,providerdispatches}' is distinct from '2'",
+    );
+    expect(sql).toContain(
+      "p_verification_report#>>'{scenarios,acceptedmarkerfailure,quarantined}' is distinct from 'true'",
+    );
+    expect(sql).toContain(
+      "p_verification_report#>>'{scenarios,materializationrecovery,recovered}' is distinct from 'true'",
+    );
+    expect(sql).toContain(
+      "sha256(convert_to(p_verification_report::text, 'utf8'))",
+    );
     expect(sql).toContain("writing_submission_verification_evidence_invalid");
     expect(sql).toContain(
       "grant execute on function public.record_writing_submission_contract_evidence",
@@ -234,6 +286,19 @@ describe("writing submission outbox migration", () => {
     expect(sql).not.toContain(
       "insert into private.writing_submission_contract_evidence ( evidence_id, evidence_type, contract_digest, verified_by",
     );
+    expect(down).toContain(
+      "drop function if exists public.record_writing_submission_contract_evidence( text, jsonb, text, text )",
+    );
+    expect(liveTest).toContain(
+      "writing-outbox-v2|prepare|claim-once|accepted-recovery|ambiguous-no-retry|confirmed-failure-new-intent|external-text-id|local-intent-uuid",
+    );
+    expect(liveTest).toContain('contract: "writing-outbox-v2"');
+    expect(liveTest).toContain("contractdigest: outbox_contract_digest");
+    expect(liveTest).toContain("schemaversion: 2");
+    expect(liveTest).toContain("retrysucceededwithnewintent: true");
+    expect(liveTest).toContain("expect(number(liveevidence?.intents)).tobe(6)");
+    expect(liveTest).toContain("expect(number(liveevidence?.submissions)).tobe(3)");
+    expect(liveTest).toContain("expect(number(liveevidence?.audit_rows)).tobe(21)");
   });
 
   it("opens a service-only verification window without certifying user submissions", () => {
@@ -271,10 +336,10 @@ describe("writing submission outbox migration", () => {
       ),
     ).replace(/\s+/g, " ");
     expect(claimFunction).toContain(
-      "private.get_writing_submission_mode() not in ( 'verification', 'canonical' )",
+      "v_submission_mode not in ( 'verification', 'canonical' )",
     );
     expect(claimFunction).toContain(
-      "if private.get_writing_submission_mode() = 'canonical' then perform private.assert_current_writing_outbox_activation();",
+      "if v_submission_mode = 'canonical' then perform private.assert_current_writing_outbox_activation();",
     );
 
     expect(sql).toContain(
