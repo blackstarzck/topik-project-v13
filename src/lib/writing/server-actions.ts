@@ -1,6 +1,7 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { redirect } from "next/navigation";
 import { asLocale, DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
 import { ACCOUNT_INACTIVE_PATH } from "../auth/completion-routes";
@@ -28,6 +29,15 @@ import {
   buildComparisonScoreItems,
   toComparisonMetricScoreItems,
 } from "./comparison-score-items";
+import {
+  getCanonicalWritingSubmissionContext,
+  getWritingSubmissionControl,
+  type CanonicalWritingSubmissionContext,
+} from "./canonical-source";
+import {
+  buildWritingSubmissionIntentPayload,
+  dispatchWritingSubmissionIntent,
+} from "./submission-outbox";
 import { toSubmitWritingErrorMessage as toSharedSubmitWritingErrorMessage } from "./submit-errors";
 import type { FeedbackBundle, QuestionNo, WritingSubmissionRow } from "./types";
 
@@ -36,6 +46,7 @@ type SupabaseServerClient = Awaited<
 >;
 
 export type SubmitWritingInput = {
+  submission_intent_id?: string;
   draft_id?: string | null;
   parent_submission_id?: string | null;
   problem_id: string;
@@ -44,6 +55,9 @@ export type SubmitWritingInput = {
   answer_json?: Record<string, unknown> | null;
   passage_context?: string | null;
   char_count: number;
+  canonical_question_id?: string | null;
+  canonical_import_id?: string | null;
+  canonical_payload_hash?: string | null;
 };
 
 export type SubmitWritingResult = {
@@ -51,21 +65,211 @@ export type SubmitWritingResult = {
   questionNo: QuestionNo;
 };
 
+export type SubmitWritingRejectedResult = {
+  submissionId?: never;
+  questionNo?: never;
+  rejection: {
+    code: "writing_submission_temporarily_blocked";
+    message: string;
+  };
+};
+
+export type SubmitWritingActionResult =
+  | SubmitWritingResult
+  | SubmitWritingRejectedResult;
+
+export type ReplaceStaleWritingDraftInput = {
+  draftId: string;
+  questionId: string;
+  importId: string;
+  payloadHash: string;
+};
+
+function hashWritingIdentifier(
+  value: string | null | undefined,
+): string | null {
+  return value ? createHash("sha256").update(value).digest("hex") : null;
+}
+
+function reportWritingVersionConflict({
+  code,
+  problemId,
+  draftId,
+  questionId,
+}: {
+  code: string;
+  problemId?: string | null;
+  draftId?: string | null;
+  questionId?: string | null;
+}) {
+  const problemIdHash = hashWritingIdentifier(problemId);
+  const draftIdHash = hashWritingIdentifier(draftId);
+  const questionIdHash = hashWritingIdentifier(questionId);
+  console.warn("writing_version_conflict", {
+    correlationId: createHash("sha256")
+      .update(
+        [code, problemIdHash, draftIdHash, questionIdHash]
+          .map((value) => value ?? "missing")
+          .join(":"),
+      )
+      .digest("hex")
+      .slice(0, 24),
+    code,
+    problemIdHash,
+    draftIdHash,
+    questionIdHash,
+  });
+}
+
+export async function replaceStaleWritingDraftAction(
+  input: ReplaceStaleWritingDraftInput,
+) {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("unauthenticated");
+
+  const importId = Number(input.importId);
+  if (
+    !input.draftId.trim() ||
+    !input.questionId.trim() ||
+    !Number.isSafeInteger(importId) ||
+    importId <= 0 ||
+    !input.payloadHash.trim()
+  ) {
+    throw new Error("stale_draft_current_version_invalid");
+  }
+
+  const { data, error } = await supabase.rpc("replace_stale_writing_draft", {
+    p_draft_id: input.draftId,
+    p_current_question_id: input.questionId,
+    p_current_import_id: importId,
+    p_current_payload_hash: input.payloadHash,
+  });
+  if (error) {
+    reportWritingVersionConflict({
+      code: "stale_draft_replace_conflict",
+      draftId: input.draftId,
+      questionId: input.questionId,
+    });
+    throw new Error(`replace_stale_writing_draft: ${error.message}`);
+  }
+  if (!data) throw new Error("replace_stale_writing_draft: empty result");
+
+  return { draftId: data };
+}
+
 function toSubmitWritingErrorMessage(message: string) {
   return toSharedSubmitWritingErrorMessage(message);
 }
 
-function isExternalSubmitNetworkError(error: unknown): error is TypeError {
-  return error instanceof TypeError;
-}
-
-function isRecoverableExternalSubmitError(error: unknown): boolean {
+function isAmbiguousExternalSubmitError(error: unknown): boolean {
   return (
-    isExternalSubmitNetworkError(error) ||
+    error instanceof TypeError ||
+    (error instanceof Error && error.name === "AbortError") ||
     (error instanceof ExternalEvaluationApiError &&
       error.status >= 500 &&
       error.status < 600)
   );
+}
+
+function externalSubmitFailureCode(error: unknown): string {
+  if (error instanceof ExternalEvaluationApiError) {
+    return `provider_http_${error.status}`;
+  }
+  if (error instanceof Error && error.name === "AbortError") {
+    return "provider_timeout";
+  }
+  return "provider_network_error";
+}
+
+function requireSubmissionIntentId(input: SubmitWritingInput): string {
+  const intentId = input.submission_intent_id?.trim() ?? "";
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      intentId,
+    )
+  ) {
+    throw new Error("writing_submission_intent_id_required");
+  }
+  return intentId;
+}
+
+function assertCanonicalRenderVersion({
+  input,
+  context,
+}: {
+  input: SubmitWritingInput;
+  context: CanonicalWritingSubmissionContext;
+}) {
+  const renderedQuestionId = input.canonical_question_id?.trim();
+  const renderedImportId = input.canonical_import_id?.trim();
+  const renderedPayloadHash = input.canonical_payload_hash?.trim();
+
+  if (!renderedQuestionId || !renderedImportId || !renderedPayloadHash) {
+    throw new Error("canonical_render_version_required");
+  }
+
+  if (
+    renderedQuestionId !== context.questionId ||
+    renderedImportId !== context.canonicalImportId ||
+    renderedPayloadHash !== context.payloadHash
+  ) {
+    reportWritingVersionConflict({
+      code: "canonical_question_version_conflict",
+      problemId: input.problem_id,
+      draftId: input.draft_id,
+      questionId: context.questionId,
+    });
+    throw new Error("canonical_question_version_conflict");
+  }
+}
+
+async function assertCanonicalDraftVersion({
+  supabase,
+  userId,
+  input,
+  context,
+}: {
+  supabase: SupabaseServerClient;
+  userId: string;
+  input: SubmitWritingInput;
+  context: CanonicalWritingSubmissionContext;
+}): Promise<string> {
+  if (!input.draft_id) {
+    throw new Error("writing_submission_draft_required");
+  }
+
+  const { data, error } = await supabase
+    .from("writing_drafts")
+    .select(
+      "canonical_question_id, canonical_import_id, canonical_payload_hash, question_snapshot",
+    )
+    .eq("id", input.draft_id)
+    .eq("user_id", userId)
+    .eq("problem_id", input.problem_id)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`canonical_draft_version_lookup_failed: ${error.message}`);
+  }
+  if (!data) throw new Error("draft_not_owned");
+
+  if (
+    data.canonical_question_id !== context.questionId ||
+    data.canonical_import_id?.toString() !== context.canonicalImportId ||
+    data.canonical_payload_hash !== context.payloadHash ||
+    !isDeepStrictEqual(data.question_snapshot, context.snapshot)
+  ) {
+    reportWritingVersionConflict({
+      code: "canonical_draft_version_conflict",
+      problemId: input.problem_id,
+      draftId: input.draft_id,
+      questionId: context.questionId,
+    });
+    throw new Error("canonical_draft_version_conflict");
+  }
+  return input.draft_id;
 }
 
 function shouldDisableExternalWritingApiForE2E(): boolean {
@@ -91,81 +295,9 @@ async function fetchSubmitProfileContext(
   };
 }
 
-function externalSubmissionPayload({
-  externalSubmissionId,
-  userId,
-  input,
-  feedbackStatus,
-}: {
-  externalSubmissionId: string;
-  userId: string;
-  input: SubmitWritingInput;
-  feedbackStatus: "analyzing" | "failed";
-}) {
-  return {
-    external_submission_id: externalSubmissionId,
-    user_id: userId,
-    problem_id: input.problem_id,
-    draft_id: input.draft_id ?? null,
-    question_no: input.question_no,
-    ...(input.parent_submission_id
-      ? { parent_submission_id: input.parent_submission_id }
-      : {}),
-    answer_text: input.answer_text,
-    answer_json: (input.answer_json ?? null) as Json | null,
-    char_count: input.char_count,
-    feedback_status: feedbackStatus,
-  };
-}
-
-async function createFailedLocalSubmission({
-  serviceSupabase,
-  userId,
-  input,
-}: {
-  serviceSupabase: ReturnType<typeof createSupabaseServiceRoleClient>;
-  userId: string;
-  input: SubmitWritingInput;
-}): Promise<SubmitWritingResult> {
-  const submissionId = randomUUID();
-  const { data, error } = await serviceSupabase.rpc(
-    "create_external_writing_submission",
-    {
-      submission: externalSubmissionPayload({
-        externalSubmissionId: submissionId,
-        userId,
-        input,
-        feedbackStatus: "failed",
-      }),
-    } as never,
-  );
-  if (error) throw new Error(toSubmitWritingErrorMessage(error.message));
-  if (data !== submissionId) {
-    throw new Error("submitWriting: insert returned empty submission id");
-  }
-  return { submissionId, questionNo: input.question_no };
-}
-
-// Q51/Q52 빈칸형 답안: answer_json.blanks({라벨ㄱ/ㄴ → 답})를 외부 API의 blanks로 전달한다.
-// 빈칸 구조가 없으면(Q53/Q54, 또는 단일 텍스트로 저장된 Q52) null → 호출부에서 text 폴백.
-function extractBlanksFromAnswerJson(
-  answerJson: SubmitWritingInput["answer_json"],
-): Record<string, string> | null {
-  if (!answerJson || typeof answerJson !== "object") return null;
-  const blanks = (answerJson as { blanks?: unknown }).blanks;
-  if (!blanks || typeof blanks !== "object" || Array.isArray(blanks))
-    return null;
-  const out: Record<string, string> = {};
-  for (const [label, value] of Object.entries(blanks)) {
-    if (typeof value === "string" && value.trim().length > 0)
-      out[label] = value;
-  }
-  return Object.keys(out).length > 0 ? out : null;
-}
-
 export async function submitWritingAction(
   input: SubmitWritingInput,
-): Promise<SubmitWritingResult> {
+): Promise<SubmitWritingActionResult> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -179,112 +311,103 @@ export async function submitWritingAction(
     );
   }
 
-  const externalBaseUrl = shouldDisableExternalWritingApiForE2E()
-    ? null
-    : getTalkpikApiBaseUrl();
-  if (externalBaseUrl) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const accessToken = session?.access_token;
-    if (!accessToken) throw new Error("submitWriting: missing session token");
-    const serviceSupabase = createSupabaseServiceRoleClient();
-    const externalTaskType = toExternalTaskType(input.question_no);
-
-    // 외부 채점 API는 question_id(= §7 question_id, GET /api/writing/tasks가 주는 값)로 해당 문항의
-    // prompt/모범답안/루브릭에 맞춰 채점한다. §7 미러 problems.materials(raw_payload)에 원본
-    // question_id가 들어 있으므로 그대로 꺼내 전달한다(없으면 null → task_type 임의 문항 ad-hoc 채점).
-    const { data: problemRow } = await serviceSupabase
-      .from("problems")
-      .select("materials")
-      .eq("id", input.problem_id)
-      .maybeSingle();
-    const materials = problemRow?.materials;
-    const externalQuestionId =
-      materials && typeof materials === "object" && !Array.isArray(materials)
-        ? (((materials as Record<string, unknown>).question_id as
-            | string
-            | null
-            | undefined) ?? null)
-        : null;
-
-    // Q51/Q52는 blanks(ㄱ/ㄴ→답)로, Q53/Q54(및 blanks 미보유)는 text로 제출한다.
-    // user_id는 보내지 않는다 — 백엔드가 JWT에서 취득(외부 계약).
-    const blanks = extractBlanksFromAnswerJson(input.answer_json);
-    const passageContext = input.passage_context?.trim() || undefined;
-    const externalPayload = blanks
-      ? {
-          task_type: externalTaskType,
-          question_id: externalQuestionId,
-          blanks,
-          ...(passageContext ? { passage_context: passageContext } : {}),
-          lang: profileContext.locale,
-        }
-      : {
-          task_type: externalTaskType,
-          question_id: externalQuestionId,
-          text: input.answer_text,
-          lang: profileContext.locale,
-        };
-
-    let external;
-    try {
-      external = await submitExternalWriting({
-        baseUrl: externalBaseUrl,
-        accessToken,
-        payload: externalPayload,
-      });
-    } catch (error) {
-      if (!isRecoverableExternalSubmitError(error)) throw error;
-      console.warn(
-        "[writing-submit] external_writing_submit_recoverable_failed",
-        {
-          questionNo: input.question_no,
-          errorName: error instanceof Error ? error.name : "UnknownError",
-          errorStatus:
-            error instanceof ExternalEvaluationApiError ? error.status : null,
-        },
-      );
-      return createFailedLocalSubmission({
-        serviceSupabase,
-        userId: user.id,
-        input,
-      });
-    }
-
-    const nextStatus = external.status === "failed" ? "failed" : "analyzing";
-    const { data: localSubmissionId, error: createError } =
-      await serviceSupabase.rpc("create_external_writing_submission", {
-        submission: externalSubmissionPayload({
-          externalSubmissionId: external.submission_id,
-          userId: user.id,
-          input,
-          feedbackStatus: nextStatus,
-        }),
-      } as never);
-    if (createError) {
-      throw new Error(toSubmitWritingErrorMessage(createError.message));
-    }
-    // RPC는 같은 draft에 활성 제출이 이미 있으면 그 기존 id를 멱등 반환한다(중복 제출 방지).
-    // 반환 id는 이번 호출의 external.submission_id와 다를 수 있으므로, 반환 id를 신뢰한다.
-    if (typeof localSubmissionId !== "string" || !localSubmissionId) {
-      throw new Error(
-        "submitWriting external local create returned empty submission id",
-      );
-    }
-
+  const submissionControl = await getWritingSubmissionControl({ supabase });
+  if (
+    submissionControl.submissionMode !== "canonical" ||
+    submissionControl.submissionContractState !== "local_outbox_verified"
+  ) {
     return {
-      submissionId: localSubmissionId,
-      questionNo: input.question_no,
+      rejection: {
+        code: "writing_submission_temporarily_blocked",
+        message: toSubmitWritingErrorMessage(
+          "writing_submission_temporarily_blocked",
+        ),
+      },
     };
   }
-
-  const serviceSupabase = createSupabaseServiceRoleClient();
-  return createFailedLocalSubmission({
-    serviceSupabase,
+  const intentId = requireSubmissionIntentId(input);
+  const canonicalContext = await getCanonicalWritingSubmissionContext({
+    supabase,
+    questionNo: input.question_no,
+    problemId: input.problem_id,
+  });
+  assertCanonicalRenderVersion({ input, context: canonicalContext });
+  const draftId = await assertCanonicalDraftVersion({
+    supabase,
     userId: user.id,
     input,
+    context: canonicalContext,
   });
+
+  const serviceSupabase = createSupabaseServiceRoleClient();
+  const intentPayload = buildWritingSubmissionIntentPayload({
+    userId: user.id,
+    problemId: input.problem_id,
+    draftId,
+    parentSubmissionId: input.parent_submission_id ?? null,
+    questionNo: input.question_no,
+    answerText: input.answer_text,
+    answerJson: (input.answer_json ?? null) as Json | null,
+    charCount: input.char_count,
+    canonicalContext,
+  });
+  const e2eExternalApiDisabled = shouldDisableExternalWritingApiForE2E();
+  const externalBaseUrl = getTalkpikApiBaseUrl();
+  if (!externalBaseUrl && !e2eExternalApiDisabled) {
+    throw new Error("writing_evaluation_provider_not_configured");
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken && !e2eExternalApiDisabled) {
+    throw new Error("submitWriting: missing session token");
+  }
+
+  const externalPayload = {
+    task_type: toExternalTaskType(input.question_no),
+    question_id: canonicalContext.questionId,
+    text: input.answer_text,
+    lang: profileContext.locale,
+  };
+
+  const localSubmissionId = await dispatchWritingSubmissionIntent({
+    client: serviceSupabase,
+    intentId,
+    submission: intentPayload,
+    dispatchProvider: async () => {
+      if (e2eExternalApiDisabled) {
+        return {
+          externalSubmissionId: `e2e-${intentId}`,
+          providerStatus: "failed",
+        };
+      }
+      const external = await submitExternalWriting({
+        baseUrl: externalBaseUrl as string,
+        accessToken: accessToken as string,
+        payload: externalPayload,
+      });
+      return {
+        externalSubmissionId: external.submission_id,
+        providerStatus: external.status,
+      };
+    },
+    classifyProviderFailure: (error) => ({
+      disposition: isAmbiguousExternalSubmitError(error)
+        ? "ambiguous"
+        : "failed",
+      reasonCode: externalSubmitFailureCode(error),
+    }),
+    onTransitionError: (error) => {
+      console.error("writing_submission_intent_transition_failed", {
+        intentIdHash: hashWritingIdentifier(intentId),
+        targetState: "ambiguous",
+        errorName: error instanceof Error ? error.name : "UnknownError",
+      });
+    },
+  });
+  return { submissionId: localSubmissionId, questionNo: input.question_no };
 }
 
 export type CreateComparisonReportInput = {

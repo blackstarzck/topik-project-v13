@@ -45,12 +45,46 @@ function makeClient(
         byRpc[fn] ??
         (fn === "list_user_library_problem_items"
           ? defaultProblemAvailabilityRpc(byTable)
-          : { data: [], error: null });
+          : fn === "get_writing_submission_history_context"
+            ? defaultSubmissionHistoryRpc(byTable)
+            : { data: [], error: null });
       return Promise.resolve({
         data: result.data ?? null,
         error: result.error ?? null,
       });
     },
+  };
+}
+
+function defaultSubmissionHistoryRpc(
+  byTable: Record<string, FromResult>,
+): FromResult {
+  const submissions = byTable.writing_submissions?.data ?? [];
+  const problems = byTable.problems?.data ?? [];
+  const problemById = new Map(
+    problems.map((row) => {
+      const problem = row as { id?: string };
+      return [problem.id, problem];
+    }),
+  );
+  return {
+    data: submissions.map((row) => {
+      const submission = row as {
+        id?: string;
+        problem_id?: string;
+        question_no?: number;
+        question_snapshot?: { title?: string } | null;
+      };
+      const problem = problemById.get(submission.problem_id) as
+        | { title?: string | null }
+        | undefined;
+      return {
+        submission_id: submission.id,
+        problem_id: submission.problem_id,
+        question_no: submission.question_no,
+        title: submission.question_snapshot?.title ?? problem?.title ?? null,
+      };
+    }),
   };
 }
 
@@ -97,6 +131,46 @@ function defaultProblemAvailabilityRpc(
 }
 
 describe("listLibraryItems(submissions)", () => {
+  it("uses the pinned canonical snapshot title when the problem anchor is hidden", async () => {
+    const create = async () =>
+      makeClient({
+        library_items: {
+          data: [
+            {
+              id: "li-canonical",
+              user_id: "u",
+              item_type: "submission",
+              submission_id: "sub-canonical",
+              tags: [],
+              saved_at: "2026-07-13T00:00:00Z",
+            },
+          ],
+        },
+        writing_submissions: {
+          data: [
+            {
+              id: "sub-canonical",
+              problem_id: "p-canonical",
+              question_no: 54,
+              submitted_at: "2026-07-13T00:00:00Z",
+              char_count: 620,
+              question_snapshot: { title: "Pinned canonical title" },
+            },
+          ],
+        },
+        problems: { data: [] },
+      }) as never;
+
+    const out = await listLibraryItems("u", "submissions", create);
+
+    expect(out).toEqual([
+      expect.objectContaining({
+        problem_id: "p-canonical",
+        problem_title: "Pinned canonical title",
+      }),
+    ]);
+  });
+
   it("joins library_items rows with writing_submissions", async () => {
     const items = [
       {

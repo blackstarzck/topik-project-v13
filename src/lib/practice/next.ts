@@ -7,8 +7,8 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
-import { filterVisibleProblemIds } from "../problems/visibility";
 import type { Tables } from "../supabase/types";
+import { getCanonicalWritingProblems } from "../writing/canonical-source";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
@@ -65,7 +65,6 @@ type ProblemSlice = Pick<
 
 const WRITING_QUESTION_NOS = [51, 52, 53, 54] as const;
 const RECOMMENDATION_SCAN_PAGE_SIZE = 8;
-const PROBLEM_SCAN_PAGE_SIZE = 40;
 const MAX_VISIBILITY_SCAN_ROWS = 200;
 const PRIMARY_VISIBLE_TARGET = 25;
 const ALTERNATIVE_VISIBLE_TARGET = 12;
@@ -86,14 +85,30 @@ type RecommendationJoinedRow = {
     | null;
 };
 
+type AttemptRow = {
+  problem_id: string;
+  started_at: string | null;
+  problems?:
+    | { question_no: number | null }
+    | { question_no: number | null }[]
+    | null;
+};
+
 export async function getNextProblem(
   userId: string,
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<NextProblemSuggestion | null> {
   const supabase = await createClient();
-
-  // Tier 1 — recommendation_items + recommendation_runs (active, not expired).
   const nowIso = new Date().toISOString();
+  return getNextProblemForMode(supabase, userId, nowIso);
+}
+
+async function getNextProblemForMode(
+  supabase: SupabaseServerClient,
+  userId: string,
+  nowIso: string,
+): Promise<NextProblemSuggestion | null> {
+  // Tier 1 — recommendation_items + recommendation_runs (active, not expired).
   const [visibleRecRow] = await fetchVisibleRecommendationRows(
     supabase,
     userId,
@@ -124,29 +139,29 @@ export async function getNextProblem(
 
   // Gather attempted problem ids so we never re-suggest something the user
   // already tried (Tiers 2 + 3 both need this).
-  const { data: attemptRows, error: attemptErr } = await supabase
+  const attemptResult = await supabase
     .from("problem_attempts")
-    .select("problem_id, started_at, problems!inner(id, question_no)")
+    .select("problem_id, started_at")
     .eq("user_id", userId)
     .order("started_at", { ascending: false });
+  const attemptErr = attemptResult.error;
   if (attemptErr) {
     throw new Error(`getNextProblem(attempts): ${attemptErr.message}`);
   }
+  const attemptRows = (attemptResult.data ?? []) as unknown as AttemptRow[];
 
   const attemptedIds = new Set<string>();
   let latestQuestionNo: number | null = null;
+  const canonicalQuestionNoById = new Map(
+    (await getCanonicalWritingProblems({ supabase })).map((problem) => [
+      problem.id,
+      problem.questionNo,
+    ]),
+  );
   for (const row of attemptRows ?? []) {
     attemptedIds.add(row.problem_id);
     if (latestQuestionNo == null) {
-      const joined = pickOne(
-        (row as { problems: unknown }).problems as
-          | { question_no: number | null }
-          | { question_no: number | null }[]
-          | null,
-      );
-      if (joined && typeof joined.question_no === "number") {
-        latestQuestionNo = joined.question_no;
-      }
+      latestQuestionNo = canonicalQuestionNoById.get(row.problem_id) ?? null;
     }
   }
 
@@ -212,16 +227,12 @@ async function pickProblemExcluding(
   // Note: PostgREST filter methods (`.eq`) must precede `.order`/`.limit` —
   // chaining filters after `.limit` returns a non-builder thenable. We apply
   // the optional question_no filter up front for that reason.
-  const candidates = await fetchVisiblePublishedWritingProblems(
-    supabase,
-    {
-      attemptedIds,
-      excludedIds: new Set(),
-      questionNo,
-      targetCount: PRIMARY_VISIBLE_TARGET,
-    },
-    "pickProblemExcluding",
-  );
+  const candidates = await fetchVisiblePublishedWritingProblems(supabase, {
+    attemptedIds,
+    excludedIds: new Set(),
+    questionNo,
+    targetCount: PRIMARY_VISIBLE_TARGET,
+  });
   return pickByQuestionRotation(candidates, rotationAnchorQuestionNo);
 }
 
@@ -233,19 +244,22 @@ async function fetchVisibleRecommendationRows(
   excludeId: string | null,
   errorContext: string,
 ): Promise<RecommendationJoinedRow[]> {
-  const visibleRows: RecommendationJoinedRow[] = [];
+  const canonicalProblems = await getCanonicalWritingProblems({ supabase });
+  const canonicalById = new Map(
+    canonicalProblems.map((problem) => [problem.id, problem]),
+  );
+  const rows: RecommendationJoinedRow[] = [];
 
   for (
     let offset = 0;
-    offset < MAX_VISIBILITY_SCAN_ROWS && visibleRows.length < targetCount;
+    offset < MAX_VISIBILITY_SCAN_ROWS && rows.length < targetCount;
     offset += RECOMMENDATION_SCAN_PAGE_SIZE
   ) {
     const { data, error } = await supabase
       .from("recommendation_items")
       .select(
         "id, problem_id, rank, reason, estimated_minutes," +
-          " recommendation_runs!inner(expires_at)," +
-          " problems!inner(id, title, domain, question_no, difficulty, publish_status)",
+          " recommendation_runs!inner(expires_at)",
       )
       .eq("user_id", userId)
       .eq("status", "active")
@@ -256,31 +270,29 @@ async function fetchVisibleRecommendationRows(
       .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
     if (error) throw new Error(`${errorContext}: ${error.message}`);
 
-    const rows = (data ?? []) as unknown as RecommendationJoinedRow[];
-    const candidates = rows.filter((row) => {
-      const problem = pickOne(row.problems);
-      return (
-        problem != null &&
-        problem.id !== excludeId &&
-        problem.publish_status === "published" &&
-        isWritingQuestionNo(problem.question_no)
-      );
-    });
-    const visibleIds = await filterVisibleProblemIds(
-      supabase,
-      candidates.map((row) => pickOne(row.problems)?.id ?? ""),
-    );
-    visibleRows.push(
-      ...candidates.filter((row) => {
-        const problem = pickOne(row.problems);
-        return problem != null && visibleIds.has(problem.id);
-      }),
-    );
-
-    if (rows.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+    const page = (data ?? []) as unknown as Array<
+      Omit<RecommendationJoinedRow, "problems">
+    >;
+    for (const row of page) {
+      const canonical = canonicalById.get(row.problem_id);
+      if (!canonical || canonical.id === excludeId) continue;
+      rows.push({
+        ...row,
+        problems: {
+          id: canonical.id,
+          title: canonical.title,
+          domain: "writing",
+          question_no: canonical.questionNo,
+          difficulty: canonical.difficulty ?? null,
+          publish_status: "published",
+        },
+      });
+      if (rows.length >= targetCount) break;
+    }
+    if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
   }
 
-  return visibleRows;
+  return rows;
 }
 
 async function fetchVisiblePublishedWritingProblems(
@@ -291,46 +303,27 @@ async function fetchVisiblePublishedWritingProblems(
     questionNo: number | null;
     targetCount: number;
   },
-  errorContext: string,
 ): Promise<ProblemSlice[]> {
-  const visibleRows: ProblemSlice[] = [];
-
-  for (
-    let offset = 0;
-    offset < MAX_VISIBILITY_SCAN_ROWS &&
-    visibleRows.length < options.targetCount;
-    offset += PROBLEM_SCAN_PAGE_SIZE
-  ) {
-    let base = supabase
-      .from("problems")
-      .select("id, title, domain, question_no, difficulty")
-      .eq("domain", "writing")
-      .eq("publish_status", "published");
-    if (options.questionNo != null) {
-      base = base.eq("question_no", options.questionNo);
-    }
-    const { data, error } = await base
-      .order("updated_at", { ascending: false })
-      .range(offset, offset + PROBLEM_SCAN_PAGE_SIZE - 1);
-    if (error) throw new Error(`${errorContext}: ${error.message}`);
-
-    const rows = (data ?? []) as ProblemSlice[];
-    const candidates = rows.filter(
-      (row) =>
-        !options.excludedIds.has(row.id) &&
-        !options.attemptedIds.has(row.id) &&
-        isWritingQuestionNo(row.question_no),
-    );
-    const visibleIds = await filterVisibleProblemIds(
-      supabase,
-      candidates.map((row) => row.id),
-    );
-    visibleRows.push(...candidates.filter((row) => visibleIds.has(row.id)));
-
-    if (rows.length < PROBLEM_SCAN_PAGE_SIZE) break;
-  }
-
-  return visibleRows;
+  const canonical = await getCanonicalWritingProblems({
+    supabase,
+    questionNo: isWritingQuestionNo(options.questionNo)
+      ? options.questionNo
+      : null,
+  });
+  return canonical
+    .filter(
+      (problem) =>
+        !options.excludedIds.has(problem.id) &&
+        !options.attemptedIds.has(problem.id),
+    )
+    .slice(0, options.targetCount)
+    .map((problem) => ({
+      id: problem.id,
+      title: problem.title,
+      domain: "writing",
+      question_no: problem.questionNo,
+      difficulty: problem.difficulty ?? null,
+    }));
 }
 
 function pickOne<T>(raw: T | T[] | null | undefined): T | null {
@@ -498,9 +491,9 @@ async function fetchAlternatives(
   userId: string,
   excludeId: string | null,
   paid: boolean,
+  nowIso: string,
 ): Promise<AlternativeProblem[]> {
   // Pull next 3 active recommendations (rank 2-4) excluding primary id
-  const nowIso = new Date().toISOString();
   const altRows = await fetchVisibleRecommendationRows(
     supabase,
     userId,
@@ -555,39 +548,35 @@ async function fetchPublishedProblemAlternatives(
   excludedIds: Set<string>,
   limit: number,
 ): Promise<AlternativeProblem[]> {
-  const { data: attemptRows } = await supabase
+  const attemptResult = await supabase
     .from("problem_attempts")
-    .select("problem_id, started_at, problems!inner(id, question_no)")
+    .select("problem_id, started_at")
     .eq("user_id", userId)
     .order("started_at", { ascending: false });
+  if (attemptResult.error) throw attemptResult.error;
+  const attemptRows = (attemptResult.data ?? []) as unknown as AttemptRow[];
 
   const attemptedIds = new Set<string>();
   let latestQuestionNo: number | null = null;
+  const canonicalQuestionNoById = new Map(
+    (await getCanonicalWritingProblems({ supabase })).map((problem) => [
+      problem.id,
+      problem.questionNo,
+    ]),
+  );
   for (const row of attemptRows ?? []) {
     attemptedIds.add(row.problem_id);
     if (latestQuestionNo == null) {
-      const joined = pickOne(
-        (row as { problems: unknown }).problems as
-          | { question_no: number | null }
-          | { question_no: number | null }[]
-          | null,
-      );
-      if (joined && typeof joined.question_no === "number") {
-        latestQuestionNo = joined.question_no;
-      }
+      latestQuestionNo = canonicalQuestionNoById.get(row.problem_id) ?? null;
     }
   }
 
-  const candidates = await fetchVisiblePublishedWritingProblems(
-    supabase,
-    {
-      attemptedIds,
-      excludedIds,
-      questionNo: null,
-      targetCount: Math.max(limit, ALTERNATIVE_VISIBLE_TARGET),
-    },
-    "fetchPublishedProblemAlternatives",
-  );
+  const candidates = await fetchVisiblePublishedWritingProblems(supabase, {
+    attemptedIds,
+    excludedIds,
+    questionNo: null,
+    targetCount: Math.max(limit, ALTERNATIVE_VISIBLE_TARGET),
+  });
 
   return sortByQuestionRotation(candidates, latestQuestionNo)
     .slice(0, limit)
@@ -607,7 +596,6 @@ export async function getNextProblemBundle(
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<NextProblemBundle> {
   const supabase = await createClient();
-  const next = await getNextProblem(userId, () => Promise.resolve(supabase));
   const summary = await fetchSummarySignals(supabase, userId);
 
   // Plan gate for the locked alternative variant (R-02 §3 예외).
@@ -617,25 +605,45 @@ export async function getNextProblemBundle(
     .eq("id", userId)
     .maybeSingle();
   const paid = isPaidPlan(profile?.plan_label);
+  const nowIso = new Date().toISOString();
 
+  const canonical = await getNextProblemBundleContentForMode(
+    supabase,
+    userId,
+    paid,
+    nowIso,
+  );
+  return { ...canonical, summary };
+}
+
+type NextProblemBundleContent = Omit<NextProblemBundle, "summary">;
+
+async function getNextProblemBundleContentForMode(
+  supabase: SupabaseServerClient,
+  userId: string,
+  paid: boolean,
+  nowIso: string,
+): Promise<NextProblemBundleContent> {
+  const primary = await getNextProblemForMode(supabase, userId, nowIso);
   const alternatives = await fetchAlternatives(
     supabase,
     userId,
-    next?.problemId ?? null,
+    primary?.problemId ?? null,
     paid,
+    nowIso,
   );
-  // primaryTier derived from next.source
-  const primaryTier: NextProblemBundle["primaryTier"] = !next
-    ? 4
-    : next.source === "recommendation"
-      ? 1
-      : next.source === "same_question_no"
-        ? 2
-        : 3;
   return {
-    primary: next,
-    primaryTier,
-    summary,
+    primary,
+    primaryTier: nextProblemTier(primary),
     alternatives,
   };
+}
+
+function nextProblemTier(
+  problem: NextProblemSuggestion | null,
+): NextProblemBundle["primaryTier"] {
+  if (!problem) return 4;
+  if (problem.source === "recommendation") return 1;
+  if (problem.source === "same_question_no") return 2;
+  return 3;
 }

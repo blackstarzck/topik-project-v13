@@ -15,6 +15,7 @@ import { logStudyEvent } from "@/lib/events/study-events";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
 import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
+import { isWritingDraftVersionStale } from "@/lib/writing/draft-version";
 import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
 import type {
   NormalizedBlank,
@@ -41,6 +42,7 @@ import {
 import { InteractiveBlankPrompt } from "./InteractiveBlankPrompt";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import { SubmissionFailedModal } from "./SubmissionFailedModal";
+import { StaleDraftVersionAlert } from "./StaleDraftVersionAlert";
 import {
   SubmittedAnalysisPanel,
   type SubmittedAnalysisState,
@@ -113,6 +115,14 @@ export function ShortAnswerWriting51Workspace({
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
   const answerSource = retrySeed ?? draft;
+  const canonicalQuestionId = problem.canonicalQuestionId ?? null;
+  const canonicalImportId = problem.canonicalImportId ?? null;
+  const canonicalPayloadHash = problem.payloadHash ?? null;
+  const staleDraftVersion = isWritingDraftVersionStale(draft, {
+    questionId: canonicalQuestionId,
+    importId: canonicalImportId,
+    payloadHash: canonicalPayloadHash,
+  });
   const [blankAnswers, setBlankAnswers] = useState<Record<string, string>>(() =>
     initialBlankAnswers(problem.blanks, answerSource),
   );
@@ -232,6 +242,7 @@ export function ShortAnswerWriting51Workspace({
   }, []);
 
   function persist(nextAnswers: Record<string, string>, isManual: boolean) {
+    if (staleDraftVersion) return;
     const nextText = build51AnswerText(nextAnswers, problem.blanks);
     const nextCharCount = count51AnswerChars(nextAnswers);
     const nextSnapshot = serializeWritingAnswerSnapshot(nextAnswers);
@@ -247,6 +258,11 @@ export function ShortAnswerWriting51Workspace({
         char_count: nextCharCount,
         autosave_status: "clean",
         last_saved_at: new Date().toISOString(),
+        canonical_question_id: canonicalQuestionId,
+        canonical_import_id: canonicalImportId
+          ? Number(canonicalImportId)
+          : null,
+        canonical_payload_hash: canonicalPayloadHash,
       },
       {
         onSuccess: (row) => {
@@ -330,7 +346,8 @@ export function ShortAnswerWriting51Workspace({
 
   function onOpenSubmitConfirm() {
     onBlurValidate();
-    if (!submittable || problem.submitBlockedReason) return;
+    if (!submittable || problem.submitBlockedReason || staleDraftVersion)
+      return;
     setSubmitError(null);
     setConfirmOpen(true);
   }
@@ -349,6 +366,9 @@ export function ShortAnswerWriting51Workspace({
         answer_json: answerJson,
         passage_context: problem.blankedPrompt || problem.prompt,
         char_count: charCount,
+        canonical_question_id: canonicalQuestionId,
+        canonical_import_id: canonicalImportId,
+        canonical_payload_hash: canonicalPayloadHash,
       },
       {
         onSuccess: (result) => {
@@ -403,11 +423,13 @@ export function ShortAnswerWriting51Workspace({
       elapsedSeconds={elapsedSeconds}
       autosaveStatus={status}
       lastSavedAt={lastSavedAt}
-      canSave={!submit.isPending && charCount > 0}
+      canSave={!submit.isPending && charCount > 0 && !staleDraftVersion}
       canSubmit={
         submittable &&
+        Boolean(draftId) &&
         !submit.isPending &&
-        !Boolean(problem.submitBlockedReason)
+        !Boolean(problem.submitBlockedReason) &&
+        !staleDraftVersion
       }
       isSaving={status === "syncing" && upsert.isPending}
       isSubmitting={submit.isPending}
@@ -417,6 +439,18 @@ export function ShortAnswerWriting51Workspace({
       onRequestBack={exitGuard.requestNavigation}
     >
       <div className="writing-workspace writing-workspace--q51">
+        {staleDraftVersion &&
+        draft &&
+        canonicalQuestionId &&
+        canonicalImportId &&
+        canonicalPayloadHash ? (
+          <StaleDraftVersionAlert
+            draftId={draft.id}
+            questionId={canonicalQuestionId}
+            importId={canonicalImportId}
+            payloadHash={canonicalPayloadHash}
+          />
+        ) : null}
         {problem.submitBlockedReason ? (
           <Alert
             type="warning"
@@ -507,7 +541,7 @@ export function ShortAnswerWriting51Workspace({
                   placeholder={tPage("answerPlaceholder", {
                     blank: activeBlank?.label ?? "ㄱ",
                   })}
-                  disabled={submit.isPending}
+                  disabled={submit.isPending || staleDraftVersion}
                   aria-label={tPage("answerInputAria")}
                 />
                 <Progress

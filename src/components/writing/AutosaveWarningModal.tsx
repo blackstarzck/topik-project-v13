@@ -115,7 +115,7 @@ export function AutosaveWarningModal({
             type="warning"
             showIcon
             className="mb-3"
-            message={warn}
+            title={warn}
           />
         ) : null}
 

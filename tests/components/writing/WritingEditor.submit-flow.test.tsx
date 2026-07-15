@@ -60,13 +60,34 @@ afterEach(() => {
   cleanup();
 });
 
-function renderEditor() {
+function renderEditor({ withSavedDraft = false } = {}) {
   renderWithIntl(
     <WritingEditor
       userId="user-1"
       problemId="problem-1"
       questionNo={51}
-      initialDraft={null}
+      initialDraft={
+        withSavedDraft
+          ? {
+              id: "saved-draft-1",
+              user_id: "user-1",
+              problem_id: "problem-1",
+              question_no: 51,
+              answer_text: "",
+              answer_json: null,
+              char_count: 0,
+              canonical_question_id: "question-1",
+              canonical_import_id: 1,
+              canonical_payload_hash: "payload-hash-1",
+              question_snapshot: null,
+              legacy_cutover_snapshot: null,
+              autosave_status: "clean",
+              last_saved_at: "2026-07-14T00:00:00.000Z",
+              created_at: "2026-07-14T00:00:00.000Z",
+              updated_at: "2026-07-14T00:00:00.000Z",
+            }
+          : null
+      }
     />,
   );
 }
@@ -106,7 +127,7 @@ describe("WritingEditor submit flow", () => {
   });
 
   it("shows page-level D-M2 analysis UI after submit succeeds", async () => {
-    renderEditor();
+    renderEditor({ withSavedDraft: true });
 
     fireEvent.change(
       screen.getByPlaceholderText(koMessages.writing.editor.placeholderShort),
@@ -148,7 +169,7 @@ describe("WritingEditor submit flow", () => {
     helpers.submitMutateMock.mockImplementation((_input, options) => {
       options?.onError?.(new Error("network down"));
     });
-    renderEditor();
+    renderEditor({ withSavedDraft: true });
 
     fireEvent.change(
       screen.getByPlaceholderText(koMessages.writing.editor.placeholderShort),

@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import koMessages from "../../../messages/ko.json";
 import { SubmissionFailedModal } from "../../../src/components/writing/SubmissionFailedModal";
+import { WRITING_SUBMISSION_BLOCKED_MESSAGE } from "../../../src/lib/writing/submit-errors";
+import { WRITING_SUBMISSION_AMBIGUOUS_MESSAGE } from "../../../src/lib/writing/submit-errors";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 afterEach(() => cleanup());
@@ -41,5 +43,41 @@ describe("SubmissionFailedModal", () => {
       name: koMessages.writing.submit.chooseAnotherProblem,
     });
     expect(problemListLink.getAttribute("href")).toBe("/practice/problems");
+  });
+
+  it("shows a localized non-retryable state while runtime submission is blocked", () => {
+    renderWithIntl(
+      <SubmissionFailedModal
+        open
+        submitError={WRITING_SUBMISSION_BLOCKED_MESSAGE}
+        onRetry={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByTestId("submission-failed-retry")).toBeNull();
+    expect(
+      screen.getByText(koMessages.writing.submit.submissionBlockedTitle),
+    ).not.toBeNull();
+  });
+
+  it("routes an ambiguous submission to its recovery history without retrying", () => {
+    renderWithIntl(
+      <SubmissionFailedModal
+        open
+        submitError={WRITING_SUBMISSION_AMBIGUOUS_MESSAGE}
+        onRetry={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByTestId("submission-failed-retry")).toBeNull();
+    expect(
+      screen.getByText(koMessages.writing.submit.submissionAmbiguousTitle),
+    ).not.toBeNull();
+    const historyLink = screen.getByTestId("submission-failed-history");
+    expect(historyLink.tagName).toBe("A");
+    expect(historyLink.querySelector("button")).toBeNull();
+    expect(historyLink.getAttribute("href")).toBe("/library");
   });
 });

@@ -94,8 +94,13 @@ describe("create_external_writing_submission", () => {
   });
 
   it("auto-saves externally queued submissions to the user's library idempotently", () => {
-    const sql = readMigrations();
-    const normalized = sql.replace(/\s+/g, " ").toLowerCase();
+    const allSql = readMigrations();
+    const outboxSql = readFileSync(
+      join(migrationsDir, "20260714141000_writing_submission_outbox.sql"),
+      "utf8",
+    );
+    const normalized = allSql.replace(/\s+/g, " ").toLowerCase();
+    const normalizedOutbox = outboxSql.replace(/\s+/g, " ").toLowerCase();
 
     expect(normalized).toContain(
       "create or replace function private.ensure_submission_library_item",
@@ -109,18 +114,19 @@ describe("create_external_writing_submission", () => {
       "grant execute on function private.ensure_submission_library_item(uuid, uuid) to service_role",
     );
 
-    const existingReturnIndex = normalized.indexOf(
-      "if existing_id is not null then perform private.ensure_submission_library_item(owner_id, existing_id); return existing_id;",
+    const materializeIndex = normalizedOutbox.indexOf(
+      "create or replace function public.materialize_writing_submission_intent",
     );
-    const insertIndex = normalized.lastIndexOf(
+    const insertIndex = normalizedOutbox.indexOf(
       "insert into public.writing_submissions",
+      materializeIndex,
     );
-    const newSubmissionSaveIndex = normalized.indexOf(
-      "perform private.ensure_submission_library_item(owner_id, external_submission_id)",
+    const newSubmissionSaveIndex = normalizedOutbox.indexOf(
+      "perform private.ensure_submission_library_item( v_intent.user_id, v_intent.local_submission_id )",
       insertIndex,
     );
 
-    expect(existingReturnIndex).toBeGreaterThanOrEqual(0);
+    expect(materializeIndex).toBeGreaterThanOrEqual(0);
     expect(newSubmissionSaveIndex).toBeGreaterThan(insertIndex);
   });
 

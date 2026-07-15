@@ -96,11 +96,7 @@ describe("PDF export quota", () => {
     };
 
     await expect(
-      claimPdfExportQuota(
-        supabase as never,
-        "user-1",
-        ["problem-1"],
-      ),
+      claimPdfExportQuota(supabase as never, "user-1", ["problem-1"]),
     ).resolves.toMatchObject({
       usageIds: ["usage-1"],
       limit: 3,
@@ -197,6 +193,76 @@ describe("PDF export quota", () => {
     ).rejects.toMatchObject({
       status: 400,
       code: PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable,
+    });
+  });
+
+  it("renders a canonical submission title from its pinned safe snapshot", async () => {
+    vi.mocked(getSubmission).mockResolvedValueOnce({
+      ...failedSubmission(),
+      feedback_status: "complete",
+      question_snapshot: {
+        question_id: "topik-writing-54-0001",
+        canonical_import_id: "321",
+        payload_hash: "hash-321",
+        item_number: 54,
+        title: "제출 시점 제목",
+        prompt: "제출 시점 문제",
+        tags: [],
+        materials: {},
+      },
+    } as never);
+    const from = vi.fn(() => {
+      throw new Error("canonical snapshot must not query problems");
+    });
+
+    await expect(
+      resolvePdfExportItems({ from } as never, {
+        sourceType: "submission",
+        sourceId: "sub-complete",
+        options: { ...exportOptions, includeFeedback: false },
+      }),
+    ).resolves.toMatchObject([
+      {
+        kind: "submission",
+        problemTitle: "제출 시점 제목",
+      },
+    ]);
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it("renders a legacy-unversioned title through the owner-scoped history repository", async () => {
+    vi.mocked(getSubmission).mockResolvedValueOnce({
+      ...failedSubmission(),
+      id: "sub-legacy",
+      feedback_status: "complete",
+      question_snapshot: null,
+    } as never);
+    const rpc = vi.fn(async () => ({
+      data: [
+        {
+          submission_id: "sub-legacy",
+          problem_id: "problem-1",
+          question_no: 51,
+          title: "보존된 미러 제목",
+        },
+      ],
+      error: null,
+    }));
+
+    await expect(
+      resolvePdfExportItems({ rpc } as never, {
+        sourceType: "submission",
+        sourceId: "sub-legacy",
+        options: { ...exportOptions, includeFeedback: false },
+      }),
+    ).resolves.toMatchObject([
+      {
+        kind: "submission",
+        problemTitle: "보존된 미러 제목",
+      },
+    ]);
+    expect(rpc).toHaveBeenCalledWith("get_writing_submission_history_context", {
+      p_submission_ids: ["sub-legacy"],
     });
   });
 });

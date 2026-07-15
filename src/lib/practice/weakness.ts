@@ -7,12 +7,11 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
-import { filterVisibleProblemIds } from "../problems/visibility";
 import type { Tables } from "../supabase/types";
+import { getCanonicalWritingProblems } from "../writing/canonical-source";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
 const RECOMMENDATION_SCAN_PAGE_SIZE = 8;
-const PROBLEM_SCAN_PAGE_SIZE = 40;
 const MAX_VISIBILITY_SCAN_ROWS = 200;
 const WEAKNESS_RECOMMENDATION_TARGET = 4;
 
@@ -266,8 +265,15 @@ export async function getWeaknessRecommendations(
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<WeaknessRecommendation[]> {
   const supabase = await createClient();
-
   const nowIso = new Date().toISOString();
+  return getWeaknessRecommendationsForMode(supabase, userId, nowIso);
+}
+
+async function getWeaknessRecommendationsForMode(
+  supabase: SupabaseServerClient,
+  userId: string,
+  nowIso: string,
+): Promise<WeaknessRecommendation[]> {
   const rows = await fetchVisibleRecommendationItemRows(
     supabase,
     userId,
@@ -315,54 +321,56 @@ async function fetchVisibleRecommendationItemRows(
   userId: string,
   nowIso: string,
 ): Promise<RecommendationItemJoined[]> {
+  const canonical = await getCanonicalWritingProblems({ supabase });
+  const canonicalById = new Map(
+    canonical.map((problem) => [problem.id, problem]),
+  );
   const visibleRows: RecommendationItemJoined[] = [];
 
-  for (
-    let offset = 0;
-    offset < MAX_VISIBILITY_SCAN_ROWS &&
-    visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
-    offset += RECOMMENDATION_SCAN_PAGE_SIZE
-  ) {
-    const { data, error } = await supabase
-      .from("recommendation_items")
-      .select(
-        "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
-          " recommendation_runs!inner(expires_at)," +
-          " problems!inner(id, title, domain, question_no, publish_status, lifecycle_status)",
-      )
-      .eq("user_id", userId)
-      .eq("status", "active")
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
-        referencedTable: "recommendation_runs",
-      })
-      .order("rank", { ascending: true })
-      .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
-    if (error) {
-      throw new Error(`getWeaknessRecommendations(items): ${error.message}`);
+    for (
+      let offset = 0;
+      offset < MAX_VISIBILITY_SCAN_ROWS &&
+      visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
+      offset += RECOMMENDATION_SCAN_PAGE_SIZE
+    ) {
+      const { data, error } = await supabase
+        .from("recommendation_items")
+        .select(
+          "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
+            " recommendation_runs!inner(expires_at)",
+        )
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
+          referencedTable: "recommendation_runs",
+        })
+        .order("rank", { ascending: true })
+        .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
+      if (error) {
+        throw new Error(`getWeaknessRecommendations(items): ${error.message}`);
+      }
+
+      const page = (data ?? []) as unknown as Array<
+        Omit<RecommendationItemJoined, "problems">
+      >;
+      for (const row of page) {
+        const problem = canonicalById.get(row.problem_id);
+        if (!problem) continue;
+        visibleRows.push({
+          ...row,
+          problems: {
+            id: problem.id,
+            title: problem.title,
+            domain: "writing",
+            question_no: problem.questionNo,
+            publish_status: "published",
+            lifecycle_status: "active",
+          },
+        });
+        if (visibleRows.length >= WEAKNESS_RECOMMENDATION_TARGET) break;
+      }
+      if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
     }
-
-    const rows = (data ?? []) as unknown as RecommendationItemJoined[];
-    const candidates = rows.filter((row) => {
-      const problem = pickOne(row.problems);
-      return (
-        problem != null &&
-        problem.publish_status === "published" &&
-        problem.lifecycle_status === "active"
-      );
-    });
-    const visibleIds = await filterVisibleProblemIds(
-      supabase,
-      candidates.map((row) => pickOne(row.problems)?.id ?? ""),
-    );
-    visibleRows.push(
-      ...candidates.filter((row) => {
-        const problem = pickOne(row.problems);
-        return problem != null && visibleIds.has(problem.id);
-      }),
-    );
-
-    if (rows.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
-  }
 
   return visibleRows;
 }
@@ -371,40 +379,17 @@ async function fetchVisibleTagFallbackRows(
   supabase: SupabaseServerClient,
   tags: WeaknessDimension[],
 ): Promise<FallbackProblemRow[]> {
-  const visibleRows: FallbackProblemRow[] = [];
-
-  for (
-    let offset = 0;
-    offset < MAX_VISIBILITY_SCAN_ROWS &&
-    visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
-    offset += PROBLEM_SCAN_PAGE_SIZE
-  ) {
-    const { data, error } = await supabase
-      .from("problems")
-      .select("id, title, domain, question_no")
-      .eq("domain", "writing")
-      .eq("publish_status", "published")
-      .eq("lifecycle_status", "active")
-      .overlaps("tags", tags)
-      .order("updated_at", { ascending: false })
-      .range(offset, offset + PROBLEM_SCAN_PAGE_SIZE - 1);
-    if (error) {
-      throw new Error(
-        `getWeaknessRecommendations(tag-fallback): ${error.message}`,
-      );
-    }
-
-    const rows = (data ?? []) as FallbackProblemRow[];
-    const visibleIds = await filterVisibleProblemIds(
-      supabase,
-      rows.map((row) => row.id),
-    );
-    visibleRows.push(...rows.filter((row) => visibleIds.has(row.id)));
-
-    if (rows.length < PROBLEM_SCAN_PAGE_SIZE) break;
-  }
-
-  return visibleRows.slice(0, WEAKNESS_RECOMMENDATION_TARGET);
+  const tagSet = new Set<string>(tags);
+  const canonical = await getCanonicalWritingProblems({ supabase });
+  return canonical
+    .filter((problem) => (problem.tags ?? []).some((tag) => tagSet.has(tag)))
+    .slice(0, WEAKNESS_RECOMMENDATION_TARGET)
+    .map((problem) => ({
+      id: problem.id,
+      title: problem.title,
+      domain: "writing",
+      question_no: problem.questionNo,
+    }));
 }
 
 function isWeaknessDimension(value: unknown): value is WeaknessDimension {

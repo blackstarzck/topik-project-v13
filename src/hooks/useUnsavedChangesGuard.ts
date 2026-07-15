@@ -40,6 +40,7 @@ export function useUnsavedChangesGuard({
     useState<PendingNavigation | null>(null);
   const whenRef = useRef(when);
   const currentHrefRef = useRef<string | null>(null);
+  const settledHrefRef = useRef<string | null>(null);
   const allowNextPopRef = useRef(false);
   const sentinelPushedRef = useRef(false);
 
@@ -59,6 +60,7 @@ export function useUnsavedChangesGuard({
     }
 
     if (!when && sentinelPushedRef.current) {
+      settledHrefRef.current = window.location.href;
       allowNextPopRef.current = true;
       sentinelPushedRef.current = false;
       window.history.back();
@@ -160,6 +162,15 @@ export function useUnsavedChangesGuard({
     function onPopState() {
       if (allowNextPopRef.current) {
         allowNextPopRef.current = false;
+        const settledHref = settledHrefRef.current;
+        settledHrefRef.current = null;
+        if (settledHref && settledHref !== window.location.href) {
+          const target = toInternalHref(new URL(settledHref));
+          router.replace(target, { scroll: false });
+          currentHrefRef.current = settledHref;
+        } else {
+          currentHrefRef.current = window.location.href;
+        }
         return;
       }
       if (!whenRef.current) return;
@@ -174,7 +185,7 @@ export function useUnsavedChangesGuard({
 
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [router]);
 
   return {
     pendingNavigation,

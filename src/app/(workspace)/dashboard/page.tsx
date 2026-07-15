@@ -20,6 +20,7 @@ import {
   pickDashboardContinueDraft,
   type DashboardContinueDraftQueryRow,
 } from "@/lib/writing/dashboard-drafts";
+import { getCanonicalWritingProblems } from "@/lib/writing/canonical-source";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("dashboard.page");
@@ -62,19 +63,34 @@ export default async function DashboardPage() {
   }));
 
   // 이어쓰기 카드는 추천 문제와 분리해 실제 작성 중 draft가 있을 때만 표시한다.
-  const { data: draftRows } = await supabase
+  const { data: rawDraftRows } = await supabase
     .from("writing_drafts")
     .select(
-      "problem_id, question_no, answer_text, answer_json, char_count, autosave_status, last_saved_at, updated_at, problems!inner(title, question_no)",
+      "problem_id, question_no, answer_text, answer_json, char_count, autosave_status, last_saved_at, updated_at",
     )
     .eq("user_id", user.id)
     .neq("autosave_status", "superseded")
     .order("last_saved_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
     .limit(10);
-  const continueDraft = pickDashboardContinueDraft(
-    (draftRows ?? []) as unknown as DashboardContinueDraftQueryRow[],
+  const canonicalProblems = await getCanonicalWritingProblems({ supabase });
+  const canonicalById = new Map(
+    canonicalProblems.map((problem) => [problem.id, problem]),
   );
+  const draftRows = (rawDraftRows ?? []).map((row) => {
+    const typed = row as unknown as Omit<
+      DashboardContinueDraftQueryRow,
+      "problems"
+    >;
+    const problem = canonicalById.get(typed.problem_id);
+    return {
+      ...typed,
+      problems: problem
+        ? { title: problem.title, question_no: problem.questionNo }
+        : null,
+    };
+  });
+  const continueDraft = pickDashboardContinueDraft(draftRows ?? []);
 
   // 최근 첨삭(받은 피드백) — KPI 타일 + 카드. single join query for question_no.
   const { data: feedbacks } = await supabase

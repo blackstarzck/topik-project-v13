@@ -12,6 +12,11 @@ describe("Phase 5 writing tables types snapshot", () => {
       answer_text: null,
       answer_json: null,
       char_count: null,
+      canonical_question_id: null,
+      canonical_import_id: null,
+      canonical_payload_hash: null,
+      question_snapshot: null,
+      legacy_cutover_snapshot: null,
       autosave_status: "clean",
       last_saved_at: null,
       created_at: "2026-05-21T00:00:00Z",
@@ -28,6 +33,7 @@ describe("Phase 5 writing tables types snapshot", () => {
       question_no: 51,
       answer_text: "이것은 답안입니다",
       char_count: 11,
+      external_submission_id: "provider-submission-id",
     });
     expect(true).toBe(true);
   });
