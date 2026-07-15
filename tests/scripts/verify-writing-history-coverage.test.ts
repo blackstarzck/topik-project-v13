@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const script = readFileSync(
-  join(process.cwd(), "scripts", "db", "verify-writing-history-coverage.mjs"),
+  new URL(
+    "../../scripts/db/verify-writing-history-coverage.mjs",
+    import.meta.url,
+  ),
   "utf8",
 ).toLowerCase();
 

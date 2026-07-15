@@ -312,6 +312,7 @@ describe.runIf(LIVE)(
       let cleanupComplete = false;
       let verificationOpened = false;
       let primaryError: unknown;
+      const recoveryErrors: unknown[] = [];
 
       try {
         const signIn = await studentClient.auth.signInWithPassword({
@@ -717,10 +718,7 @@ describe.runIf(LIVE)(
         );
       } catch (error) {
         primaryError = error;
-        throw error;
       } finally {
-        const recoveryErrors: unknown[] = [];
-        if (primaryError !== undefined) recoveryErrors.push(primaryError);
         if (verificationOpened) {
           try {
             await setSubmissionState(
@@ -746,13 +744,17 @@ describe.runIf(LIVE)(
         } catch (error) {
           recoveryErrors.push(error);
         }
-        if (recoveryErrors.length > (primaryError === undefined ? 0 : 1)) {
-          throw new AggregateError(
-            recoveryErrors,
-            "Live outbox recovery failed.",
-          );
-        }
       }
+
+      if (recoveryErrors.length > 0) {
+        throw new AggregateError(
+          primaryError === undefined
+            ? recoveryErrors
+            : [primaryError, ...recoveryErrors],
+          "Live outbox recovery failed.",
+        );
+      }
+      if (primaryError !== undefined) throw primaryError;
     }, 120_000);
   },
 );
