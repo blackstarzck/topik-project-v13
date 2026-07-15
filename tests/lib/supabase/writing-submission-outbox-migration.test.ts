@@ -96,6 +96,12 @@ describe("writing submission outbox migration", () => {
     expect(sql).toContain("writing_submission_intent_id_conflict");
     expect(sql).toContain("or intent.dedup_key = v_dedup_key");
     expect(sql).toContain("(intent.state <> 'failed') desc");
+    expect(sql).toContain(
+      "references public.writing_drafts(id) on delete restrict",
+    );
+    expect(sql).not.toContain(
+      "references public.writing_drafts(id) on delete cascade",
+    );
   });
 
   it("claims pending work once and never authorizes automatic redispatch", () => {
@@ -173,6 +179,10 @@ describe("writing submission outbox migration", () => {
     expect(materializeFunction).toContain("set state = 'materialized'");
     expect(materializeFunction).toContain(
       "when lower(v_intent.provider_status) = 'failed' then 'failed'",
+    );
+    expect(materializeFunction).toContain("where id = v_intent.draft_id");
+    expect(sql).toContain(
+      "before insert or update of problem_id, question_no, user_id, draft_id, answer_text, answer_json, char_count, parent_submission_id, canonical_question_id, canonical_import_id, canonical_payload_hash, question_snapshot on public.writing_submissions",
     );
     expect(sql).toContain(
       "drop function public.create_external_writing_submission_v2(jsonb)",
@@ -299,6 +309,14 @@ describe("writing submission outbox migration", () => {
     expect(liveTest).toContain("expect(number(liveevidence?.intents)).tobe(6)");
     expect(liveTest).toContain("expect(number(liveevidence?.submissions)).tobe(3)");
     expect(liveTest).toContain("expect(number(liveevidence?.audit_rows)).tobe(21)");
+    expect(
+      liveTest.indexOf(
+        '"close service-only live outbox fault verification"',
+      ),
+    ).toBeLessThan(liveTest.indexOf("await cleanuprun(config, draftids, intentids)"));
+    expect(liveTest).toContain("const recoveryerrors: unknown[] = []");
+    expect(liveTest).toContain("throw new aggregateerror( recoveryerrors");
+    expect(liveTest).toContain('"live outbox recovery failed."');
   });
 
   it("opens a service-only verification window without certifying user submissions", () => {
@@ -380,6 +398,20 @@ describe("writing submission outbox migration", () => {
     expect(down).toContain("service_role_had_execute");
     expect(down).toContain("drop column external_submission_id");
     expect(down).toContain("submission mode remains blocked");
+    expect(down).toContain(
+      "lock table private.writing_submission_control in access exclusive mode",
+    );
+    expect(down).toContain(
+      "lock table private.writing_submission_intents in access exclusive mode",
+    );
+    expect(down).toContain(
+      "lock table private.writing_submission_intent_audit in access exclusive mode",
+    );
+    expect(down).toContain(
+      "lock table public.writing_submissions in access exclusive mode",
+    );
+    expect(down.indexOf("begin;")).toBeLessThan(down.indexOf("do $$"));
+    expect(down.trimEnd().endsWith("commit;")).toBe(true);
     expect(down).not.toContain("delete from private.writing_submission_intents");
   });
 });

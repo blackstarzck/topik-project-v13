@@ -64,6 +64,21 @@ describe("writing cutover serialization guard migration", () => {
     expect(sql).toContain("writing_mirror_cron_removal_requires_canonical_blocked");
     expect(sql).toContain("writing_mirror_cron_restore_requires_legacy_blocked");
     expect(sql).not.toContain("create trigger writing_mirror_cron_runtime_guard");
+    expect(sql).toContain(
+      "do $$ declare v_read_mode text; v_evidence_id text; begin perform pg_catalog.pg_advisory_xact_lock(731971029691967530::bigint); select control.read_mode, control.evidence_id",
+    );
+    expect(sql).toContain(
+      "alter function public.sync_available_writing_problems() rename to sync_available_writing_problems_legacy_impl",
+    );
+    expect(sql).toContain(
+      "create or replace function public.sync_available_writing_problems()",
+    );
+    expect(sql).toContain(
+      "if v_read_mode is distinct from 'legacy' then raise exception 'writing_mirror_sync_requires_legacy_mode'",
+    );
+    expect(sql).toContain(
+      "return query select * from private.sync_available_writing_problems_legacy_impl()",
+    );
   });
 
   it("verifies unschedule success before accepting retirement evidence", () => {
@@ -85,6 +100,13 @@ describe("writing cutover serialization guard migration", () => {
   });
 
   it("removes only the corrective interfaces on schema rollback", () => {
+    expect(down.indexOf("begin;")).toBeLessThan(
+      down.indexOf("pg_advisory_xact_lock"),
+    );
+    expect(down.indexOf("pg_advisory_xact_lock")).toBeLessThan(
+      down.indexOf("drop trigger"),
+    );
+    expect(down.trimEnd().endsWith("commit;")).toBe(true);
     expect(down).toContain(
       "drop trigger if exists writing_cron_retirement_snapshot_guard on private.writing_cron_definition_snapshot",
     );

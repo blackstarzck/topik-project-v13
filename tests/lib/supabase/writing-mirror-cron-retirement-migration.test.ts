@@ -29,9 +29,18 @@ describe("writing mirror cron retirement migration", () => {
     expect(sql).toContain("where jobname = 'sync-writing-problems'");
     expect(sql).toContain("writing_mirror_cron_duplicate_jobs");
     expect(sql).toContain("where run.jobid = v_job_id");
-    expect(sql).toContain("run.status = 'running'");
+    expect(sql).toContain("run.end_time is null");
     expect(sql).toContain("writing_mirror_cron_run_in_progress");
     expect(sql).toContain("perform cron.unschedule(v_job_id)");
+    expect(sql).toContain(
+      "perform pg_catalog.pg_advisory_xact_lock(731971029691967530::bigint)",
+    );
+    expect(sql).toContain(
+      "lock table public.problems in share row exclusive mode",
+    );
+    expect(sql.indexOf("perform cron.unschedule(v_job_id)")).toBeLessThan(
+      sql.indexOf("from cron.job_run_details run"),
+    );
     expect(sql).not.toContain("writing-tasks/ingest");
   });
 

@@ -213,6 +213,7 @@ async function fetchCanonicalRecommendationItems(
         referencedTable: "recommendation_runs",
       })
       .order("rank", { ascending: true })
+      .order("id", { ascending: true })
       .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
     if (error) {
       throw new Error(`queryRecommendationBundle(items): ${error.message}`);

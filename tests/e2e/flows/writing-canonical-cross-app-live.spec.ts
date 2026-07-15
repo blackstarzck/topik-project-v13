@@ -319,7 +319,6 @@ test.describe("canonical writing cross-app live acceptance", () => {
             config: fixture.config,
             problemId: upstreamFixture.problemId,
             questionId: upstreamFixture.questionId,
-            serviceClient: fixture.serviceClient,
             studentUserId: fixture.studentUserId,
           });
         } catch (error) {

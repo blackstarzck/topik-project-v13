@@ -137,6 +137,7 @@ export function resolveCanonicalLiveConfig(
 
   const supabaseUrl = required(env, "NEXT_PUBLIC_SUPABASE_URL");
   const projectRef = required(env, "SUPABASE_PROJECT_REF");
+  const expectedProjectRef = required(env, "E2E_EXPECTED_SUPABASE_PROJECT_REF");
   if (!/^[a-z0-9]+$/.test(projectRef)) {
     throw new Error("SUPABASE_PROJECT_REF has an unexpected format.");
   }
@@ -144,9 +145,13 @@ export function resolveCanonicalLiveConfig(
   const urlProjectRef = supabaseHost.endsWith(".supabase.co")
     ? supabaseHost.slice(0, -".supabase.co".length)
     : null;
-  if (!urlProjectRef || urlProjectRef !== projectRef) {
+  if (
+    !urlProjectRef ||
+    urlProjectRef !== projectRef ||
+    projectRef !== expectedProjectRef
+  ) {
     throw new Error(
-      "SUPABASE_PROJECT_REF must match NEXT_PUBLIC_SUPABASE_URL before live DB mutation.",
+      "SUPABASE_PROJECT_REF, E2E_EXPECTED_SUPABASE_PROJECT_REF, and NEXT_PUBLIC_SUPABASE_URL must match before live DB mutation.",
     );
   }
 
@@ -609,7 +614,6 @@ export async function createCanonicalLiveFixture(
         config,
         problemId: expectedProblemId,
         questionId,
-        serviceClient,
         studentUserId,
       });
     } catch (cleanupError) {
@@ -622,89 +626,328 @@ export async function createCanonicalLiveFixture(
   }
 }
 
-async function deleteByProblem(
-  serviceClient: SupabaseClient,
-  table: string,
-  problemId: string,
-): Promise<void> {
-  const result = await serviceClient
-    .from(table)
-    .delete()
-    .eq("problem_id", problemId);
-  if (result.error)
-    throw new Error(`${table} cleanup: ${result.error.message}`);
-}
-
 export async function cleanupCanonicalIdentity({
   config,
   problemId,
   questionId,
-  serviceClient,
   studentUserId,
 }: {
   config: CanonicalLiveConfig;
   problemId: string;
   questionId: string;
-  serviceClient: SupabaseClient;
   studentUserId: string;
 }): Promise<void> {
-  const submissions = await serviceClient
-    .from("writing_submissions")
-    .select("id")
-    .eq("problem_id", problemId)
-    .eq("user_id", studentUserId);
-  if (submissions.error)
-    throw new Error(
-      `fixture submission cleanup lookup: ${submissions.error.message}`,
-    );
-  const submissionIds = (submissions.data ?? []).map((row) => String(row.id));
-  if (submissionIds.length > 0) {
-    for (const table of [
-      "feedback_dimension_scores",
-      "sentence_feedback",
-      "writing_feedback",
-      "writing_submission_metrics",
-    ]) {
-      const deleted = await serviceClient
-        .from(table)
-        .delete()
-        .in("submission_id", submissionIds);
-      if (deleted.error)
-        throw new Error(`${table} cleanup: ${deleted.error.message}`);
-    }
-    const library = await serviceClient
-      .from("library_items")
-      .delete()
-      .in("submission_id", submissionIds);
-    if (library.error)
-      throw new Error(`library submission cleanup: ${library.error.message}`);
-    const deleted = await serviceClient
-      .from("writing_submissions")
-      .delete()
-      .in("id", submissionIds);
-    if (deleted.error)
-      throw new Error(`writing_submissions cleanup: ${deleted.error.message}`);
-  }
-
-  for (const table of [
-    "writing_drafts",
-    "problem_attempts",
-    "recommendation_items",
-    "library_items",
-    "study_events",
-    "problem_assets",
-  ]) {
-    await deleteByProblem(serviceClient, table, problemId);
-  }
-
-  // The production guard intentionally rejects canonical question deletion.
-  // Delete the canonical identity as one dev-only transaction so an interrupted
-  // cleanup cannot leave an available question without its source-map row.
-  // resolveCanonicalLiveConfig already requires local app URLs, a non-production
-  // label, explicit mutation opt-in, and a matching Management project ref.
+  // Quarantine, ownership verification, dependent cleanup, and identity
+  // deletion are one locked transaction. No writer can add a reference between
+  // the external-owner check and the dev-only trigger bypass.
   await managementSql(
     config,
     `begin;
+     update public.topik_writing_51_questions
+        set service_status = 'excluded'
+      where question_id = ${sqlLiteral(questionId)};
+
+     lock table
+       private.problem_identities,
+       private.writing_submission_intents,
+       public.problem_assets,
+       public.problem_attempts,
+       public.writing_drafts,
+       public.writing_submissions,
+       public.recommendation_items,
+       public.library_items,
+       public.study_events,
+       public.pdf_export_quota_usages,
+       public.pdf_export_quota_resets,
+       public.writing_submission_metrics,
+       public.comparison_reports,
+       public.feedback_dimension_scores,
+       public.sentence_feedback,
+       public.writing_feedback
+     in share row exclusive mode;
+
+     do $cleanup_guard$
+     declare
+       v_assignment_reference boolean := false;
+       v_assignment_submission_reference boolean := false;
+     begin
+       if to_regclass('public.assignments') is not null then
+         execute 'lock table public.assignments in share row exclusive mode';
+         execute format(
+           'select exists (select 1 from public.assignments where problem_id = %L::uuid)',
+           ${sqlLiteral(problemId)}
+         ) into v_assignment_reference;
+       end if;
+
+       if to_regclass('public.assignment_submissions') is not null then
+         execute 'lock table public.assignment_submissions in share row exclusive mode';
+         execute format(
+           'select exists (
+              select 1 from public.assignment_submissions assignment_submission
+               where assignment_submission.submission_id in (
+                 select submission.id from public.writing_submissions submission
+                  where submission.problem_id = %L::uuid
+               )
+            )',
+           ${sqlLiteral(problemId)}
+         ) into v_assignment_submission_reference;
+       end if;
+
+       if v_assignment_reference or v_assignment_submission_reference
+          or exists (
+            select 1 from private.writing_submission_intents
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+          )
+          or exists (
+            select 1 from public.pdf_export_quota_resets
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+          )
+          or exists (
+            select 1 from public.writing_submissions
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.writing_drafts
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.problem_attempts
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.recommendation_items
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.library_items
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.study_events
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.pdf_export_quota_usages
+             where problem_id = ${sqlLiteral(problemId)}::uuid
+               and user_id <> ${sqlLiteral(studentUserId)}::uuid
+          )
+          or exists (
+            select 1 from public.writing_submissions child
+             where child.draft_id in (
+               select draft.id from public.writing_drafts draft
+                where draft.problem_id = ${sqlLiteral(problemId)}::uuid
+                  and draft.user_id = ${sqlLiteral(studentUserId)}::uuid
+             )
+               and (
+                 child.problem_id <> ${sqlLiteral(problemId)}::uuid
+                 or child.user_id <> ${sqlLiteral(studentUserId)}::uuid
+               )
+          )
+          or exists (
+            select 1 from public.writing_submissions child
+             where child.parent_submission_id in (
+               select submission.id from public.writing_submissions submission
+                where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                  and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+             )
+               and (
+                 child.problem_id <> ${sqlLiteral(problemId)}::uuid
+                 or child.user_id <> ${sqlLiteral(studentUserId)}::uuid
+               )
+          )
+          or exists (
+            select 1 from public.writing_submission_metrics metric
+             where metric.user_id <> ${sqlLiteral(studentUserId)}::uuid
+               and metric.submission_id in (
+                 select submission.id from public.writing_submissions submission
+                  where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                    and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+               )
+          )
+          or exists (
+            select 1 from public.comparison_reports report
+             where report.user_id <> ${sqlLiteral(studentUserId)}::uuid
+               and (
+                 report.current_submission_id in (
+                   select submission.id from public.writing_submissions submission
+                    where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                      and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+                 )
+                 or report.previous_submission_id in (
+                   select submission.id from public.writing_submissions submission
+                    where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                      and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+                 )
+               )
+          )
+          or exists (
+            select 1 from public.library_items item
+             where item.user_id <> ${sqlLiteral(studentUserId)}::uuid
+               and (
+                 item.submission_id in (
+                   select submission.id from public.writing_submissions submission
+                    where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                      and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+                 )
+                 or item.attempt_id in (
+                   select attempt.id from public.problem_attempts attempt
+                    where attempt.problem_id = ${sqlLiteral(problemId)}::uuid
+                      and attempt.user_id = ${sqlLiteral(studentUserId)}::uuid
+                 )
+                 or item.report_id in (
+                   select report.id from public.comparison_reports report
+                    where report.current_submission_id in (
+                      select submission.id from public.writing_submissions submission
+                       where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                         and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+                    )
+                       or report.previous_submission_id in (
+                         select submission.id from public.writing_submissions submission
+                          where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                            and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+                       )
+                 )
+               )
+          )
+          or exists (
+            select 1 from public.study_events event
+             where event.user_id <> ${sqlLiteral(studentUserId)}::uuid
+               and (
+                 event.submission_id in (
+                   select submission.id from public.writing_submissions submission
+                    where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+                      and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+                 )
+                 or event.attempt_id in (
+                   select attempt.id from public.problem_attempts attempt
+                    where attempt.problem_id = ${sqlLiteral(problemId)}::uuid
+                      and attempt.user_id = ${sqlLiteral(studentUserId)}::uuid
+                 )
+               )
+          ) then
+         raise exception 'canonical_fixture_external_reference';
+       end if;
+     end
+     $cleanup_guard$;
+
+     delete from public.comparison_reports report
+      where report.current_submission_id in (
+        select submission.id from public.writing_submissions submission
+         where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+           and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+      ) or report.previous_submission_id in (
+        select submission.id from public.writing_submissions submission
+         where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+           and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+      );
+     delete from public.feedback_dimension_scores feedback
+      where feedback.submission_id in (
+        select submission.id from public.writing_submissions submission
+         where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+           and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+      );
+     delete from public.sentence_feedback feedback
+      where feedback.submission_id in (
+        select submission.id from public.writing_submissions submission
+         where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+           and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+      );
+     delete from public.writing_feedback feedback
+      where feedback.submission_id in (
+        select submission.id from public.writing_submissions submission
+         where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+           and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+      );
+     delete from public.library_items item
+      where item.user_id = ${sqlLiteral(studentUserId)}::uuid
+        and (
+          item.problem_id = ${sqlLiteral(problemId)}::uuid
+          or item.submission_id in (
+            select submission.id from public.writing_submissions submission
+             where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+               and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+          )
+        );
+     delete from public.study_events event
+      where event.user_id = ${sqlLiteral(studentUserId)}::uuid
+        and (
+          event.problem_id = ${sqlLiteral(problemId)}::uuid
+          or event.submission_id in (
+            select submission.id from public.writing_submissions submission
+             where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+               and submission.user_id = ${sqlLiteral(studentUserId)}::uuid
+          )
+          or event.attempt_id in (
+            select attempt.id from public.problem_attempts attempt
+             where attempt.problem_id = ${sqlLiteral(problemId)}::uuid
+               and attempt.user_id = ${sqlLiteral(studentUserId)}::uuid
+          )
+        );
+     delete from public.writing_submission_metrics metric
+      where metric.user_id = ${sqlLiteral(studentUserId)}::uuid
+        and metric.problem_id = ${sqlLiteral(problemId)}::uuid;
+     delete from public.writing_submissions submission
+      where submission.problem_id = ${sqlLiteral(problemId)}::uuid
+        and submission.user_id = ${sqlLiteral(studentUserId)}::uuid;
+     delete from public.writing_drafts draft
+      where draft.problem_id = ${sqlLiteral(problemId)}::uuid
+        and draft.user_id = ${sqlLiteral(studentUserId)}::uuid;
+     delete from public.problem_attempts attempt
+      where attempt.problem_id = ${sqlLiteral(problemId)}::uuid
+        and attempt.user_id = ${sqlLiteral(studentUserId)}::uuid;
+     delete from public.recommendation_items item
+      where item.problem_id = ${sqlLiteral(problemId)}::uuid
+        and item.user_id = ${sqlLiteral(studentUserId)}::uuid;
+     delete from public.pdf_export_quota_usages usage
+      where usage.problem_id = ${sqlLiteral(problemId)}::uuid
+        and usage.user_id = ${sqlLiteral(studentUserId)}::uuid;
+     delete from public.problem_assets asset
+      where asset.problem_id = ${sqlLiteral(problemId)}::uuid;
+
+     do $cleanup_verify$
+     begin
+       if exists (
+         select 1 from private.writing_submission_intents
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.writing_submissions
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.writing_drafts
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.problem_attempts
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.recommendation_items
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.library_items
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.study_events
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.pdf_export_quota_usages
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.pdf_export_quota_resets
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) or exists (
+         select 1 from public.writing_submission_metrics
+          where problem_id = ${sqlLiteral(problemId)}::uuid
+       ) then
+         raise exception 'canonical_fixture_reference_cleanup_incomplete';
+       end if;
+     end
+     $cleanup_verify$;
+
      set local session_replication_role = replica;
      delete from private.problem_identities
       where problem_id = ${sqlLiteral(problemId)}::uuid

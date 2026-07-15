@@ -103,6 +103,7 @@ function makeDashboardClientForTimelineSubmissionFetch(
   canonicalRows: Array<Record<string, unknown>> = [],
   canonicalError: string | null = null,
   historyRows: Array<Record<string, unknown>> = [],
+  nonWritingRows: Array<Record<string, unknown>> = [],
 ) {
   const oldSubmissions = [
     {
@@ -117,10 +118,6 @@ function makeDashboardClientForTimelineSubmissionFetch(
       question_no: 53,
       parent_submission_id: null,
     },
-  ];
-  const problems = [
-    problem("p-old-report", 54, "Old report problem"),
-    problem("p-old-export", 53, "Old export problem"),
   ];
   const queries: Array<{
     table: string;
@@ -204,8 +201,8 @@ function makeDashboardClientForTimelineSubmissionFetch(
             )?.values;
             return {
               data: ids
-                ? problems.filter((row) => ids.includes(row.id))
-                : problems,
+                ? nonWritingRows.filter((row) => ids.includes(row.id))
+                : nonWritingRows,
               error: null,
             };
           }
@@ -216,6 +213,7 @@ function makeDashboardClientForTimelineSubmissionFetch(
         const chain = {
           select: () => chain,
           eq: () => chain,
+          neq: () => chain,
           order: () => chain,
           in: (column: string, values: unknown[]) => {
             query.inFilters.push({ column, values });
@@ -823,19 +821,86 @@ describe("buildLibraryDashboardFromRows", () => {
 });
 
 describe("getLibraryDashboard", () => {
-  it("hydrates current timeline metadata from canonical without querying public.problems", async () => {
+  it("hydrates writing timeline metadata from canonical instead of public mirrors", async () => {
     const { client, queries } = makeDashboardClientForTimelineSubmissionFetch([
       canonicalDashboardRow("p-old-report", 54, "Canonical report problem"),
       canonicalDashboardRow("p-old-export", 53, "Canonical export problem"),
     ]);
 
-    const view = await getLibraryDashboard("user-1", async () => client as never);
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
 
     expect(view.timeline.map((item) => item.title)).toEqual([
       "Canonical report problem",
       "Canonical export problem",
     ]);
-    expect(queries.some((query) => query.table === "problems")).toBe(false);
+    expect(queries.some((query) => query.table === "problems")).toBe(true);
+  });
+
+  it("hydrates non-writing metadata from public.problems when canonical has no match", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch(
+      [canonicalDashboardRow("p-old-report", 54, "Canonical report problem")],
+      null,
+      [],
+      [problem("p-old-export", 53, "Old export problem")],
+    );
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline.map((item) => item.title)).toEqual([
+      "Canonical report problem",
+      "Old export problem",
+    ]);
+    expect(queries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table: "problems",
+          inFilters: [
+            {
+              column: "id",
+              values: ["p-old-report", "p-old-export"],
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+
+  it("keeps historical non-writing metadata without depending on canonical availability", async () => {
+    const { client } = makeDashboardClientForTimelineSubmissionFetch(
+      [],
+      "catalog unavailable",
+      [],
+      [
+        {
+          ...problem("p-old-report", 54, "Archived report problem"),
+          publish_status: "archived",
+          visibility: "org",
+          lifecycle_status: "inactive",
+        },
+        {
+          ...problem("p-old-export", 53, "Inactive export problem"),
+          publish_status: "published",
+          visibility: "public",
+          lifecycle_status: "inactive",
+        },
+      ],
+    );
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline.map((item) => item.title)).toEqual([
+      "Archived report problem",
+      "Inactive export problem",
+    ]);
   });
 
   it("uses retained submission snapshots for historical cards even when current canonical content changed", async () => {
@@ -852,10 +917,15 @@ describe("getLibraryDashboard", () => {
       ],
     );
 
-    const view = await getLibraryDashboard("user-1", async () => client as never);
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
 
     expect(view.timeline).toHaveLength(2);
-    expect(view.timeline.every((item) => item.title === pinnedTitle)).toBe(true);
+    expect(view.timeline.every((item) => item.title === pinnedTitle)).toBe(
+      true,
+    );
   });
 
   it("fetches payload-linked historical submissions outside the recent cache", async () => {
@@ -864,7 +934,10 @@ describe("getLibraryDashboard", () => {
       canonicalDashboardRow("p-old-export", 53, "Old export problem"),
     ]);
 
-    const view = await getLibraryDashboard("user-1", async () => client as never);
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
 
     expect(view.timeline).toEqual([
       expect.objectContaining({
@@ -886,7 +959,9 @@ describe("getLibraryDashboard", () => {
       expect.arrayContaining([
         expect.objectContaining({
           table: "writing_submissions",
-          inFilters: [{ column: "id", values: ["s-old-report", "s-old-export"] }],
+          inFilters: [
+            { column: "id", values: ["s-old-report", "s-old-export"] },
+          ],
         }),
       ]),
     );
@@ -901,7 +976,7 @@ describe("getLibraryDashboard", () => {
     await expect(
       getLibraryDashboard("user-1", async () => client as never),
     ).rejects.toThrow("getCanonicalWritingProblems: catalog unavailable");
-    expect(queries.some((query) => query.table === "problems")).toBe(false);
+    expect(queries.some((query) => query.table === "problems")).toBe(true);
   });
 });
 

@@ -65,11 +65,12 @@ function resolveConfig(): ProviderCanaryConfig {
 
   const supabaseUrl = required("NEXT_PUBLIC_SUPABASE_URL");
   const projectRef = required("E2E_EXPECTED_SUPABASE_PROJECT_REF");
+  const managementProjectRef = required("SUPABASE_PROJECT_REF");
   const urlProjectRef = new URL(supabaseUrl).hostname.replace(
     /\.supabase\.co$/,
     "",
   );
-  if (urlProjectRef !== projectRef) {
+  if (urlProjectRef !== projectRef || managementProjectRef !== projectRef) {
     throw new Error("Provider live E2E project-ref guard failed.");
   }
 
@@ -141,16 +142,31 @@ async function cleanup(
   await managementSql(
     config,
     `begin;
-     delete from public.comparison_reports where current_submission_id = ${sqlUuid(state.intentId)} or previous_submission_id = ${sqlUuid(state.intentId)};
-     delete from public.feedback_dimension_scores where submission_id = ${sqlUuid(state.intentId)};
-     delete from public.sentence_feedback where submission_id = ${sqlUuid(state.intentId)};
-     delete from public.writing_feedback where submission_id = ${sqlUuid(state.intentId)};
-     delete from public.writing_submission_metrics where submission_id = ${sqlUuid(state.intentId)};
-     delete from public.study_events where submission_id = ${sqlUuid(state.intentId)};
-     delete from public.library_items where submission_id = ${sqlUuid(state.intentId)};
-     delete from public.writing_submissions where id = ${sqlUuid(state.intentId)};
-     delete from private.writing_submission_intent_audit where intent_id = ${sqlUuid(state.intentId)};
-     delete from private.writing_submission_intents where intent_id = ${sqlUuid(state.intentId)};
+     do $cleanup$
+     declare
+       v_intent_id uuid := coalesce(
+         ${sqlUuid(state.intentId)},
+         (
+           select intent_id
+           from private.writing_submission_intents
+           where draft_id = ${sqlUuid(state.draftId)}
+           order by created_at desc
+           limit 1
+         )
+       );
+     begin
+       delete from public.comparison_reports where current_submission_id = v_intent_id or previous_submission_id = v_intent_id;
+       delete from public.feedback_dimension_scores where submission_id = v_intent_id;
+       delete from public.sentence_feedback where submission_id = v_intent_id;
+       delete from public.writing_feedback where submission_id = v_intent_id;
+       delete from public.writing_submission_metrics where submission_id = v_intent_id;
+       delete from public.study_events where submission_id = v_intent_id;
+       delete from public.library_items where submission_id = v_intent_id;
+       delete from public.writing_submissions where id = v_intent_id;
+       delete from private.writing_submission_intent_audit where intent_id = v_intent_id;
+       delete from private.writing_submission_intents where intent_id = v_intent_id;
+     end
+     $cleanup$;
      delete from public.writing_drafts where id = ${sqlUuid(state.draftId)};
      commit;`,
   );
@@ -216,7 +232,10 @@ async function waitForSubmission(
       .order("submitted_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (result.error) throw new Error(`provider canary submission lookup: ${result.error.message}`);
+    if (result.error)
+      throw new Error(
+        `provider canary submission lookup: ${result.error.message}`,
+      );
     if (result.data) return result.data;
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
@@ -256,16 +275,23 @@ test("canonical Q54 reaches the real provider and renders persisted feedback", a
       password: config.studentPassword,
     });
     if (signIn.error || !signIn.data.user) {
-      throw new Error(`provider canary student sign-in: ${signIn.error?.message}`);
+      throw new Error(
+        `provider canary student sign-in: ${signIn.error?.message}`,
+      );
     }
     state.userId = signIn.data.user.id;
 
-    const canonical = await studentClient.rpc("get_available_writing_questions", {
-      p_item_number: 54,
-      p_problem_id: null,
-    });
+    const canonical = await studentClient.rpc(
+      "get_available_writing_questions",
+      {
+        p_item_number: 54,
+        p_problem_id: null,
+      },
+    );
     if (canonical.error) {
-      throw new Error(`provider canary canonical lookup: ${canonical.error.message}`);
+      throw new Error(
+        `provider canary canonical lookup: ${canonical.error.message}`,
+      );
     }
     const rows = (canonical.data ?? []) as CanonicalRow[];
     const ids = rows.map((row) => row.problem_id);
@@ -290,7 +316,8 @@ test("canonical Q54 reaches the real provider and renders persisted feedback", a
       ),
     );
     const sample = rows.find((row) => !occupied.has(row.problem_id));
-    if (!sample) throw new Error("Provider canary requires an unused Q54 question.");
+    if (!sample)
+      throw new Error("Provider canary requires an unused Q54 question.");
     state.problemId = sample.problem_id;
 
     await page.goto(
@@ -371,7 +398,9 @@ test("canonical Q54 reaches the real provider and renders persisted feedback", a
       }),
     ]);
     if (feedback.error || dimensions.error || intentAudit.error) {
-      throw new Error("Provider canary persisted feedback verification failed.");
+      throw new Error(
+        "Provider canary persisted feedback verification failed.",
+      );
     }
     expect(feedback.data.status).toBe("complete");
     expect(dimensions.data.length).toBeGreaterThan(0);

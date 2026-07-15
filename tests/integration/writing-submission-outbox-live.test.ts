@@ -59,7 +59,8 @@ type LiveConfig = {
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is required for live outbox verification.`);
+  if (!value)
+    throw new Error(`${name} is required for live outbox verification.`);
   return value;
 }
 
@@ -146,7 +147,9 @@ function uuidArray(ids: string[]): string {
   return `array[${ids.map((id) => `'${id}'::uuid`).join(",")}]`;
 }
 
-function canonicalContext(row: CanonicalRow): CanonicalWritingSubmissionContext {
+function canonicalContext(
+  row: CanonicalRow,
+): CanonicalWritingSubmissionContext {
   const canonicalImportId = String(row.canonical_import_id);
   return {
     canonicalImportId,
@@ -227,7 +230,9 @@ async function createDraftAndPayload({
   };
 }
 
-function rpcClient(serviceClient: SupabaseClient): WritingSubmissionOutboxClient {
+function rpcClient(
+  serviceClient: SupabaseClient,
+): WritingSubmissionOutboxClient {
   return serviceClient as unknown as WritingSubmissionOutboxClient;
 }
 
@@ -248,7 +253,8 @@ function withRpcFault(
 }
 
 const classifyProviderFailure = (error: unknown) => ({
-  disposition: error instanceof TypeError ? ("ambiguous" as const) : ("failed" as const),
+  disposition:
+    error instanceof TypeError ? ("ambiguous" as const) : ("failed" as const),
   reasonCode:
     error instanceof TypeError ? "provider_network_error" : "provider_http_400",
 });
@@ -266,7 +272,9 @@ async function setSubmissionState(
     p_submission_mode: mode,
   });
   if (result.error) {
-    throw new Error(`set_writing_submission_state(${mode}): ${result.error.message}`);
+    throw new Error(
+      `set_writing_submission_state(${mode}): ${result.error.message}`,
+    );
   }
 }
 
@@ -292,310 +300,354 @@ async function cleanupRun(
   );
 }
 
-describe.runIf(LIVE)("writing submission outbox live fault verification", () => {
-  it("contains duplicate, timeout, persistence, and recovery failures in dev", async () => {
-    const config = resolveLiveConfig();
-    const serviceClient = client(config.supabaseUrl, config.serviceRoleKey);
-    const studentClient = client(config.supabaseUrl, config.anonKey);
-    const draftIds: string[] = [];
-    const intentIds: string[] = [];
-    let cleanupComplete = false;
-    let verificationOpened = false;
+describe.runIf(LIVE)(
+  "writing submission outbox live fault verification",
+  () => {
+    it("contains duplicate, timeout, persistence, and recovery failures in dev", async () => {
+      const config = resolveLiveConfig();
+      const serviceClient = client(config.supabaseUrl, config.serviceRoleKey);
+      const studentClient = client(config.supabaseUrl, config.anonKey);
+      const draftIds: string[] = [];
+      const intentIds: string[] = [];
+      let cleanupComplete = false;
+      let verificationOpened = false;
+      let primaryError: unknown;
 
-    try {
-      const signIn = await studentClient.auth.signInWithPassword({
-        email: config.studentEmail,
-        password: config.studentPassword,
-      });
-      if (signIn.error || !signIn.data.user) {
-        throw new Error(`live outbox student sign-in: ${signIn.error?.message}`);
-      }
-      const userId = signIn.data.user.id;
+      try {
+        const signIn = await studentClient.auth.signInWithPassword({
+          email: config.studentEmail,
+          password: config.studentPassword,
+        });
+        if (signIn.error || !signIn.data.user) {
+          throw new Error(
+            `live outbox student sign-in: ${signIn.error?.message}`,
+          );
+        }
+        const userId = signIn.data.user.id;
 
-      const canonical = await studentClient.rpc("get_available_writing_questions", {
-        p_item_number: 54,
-        p_problem_id: null,
-      });
-      if (canonical.error) {
-        throw new Error(`live outbox canonical lookup: ${canonical.error.message}`);
-      }
-      const rows = (canonical.data ?? []) as CanonicalRow[];
-      const problemIds = rows.map((row) => row.problem_id);
-      const [existingDrafts, existingSubmissions] = await Promise.all([
-        serviceClient
-          .from("writing_drafts")
-          .select("problem_id")
-          .eq("user_id", userId)
-          .in("problem_id", problemIds),
-        serviceClient
-          .from("writing_submissions")
-          .select("problem_id")
-          .eq("user_id", userId)
-          .in("problem_id", problemIds),
-      ]);
-      if (existingDrafts.error || existingSubmissions.error) {
-        throw new Error("live outbox existing problem lookup failed");
-      }
-      const occupied = new Set(
-        [...(existingDrafts.data ?? []), ...(existingSubmissions.data ?? [])].map(
-          (row) => String(row.problem_id),
-        ),
-      );
-      const samples = rows.filter((row) => !occupied.has(row.problem_id)).slice(0, 5);
-      if (samples.length !== 5) {
-        throw new Error("Live outbox verification requires five unused Q54 questions.");
-      }
+        const canonical = await studentClient.rpc(
+          "get_available_writing_questions",
+          {
+            p_item_number: 54,
+            p_problem_id: null,
+          },
+        );
+        if (canonical.error) {
+          throw new Error(
+            `live outbox canonical lookup: ${canonical.error.message}`,
+          );
+        }
+        const rows = (canonical.data ?? []) as CanonicalRow[];
+        const problemIds = rows.map((row) => row.problem_id);
+        const [existingDrafts, existingSubmissions] = await Promise.all([
+          serviceClient
+            .from("writing_drafts")
+            .select("problem_id")
+            .eq("user_id", userId)
+            .in("problem_id", problemIds),
+          serviceClient
+            .from("writing_submissions")
+            .select("problem_id")
+            .eq("user_id", userId)
+            .in("problem_id", problemIds),
+        ]);
+        if (existingDrafts.error || existingSubmissions.error) {
+          throw new Error("live outbox existing problem lookup failed");
+        }
+        const occupied = new Set(
+          [
+            ...(existingDrafts.data ?? []),
+            ...(existingSubmissions.data ?? []),
+          ].map((row) => String(row.problem_id)),
+        );
+        const samples = rows
+          .filter((row) => !occupied.has(row.problem_id))
+          .slice(0, 5);
+        if (samples.length !== 5) {
+          throw new Error(
+            "Live outbox verification requires five unused Q54 questions.",
+          );
+        }
 
-      await setSubmissionState(
-        serviceClient,
-        "verification",
-        "open service-only live outbox fault verification",
-      );
-      verificationOpened = true;
-      const realClient = rpcClient(serviceClient);
-      const scenarios: Record<string, Record<string, boolean | number>> = {};
+        await setSubmissionState(
+          serviceClient,
+          "verification",
+          "open service-only live outbox fault verification",
+        );
+        verificationOpened = true;
+        const realClient = rpcClient(serviceClient);
+        const scenarios: Record<string, Record<string, boolean | number>> = {};
 
-      const concurrentDraft = await createDraftAndPayload({
-        answer: "Live outbox concurrent duplicate verification answer.",
-        row: samples[0],
-        serviceClient,
-        userId,
-      });
-      draftIds.push(concurrentDraft.draftId);
-      const concurrentIntentA = randomUUID();
-      const concurrentIntentB = randomUUID();
-      intentIds.push(concurrentIntentA, concurrentIntentB);
-      let concurrentDispatches = 0;
-      const concurrentProvider = async () => {
-        concurrentDispatches += 1;
-        await new Promise((resolve) => setTimeout(resolve, 30));
-        return {
-          externalSubmissionId: `dev-fault-${randomUUID()}`,
-          providerStatus: "processing",
+        const concurrentDraft = await createDraftAndPayload({
+          answer: "Live outbox concurrent duplicate verification answer.",
+          row: samples[0],
+          serviceClient,
+          userId,
+        });
+        draftIds.push(concurrentDraft.draftId);
+        const concurrentIntentA = randomUUID();
+        const concurrentIntentB = randomUUID();
+        intentIds.push(concurrentIntentA, concurrentIntentB);
+        let concurrentDispatches = 0;
+        const concurrentProvider = async () => {
+          concurrentDispatches += 1;
+          await new Promise((resolve) => setTimeout(resolve, 30));
+          return {
+            externalSubmissionId: `dev-fault-${randomUUID()}`,
+            providerStatus: "processing",
+          };
         };
-      };
-      const concurrentResults = await Promise.allSettled([
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: realClient,
-          dispatchProvider: concurrentProvider,
-          intentId: concurrentIntentA,
-          submission: concurrentDraft.payload,
-        }),
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: realClient,
-          dispatchProvider: concurrentProvider,
-          intentId: concurrentIntentB,
-          submission: concurrentDraft.payload,
-        }),
-      ]);
-      expect(concurrentDispatches).toBe(1);
-      expect(concurrentResults.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-      scenarios.concurrentDuplicate = {
-        oneFulfilled: true,
-        providerDispatches: concurrentDispatches,
-      };
+        const concurrentResults = await Promise.allSettled([
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: concurrentProvider,
+            intentId: concurrentIntentA,
+            submission: concurrentDraft.payload,
+          }),
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: concurrentProvider,
+            intentId: concurrentIntentB,
+            submission: concurrentDraft.payload,
+          }),
+        ]);
+        expect(concurrentDispatches).toBe(1);
+        expect(
+          concurrentResults.filter((result) => result.status === "fulfilled"),
+        ).toHaveLength(1);
+        scenarios.concurrentDuplicate = {
+          oneFulfilled: true,
+          providerDispatches: concurrentDispatches,
+        };
 
-      const timeoutDraft = await createDraftAndPayload({
-        answer: "Live outbox timeout verification answer.",
-        row: samples[1],
-        serviceClient,
-        userId,
-      });
-      draftIds.push(timeoutDraft.draftId);
-      const timeoutIntent = randomUUID();
-      intentIds.push(timeoutIntent);
-      let timeoutDispatches = 0;
-      await expect(
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: realClient,
-          dispatchProvider: async () => {
-            timeoutDispatches += 1;
-            throw new TypeError("simulated timeout");
-          },
-          intentId: timeoutIntent,
-          submission: timeoutDraft.payload,
-        }),
-      ).rejects.toThrow("writing_submission_dispatch_ambiguous");
-      await expect(
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: realClient,
-          dispatchProvider: async () => {
-            timeoutDispatches += 1;
-            throw new Error("must not redispatch");
-          },
-          intentId: timeoutIntent,
-          submission: timeoutDraft.payload,
-        }),
-      ).rejects.toThrow("writing_submission_dispatch_ambiguous");
-      expect(timeoutDispatches).toBe(1);
-      expect((await prepareWritingSubmissionIntent(realClient, timeoutIntent, timeoutDraft.payload)).state).toBe("ambiguous");
-      scenarios.timeout = { providerDispatches: timeoutDispatches, quarantined: true };
+        const timeoutDraft = await createDraftAndPayload({
+          answer: "Live outbox timeout verification answer.",
+          row: samples[1],
+          serviceClient,
+          userId,
+        });
+        draftIds.push(timeoutDraft.draftId);
+        const timeoutIntent = randomUUID();
+        intentIds.push(timeoutIntent);
+        let timeoutDispatches = 0;
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: async () => {
+              timeoutDispatches += 1;
+              throw new TypeError("simulated timeout");
+            },
+            intentId: timeoutIntent,
+            submission: timeoutDraft.payload,
+          }),
+        ).rejects.toThrow("writing_submission_dispatch_ambiguous");
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: async () => {
+              timeoutDispatches += 1;
+              throw new Error("must not redispatch");
+            },
+            intentId: timeoutIntent,
+            submission: timeoutDraft.payload,
+          }),
+        ).rejects.toThrow("writing_submission_dispatch_ambiguous");
+        expect(timeoutDispatches).toBe(1);
+        expect(
+          (
+            await prepareWritingSubmissionIntent(
+              realClient,
+              timeoutIntent,
+              timeoutDraft.payload,
+            )
+          ).state,
+        ).toBe("ambiguous");
+        scenarios.timeout = {
+          providerDispatches: timeoutDispatches,
+          quarantined: true,
+        };
 
-      const failedDraft = await createDraftAndPayload({
-        answer: "Live outbox deterministic failure verification answer.",
-        row: samples[2],
-        serviceClient,
-        userId,
-      });
-      draftIds.push(failedDraft.draftId);
-      const failedIntent = randomUUID();
-      intentIds.push(failedIntent);
-      let failedDispatches = 0;
-      await expect(
-        dispatchWritingSubmissionIntent({
+        const failedDraft = await createDraftAndPayload({
+          answer: "Live outbox deterministic failure verification answer.",
+          row: samples[2],
+          serviceClient,
+          userId,
+        });
+        draftIds.push(failedDraft.draftId);
+        const failedIntent = randomUUID();
+        intentIds.push(failedIntent);
+        let failedDispatches = 0;
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: async () => {
+              failedDispatches += 1;
+              throw new Error("simulated provider 400");
+            },
+            intentId: failedIntent,
+            submission: failedDraft.payload,
+          }),
+        ).rejects.toThrow("writing_submission_dispatch_failed");
+        expect(
+          (
+            await prepareWritingSubmissionIntent(
+              realClient,
+              failedIntent,
+              failedDraft.payload,
+            )
+          ).state,
+        ).toBe("failed");
+
+        const retryIntent = randomUUID();
+        intentIds.push(retryIntent);
+        await dispatchWritingSubmissionIntent({
           classifyProviderFailure,
           client: realClient,
           dispatchProvider: async () => {
             failedDispatches += 1;
-            throw new Error("simulated provider 400");
+            return {
+              externalSubmissionId: `dev-retry-${randomUUID()}`,
+              providerStatus: "processing",
+            };
           },
-          intentId: failedIntent,
+          intentId: retryIntent,
           submission: failedDraft.payload,
-        }),
-      ).rejects.toThrow("writing_submission_dispatch_failed");
-      expect((await prepareWritingSubmissionIntent(realClient, failedIntent, failedDraft.payload)).state).toBe("failed");
-
-      const retryIntent = randomUUID();
-      intentIds.push(retryIntent);
-      await dispatchWritingSubmissionIntent({
-        classifyProviderFailure,
-        client: realClient,
-        dispatchProvider: async () => {
-          failedDispatches += 1;
-          return {
-            externalSubmissionId: `dev-retry-${randomUUID()}`,
-            providerStatus: "processing",
-          };
-        },
-        intentId: retryIntent,
-        submission: failedDraft.payload,
-      });
-      await dispatchWritingSubmissionIntent({
-        classifyProviderFailure,
-        client: realClient,
-        dispatchProvider: async () => {
-          failedDispatches += 1;
-          throw new Error("must not redispatch a materialized retry");
-        },
-        intentId: retryIntent,
-        submission: failedDraft.payload,
-      });
-      expect(failedDispatches).toBe(2);
-      scenarios.deterministicFailure = {
-        failed: true,
-        providerDispatches: failedDispatches,
-        retrySucceededWithNewIntent: true,
-      };
-
-      const acceptedMarkerDraft = await createDraftAndPayload({
-        answer: "Live outbox accepted marker persistence verification answer.",
-        row: samples[3],
-        serviceClient,
-        userId,
-      });
-      draftIds.push(acceptedMarkerDraft.draftId);
-      const acceptedMarkerIntent = randomUUID();
-      intentIds.push(acceptedMarkerIntent);
-      let acceptedMarkerDispatches = 0;
-      const acceptedMarkerFault = withRpcFault(serviceClient, (name) =>
-        name === "mark_writing_submission_intent_accepted"
-          ? Promise.resolve({ data: null, error: { message: "simulated persistence outage" } })
-          : null,
-      );
-      await expect(
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: acceptedMarkerFault,
-          dispatchProvider: async () => {
-            acceptedMarkerDispatches += 1;
-            return {
-              externalSubmissionId: `dev-fault-${randomUUID()}`,
-              providerStatus: "processing",
-            };
-          },
-          intentId: acceptedMarkerIntent,
-          submission: acceptedMarkerDraft.payload,
-        }),
-      ).rejects.toThrow("writing_submission_dispatch_ambiguous");
-      await expect(
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: realClient,
-          dispatchProvider: async () => {
-            acceptedMarkerDispatches += 1;
-            throw new Error("must not redispatch");
-          },
-          intentId: acceptedMarkerIntent,
-          submission: acceptedMarkerDraft.payload,
-        }),
-      ).rejects.toThrow("writing_submission_dispatch_ambiguous");
-      expect(acceptedMarkerDispatches).toBe(1);
-      scenarios.acceptedMarkerFailure = {
-        providerDispatches: acceptedMarkerDispatches,
-        quarantined: true,
-      };
-
-      const materializeDraft = await createDraftAndPayload({
-        answer: "Live outbox accepted materialization recovery verification answer.",
-        row: samples[4],
-        serviceClient,
-        userId,
-      });
-      draftIds.push(materializeDraft.draftId);
-      const materializeIntent = randomUUID();
-      intentIds.push(materializeIntent);
-      let materializeDispatches = 0;
-      let failMaterialize = true;
-      const materializeFault = withRpcFault(serviceClient, (name) => {
-        if (name !== "materialize_writing_submission_intent" || !failMaterialize) {
-          return null;
-        }
-        failMaterialize = false;
-        return Promise.resolve({
-          data: null,
-          error: { message: "simulated materialization response loss" },
         });
-      });
-      await expect(
-        dispatchWritingSubmissionIntent({
-          classifyProviderFailure,
-          client: materializeFault,
-          dispatchProvider: async () => {
-            materializeDispatches += 1;
-            return {
-              externalSubmissionId: `dev-fault-${randomUUID()}`,
-              providerStatus: "processing",
-            };
-          },
-          intentId: materializeIntent,
-          submission: materializeDraft.payload,
-        }),
-      ).rejects.toThrow("simulated materialization response loss");
-      await expect(
-        dispatchWritingSubmissionIntent({
+        await dispatchWritingSubmissionIntent({
           classifyProviderFailure,
           client: realClient,
           dispatchProvider: async () => {
-            materializeDispatches += 1;
-            throw new Error("must not redispatch");
+            failedDispatches += 1;
+            throw new Error("must not redispatch a materialized retry");
           },
-          intentId: materializeIntent,
-          submission: materializeDraft.payload,
-        }),
-      ).resolves.toBe(materializeIntent);
-      expect(materializeDispatches).toBe(1);
-      scenarios.materializationRecovery = {
-        providerDispatches: materializeDispatches,
-        recovered: true,
-      };
+          intentId: retryIntent,
+          submission: failedDraft.payload,
+        });
+        expect(failedDispatches).toBe(2);
+        scenarios.deterministicFailure = {
+          failed: true,
+          providerDispatches: failedDispatches,
+          retrySucceededWithNewIntent: true,
+        };
 
-      const liveCounts = await managementSql(
-        config,
-        `select jsonb_build_object(
+        const acceptedMarkerDraft = await createDraftAndPayload({
+          answer:
+            "Live outbox accepted marker persistence verification answer.",
+          row: samples[3],
+          serviceClient,
+          userId,
+        });
+        draftIds.push(acceptedMarkerDraft.draftId);
+        const acceptedMarkerIntent = randomUUID();
+        intentIds.push(acceptedMarkerIntent);
+        let acceptedMarkerDispatches = 0;
+        const acceptedMarkerFault = withRpcFault(serviceClient, (name) =>
+          name === "mark_writing_submission_intent_accepted"
+            ? Promise.resolve({
+                data: null,
+                error: { message: "simulated persistence outage" },
+              })
+            : null,
+        );
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: acceptedMarkerFault,
+            dispatchProvider: async () => {
+              acceptedMarkerDispatches += 1;
+              return {
+                externalSubmissionId: `dev-fault-${randomUUID()}`,
+                providerStatus: "processing",
+              };
+            },
+            intentId: acceptedMarkerIntent,
+            submission: acceptedMarkerDraft.payload,
+          }),
+        ).rejects.toThrow("writing_submission_dispatch_ambiguous");
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: async () => {
+              acceptedMarkerDispatches += 1;
+              throw new Error("must not redispatch");
+            },
+            intentId: acceptedMarkerIntent,
+            submission: acceptedMarkerDraft.payload,
+          }),
+        ).rejects.toThrow("writing_submission_dispatch_ambiguous");
+        expect(acceptedMarkerDispatches).toBe(1);
+        scenarios.acceptedMarkerFailure = {
+          providerDispatches: acceptedMarkerDispatches,
+          quarantined: true,
+        };
+
+        const materializeDraft = await createDraftAndPayload({
+          answer:
+            "Live outbox accepted materialization recovery verification answer.",
+          row: samples[4],
+          serviceClient,
+          userId,
+        });
+        draftIds.push(materializeDraft.draftId);
+        const materializeIntent = randomUUID();
+        intentIds.push(materializeIntent);
+        let materializeDispatches = 0;
+        let failMaterialize = true;
+        const materializeFault = withRpcFault(serviceClient, (name) => {
+          if (
+            name !== "materialize_writing_submission_intent" ||
+            !failMaterialize
+          ) {
+            return null;
+          }
+          failMaterialize = false;
+          return Promise.resolve({
+            data: null,
+            error: { message: "simulated materialization response loss" },
+          });
+        });
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: materializeFault,
+            dispatchProvider: async () => {
+              materializeDispatches += 1;
+              return {
+                externalSubmissionId: `dev-fault-${randomUUID()}`,
+                providerStatus: "processing",
+              };
+            },
+            intentId: materializeIntent,
+            submission: materializeDraft.payload,
+          }),
+        ).rejects.toThrow("simulated materialization response loss");
+        await expect(
+          dispatchWritingSubmissionIntent({
+            classifyProviderFailure,
+            client: realClient,
+            dispatchProvider: async () => {
+              materializeDispatches += 1;
+              throw new Error("must not redispatch");
+            },
+            intentId: materializeIntent,
+            submission: materializeDraft.payload,
+          }),
+        ).resolves.toBe(materializeIntent);
+        expect(materializeDispatches).toBe(1);
+        scenarios.materializationRecovery = {
+          providerDispatches: materializeDispatches,
+          recovered: true,
+        };
+
+        const liveCounts = await managementSql(
+          config,
+          `select jsonb_build_object(
           'intents', (select count(*) from private.writing_submission_intents where intent_id = any(${uuidArray(intentIds)})),
           'audit_rows', (select count(*) from private.writing_submission_intent_audit where intent_id = any(${uuidArray(intentIds)})),
           'submissions', (select count(*) from public.writing_submissions where id = any(${uuidArray(intentIds)})),
@@ -606,71 +658,101 @@ describe.runIf(LIVE)("writing submission outbox live fault verification", () => 
                and column_name in ('answer_text', 'answer_json')
           )
         ) as evidence;`,
-      );
-      const liveEvidence = liveCounts[0]?.evidence as
-        | Record<string, unknown>
-        | undefined;
-      expect(Number(liveEvidence?.intents)).toBe(6);
-      expect(Number(liveEvidence?.submissions)).toBe(3);
-      expect(Number(liveEvidence?.audit_rows)).toBe(21);
-      expect(liveEvidence?.answer_columns_in_audit).toBe(false);
+        );
+        const liveEvidence = liveCounts[0]?.evidence as
+          | Record<string, unknown>
+          | undefined;
+        expect(Number(liveEvidence?.intents)).toBe(6);
+        expect(Number(liveEvidence?.submissions)).toBe(3);
+        expect(Number(liveEvidence?.audit_rows)).toBe(21);
+        expect(liveEvidence?.answer_columns_in_audit).toBe(false);
 
-      await cleanupRun(config, draftIds, intentIds);
-      cleanupComplete = true;
-      await setSubmissionState(
-        serviceClient,
-        "blocked",
-        "close service-only live outbox fault verification",
-      );
-      verificationOpened = false;
+        await setSubmissionState(
+          serviceClient,
+          "blocked",
+          "close service-only live outbox fault verification",
+        );
+        verificationOpened = false;
+        await cleanupRun(config, draftIds, intentIds);
+        cleanupComplete = true;
 
-      const cleanupCounts = await managementSql(
-        config,
-        `select jsonb_build_object(
+        const cleanupCounts = await managementSql(
+          config,
+          `select jsonb_build_object(
           'intents', (select count(*) from private.writing_submission_intents where intent_id = any(${uuidArray(intentIds)})),
           'audit_rows', (select count(*) from private.writing_submission_intent_audit where intent_id = any(${uuidArray(intentIds)})),
           'drafts', (select count(*) from public.writing_drafts where id = any(${uuidArray(draftIds)})),
           'submissions', (select count(*) from public.writing_submissions where id = any(${uuidArray(intentIds)}))
         ) as evidence;`,
-      );
-      const cleanupEvidence = cleanupCounts[0]?.evidence as
-        | Record<string, unknown>
-        | undefined;
-      expect(cleanupEvidence).toEqual({
-        audit_rows: 0,
-        drafts: 0,
-        intents: 0,
-        submissions: 0,
-      });
-
-      const report = {
-        cleanup: "complete",
-        contract: "writing-outbox-v2",
-        contractDigest: OUTBOX_CONTRACT_DIGEST,
-        projectRefHash: createHash("sha256")
-          .update(config.expectedProjectRef)
-          .digest("hex"),
-        scenarios,
-        schemaVersion: 2,
-        verifiedAt: new Date().toISOString(),
-      };
-      mkdirSync(dirname(config.reportPath), { recursive: true });
-      writeFileSync(config.reportPath, `${JSON.stringify(report, null, 2)}\n`, {
-        encoding: "utf8",
-        flag: "wx",
-      });
-    } finally {
-      if (!cleanupComplete && (draftIds.length > 0 || intentIds.length > 0)) {
-        await cleanupRun(config, draftIds, intentIds);
-      }
-      if (verificationOpened) {
-        await setSubmissionState(
-          serviceClient,
-          "blocked",
-          "fail-closed after live outbox fault verification",
         );
+        const cleanupEvidence = cleanupCounts[0]?.evidence as
+          | Record<string, unknown>
+          | undefined;
+        expect(cleanupEvidence).toEqual({
+          audit_rows: 0,
+          drafts: 0,
+          intents: 0,
+          submissions: 0,
+        });
+
+        const report = {
+          cleanup: "complete",
+          contract: "writing-outbox-v2",
+          contractDigest: OUTBOX_CONTRACT_DIGEST,
+          projectRefHash: createHash("sha256")
+            .update(config.expectedProjectRef)
+            .digest("hex"),
+          scenarios,
+          schemaVersion: 2,
+          verifiedAt: new Date().toISOString(),
+        };
+        mkdirSync(dirname(config.reportPath), { recursive: true });
+        writeFileSync(
+          config.reportPath,
+          `${JSON.stringify(report, null, 2)}\n`,
+          {
+            encoding: "utf8",
+            flag: "wx",
+          },
+        );
+      } catch (error) {
+        primaryError = error;
+        throw error;
+      } finally {
+        const recoveryErrors: unknown[] = [];
+        if (primaryError !== undefined) recoveryErrors.push(primaryError);
+        if (verificationOpened) {
+          try {
+            await setSubmissionState(
+              serviceClient,
+              "blocked",
+              "fail-closed after live outbox fault verification",
+            );
+            verificationOpened = false;
+          } catch (error) {
+            recoveryErrors.push(error);
+          }
+        }
+        if (!cleanupComplete && (draftIds.length > 0 || intentIds.length > 0)) {
+          try {
+            await cleanupRun(config, draftIds, intentIds);
+            cleanupComplete = true;
+          } catch (error) {
+            recoveryErrors.push(error);
+          }
+        }
+        try {
+          await studentClient.auth.signOut({ scope: "local" });
+        } catch (error) {
+          recoveryErrors.push(error);
+        }
+        if (recoveryErrors.length > (primaryError === undefined ? 0 : 1)) {
+          throw new AggregateError(
+            recoveryErrors,
+            "Live outbox recovery failed.",
+          );
+        }
       }
-      await studentClient.auth.signOut({ scope: "local" });
-    }
-  }, 120_000);
-});
+    }, 120_000);
+  },
+);

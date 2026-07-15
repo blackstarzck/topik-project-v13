@@ -299,11 +299,14 @@ async function getNextWritingProblemTarget({
     supabase,
     questionNo,
   });
-  const currentIndex = canonicalProblems.findIndex(
+  const submittableProblems = canonicalProblems.filter(
+    (problem) => problem.submitBlockedReason === null,
+  );
+  const currentIndex = submittableProblems.findIndex(
     (problem) => problem.id === currentProblemId,
   );
   const target =
-    canonicalProblems[currentIndex + 1] ?? canonicalProblems[0] ?? null;
+    submittableProblems[currentIndex + 1] ?? submittableProblems[0] ?? null;
 
   return target
     ? { problemId: target.id, questionNo: target.questionNo }
@@ -399,14 +402,14 @@ export async function getWritingProblemAvailability(
     problemId,
   });
   return getProblemAvailability(
-    canonicalProblems.length > 0
+    canonicalProblems[0]
       ? {
           publishStatus: "published",
           visibility: "public",
           lifecycleStatus: "active",
           lifecycleReason: null,
+          submitBlockedReason: canonicalProblems[0].submitBlockedReason,
         }
       : null,
   );
-
 }

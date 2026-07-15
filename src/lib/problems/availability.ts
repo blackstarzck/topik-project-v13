@@ -12,6 +12,7 @@ export type ProblemAvailabilityInput = {
   visibility: ProblemVisibility | string | null | undefined;
   lifecycleStatus: ProblemLifecycleStatus | string | null | undefined;
   lifecycleReason: string | null | undefined;
+  submitBlockedReason?: string | null | undefined;
 };
 
 export type ProblemAvailability = {
@@ -40,6 +41,17 @@ export function getProblemAvailability(
   const published = input.publishStatus === "published";
   const publicVisible = input.visibility === "public";
   const active = input.lifecycleStatus === "active";
+
+  if (published && publicVisible && active && input.submitBlockedReason) {
+    return {
+      state: "soft_unavailable",
+      canShowProblemIdentity: true,
+      canStart: false,
+      canSubmit: false,
+      labelKey: null,
+      reason: input.submitBlockedReason,
+    };
+  }
 
   if (published && publicVisible && active) {
     return {

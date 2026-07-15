@@ -80,6 +80,7 @@ declare
   v_nodeport integer;
   v_running_count integer;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(731971029691967530::bigint);
   select control.read_mode, control.submission_mode
     into v_read_mode, v_submission_mode
     from private.writing_read_control control
@@ -161,19 +162,22 @@ begin
       raise exception 'writing_mirror_cron_definition_changed_after_snapshot';
     end if;
 
+    perform cron.unschedule(v_job_id);
+
+    -- The wrapper installed by 20260713084000 takes the same advisory lock
+    -- and re-checks legacy read mode before invoking the old body. This table
+    -- lock also waits for an already-mutating legacy transaction to finish.
+    lock table public.problems in share row exclusive mode;
+
     select count(*)
       into v_running_count
       from cron.job_run_details run
      where run.jobid = v_job_id
-       and run.status = 'running';
+       and run.end_time is null;
 
     if v_running_count <> 0 then
       raise exception 'writing_mirror_cron_run_in_progress: %', v_running_count;
     end if;
-
-    -- This is intentionally the last statement before the evidence insert:
-    -- the running check above targets this exact jobid, never unrelated jobs.
-    perform cron.unschedule(v_job_id);
 
     insert into private.writing_scheduler_event (
       event_name,

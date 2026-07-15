@@ -53,6 +53,12 @@ type ProblemDashboardRow = Pick<
   "id" | "question_no" | "title" | "difficulty"
 >;
 
+type NonWritingProblemDashboardRow = ProblemDashboardRow &
+  Pick<
+    Tables<"problems">,
+    "publish_status" | "visibility" | "lifecycle_status"
+  >;
+
 type SubmissionProblemRow = Pick<
   Tables<"writing_submissions">,
   "id" | "problem_id" | "question_no" | "parent_submission_id"
@@ -175,8 +181,13 @@ export async function getLibraryDashboard(
     ...timelineSubmissions.map((row) => row.problem_id),
   ]);
   const requestedIds = new Set(problemIds);
-  const problems: ProblemDashboardRow[] = (
-    await getCanonicalWritingProblems({ supabase })
+  const nonWritingRows = await fetchNonWritingProblems(supabase, problemIds);
+  const nonWritingIds = new Set(nonWritingRows.map((problem) => problem.id));
+  const unresolvedIds = problemIds.filter((id) => !nonWritingIds.has(id));
+  const canonicalProblems: ProblemDashboardRow[] = (
+    unresolvedIds.length > 0
+      ? await getCanonicalWritingProblems({ supabase })
+      : []
   )
     .filter((problem) => requestedIds.has(problem.id))
     .map((problem) => ({
@@ -185,7 +196,21 @@ export async function getLibraryDashboard(
       title: problem.title,
       difficulty: problem.difficulty ?? null,
     }));
-  const visibleProblemIds = new Set(problems.map((problem) => problem.id));
+  const nonWritingProblems: ProblemDashboardRow[] = nonWritingRows.map(
+    ({ id, question_no, title, difficulty }) => ({
+      id,
+      question_no,
+      title,
+      difficulty,
+    }),
+  );
+  const problems = [...nonWritingProblems, ...canonicalProblems];
+  const visibleProblemIds = new Set([
+    ...canonicalProblems.map((problem) => problem.id),
+    ...nonWritingRows
+      .filter(isVisibleNonWritingProblem)
+      .map((problem) => problem.id),
+  ]);
 
   return buildLibraryDashboardFromRows({
     libraryItems: (libraryItems ?? []) as LibraryItemDashboardRow[],
@@ -200,6 +225,36 @@ export async function getLibraryDashboard(
     exportFiles,
     visibleProblemIds: [...visibleProblemIds],
   });
+}
+
+async function fetchNonWritingProblems(
+  supabase: SupabaseServerClient,
+  ids: string[],
+): Promise<NonWritingProblemDashboardRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("problems")
+    .select(
+      "id, question_no, title, difficulty, publish_status, visibility, lifecycle_status",
+    )
+    .in("id", ids)
+    .neq("domain", "writing");
+  if (error) {
+    throw new Error(
+      `getLibraryDashboard(non-writing problems): ${error.message}`,
+    );
+  }
+  return (data ?? []) as NonWritingProblemDashboardRow[];
+}
+
+function isVisibleNonWritingProblem(
+  problem: NonWritingProblemDashboardRow,
+): boolean {
+  return (
+    problem.publish_status === "published" &&
+    problem.lifecycle_status === "active" &&
+    problem.visibility !== "private"
+  );
 }
 
 export function buildLibraryDashboardFromRows(
@@ -363,8 +418,7 @@ export function buildLibraryDashboardFromRows(
         problemId,
         submissionId,
         questionNo,
-        title:
-          submission?.history_title ?? problemTitle(problem, questionNo),
+        title: submission?.history_title ?? problemTitle(problem, questionNo),
       };
     });
 

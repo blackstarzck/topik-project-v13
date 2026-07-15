@@ -159,7 +159,7 @@ create table private.writing_submission_intents (
   problem_id uuid not null
     references private.problem_identities(problem_id) on delete restrict,
   draft_id uuid not null
-    references public.writing_drafts(id) on delete cascade,
+    references public.writing_drafts(id) on delete restrict,
   question_no smallint not null check (question_no in (51, 52, 53, 54)),
   answer_text text not null check (length(answer_text) > 0),
   answer_json jsonb,
@@ -1252,6 +1252,26 @@ revoke all on function private.validate_writing_submission_canonical_context() f
 revoke all on function private.validate_writing_submission_canonical_context() from authenticated;
 revoke all on function private.validate_writing_submission_canonical_context() from service_role;
 
+drop trigger if exists writing_submissions_validate_canonical_context
+  on public.writing_submissions;
+create trigger writing_submissions_validate_canonical_context
+before insert or update of
+  problem_id,
+  question_no,
+  user_id,
+  draft_id,
+  answer_text,
+  answer_json,
+  char_count,
+  parent_submission_id,
+  canonical_question_id,
+  canonical_import_id,
+  canonical_payload_hash,
+  question_snapshot
+on public.writing_submissions
+for each row
+execute function private.validate_writing_submission_canonical_context();
+
 create or replace function public.materialize_writing_submission_intent(
   p_intent_id uuid
 )
@@ -1373,7 +1393,8 @@ begin
   update public.writing_drafts
   set autosave_status = 'superseded',
       updated_at = now()
-  where user_id = v_intent.user_id
+  where id = v_intent.draft_id
+    and user_id = v_intent.user_id
     and problem_id = v_intent.problem_id
     and autosave_status <> 'superseded';
 

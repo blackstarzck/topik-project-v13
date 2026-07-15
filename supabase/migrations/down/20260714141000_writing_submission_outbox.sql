@@ -1,13 +1,28 @@
 -- Roll back the unused submission outbox only. Once any provider-dispatch
 -- intent exists, automatic rollback is unsafe and is deliberately refused.
 
+begin;
+
 do $$
 begin
   if to_regclass('private.writing_submission_intents') is null
+     or to_regclass('private.writing_submission_intent_audit') is null
+     or to_regclass('private.writing_submission_control') is null
      or to_regclass('private.writing_outbox_function_backup') is null
      or to_regclass('private.writing_outbox_grant_backup') is null then
     raise exception 'writing_outbox_down_backup_missing';
   end if;
+
+  -- Keep these locks through the surrounding migration transaction so no
+  -- writer can add evidence after the safety checks and before the DROP DDL.
+  lock table private.writing_submission_control
+    in access exclusive mode;
+  lock table private.writing_submission_intents
+    in access exclusive mode;
+  lock table private.writing_submission_intent_audit
+    in access exclusive mode;
+  lock table public.writing_submissions
+    in access exclusive mode;
   if not exists (
     select 1
     from private.writing_submission_control control
@@ -205,3 +220,5 @@ begin
     '20260714141000 rolled back before use; submission mode remains blocked';
 end
 $$;
+
+commit;

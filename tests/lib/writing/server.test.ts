@@ -539,7 +539,7 @@ function canonicalRow({
     prompt: "Canonical prompt",
     tags: [],
     materials:
-      questionNo === 51
+      questionNo === 51 || questionNo === 52
         ? { blanks: { blank_target_giyeok: "a", blank_target_nieun: "b" } }
         : {},
     source_created_at: "2026-07-14T00:00:00.000Z",
@@ -555,7 +555,8 @@ function makeCanonicalClient(
     expect(name).toBe("get_available_writing_questions");
     const filtered = rows.filter(
       (row) =>
-        (args.p_item_number == null || row.item_number === args.p_item_number) &&
+        (args.p_item_number == null ||
+          row.item_number === args.p_item_number) &&
         (args.p_problem_id == null || row.problem_id === args.p_problem_id),
     );
     return { data: filtered, error: null };
@@ -624,6 +625,28 @@ describe("canonical writing catalog", () => {
     expect(availability.canStart).toBe(false);
   });
 
+  it("treats an incomplete canonical row as visible but not submittable", async () => {
+    const incomplete = canonicalRow();
+    incomplete.materials.blanks = {
+      blank_target_giyeok: "",
+      blank_target_nieun: "",
+    };
+    const { client } = makeCanonicalClient([incomplete]);
+
+    const availability = await getWritingProblemAvailability(
+      COMPLETE_51_ID,
+      async () => client as never,
+    );
+
+    expect(availability).toMatchObject({
+      state: "soft_unavailable",
+      canShowProblemIdentity: true,
+      canStart: false,
+      canSubmit: false,
+      reason: "problem_data_incomplete",
+    });
+  });
+
   it("builds the next canonical problem URL and wraps at the end", async () => {
     const nextId = "55555555-5555-4555-8555-555555555552";
     const { client } = makeCanonicalClient([
@@ -637,9 +660,7 @@ describe("canonical writing catalog", () => {
         questionNo: 52,
         createClient: async () => client as never,
       }),
-    ).resolves.toBe(
-      `/writing/answer-writing-52?problem=${nextId}&fresh=1`,
-    );
+    ).resolves.toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
     await expect(
       getNextWritingProblemStartHref({
         currentProblemId: nextId,
@@ -649,6 +670,29 @@ describe("canonical writing catalog", () => {
     ).resolves.toBe(
       `/writing/answer-writing-52?problem=${COMPLETE_51_ID}&fresh=1`,
     );
+  });
+
+  it("skips incomplete canonical rows when building the next problem URL", async () => {
+    const incompleteId = "66666666-6666-4666-8666-666666666652";
+    const nextId = "77777777-7777-4777-8777-777777777752";
+    const incomplete = canonicalRow({ id: incompleteId, questionNo: 52 });
+    incomplete.materials.blanks = {
+      blank_target_giyeok: "",
+      blank_target_nieun: "",
+    };
+    const { client } = makeCanonicalClient([
+      canonicalRow({ id: COMPLETE_51_ID, questionNo: 52 }),
+      incomplete,
+      canonicalRow({ id: nextId, questionNo: 52 }),
+    ]);
+
+    await expect(
+      getNextWritingProblemStartHref({
+        currentProblemId: COMPLETE_51_ID,
+        questionNo: 52,
+        createClient: async () => client as never,
+      }),
+    ).resolves.toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
   });
 });
 

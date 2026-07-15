@@ -4,6 +4,135 @@
 -- makes the latest reconciliation evidence, its current draft set, runtime
 -- state changes, and the exact mirror Cron mutation one serialized contract.
 
+-- Every runtime-state writer must acquire the advisory barrier before the
+-- control-row lock taken by the legacy implementation. Renaming preserves the
+-- exact validated implementation while the wrapper fixes the global lock order.
+do $$
+begin
+  if to_regprocedure(
+    'private.set_writing_runtime_state_unserialized_impl(text,text,text,text,text,text)'
+  ) is null then
+    if to_regprocedure(
+      'private.set_writing_runtime_state(text,text,text,text,text,text)'
+    ) is null then
+      raise exception 'writing_runtime_state_setter_missing';
+    end if;
+    alter function private.set_writing_runtime_state(
+      text, text, text, text, text, text
+    ) rename to set_writing_runtime_state_unserialized_impl;
+  end if;
+end
+$$;
+
+revoke all on function private.set_writing_runtime_state_unserialized_impl(
+  text, text, text, text, text, text
+) from public;
+revoke all on function private.set_writing_runtime_state_unserialized_impl(
+  text, text, text, text, text, text
+) from anon;
+revoke all on function private.set_writing_runtime_state_unserialized_impl(
+  text, text, text, text, text, text
+) from authenticated;
+revoke all on function private.set_writing_runtime_state_unserialized_impl(
+  text, text, text, text, text, text
+) from service_role;
+
+create or replace function private.set_writing_runtime_state(
+  p_read_mode text,
+  p_submission_mode text,
+  p_submission_contract_state text,
+  p_actor text,
+  p_reason text,
+  p_evidence_id text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, private
+as $$
+begin
+  perform pg_catalog.pg_advisory_xact_lock(731971029691967530::bigint);
+  perform private.set_writing_runtime_state_unserialized_impl(
+    p_read_mode,
+    p_submission_mode,
+    p_submission_contract_state,
+    p_actor,
+    p_reason,
+    p_evidence_id
+  );
+end;
+$$;
+
+revoke all on function private.set_writing_runtime_state(
+  text, text, text, text, text, text
+) from public;
+revoke all on function private.set_writing_runtime_state(
+  text, text, text, text, text, text
+) from anon;
+revoke all on function private.set_writing_runtime_state(
+  text, text, text, text, text, text
+) from authenticated;
+revoke all on function private.set_writing_runtime_state(
+  text, text, text, text, text, text
+) from service_role;
+
+-- Put the legacy mirror body behind the same cutover barrier before the Cron
+-- retirement migration runs. A job that started while retirement was waiting
+-- must re-check read mode after acquiring the barrier and fail closed.
+do $$
+begin
+  if to_regprocedure(
+    'private.sync_available_writing_problems_legacy_impl()'
+  ) is null then
+    if to_regprocedure('public.sync_available_writing_problems()') is null then
+      raise exception 'writing_mirror_sync_function_missing';
+    end if;
+    alter function public.sync_available_writing_problems()
+      rename to sync_available_writing_problems_legacy_impl;
+    alter function public.sync_available_writing_problems_legacy_impl()
+      set schema private;
+  end if;
+end
+$$;
+
+revoke all on function private.sync_available_writing_problems_legacy_impl()
+  from public;
+revoke all on function private.sync_available_writing_problems_legacy_impl()
+  from anon;
+revoke all on function private.sync_available_writing_problems_legacy_impl()
+  from authenticated;
+revoke all on function private.sync_available_writing_problems_legacy_impl()
+  from service_role;
+
+create or replace function public.sync_available_writing_problems()
+returns table (synced integer, archived integer)
+language plpgsql
+security definer
+set search_path = pg_catalog, private
+as $$
+declare
+  v_read_mode text;
+begin
+  perform pg_catalog.pg_advisory_xact_lock(731971029691967530::bigint);
+  select control.read_mode
+    into v_read_mode
+    from private.writing_read_control control
+   where control.singleton;
+  if v_read_mode is distinct from 'legacy' then
+    raise exception 'writing_mirror_sync_requires_legacy_mode';
+  end if;
+  return query
+  select * from private.sync_available_writing_problems_legacy_impl();
+end;
+$$;
+
+revoke all on function public.sync_available_writing_problems() from public;
+revoke all on function public.sync_available_writing_problems() from anon;
+revoke all on function public.sync_available_writing_problems()
+  from authenticated;
+grant execute on function public.sync_available_writing_problems()
+  to service_role;
+
 create or replace function private.assert_latest_writing_draft_reconciliation(
   p_evidence_id text
 )
@@ -288,6 +417,7 @@ declare
   v_read_mode text;
   v_evidence_id text;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(731971029691967530::bigint);
   select control.read_mode, control.evidence_id
     into v_read_mode, v_evidence_id
     from private.writing_read_control control
