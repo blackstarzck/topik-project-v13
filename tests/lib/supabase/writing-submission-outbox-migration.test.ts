@@ -315,7 +315,12 @@ describe("writing submission outbox migration", () => {
       ),
     ).toBeLessThan(liveTest.indexOf("await cleanuprun(config, draftids, intentids)"));
     expect(liveTest).toContain("const recoveryerrors: unknown[] = []");
-    expect(liveTest).toContain("throw new aggregateerror( recoveryerrors");
+    expect(liveTest).toContain(
+      "primaryerror === undefined ? recoveryerrors : [primaryerror, ...recoveryerrors]",
+    );
+    expect(liveTest).toContain(
+      "if (primaryerror !== undefined) throw primaryerror",
+    );
     expect(liveTest).toContain('"live outbox recovery failed."');
   });
 
