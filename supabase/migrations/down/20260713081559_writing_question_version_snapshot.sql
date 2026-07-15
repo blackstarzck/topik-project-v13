@@ -13,4 +13,3 @@ drop trigger if exists writing_submissions_validate_canonical_context
 drop function if exists private.validate_writing_submission_canonical_context();
 drop function if exists private.assert_writing_submission_snapshot_matches_catalog(uuid, text, bigint, text, smallint, uuid, jsonb);
 drop function if exists private.get_writing_question_snapshot_from_catalog(uuid, text, bigint, text, smallint, uuid);
-drop function if exists private.jsonb_has_forbidden_writing_snapshot_key(jsonb);

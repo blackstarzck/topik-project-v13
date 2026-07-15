@@ -227,15 +227,12 @@ async function pickProblemExcluding(
   // Note: PostgREST filter methods (`.eq`) must precede `.order`/`.limit` —
   // chaining filters after `.limit` returns a non-builder thenable. We apply
   // the optional question_no filter up front for that reason.
-  const candidates = await fetchVisiblePublishedWritingProblems(
-    supabase,
-    {
-      attemptedIds,
-      excludedIds: new Set(),
-      questionNo,
-      targetCount: PRIMARY_VISIBLE_TARGET,
-    },
-  );
+  const candidates = await fetchVisiblePublishedWritingProblems(supabase, {
+    attemptedIds,
+    excludedIds: new Set(),
+    questionNo,
+    targetCount: PRIMARY_VISIBLE_TARGET,
+  });
   return pickByQuestionRotation(candidates, rotationAnchorQuestionNo);
 }
 
@@ -247,55 +244,55 @@ async function fetchVisibleRecommendationRows(
   excludeId: string | null,
   errorContext: string,
 ): Promise<RecommendationJoinedRow[]> {
-    const canonicalProblems = await getCanonicalWritingProblems({ supabase });
-    const canonicalById = new Map(
-      canonicalProblems.map((problem) => [problem.id, problem]),
-    );
-    const rows: RecommendationJoinedRow[] = [];
+  const canonicalProblems = await getCanonicalWritingProblems({ supabase });
+  const canonicalById = new Map(
+    canonicalProblems.map((problem) => [problem.id, problem]),
+  );
+  const rows: RecommendationJoinedRow[] = [];
 
-    for (
-      let offset = 0;
-      offset < MAX_VISIBILITY_SCAN_ROWS && rows.length < targetCount;
-      offset += RECOMMENDATION_SCAN_PAGE_SIZE
-    ) {
-      const { data, error } = await supabase
-        .from("recommendation_items")
-        .select(
-          "id, problem_id, rank, reason, estimated_minutes," +
-            " recommendation_runs!inner(expires_at)",
-        )
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
-          referencedTable: "recommendation_runs",
-        })
-        .order("rank", { ascending: true })
-        .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
-      if (error) throw new Error(`${errorContext}: ${error.message}`);
+  for (
+    let offset = 0;
+    offset < MAX_VISIBILITY_SCAN_ROWS && rows.length < targetCount;
+    offset += RECOMMENDATION_SCAN_PAGE_SIZE
+  ) {
+    const { data, error } = await supabase
+      .from("recommendation_items")
+      .select(
+        "id, problem_id, rank, reason, estimated_minutes," +
+          " recommendation_runs!inner(expires_at)",
+      )
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
+        referencedTable: "recommendation_runs",
+      })
+      .order("rank", { ascending: true })
+      .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
+    if (error) throw new Error(`${errorContext}: ${error.message}`);
 
-      const page = (data ?? []) as unknown as Array<
-        Omit<RecommendationJoinedRow, "problems">
-      >;
-      for (const row of page) {
-        const canonical = canonicalById.get(row.problem_id);
-        if (!canonical || canonical.id === excludeId) continue;
-        rows.push({
-          ...row,
-          problems: {
-            id: canonical.id,
-            title: canonical.title,
-            domain: "writing",
-            question_no: canonical.questionNo,
-            difficulty: canonical.difficulty ?? null,
-            publish_status: "published",
-          },
-        });
-        if (rows.length >= targetCount) break;
-      }
-      if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+    const page = (data ?? []) as unknown as Array<
+      Omit<RecommendationJoinedRow, "problems">
+    >;
+    for (const row of page) {
+      const canonical = canonicalById.get(row.problem_id);
+      if (!canonical || canonical.id === excludeId) continue;
+      rows.push({
+        ...row,
+        problems: {
+          id: canonical.id,
+          title: canonical.title,
+          domain: "writing",
+          question_no: canonical.questionNo,
+          difficulty: canonical.difficulty ?? null,
+          publish_status: "published",
+        },
+      });
+      if (rows.length >= targetCount) break;
     }
+    if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+  }
 
-    return rows;
+  return rows;
 }
 
 async function fetchVisiblePublishedWritingProblems(
@@ -556,6 +553,7 @@ async function fetchPublishedProblemAlternatives(
     .select("problem_id, started_at")
     .eq("user_id", userId)
     .order("started_at", { ascending: false });
+  if (attemptResult.error) throw attemptResult.error;
   const attemptRows = (attemptResult.data ?? []) as unknown as AttemptRow[];
 
   const attemptedIds = new Set<string>();
@@ -573,15 +571,12 @@ async function fetchPublishedProblemAlternatives(
     }
   }
 
-  const candidates = await fetchVisiblePublishedWritingProblems(
-    supabase,
-    {
-      attemptedIds,
-      excludedIds,
-      questionNo: null,
-      targetCount: Math.max(limit, ALTERNATIVE_VISIBLE_TARGET),
-    },
-  );
+  const candidates = await fetchVisiblePublishedWritingProblems(supabase, {
+    attemptedIds,
+    excludedIds,
+    questionNo: null,
+    targetCount: Math.max(limit, ALTERNATIVE_VISIBLE_TARGET),
+  });
 
   return sortByQuestionRotation(candidates, latestQuestionNo)
     .slice(0, limit)

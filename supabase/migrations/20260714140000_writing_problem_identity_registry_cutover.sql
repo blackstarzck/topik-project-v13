@@ -1909,6 +1909,22 @@ begin
     raise exception 'writing_problem_delete_evidence_incomplete: %', v_count;
   end if;
 
+  -- Only source-map-pinned mirror rows belong to this catalog cutover. Abort
+  -- instead of deleting an author-owned, AI-generated, or otherwise
+  -- unclassified writing row that happens to share the legacy domain.
+  select count(*) into v_count
+  from public.problems problem
+  where problem.domain = 'writing'
+    and not exists (
+      select 1
+      from public.topik_writing_question_source_map source_map
+      where source_map.learner_problem_id = problem.id
+    );
+  if v_count <> 0 then
+    raise exception 'writing_problem_delete_source_map_unclassified: %',
+      v_count;
+  end if;
+
   select count(*) into v_count
   from public.writing_drafts draft
   where not (
@@ -1957,7 +1973,12 @@ end
 $$;
 
 delete from public.problems problem
-where problem.domain = 'writing';
+where problem.domain = 'writing'
+  and exists (
+    select 1
+    from public.topik_writing_question_source_map source_map
+    where source_map.learner_problem_id = problem.id
+  );
 
 do $$
 begin

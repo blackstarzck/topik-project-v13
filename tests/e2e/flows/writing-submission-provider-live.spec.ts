@@ -15,6 +15,12 @@ const SAFE_ENV_LABELS = new Set([
   "test",
   "testing",
 ]);
+// This hash is code-reviewed independently from the runtime environment. The
+// project ref itself is not stored here, so a mislabeled production ref cannot
+// opt itself into Management API mutations through environment variables.
+const TRUSTED_NON_PRODUCTION_PROJECT_REF_HASHES = new Set([
+  "ef529791dc0b76f96c95ba5d9b90cf182d537755c2b1d4ac94a87055727068c4",
+]);
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -72,6 +78,12 @@ function resolveConfig(): ProviderCanaryConfig {
   );
   if (urlProjectRef !== projectRef || managementProjectRef !== projectRef) {
     throw new Error("Provider live E2E project-ref guard failed.");
+  }
+  const projectRefHash = createHash("sha256").update(projectRef).digest("hex");
+  if (!TRUSTED_NON_PRODUCTION_PROJECT_REF_HASHES.has(projectRefHash)) {
+    throw new Error(
+      "Provider live E2E project is not in the trusted non-production allowlist.",
+    );
   }
 
   return {

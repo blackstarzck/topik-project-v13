@@ -63,4 +63,16 @@ describe("canonical live fixture cleanup safety", () => {
     expect(providerSource).toContain("where draft_id =");
     expect(providerSource).toContain("where intent_id = v_intent_id");
   });
+
+  it("requires a code-maintained non-production project allowlist", () => {
+    expect(providerSource).toContain(
+      "trusted_non_production_project_ref_hashes",
+    );
+    expect(providerSource).toMatch(
+      /createhash\("sha256"\)\s*\.update\(projectref\)\s*\.digest\("hex"\)/,
+    );
+    expect(providerSource).toContain(
+      "provider live e2e project is not in the trusted non-production allowlist",
+    );
+  });
 });

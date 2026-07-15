@@ -201,6 +201,16 @@ describe("writing problem identity registry cutover migration", () => {
     expect(fkValidationAt).toBeGreaterThan(backupAt);
     expect(deleteAt).toBeGreaterThan(fkValidationAt);
     expect(sql).toContain("where problem.domain = 'writing'");
+    expect(sql).toContain("writing_problem_delete_source_map_unclassified");
+    expect(sql).toContain(
+      "where source_map.learner_problem_id = problem.id",
+    );
+    const deleteStatement = rawSql
+      .slice(deleteAt, rawSql.indexOf("do $$", deleteAt))
+      .replace(/\s+/g, " ");
+    expect(deleteStatement).toContain(
+      "exists ( select 1 from public.topik_writing_question_source_map source_map where source_map.learner_problem_id = problem.id )",
+    );
     expect(sql).not.toMatch(/drop function[^;]+cascade/);
   });
 

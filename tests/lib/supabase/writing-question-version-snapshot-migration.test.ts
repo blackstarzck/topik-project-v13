@@ -143,6 +143,9 @@ describe("writing question version snapshot migration", () => {
     expect(down).not.toContain("drop column");
     expect(down).not.toMatch(/drop\s+table/);
     expect(down).not.toContain("drop constraint");
+    expect(down).not.toContain(
+      "drop function if exists private.jsonb_has_forbidden_writing_snapshot_key(jsonb)",
+    );
     expect(down).toContain(
       "import fks are retained with the columns",
     );
