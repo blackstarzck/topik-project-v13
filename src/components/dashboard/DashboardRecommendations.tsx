@@ -108,6 +108,7 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                 writingProblemHref({
                   questionNo: primary.questionNo,
                   problemId: primary.problemId,
+                  returnTo: "/dashboard",
                 }) as never
               }
             >
@@ -146,6 +147,7 @@ export function DashboardRecommendations({ primary, alternatives }: Props) {
                       writingProblemHref({
                         questionNo: alt.questionNo,
                         problemId: alt.problemId,
+                        returnTo: "/dashboard",
                       }) as never
                     }
                   >

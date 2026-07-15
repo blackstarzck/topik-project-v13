@@ -47,6 +47,7 @@ export default async function LongFeedbackPage({
       getNextWritingProblemStartHref({
         currentProblemId: submission.problem_id,
         questionNo: submission.question_no,
+        returnTo: `/writing/feedback/long/${encodeURIComponent(id)}`,
       }),
     ]);
   return (

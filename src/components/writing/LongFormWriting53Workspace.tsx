@@ -58,6 +58,7 @@ type Props = {
   draft: WritingDraftRow | null;
   retrySeed?: WritingRetrySeed | null;
   parentSubmissionId?: string | null;
+  returnHref: string;
 };
 
 type Question53State = {
@@ -124,6 +125,7 @@ export function LongFormWriting53Workspace({
   draft,
   retrySeed = null,
   parentSubmissionId = null,
+  returnHref,
 }: Props) {
   const tPage = useTranslations("writing.q53");
   const tEditor = useTranslations("writing.editor");
@@ -192,7 +194,7 @@ export function LongFormWriting53Workspace({
   const hasUnsavedAnswerChange = currentAnswerSnapshot !== lastSavedSnapshot;
   const exitGuard = useUnsavedChangesGuard({
     when: hasUnsavedAnswerChange,
-    fallbackHref: "/practice/problems",
+    fallbackHref: returnHref,
   });
   const modalTrigger: WarningTrigger | null = exitGuard.pendingNavigation
     ? "exit_with_dirty"
@@ -499,7 +501,9 @@ export function LongFormWriting53Workspace({
       problemBookmark={{ userId, problemId: problem.id }}
       onSave={onManualSave}
       onSubmit={onOpenSubmitConfirm}
-      onRequestBack={exitGuard.requestNavigation}
+      onRequestBack={() =>
+        exitGuard.requestNavigation(returnHref, { mode: "replace" })
+      }
     >
       <div className="writing-workspace writing-workspace--q53">
         {staleDraftVersion &&

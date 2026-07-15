@@ -29,10 +29,11 @@ const secondaryCardClassNames = {
   actions: "app-card-footer-actions [&>li]:!px-3 [&>li]:!pb-3",
 };
 
-function ctaHref(card: RecommendationItemCard): string {
+function ctaHref(card: RecommendationItemCard, returnTo: string): string {
   return writingProblemHref({
     questionNo: card.questionNo,
     problemId: card.problemId,
+    returnTo,
   });
 }
 
@@ -124,8 +125,10 @@ function WeaknessTags({ tags }: { tags: string[] }) {
  */
 export function PrimaryRecommendationCard({
   card,
+  returnTo,
 }: {
   card: RecommendationItemCard;
+  returnTo: string;
 }) {
   const t = useTranslations("practice.recommendations");
   const tCommon = useTranslations("practice.common");
@@ -180,7 +183,7 @@ export function PrimaryRecommendationCard({
               value={t("fallbackHeroStatusReady")}
             />
           </div>
-          <Link href={ctaHref(card) as never}>
+          <Link href={ctaHref(card, returnTo) as never}>
             <Button className="mt-4" type="primary" size="large" block>
               {t("startFromThis")}
               <ArrowRight size={18} aria-hidden="true" />
@@ -195,8 +198,10 @@ export function PrimaryRecommendationCard({
 /** 대표 추천 외 나머지 추천(compact). */
 export function SecondaryRecommendationCard({
   card,
+  returnTo,
 }: {
   card: RecommendationItemCard;
+  returnTo: string;
 }) {
   const t = useTranslations("practice.recommendations");
   const tCommon = useTranslations("practice.common");
@@ -209,7 +214,7 @@ export function SecondaryRecommendationCard({
       actions={[
         <Link
           key="continue"
-          href={ctaHref(card) as never}
+          href={ctaHref(card, returnTo) as never}
           className="block w-full"
         >
           <Button

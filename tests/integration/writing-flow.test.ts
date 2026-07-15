@@ -246,6 +246,7 @@ describe("writing flow — route guards", () => {
     expect(helpers.getNextWritingProblemStartHrefMock).toHaveBeenCalledWith({
       currentProblemId: "p-availability",
       questionNo: 51,
+      returnTo: "/writing/feedback/short/s-3",
     });
   });
 

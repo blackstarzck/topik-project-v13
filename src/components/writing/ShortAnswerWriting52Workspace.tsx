@@ -61,6 +61,7 @@ type Props = {
   draft: WritingDraftRow | null;
   retrySeed?: WritingRetrySeed | null;
   parentSubmissionId?: string | null;
+  returnHref: string;
 };
 
 const DEBOUNCE_MS = 2000;
@@ -101,6 +102,7 @@ export function ShortAnswerWriting52Workspace({
   draft,
   retrySeed = null,
   parentSubmissionId = null,
+  returnHref,
 }: Props) {
   const tPage = useTranslations("writing.q52");
   const tEditor = useTranslations("writing.editor");
@@ -170,7 +172,7 @@ export function ShortAnswerWriting52Workspace({
   const hasUnsavedAnswerChange = currentAnswerSnapshot !== lastSavedSnapshot;
   const exitGuard = useUnsavedChangesGuard({
     when: hasUnsavedAnswerChange,
-    fallbackHref: "/practice/problems",
+    fallbackHref: returnHref,
   });
   const modalTrigger: WarningTrigger | null = exitGuard.pendingNavigation
     ? "exit_with_dirty"
@@ -421,7 +423,9 @@ export function ShortAnswerWriting52Workspace({
       problemBookmark={{ userId, problemId: problem.id }}
       onSave={onManualSave}
       onSubmit={onOpenSubmitConfirm}
-      onRequestBack={exitGuard.requestNavigation}
+      onRequestBack={() =>
+        exitGuard.requestNavigation(returnHref, { mode: "replace" })
+      }
     >
       <div className="writing-workspace writing-workspace--q52">
         {staleDraftVersion &&

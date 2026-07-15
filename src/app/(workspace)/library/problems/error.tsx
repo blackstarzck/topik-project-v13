@@ -3,7 +3,7 @@
 import { Button, Result } from "antd";
 import { useTranslations } from "next-intl";
 
-import { APP_ROUTES } from "@/lib/routes";
+import { LibraryProblemsBackLink } from "@/components/library/LibraryProblemsBackLink";
 
 export default function LibraryProblemsError({ reset }: { reset: () => void }) {
   const t = useTranslations("library.dashboard.error");
@@ -19,9 +19,10 @@ export default function LibraryProblemsError({ reset }: { reset: () => void }) {
         <Button key="retry" type="primary" onClick={reset}>
           {t("retry")}
         </Button>,
-        <Button key="back" href={APP_ROUTES.library}>
-          {pageT("backToLibrary")}
-        </Button>,
+        <LibraryProblemsBackLink
+          key="back"
+          label={pageT("backToLibrary")}
+        />,
       ]}
     />
   );

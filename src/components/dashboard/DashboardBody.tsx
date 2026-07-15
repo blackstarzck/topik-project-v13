@@ -100,6 +100,7 @@ export function DashboardBody({
     ? writingProblemHref({
         questionNo: primary.questionNo,
         problemId: primary.problemId,
+        returnTo: "/dashboard",
       })
     : "/practice/recommendations";
   const primaryQuestionTag =
@@ -110,6 +111,7 @@ export function DashboardBody({
     ? writingProblemHref({
         questionNo: continueDraft.questionNo,
         problemId: continueDraft.problemId,
+        returnTo: "/dashboard",
       })
     : "/practice/problems";
   const feedbackPreview = recentFeedbacks.slice(0, 2);

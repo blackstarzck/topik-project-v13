@@ -28,6 +28,7 @@ import { ProblemBookmarkToggle } from "./ProblemBookmarkToggle";
 type Props = {
   rows: UserProblemRow[];
   userId: string;
+  returnTo: string;
   savedProblemIds?: ReadonlySet<string>;
   savedProblemsLoading?: boolean;
   onRetryClick: (row: UserProblemRow) => void;
@@ -123,6 +124,7 @@ function ProblemMetadataTag({ tag }: { tag: string }) {
 export function ProblemTable({
   rows,
   userId,
+  returnTo,
   savedProblemIds = EMPTY_SAVED_PROBLEM_IDS,
   savedProblemsLoading = false,
   onRetryClick,
@@ -143,6 +145,7 @@ export function ProblemTable({
       writingProblemHref({
         questionNo: row.questionNo,
         problemId: row.problemId,
+        returnTo,
       }) as never,
     );
   }
@@ -373,6 +376,7 @@ export function ProblemTable({
                 writingProblemHref({
                   questionNo: row.questionNo,
                   problemId: row.problemId,
+                  returnTo,
                 }) as never
               }
             >

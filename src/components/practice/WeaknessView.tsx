@@ -166,6 +166,7 @@ export function WeaknessView({
       writingProblemHref({
         questionNo: rec.question_no,
         problemId: rec.problem_id,
+        returnTo: "/practice/weakness",
       }) as never,
     );
   }

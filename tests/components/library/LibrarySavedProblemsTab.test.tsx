@@ -62,7 +62,9 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
       screen
         .getByRole("link", { name: koMessages.library.saved.retry })
         .getAttribute("href"),
-    ).toBe("/writing/long-form-writing-53?problem=p-available");
+    ).toBe(
+      "/writing/long-form-writing-53?problem=p-available&returnTo=%2Flibrary",
+    );
     expect(screen.getByTestId("library-item-row").className).toContain(
       "border-[var(--ant-color-border-secondary)]",
     );

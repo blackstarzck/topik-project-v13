@@ -21,6 +21,7 @@ type Props = {
   retrySeed?: WritingRetrySeed | null;
   parentSubmissionId?: string | null;
   canRetryProblemLoad?: boolean;
+  returnHref: string;
 };
 
 export async function WritingPageContent({
@@ -31,8 +32,10 @@ export async function WritingPageContent({
   retrySeed = null,
   parentSubmissionId = null,
   canRetryProblemLoad = true,
+  returnHref,
 }: Props) {
   const t = await getTranslations("writing.page");
+  const editorT = await getTranslations("writing.editor");
   if (!problem) {
     // D-01 §2 예외 — 지문 로드 실패/문제 없음: 재시도 + 문제 목록 복귀 동선.
     const problemLoadFailed = t("problemLoadFailed", { questionNo });
@@ -59,13 +62,17 @@ export async function WritingPageContent({
       >
         <Space>
           {showRetry ? (
-            <Link href={writingQuestionHref(questionNo) as never}>
+            <Link
+              href={
+                writingQuestionHref(questionNo, { returnTo: returnHref }) as never
+              }
+            >
               <Button type="primary">{t("retry")}</Button>
             </Link>
           ) : null}
-          <Link href={"/practice/problems" as never}>
+          <Link href={returnHref as never} replace>
             <Button type={showRetry ? "default" : "primary"}>
-              {t("toProblemList")}
+              {editorT("back")}
             </Button>
           </Link>
         </Space>
@@ -80,6 +87,7 @@ export async function WritingPageContent({
         draft={draft}
         retrySeed={retrySeed}
         parentSubmissionId={parentSubmissionId}
+        returnHref={returnHref}
       />
     );
   }
@@ -91,6 +99,7 @@ export async function WritingPageContent({
         draft={draft}
         retrySeed={retrySeed}
         parentSubmissionId={parentSubmissionId}
+        returnHref={returnHref}
       />
     );
   }
@@ -102,6 +111,7 @@ export async function WritingPageContent({
         draft={draft}
         retrySeed={retrySeed}
         parentSubmissionId={parentSubmissionId}
+        returnHref={returnHref}
       />
     );
   }
@@ -113,6 +123,7 @@ export async function WritingPageContent({
         draft={draft}
         retrySeed={retrySeed}
         parentSubmissionId={parentSubmissionId}
+        returnHref={returnHref}
       />
     );
   }

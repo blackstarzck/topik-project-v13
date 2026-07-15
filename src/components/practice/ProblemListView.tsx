@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { AppCard } from "@/components/shared/AppCard";
+import { useLocationHash } from "@/hooks/useLocationHash";
 import { useLibraryItems } from "@/lib/library/queries";
 import {
   isValidQuestionNo,
@@ -95,8 +96,10 @@ export function ProblemListView({ userId }: Props) {
   const t = useTranslations("practice.problems");
   const router = useRouter();
   const params = useSearchParams();
+  const locationHash = useLocationHash();
   const [retryTarget, setRetryTarget] = useState<UserProblemRow | null>(null);
   const paramsKey = params.toString();
+  const returnTo = `/practice/problems${paramsKey ? `?${paramsKey}` : ""}${locationHash}`;
   const urlState = useMemo(
     () => parseUrlState(new URLSearchParams(paramsKey)),
     [paramsKey],
@@ -266,6 +269,7 @@ export function ProblemListView({ userId }: Props) {
             <ProblemTable
               rows={rows}
               userId={userId}
+              returnTo={returnTo}
               savedProblemIds={savedProblemIds}
               savedProblemsLoading={savedProblems.isLoading}
               onRetryClick={setRetryTarget}
@@ -302,6 +306,7 @@ export function ProblemListView({ userId }: Props) {
           hasAttempt={retryTarget.solveState === "attempted"}
           submissionId={retryTarget.latestSubmissionId ?? undefined}
           feedbackStatus={retryTarget.feedbackStatus}
+          returnTo={returnTo}
         />
       ) : null}
     </div>

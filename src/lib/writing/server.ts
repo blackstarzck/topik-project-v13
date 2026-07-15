@@ -262,10 +262,12 @@ export function isProblemIdLikeUuid(
 export async function getNextWritingProblemStartHref({
   currentProblemId,
   questionNo,
+  returnTo,
   createClient = createSupabaseServerClient,
 }: {
   currentProblemId: string | null | undefined;
   questionNo: number | null | undefined;
+  returnTo?: string | null;
   createClient?: ClientFactory;
 }): Promise<string> {
   const target = await getNextWritingProblemTarget({
@@ -278,6 +280,7 @@ export async function getNextWritingProblemStartHref({
     questionNo: target?.questionNo ?? questionNo,
     problemId: target?.problemId ?? null,
     fresh: true,
+    returnTo,
   });
 }
 

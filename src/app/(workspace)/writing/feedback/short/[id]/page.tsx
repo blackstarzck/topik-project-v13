@@ -51,6 +51,7 @@ export default async function ShortFeedbackPage({
       getNextWritingProblemStartHref({
         currentProblemId: submission.problem_id,
         questionNo: submission.question_no,
+        returnTo: `/writing/feedback/short/${encodeURIComponent(id)}`,
       }),
     ]);
   return (

@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { AppCard } from "@/components/shared/AppCard";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { useLocationHash } from "@/hooks/useLocationHash";
 import {
   isValidQuestionNo,
   QUESTION_NOS,
@@ -215,6 +216,9 @@ export function RecommendationsView() {
   const t = useTranslations("practice.recommendations");
   const router = useRouter();
   const params = useSearchParams();
+  const locationHash = useLocationHash();
+  const paramsKey = params.toString();
+  const returnTo = `/practice/recommendations${paramsKey ? `?${paramsKey}` : ""}${locationHash}`;
 
   const active = useMemo<QuestionNo | null>(() => {
     const raw = params.get("type");
@@ -308,7 +312,7 @@ export function RecommendationsView() {
       {bundle.isLoading ? (
         <>
           <RecommendationResultsSkeleton />
-          <TypeSelectCards lockedTypes={lockedTypes} />
+          <TypeSelectCards lockedTypes={lockedTypes} returnTo={returnTo} />
         </>
       ) : bundle.error ? (
         <>
@@ -329,11 +333,13 @@ export function RecommendationsView() {
               </Button>
             }
           />
-          <TypeSelectCards lockedTypes={lockedTypes} />
+          <TypeSelectCards lockedTypes={lockedTypes} returnTo={returnTo} />
         </>
       ) : items.length > 0 ? (
         <>
-          {primary ? <PrimaryRecommendationCard card={primary} /> : null}
+          {primary ? (
+            <PrimaryRecommendationCard card={primary} returnTo={returnTo} />
+          ) : null}
 
           {rest.length > 0 ? (
             <section className="grid gap-3">
@@ -345,19 +351,22 @@ export function RecommendationsView() {
                   // Computed items have no recommendation row, so itemId is
                   // null — problemId keeps keys unique in that case.
                   <div key={card.itemId ?? card.problemId} className="min-w-0">
-                    <SecondaryRecommendationCard card={card} />
+                    <SecondaryRecommendationCard
+                      card={card}
+                      returnTo={returnTo}
+                    />
                   </div>
                 ))}
               </div>
             </section>
           ) : null}
 
-          <TypeSelectCards lockedTypes={lockedTypes} />
+          <TypeSelectCards lockedTypes={lockedTypes} returnTo={returnTo} />
         </>
       ) : (
         <>
           <RecommendationEmptyState />
-          <TypeSelectCards lockedTypes={lockedTypes} />
+          <TypeSelectCards lockedTypes={lockedTypes} returnTo={returnTo} />
         </>
       )}
     </div>
