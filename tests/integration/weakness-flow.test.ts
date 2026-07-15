@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 // Phase 6 integration: weakness-flow
 // - getWeakDimensions returns empty when fewer than threshold scored entries
 // - returns bottom-2 by avg score when threshold is met
-// - getWeaknessRecommendations falls back to tag overlap when
+// - getWeaknessRecommendations falls back to canonical question tags when
 //   recommendation_items is empty
 
 import {
@@ -18,10 +18,39 @@ function makeClient(opts: {
   recItems?: unknown[];
   fallbackProblems?: unknown[];
 }) {
-  const overlapsCalls: Array<{ col: string; values: unknown[] }> = [];
+  const canonicalRpcCalls: unknown[] = [];
   return {
-    overlapsCalls,
+    canonicalRpcCalls,
     rpc: (name: string, args: unknown) => {
+      if (name === "get_available_writing_questions") {
+        canonicalRpcCalls.push(args);
+        return Promise.resolve({
+          data: (opts.fallbackProblems ?? []).map((value, index) => {
+            const row = value as {
+              id: string;
+              title: string;
+              question_no: number;
+              tags?: string[];
+            };
+            return {
+              problem_id: row.id,
+              question_id: `question-${row.id}`,
+              canonical_import_id: index + 1,
+              payload_hash: `hash-${row.id}`,
+              item_number: row.question_no,
+              topik_level: 2,
+              difficulty: null,
+              title: row.title,
+              prompt: row.title,
+              tags: row.tags ?? [],
+              materials: {},
+              source_created_at: "2026-07-14T00:00:00.000Z",
+              source_updated_at: "2026-07-14T00:00:00.000Z",
+            };
+          }),
+          error: null,
+        });
+      }
       if (name === "filter_visible_writing_problem_ids") {
         const problemIds =
           typeof args === "object" && args !== null && "p_problem_ids" in args
@@ -67,36 +96,6 @@ function makeClient(opts: {
         };
         return {
           select: () => chain,
-        };
-      }
-      if (table === "problems") {
-        let start = 0;
-        let end: number | null = null;
-        const rows = () =>
-          end == null
-            ? (opts.fallbackProblems ?? [])
-            : (opts.fallbackProblems ?? []).slice(start, end + 1);
-        const result = () =>
-          Promise.resolve({
-            data: rows(),
-            error: null,
-          });
-        const overlapChain = {
-          eq: () => overlapChain,
-          overlaps: (col: string, values: unknown[]) => {
-            overlapsCalls.push({ col, values });
-            return overlapChain;
-          },
-          order: () => overlapChain,
-          limit: () => result(),
-          range: (from: number, to: number) => {
-            start = from;
-            end = to;
-            return result();
-          },
-        };
-        return {
-          select: () => overlapChain,
         };
       }
       return {
@@ -149,7 +148,7 @@ describe("weakness-flow — gate threshold", () => {
 });
 
 describe("weakness-flow — recommendation fallback", () => {
-  it("falls back to problems.tags overlap when recommendation_items is empty", async () => {
+  it("falls back to canonical question tags when recommendation_items is empty", async () => {
     const make = (dim: string, score: number): ScoreRow => ({
       dimension: dim,
       score,
@@ -178,8 +177,7 @@ describe("weakness-flow — recommendation fallback", () => {
       "user-1",
       async () => client as never,
     );
-    expect(client.overlapsCalls.length).toBeGreaterThan(0);
-    expect(client.overlapsCalls[0].col).toBe("tags");
+    expect(client.canonicalRpcCalls.length).toBeGreaterThan(0);
     expect(recs.length).toBeGreaterThan(0);
     expect(recs[0].source).toBe("tag_fallback");
   });

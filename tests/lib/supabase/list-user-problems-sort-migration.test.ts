@@ -20,6 +20,16 @@ function readLatestListUserProblemsDefinition() {
   return matches.at(-1) ?? "";
 }
 
+function readIdentityCutoverMigration() {
+  return readFileSync(
+    join(
+      migrationsDir,
+      "20260714140000_writing_problem_identity_registry_cutover.sql",
+    ),
+    "utf8",
+  );
+}
+
 describe("list_user_problems sort migration contract", () => {
   it("uses a deterministic tie-breaker after UI sort keys", () => {
     const normalized = readLatestListUserProblemsDefinition()
@@ -27,12 +37,23 @@ describe("list_user_problems sort migration contract", () => {
       .toLowerCase();
 
     expect(normalized).toContain("order by");
-    expect(normalized).toContain(
-      "case when v_sort in ('newest', 'recent', 'difficulty', 'difficulty-asc', 'difficulty-desc') then counted.created_at end desc nulls last",
+    expect(normalized).toMatch(
+      /case when v_sort in \(\s*'newest',\s*'recent',\s*'difficulty',\s*'difficulty-asc',\s*'difficulty-desc'\s*\) then counted\.created_at end desc nulls last/,
     );
     expect(normalized).toContain("counted.id asc");
+  });
+
+  it("rewrites the writing catalog to canonical rows and rejects retired read dependencies", () => {
+    const normalized = readIdentityCutoverMigration()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
     expect(normalized).toContain(
-      "public.is_writing_problem_visible_to_caller(p.id, p.question_no)",
+      "from public.get_available_writing_questions(null, null) canonical",
     );
+    expect(normalized).toContain(
+      "list_user_problems_retired_read_dependency_remains",
+    );
+    expect(normalized).toContain("problem.domain <> 'writing'");
   });
 });

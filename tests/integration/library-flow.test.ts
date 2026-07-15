@@ -23,6 +23,13 @@ function makeClient(opts: {
   return {
     inserted,
     calls,
+    rpc: (name: string) => {
+      calls.push(`rpc:${name}`);
+      if (name === "get_writing_submission_history_context") {
+        return Promise.resolve({ data: [], error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    },
     auth: {
       getUser: vi.fn(async () => ({
         data: { user: { id: "user-1" } },

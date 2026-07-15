@@ -34,6 +34,9 @@ vi.mock("@/lib/writing-api/evaluation", () => ({
 
 import { GET } from "../../../../src/app/api/writing/evaluation-status/route";
 
+const LOCAL_SUBMISSION_ID = "00000000-0000-0000-0000-000000000099";
+const EXTERNAL_SUBMISSION_ID = "provider-writing-2026-000099";
+
 describe("GET /api/writing/evaluation-status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -68,7 +71,8 @@ describe("GET /api/writing/evaluation-status", () => {
             maybeSingle: () =>
               Promise.resolve({
                 data: {
-                  id: "00000000-0000-0000-0000-000000000099",
+                  id: LOCAL_SUBMISSION_ID,
+                  external_submission_id: EXTERNAL_SUBMISSION_ID,
                   user_id: "user-1",
                   feedback_status: "analyzing",
                 },
@@ -87,11 +91,11 @@ describe("GET /api/writing/evaluation-status", () => {
 
   it("syncs externally graded feedback through the feedback RPC", async () => {
     helpers.getExternalEvaluationStatusMock.mockResolvedValue({
-      submission_id: "00000000-0000-0000-0000-000000000099",
+      submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
     });
     const externalFeedback = {
-      submission_id: "00000000-0000-0000-0000-000000000099",
+      submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
     };
     helpers.getExternalEvaluationFeedbackMock.mockResolvedValue(
@@ -121,6 +125,12 @@ describe("GET /api/writing/evaluation-status", () => {
     await expect(response.json()).resolves.toEqual({
       feedback_status: "complete",
     });
+    expect(helpers.getExternalEvaluationStatusMock).toHaveBeenCalledWith(
+      expect.objectContaining({ submissionId: EXTERNAL_SUBMISSION_ID }),
+    );
+    expect(helpers.getExternalEvaluationFeedbackMock).toHaveBeenCalledWith(
+      expect.objectContaining({ submissionId: EXTERNAL_SUBMISSION_ID }),
+    );
     expect(helpers.rpcMock).not.toHaveBeenCalledWith(
       "sync_external_writing_feedback",
       expect.anything(),
@@ -128,7 +138,7 @@ describe("GET /api/writing/evaluation-status", () => {
     expect(helpers.serviceRpcMock).toHaveBeenCalledWith(
       "sync_external_writing_feedback",
       {
-        target_submission_id: "00000000-0000-0000-0000-000000000099",
+        target_submission_id: LOCAL_SUBMISSION_ID,
         next_status: "complete",
         feedback: expect.objectContaining({
           status: "complete",
@@ -168,7 +178,7 @@ describe("GET /api/writing/evaluation-status", () => {
 
   it("does not sync feedback when the external status id does not match the local submission", async () => {
     helpers.getExternalEvaluationStatusMock.mockResolvedValue({
-      submission_id: "00000000-0000-0000-0000-000000000000",
+      submission_id: "different-provider-id",
       status: "graded",
     });
 
@@ -187,11 +197,11 @@ describe("GET /api/writing/evaluation-status", () => {
 
   it("does not sync feedback when the external feedback id does not match the local submission", async () => {
     helpers.getExternalEvaluationStatusMock.mockResolvedValue({
-      submission_id: "00000000-0000-0000-0000-000000000099",
+      submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
     });
     helpers.getExternalEvaluationFeedbackMock.mockResolvedValue({
-      submission_id: "00000000-0000-0000-0000-000000000000",
+      submission_id: "different-provider-id",
       status: "graded",
     });
     helpers.mapExternalEvaluationFeedbackMock.mockReturnValue({
@@ -240,11 +250,11 @@ describe("GET /api/writing/evaluation-status", () => {
 
   it("reports a status check error without marking the submission failed when feedback sync fails", async () => {
     helpers.getExternalEvaluationStatusMock.mockResolvedValue({
-      submission_id: "00000000-0000-0000-0000-000000000099",
+      submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
     });
     helpers.getExternalEvaluationFeedbackMock.mockResolvedValue({
-      submission_id: "00000000-0000-0000-0000-000000000099",
+      submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
     });
     helpers.mapExternalEvaluationFeedbackMock.mockReturnValue({

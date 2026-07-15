@@ -44,9 +44,13 @@ vi.mock("../../../src/lib/supabase/server", () => ({
 import {
   createComparisonReportAction,
   createComparisonReportWithViewAction,
+  replaceStaleWritingDraftAction,
   submitWritingAction,
 } from "../../../src/lib/writing/server-actions";
-import { WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE } from "../../../src/lib/writing/submit-errors";
+import { setWritingSubmissionControlForTests } from "../../../src/lib/writing/canonical-source";
+import {
+  WRITING_SUBMISSION_BLOCKED_MESSAGE,
+} from "../../../src/lib/writing/submit-errors";
 
 type ComparisonRow = Record<string, unknown>;
 type ComparisonStore = {
@@ -170,551 +174,309 @@ function dimensionRow(submissionId: string, score: number): ComparisonRow {
   };
 }
 
+const CANONICAL_PROBLEM_ID = "00000000-0000-4000-8000-000000000001";
+const SUBMISSION_INTENT_ID = "00000000-0000-4000-8000-000000000099";
+const DRAFT_ID = "00000000-0000-4000-8000-0000000000dd";
+
+function canonicalQuestionRow(overrides: Record<string, unknown> = {}) {
+  return {
+    problem_id: CANONICAL_PROBLEM_ID,
+    question_id: "topik-writing-54-0001",
+    canonical_import_id: 321,
+    payload_hash: "payload-hash-321",
+    item_number: 54,
+    topik_level: 2,
+    difficulty: 4,
+    title: "환경 보호",
+    prompt: "1) 필요성 2) 실천 방법 3) 사회의 역할",
+    tags: ["환경"],
+    materials: {
+      prompt_questions: ["필요성", "실천 방법", "사회의 역할"],
+      required_structure: ["도입", "본론", "결론"],
+    },
+    source_created_at: "2026-07-13T00:00:00.000Z",
+    source_updated_at: "2026-07-13T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function intentView(state: string, overrides: Record<string, unknown> = {}) {
+  return {
+    intent_id: SUBMISSION_INTENT_ID,
+    state,
+    should_dispatch: false,
+    local_submission_id: null,
+    external_submission_id: null,
+    ...overrides,
+  };
+}
+
+function canonicalSubmitInput(overrides: Record<string, unknown> = {}) {
+  return {
+    submission_intent_id: SUBMISSION_INTENT_ID,
+    draft_id: DRAFT_ID,
+    problem_id: CANONICAL_PROBLEM_ID,
+    question_no: 54 as const,
+    answer_text: "Canonical answer",
+    char_count: 16,
+    canonical_question_id: "topik-writing-54-0001",
+    canonical_import_id: "321",
+    canonical_payload_hash: "payload-hash-321",
+    ...overrides,
+  };
+}
+
+function mockSubmitTables(question = canonicalQuestionRow()) {
+  helpers.fromMock.mockImplementation((table: string) => {
+    const row =
+      table === "writing_drafts"
+        ? {
+            id: DRAFT_ID,
+            canonical_question_id: question.question_id,
+            canonical_import_id: question.canonical_import_id,
+            canonical_payload_hash: question.payload_hash,
+            question_snapshot: {
+              question_id: question.question_id,
+              canonical_import_id: String(question.canonical_import_id),
+              payload_hash: question.payload_hash,
+              item_number: question.item_number,
+              topik_level: question.topik_level,
+              difficulty: question.difficulty,
+              title: question.title,
+              prompt: question.prompt,
+              tags: question.tags,
+              materials: question.materials,
+            },
+          }
+        : { status: "active", ui_locale: "ko" };
+    const query = {
+      eq: vi.fn(() => query),
+      maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }),
+    };
+    return { select: vi.fn(() => query) };
+  });
+}
+
 describe("submitWritingAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     helpers.getUserMock.mockResolvedValue({
-      data: {
-        user: { id: "user-1" },
-      },
+      data: { user: { id: "user-1" } },
     });
     helpers.getSessionMock.mockResolvedValue({
-      data: {
-        session: { access_token: "learner-token" },
-      },
+      data: { session: { access_token: "learner-token" } },
     });
-    helpers.fromMock.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      // fetchProfileStatus(supabase, userId): profiles → select → eq → maybeSingle
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi
-            .fn()
-            .mockResolvedValue({ data: { status: "active" }, error: null }),
-        })),
-      })),
-    });
+    mockSubmitTables();
     helpers.rpcMock.mockResolvedValue({
-      data: "local-submission-id",
+      data: [canonicalQuestionRow()],
       error: null,
     });
-    helpers.serviceRpcMock.mockResolvedValue({
-      data: "00000000-0000-0000-0000-000000000099",
-      error: null,
+    helpers.serviceRpcMock.mockImplementation(async (name: string) => {
+      if (name === "prepare_writing_submission_intent") {
+        return { data: intentView("pending"), error: null };
+      }
+      if (name === "claim_writing_submission_intent") {
+        return {
+          data: intentView("dispatching", { should_dispatch: true }),
+          error: null,
+        };
+      }
+      if (name === "materialize_writing_submission_intent") {
+        return { data: SUBMISSION_INTENT_ID, error: null };
+      }
+      return { data: null, error: null };
     });
     helpers.createServiceClientMock.mockReturnValue({
       rpc: helpers.serviceRpcMock,
-      // submitWritingAction는 problems.materials.question_id를 외부 question_id로 읽는다.
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: { materials: { question_id: "topik-writing-54-0001" } },
-              error: null,
-            }),
-          })),
-        })),
-      })),
     });
-    delete process.env.TALKPIK_API_BASE_URL;
-  });
-
-  it("submits to the external OpenAPI writing endpoint and records the external submission locally", async () => {
     process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    const answerText = "External writing answer.";
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-000000000099",
-          status: "processing",
-          message: "queued",
-        }),
-        { status: 202 },
-      ),
-    );
-
-    const result = await submitWritingAction({
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 54,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/writing/submit",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          Authorization: "Bearer learner-token",
-          "Content-Type": "application/json",
-        }),
-        body: JSON.stringify({
-          task_type: "Q54",
-          question_id: "topik-writing-54-0001",
-          text: answerText,
-          lang: "ko",
-        }),
-      }),
-    );
-    expect(helpers.rpcMock).not.toHaveBeenCalledWith(
-      "create_external_writing_submission",
-      expect.anything(),
-    );
-    expect(helpers.serviceRpcMock).toHaveBeenCalledWith(
-      "create_external_writing_submission",
-      {
-        submission: {
-          external_submission_id: "00000000-0000-0000-0000-000000000099",
-          user_id: "user-1",
-          problem_id: "00000000-0000-0000-0000-000000000001",
-          draft_id: null,
-          question_no: 54,
-          answer_text: answerText,
-          answer_json: null,
-          char_count: answerText.length,
-          feedback_status: "analyzing",
-        },
-      },
-    );
-    expect(result).toEqual({
-      submissionId: "00000000-0000-0000-0000-000000000099",
-      questionNo: 54,
-    });
+    delete process.env.E2E_DISABLE_EXTERNAL_WRITING_API;
+    setWritingSubmissionControlForTests(null);
   });
 
-  it("records the source submission when retry feedback is submitted successfully", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    const answerText = "Revised external writing answer.";
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-0000000000bb",
-          status: "processing",
-        }),
-        { status: 202 },
-      ),
-    );
-
-    await submitWritingAction({
-      parent_submission_id: "00000000-0000-0000-0000-000000000011",
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 54,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    expect(helpers.serviceRpcMock).toHaveBeenCalledWith(
-      "create_external_writing_submission",
-      {
-        submission: expect.objectContaining({
-          external_submission_id: "00000000-0000-0000-0000-0000000000bb",
-          user_id: "user-1",
-          problem_id: "00000000-0000-0000-0000-000000000001",
-          parent_submission_id: "00000000-0000-0000-0000-000000000011",
-          feedback_status: "analyzing",
-        }),
-      },
-    );
-  });
-
-  it("submits Q51 as blanks (not raw text) when answer_json carries them", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-0000000000aa",
-          status: "processing",
-        }),
-        { status: 202 },
-      ),
-    );
-
-    await submitWritingAction({
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 51,
-      answer_text: "ㄱ: 잘 수 없습니다\nㄴ: 알려 주시면",
-      answer_json: {
-        _v: "51.v1",
-        blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" },
-      },
-      passage_context:
-        "지금 사용하고 있는 방은 도로와 가까워서 잠을 ( ㄱ ). 방법을 ( ㄴ ) 감사하겠습니다.",
-      char_count: 12,
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/writing/submit",
-      expect.objectContaining({
-        body: JSON.stringify({
-          task_type: "Q51",
-          question_id: "topik-writing-54-0001",
-          blanks: { ㄱ: "잘 수 없습니다", ㄴ: "알려 주시면" },
-          passage_context:
-            "지금 사용하고 있는 방은 도로와 가까워서 잠을 ( ㄱ ). 방법을 ( ㄴ ) 감사하겠습니다.",
-          lang: "ko",
-        }),
-      }),
-    );
-  });
-
-  it("uses the profile UI locale as the external submit language", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    helpers.fromMock.mockReturnValue({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: { status: "active", ui_locale: "vi" },
-            error: null,
-          }),
-        })),
-      })),
-    });
-    const answerText = "External writing answer.";
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-000000000099",
-          status: "processing",
-        }),
-        { status: 202 },
-      ),
-    );
-
-    await submitWritingAction({
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 54,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/writing/submit",
-      expect.objectContaining({
-        body: JSON.stringify({
-          task_type: "Q54",
-          question_id: "topik-writing-54-0001",
-          text: answerText,
-          lang: "vi",
-        }),
-      }),
-    );
-  });
-
-  it("fails before queueing externally when the service role writer is unavailable", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    helpers.createServiceClientMock.mockImplementation(() => {
-      throw new Error("service role unavailable");
-    });
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-000000000099",
-          status: "processing",
-          message: "queued",
-        }),
-        { status: 202 },
-      ),
-    );
-
-    await expect(
-      submitWritingAction({
-        problem_id: "00000000-0000-0000-0000-000000000001",
-        question_no: 54,
-        answer_text: "External writing answer.",
-        char_count: 24,
-      }),
-    ).rejects.toThrow("service role unavailable");
-
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it("records local submissions as failed without writing mock feedback when the external API is unavailable", async () => {
-    const answerText = "Local writing answer.";
-    helpers.serviceRpcMock.mockImplementation((rpcName, payload) =>
-      Promise.resolve({
-        data: (payload as { submission: { external_submission_id: string } })
-          .submission.external_submission_id,
-        error: null,
-      }),
-    );
-
-    const result = await submitWritingAction({
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 51,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    expect(helpers.rpcMock).not.toHaveBeenCalledWith(
-      "submit_writing_with_feedback",
-      expect.anything(),
-    );
-    expect(helpers.serviceRpcMock).toHaveBeenCalledTimes(1);
-    const [rpcName, rpcPayload] = helpers.serviceRpcMock.mock.calls[0] as [
-      string,
-      {
-        submission: {
-          external_submission_id: string;
-          feedback_status: string;
-        };
-      },
-    ];
-    expect(rpcName).toBe("create_external_writing_submission");
-    expect(rpcPayload.submission).toMatchObject({
-      external_submission_id: expect.any(String),
-      user_id: "user-1",
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      draft_id: null,
-      question_no: 51,
-      answer_text: answerText,
-      answer_json: null,
-      char_count: answerText.length,
-      feedback_status: "failed",
-    });
-    expect(rpcPayload.submission.external_submission_id).toMatch(
-      /^[0-9a-f-]{36}$/,
-    );
-    expect(result).toEqual({
-      submissionId: rpcPayload.submission.external_submission_id,
-      questionNo: 51,
-    });
-  });
-
-  it("preserves the source submission when a retry falls back to a failed local submission", async () => {
-    const answerText = "Retry fallback answer.";
-    helpers.serviceRpcMock.mockImplementation((rpcName, payload) =>
-      Promise.resolve({
-        data: (payload as { submission: { external_submission_id: string } })
-          .submission.external_submission_id,
-        error: null,
-      }),
-    );
-
-    await submitWritingAction({
-      parent_submission_id: "00000000-0000-0000-0000-000000000011",
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 53,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    const [, rpcPayload] = helpers.serviceRpcMock.mock.calls[0] as [
-      string,
-      {
-        submission: {
-          parent_submission_id?: string;
-        };
-      },
-    ];
-    expect(rpcPayload.submission.parent_submission_id).toBe(
-      "00000000-0000-0000-0000-000000000011",
-    );
-  });
-
-  it("records a failed local submission when the configured external API cannot be reached", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    const answerText = "External API network failure answer.";
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockRejectedValue(new TypeError("fetch failed"));
-    helpers.serviceRpcMock.mockImplementation((rpcName, payload) =>
-      Promise.resolve({
-        data: (payload as { submission: { external_submission_id: string } })
-          .submission.external_submission_id,
-        error: null,
-      }),
-    );
-
-    const result = await submitWritingAction({
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 51,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/writing/submit",
-      expect.anything(),
-    );
-    expect(helpers.serviceRpcMock).toHaveBeenCalledTimes(1);
-    const [rpcName, rpcPayload] = helpers.serviceRpcMock.mock.calls[0] as [
-      string,
-      {
-        submission: {
-          external_submission_id: string;
-          feedback_status: string;
-        };
-      },
-    ];
-    expect(rpcName).toBe("create_external_writing_submission");
-    expect(rpcPayload.submission).toMatchObject({
-      external_submission_id: expect.any(String),
-      user_id: "user-1",
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      draft_id: null,
-      question_no: 51,
-      answer_text: answerText,
-      answer_json: null,
-      char_count: answerText.length,
-      feedback_status: "failed",
-    });
-    expect(result).toEqual({
-      submissionId: rpcPayload.submission.external_submission_id,
-      questionNo: 51,
-    });
-  });
-
-  it("records a failed local submission when the external API returns a server error", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    const answerText = "External API server error answer.";
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ detail: "upstream unavailable" }), {
-        status: 500,
-      }),
-    );
-    helpers.serviceRpcMock.mockImplementation((rpcName, payload) =>
-      Promise.resolve({
-        data: (payload as { submission: { external_submission_id: string } })
-          .submission.external_submission_id,
-        error: null,
-      }),
-    );
-
-    const result = await submitWritingAction({
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 54,
-      answer_text: answerText,
-      char_count: answerText.length,
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.example.test/api/writing/submit",
-      expect.anything(),
-    );
-    expect(helpers.serviceRpcMock).toHaveBeenCalledTimes(1);
-    const [rpcName, rpcPayload] = helpers.serviceRpcMock.mock.calls[0] as [
-      string,
-      {
-        submission: {
-          external_submission_id: string;
-          feedback_status: string;
-        };
-      },
-    ];
-    expect(rpcName).toBe("create_external_writing_submission");
-    expect(rpcPayload.submission).toMatchObject({
-      external_submission_id: expect.any(String),
-      user_id: "user-1",
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      draft_id: null,
-      question_no: 54,
-      answer_text: answerText,
-      answer_json: null,
-      char_count: answerText.length,
-      feedback_status: "failed",
-    });
-    expect(result).toEqual({
-      submissionId: rpcPayload.submission.external_submission_id,
-      questionNo: 54,
-    });
-  });
-
-  it("does not record a local failed submission for external API HTTP errors", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ detail: "unauthorized" }), {
-        status: 401,
-      }),
-    );
-
-    await expect(
-      submitWritingAction({
-        problem_id: "00000000-0000-0000-0000-000000000001",
-        question_no: 51,
-        answer_text: "External API unauthorized answer.",
-        char_count: 33,
-      }),
-    ).rejects.toThrow("External evaluation API request failed with status 401");
-
-    expect(fetchMock).toHaveBeenCalled();
-    expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
-  });
-
-  it("shows a learner-friendly error when the selected problem is no longer submittable", async () => {
-    helpers.serviceRpcMock.mockResolvedValue({
-      data: null,
-      error: { message: "problem_not_submittable" },
-    });
-
-    await expect(
-      submitWritingAction({
-        problem_id: "00000000-0000-0000-0000-000000000001",
-        question_no: 51,
-        answer_text: "Answer for a hidden problem.",
-        char_count: 28,
-      }),
-    ).rejects.toThrow(WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE);
-  });
-
-  it("shows a learner-friendly error when the external create RPC rejects an unsubmittable problem", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-000000000099",
-          status: "processing",
-          message: "queued",
-        }),
-        { status: 202 },
-      ),
-    );
-    helpers.serviceRpcMock.mockResolvedValue({
-      data: null,
-      error: { message: "problem_not_submittable" },
-    });
-
-    await expect(
-      submitWritingAction({
-        problem_id: "00000000-0000-0000-0000-000000000001",
-        question_no: 51,
-        answer_text: "Answer for a hidden problem.",
-        char_count: 28,
-      }),
-    ).rejects.toThrow(WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE);
-  });
-
-  it("returns the existing submission id when the external create RPC dedups a duplicate submit", async () => {
-    process.env.TALKPIK_API_BASE_URL = "https://api.example.test";
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "00000000-0000-0000-0000-0000000000bb",
-          status: "processing",
-          message: "queued",
-        }),
-        { status: 202 },
-      ),
-    );
-    // 중복 제출이면 RPC가 새 row를 만들지 않고 기존 활성 제출 id를 멱등 반환한다.
-    // 이 값은 이번 호출의 external.submission_id(...bb)와 다르다.
-    helpers.serviceRpcMock.mockResolvedValue({
-      data: "00000000-0000-0000-0000-0000000000aa",
+  it("replaces a stale draft through the authenticated atomic RPC", async () => {
+    helpers.rpcMock.mockResolvedValue({
+      data: "00000000-0000-4000-8000-0000000000dd",
       error: null,
     });
 
-    const result = await submitWritingAction({
-      draft_id: "00000000-0000-0000-0000-0000000000dd",
-      problem_id: "00000000-0000-0000-0000-000000000001",
-      question_no: 54,
-      answer_text: "Duplicate submit answer.",
-      char_count: 24,
+    await expect(
+      replaceStaleWritingDraftAction({
+        draftId: "00000000-0000-4000-8000-0000000000dd",
+        questionId: "topik-writing-54-0001",
+        importId: "321",
+        payloadHash: "payload-hash-321",
+      }),
+    ).resolves.toEqual({
+      draftId: "00000000-0000-4000-8000-0000000000dd",
+    });
+  });
+
+  it("blocks submission until local outbox evidence is verified", async () => {
+    setWritingSubmissionControlForTests({
+      submissionMode: "blocked",
+      submissionContractState: "unverified",
     });
 
-    // mismatch 에러를 던지지 않고, RPC가 반환한 기존 제출 id로 수렴한다.
-    expect(result).toEqual({
-      submissionId: "00000000-0000-0000-0000-0000000000aa",
+    await expect(submitWritingAction(canonicalSubmitInput())).resolves.toEqual({
+      rejection: {
+        code: "writing_submission_temporarily_blocked",
+        message: WRITING_SUBMISSION_BLOCKED_MESSAGE,
+      },
+    });
+    expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
+  });
+
+  it("persists the canonical intent before sending the provider request", async () => {
+    setWritingSubmissionControlForTests({
+      submissionMode: "canonical",
+      submissionContractState: "local_outbox_verified",
+    });
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "provider-string-id",
+          status: "processing",
+          message: "accepted",
+        }),
+        { status: 202 },
+      ),
+    );
+
+    await expect(
+      submitWritingAction(
+        canonicalSubmitInput({
+          passage_context: "client-controlled prompt",
+        }),
+      ),
+    ).resolves.toEqual({
+      submissionId: SUBMISSION_INTENT_ID,
       questionNo: 54,
     });
+
+    expect(helpers.serviceRpcMock.mock.calls.map(([name]) => name)).toEqual([
+      "prepare_writing_submission_intent",
+      "claim_writing_submission_intent",
+      "mark_writing_submission_intent_accepted",
+      "materialize_writing_submission_intent",
+    ]);
+    expect(helpers.serviceRpcMock).toHaveBeenCalledWith(
+      "prepare_writing_submission_intent",
+      expect.objectContaining({
+        p_intent_id: SUBMISSION_INTENT_ID,
+        p_submission: expect.objectContaining({
+          problem_id: CANONICAL_PROBLEM_ID,
+          canonical_question_id: "topik-writing-54-0001",
+          canonical_import_id: "321",
+          canonical_payload_hash: "payload-hash-321",
+          question_snapshot: expect.objectContaining({
+            question_id: "topik-writing-54-0001",
+            canonical_import_id: "321",
+            payload_hash: "payload-hash-321",
+          }),
+        }),
+      }),
+    );
+    expect(helpers.serviceRpcMock).toHaveBeenCalledWith(
+      "mark_writing_submission_intent_accepted",
+      expect.objectContaining({
+        p_external_submission_id: "provider-string-id",
+      }),
+    );
+    const providerBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(providerBody.question_id).toBe("topik-writing-54-0001");
+    expect(providerBody).not.toHaveProperty("passage_context");
+  });
+
+  it("rejects a changed version before creating an outbox intent", async () => {
+    setWritingSubmissionControlForTests({
+      submissionMode: "canonical",
+      submissionContractState: "local_outbox_verified",
+    });
+    helpers.rpcMock.mockResolvedValue({
+      data: [
+        canonicalQuestionRow({
+          canonical_import_id: 322,
+          payload_hash: "payload-hash-322",
+        }),
+      ],
+      error: null,
+    });
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+
+    await expect(
+      submitWritingAction(canonicalSubmitInput()),
+    ).rejects.toThrow("canonical_question_version_conflict");
+    expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a stable client-generated intent id", async () => {
+    setWritingSubmissionControlForTests({
+      submissionMode: "canonical",
+      submissionContractState: "local_outbox_verified",
+    });
+
+    await expect(
+      submitWritingAction(
+        canonicalSubmitInput({ submission_intent_id: undefined }),
+      ),
+    ).rejects.toThrow("writing_submission_intent_id_required");
+    expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a persisted owned draft before provider dispatch", async () => {
+    setWritingSubmissionControlForTests({
+      submissionMode: "canonical",
+      submissionContractState: "local_outbox_verified",
+    });
+
+    await expect(
+      submitWritingAction(canonicalSubmitInput({ draft_id: null })),
+    ).rejects.toThrow("writing_submission_draft_required");
+    expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
+  });
+
+  it("submits Q51 blanks instead of raw answer text", async () => {
+    setWritingSubmissionControlForTests({
+      submissionMode: "canonical",
+      submissionContractState: "local_outbox_verified",
+    });
+    const q51Question = canonicalQuestionRow({
+      question_id: "topik-writing-51-0001",
+      item_number: 51,
+    });
+    helpers.rpcMock.mockResolvedValue({
+      data: [q51Question],
+      error: null,
+    });
+    mockSubmitTables(q51Question);
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "provider-q51-id",
+          status: "processing",
+          message: "accepted",
+        }),
+        { status: 202 },
+      ),
+    );
+
+    await submitWritingAction(
+      canonicalSubmitInput({
+        question_no: 51,
+        canonical_question_id: "topik-writing-51-0001",
+        answer_json: { blanks: { "ㄱ": "첫째", "ㄴ": "둘째" } },
+      }),
+    );
+
+    const providerBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(providerBody).toMatchObject({
+      task_type: "Q51",
+      blanks: { "ㄱ": "첫째", "ㄴ": "둘째" },
+      lang: "ko",
+    });
+    expect(providerBody).not.toHaveProperty("text");
   });
 });
 

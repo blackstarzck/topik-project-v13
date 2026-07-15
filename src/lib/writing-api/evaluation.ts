@@ -183,17 +183,20 @@ export async function submitExternalWriting({
   baseUrl,
   accessToken,
   payload,
+  timeoutMs = 20_000,
   fetchImpl = fetch,
 }: {
   baseUrl: string;
   accessToken: string;
   payload: ExternalSubmitWritingRequest;
+  timeoutMs?: number;
   fetchImpl?: typeof fetch;
 }): Promise<ExternalSubmitWritingResponse> {
   return requestJson(`${baseUrl.replace(/\/$/, "")}/api/writing/submit`, {
     accessToken,
     method: "POST",
     body: payload,
+    timeoutMs,
     fetchImpl,
   }) as Promise<ExternalSubmitWritingResponse>;
 }
@@ -238,29 +241,41 @@ async function requestJson(
     accessToken,
     method,
     body,
+    timeoutMs = 15_000,
     fetchImpl,
   }: {
     accessToken: string;
     method: "GET" | "POST";
     body?: unknown;
+    timeoutMs?: number;
     fetchImpl: typeof fetch;
   },
 ): Promise<unknown> {
   if (!accessToken.trim()) throw new Error("accessToken is required");
-
-  const response = await fetchImpl(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: body == null ? undefined : JSON.stringify(body),
-  });
-  const parsed = await parseJson(response);
-  if (!response.ok) {
-    throw new ExternalEvaluationApiError(response.status, parsed);
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("timeoutMs must be a positive number");
   }
-  return parsed;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: body == null ? undefined : JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const parsed = await parseJson(response);
+    if (!response.ok) {
+      throw new ExternalEvaluationApiError(response.status, parsed);
+    }
+    return parsed;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function parseJson(response: Response): Promise<unknown> {

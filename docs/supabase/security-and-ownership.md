@@ -24,6 +24,9 @@
 - `SECURITY DEFINER` function은 RLS 우회가 필요한 최소 작업에만 사용하고, 함수 내부에서 auth·소유권을 다시 확인하며 `search_path`와 execute grant를 제한한다.
 - private schema function과 cron은 browser callable API로 간주하지 않는다.
 - admin RPC와 audit 구조가 migration에 남아 있어도 v13 user app은 admin UI나 운영 권한을 소유하지 않는다.
+- canonical 쓰기 RPC는 학습자에게 제목·지문·자료와 버전 식별자처럼 허용된 필드만 반환한다. 정답·모범답안·rubric·scoring·raw payload는 browser 응답과 learner-safe snapshot에 포함하지 않는다.
+- `private.problem_identities`와 submission intent/outbox, reconciliation·evidence RPC는 browser가 직접 읽거나 조작하는 표면이 아니다. authenticated 사용자는 owner 검증을 거친 공개 RPC만 호출하고, 상태 전환·운영 대사는 service role에 한정한다.
+- snapshot CHECK가 호출하는 금지-key 판별 helper는 immutable하고 table을 읽지 않는 순수 함수다. `authenticated`와 `service_role`에 실행 권한을 주되 `anon`과 `PUBLIC`에는 주지 않는다.
 
 ## 계정·알림·정리
 

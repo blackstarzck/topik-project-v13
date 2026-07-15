@@ -4,8 +4,8 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
-import { filterVisibleProblemIds } from "../problems/visibility";
 import type { Json, Tables } from "../supabase/types";
+import { getCanonicalWritingProblems } from "../writing/canonical-source";
 import { writingFeedbackHref, writingProblemHref } from "../writing/routes";
 import type {
   LibraryDashboardFeedbackWaitingStatus,
@@ -30,7 +30,7 @@ type SubmissionDashboardRow = Pick<
   | "submitted_at"
   | "feedback_status"
   | "parent_submission_id"
->;
+> & { history_title?: string | null };
 
 type FeedbackDashboardRow = Pick<
   Tables<"writing_feedback">,
@@ -81,7 +81,12 @@ type ExportFileDashboardRow = Pick<
 type TimelineSubmissionRow = Pick<
   Tables<"writing_submissions">,
   "id" | "problem_id" | "question_no"
->;
+> & { history_title?: string | null };
+
+type WritingSubmissionHistoryRow = {
+  submission_id: string;
+  title: string | null;
+};
 
 export type LibraryDashboardRows = {
   libraryItems: LibraryItemDashboardRow[];
@@ -169,10 +174,18 @@ export async function getLibraryDashboard(
     ...studyEvents.map((row) => payloadString(row.payload, "problem_id")),
     ...timelineSubmissions.map((row) => row.problem_id),
   ]);
-  const [problems, visibleProblemIds] = await Promise.all([
-    fetchProblems(supabase, problemIds),
-    filterVisibleProblemIds(supabase, problemIds),
-  ]);
+  const requestedIds = new Set(problemIds);
+  const problems: ProblemDashboardRow[] = (
+    await getCanonicalWritingProblems({ supabase })
+  )
+    .filter((problem) => requestedIds.has(problem.id))
+    .map((problem) => ({
+      id: problem.id,
+      question_no: problem.questionNo,
+      title: problem.title,
+      difficulty: problem.difficulty ?? null,
+    }));
+  const visibleProblemIds = new Set(problems.map((problem) => problem.id));
 
   return buildLibraryDashboardFromRows({
     libraryItems: (libraryItems ?? []) as LibraryItemDashboardRow[],
@@ -281,7 +294,7 @@ export function buildLibraryDashboardFromRows(
       submissionId: row.submission.id,
       problemId: row.submission.problem_id,
       questionNo: row.submission.question_no,
-      title: problemTitle(row.problem, row.submission.question_no),
+      title: submissionTitle(row.submission, row.problem),
       submittedAt: row.submission.submitted_at,
       charCount: row.submission.char_count,
       status: feedbackWaitingStatus(
@@ -350,7 +363,8 @@ export function buildLibraryDashboardFromRows(
         problemId,
         submissionId,
         questionNo,
-        title: problemTitle(problem, questionNo),
+        title:
+          submission?.history_title ?? problemTitle(problem, questionNo),
       };
     });
 
@@ -389,7 +403,11 @@ async function fetchSavedSubmissions(
       `getLibraryDashboard(writing_submissions): ${error.message}`,
     );
   }
-  return (data ?? []) as SubmissionDashboardRow[];
+  const historyTitles = await fetchHistoryTitles(supabase, ids);
+  return ((data ?? []) as SubmissionDashboardRow[]).map((row) => ({
+    ...row,
+    history_title: historyTitles.get(row.id) ?? null,
+  }));
 }
 
 async function fetchFeedback(
@@ -507,22 +525,33 @@ async function fetchTimelineSubmissions(
       `getLibraryDashboard(timeline writing_submissions): ${error.message}`,
     );
   }
-  return (data ?? []) as TimelineSubmissionRow[];
+  const historyTitles = await fetchHistoryTitles(supabase, ids);
+  return ((data ?? []) as TimelineSubmissionRow[]).map((row) => ({
+    ...row,
+    history_title: historyTitles.get(row.id) ?? null,
+  }));
 }
 
-async function fetchProblems(
+async function fetchHistoryTitles(
   supabase: SupabaseServerClient,
   ids: string[],
-): Promise<ProblemDashboardRow[]> {
-  if (ids.length === 0) return [];
-  const { data, error } = await supabase
-    .from("problems")
-    .select("id, question_no, title, difficulty")
-    .in("id", ids);
+): Promise<Map<string, string | null>> {
+  if (ids.length === 0) return new Map();
+  const { data, error } = await supabase.rpc(
+    "get_writing_submission_history_context",
+    { p_submission_ids: ids },
+  );
   if (error) {
-    throw new Error(`getLibraryDashboard(problems): ${error.message}`);
+    throw new Error(
+      `getLibraryDashboard(submission history): ${error.message}`,
+    );
   }
-  return (data ?? []) as ProblemDashboardRow[];
+  return new Map(
+    ((data ?? []) as WritingSubmissionHistoryRow[]).map((row) => [
+      row.submission_id,
+      row.title,
+    ]),
+  );
 }
 
 function buildReviewCandidate(
@@ -559,7 +588,7 @@ function buildReviewCandidate(
     submissionId: submission.id,
     problemId: submission.problem_id,
     questionNo: submission.question_no,
-    title: problemTitle(problem, submission.question_no),
+    title: submissionTitle(submission, problem),
     submittedAt: submission.submitted_at,
     charCount: submission.char_count,
     estimatedMinutes: estimatedMinutesForQuestion(submission.question_no),
@@ -616,7 +645,7 @@ function buildWeakItems(
             submissionId: row.submission.id,
             problemId: row.submission.problem_id,
             questionNo: row.submission.question_no,
-            title: problemTitle(row.problem, row.submission.question_no),
+            title: submissionTitle(row.submission, row.problem),
             submittedAt: row.submission.submitted_at,
             ...normalized,
           };
@@ -949,6 +978,15 @@ function problemTitle(
 ) {
   if (problem?.title) return problem.title;
   return questionNo ? `${questionNo}번 문제` : "저장 답안";
+}
+
+function submissionTitle(
+  submission: Pick<SubmissionDashboardRow, "question_no" | "history_title">,
+  problem: ProblemDashboardRow | null | undefined,
+) {
+  return (
+    submission.history_title ?? problemTitle(problem, submission.question_no)
+  );
 }
 
 function mostRecentIso(values: string[]) {

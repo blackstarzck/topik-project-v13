@@ -10,6 +10,7 @@ import { logStudyEvent } from "@/lib/events/study-events";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
 import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
+import { isWritingDraftVersionStale } from "@/lib/writing/draft-version";
 import {
   getCharLimit,
   isCountInRecommendedRange,
@@ -37,6 +38,7 @@ import {
 import { QuestionPrompt } from "./QuestionPrompt";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import { SubmissionFailedModal } from "./SubmissionFailedModal";
+import { StaleDraftVersionAlert } from "./StaleDraftVersionAlert";
 import {
   SubmittedAnalysisPanel,
   type SubmittedAnalysisState,
@@ -127,6 +129,14 @@ export function LongFormWriting53Workspace({
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
   const answerSource = retrySeed ?? draft;
+  const canonicalQuestionId = problem.canonicalQuestionId ?? null;
+  const canonicalImportId = problem.canonicalImportId ?? null;
+  const canonicalPayloadHash = problem.payloadHash ?? null;
+  const staleDraftVersion = isWritingDraftVersionStale(draft, {
+    questionId: canonicalQuestionId,
+    importId: canonicalImportId,
+    payloadHash: canonicalPayloadHash,
+  });
   const [state, setState] = useState<Question53State>(() =>
     readInitial53(answerSource),
   );
@@ -238,6 +248,7 @@ export function LongFormWriting53Workspace({
     nextText: string,
     isManual: boolean,
   ) {
+    if (staleDraftVersion) return;
     const nextSnapshot = serializeWritingAnswerSnapshot(nextJson);
     setStatus("syncing");
     const seq = ++saveSeqRef.current;
@@ -251,6 +262,11 @@ export function LongFormWriting53Workspace({
         char_count: nextText.length,
         autosave_status: "clean",
         last_saved_at: new Date().toISOString(),
+        canonical_question_id: canonicalQuestionId,
+        canonical_import_id: canonicalImportId
+          ? Number(canonicalImportId)
+          : null,
+        canonical_payload_hash: canonicalPayloadHash,
       },
       {
         onSuccess: (row) => {
@@ -301,7 +317,8 @@ export function LongFormWriting53Workspace({
 
   function onOpenSubmitConfirm() {
     validateLength();
-    if (!submittable || problem.submitBlockedReason) return;
+    if (!submittable || problem.submitBlockedReason || staleDraftVersion)
+      return;
     setSubmitError(null);
     setConfirmOpen(true);
   }
@@ -319,6 +336,9 @@ export function LongFormWriting53Workspace({
         answer_text: combinedText,
         answer_json: JSON.parse(JSON.stringify(build53Json(state))),
         char_count: charCount,
+        canonical_question_id: canonicalQuestionId,
+        canonical_import_id: canonicalImportId,
+        canonical_payload_hash: canonicalPayloadHash,
       },
       {
         onSuccess: (result) => {
@@ -380,7 +400,7 @@ export function LongFormWriting53Workspace({
           onBlur={validateLength}
           autoSize={{ minRows }}
           placeholder={placeholder}
-          disabled={submit.isPending}
+          disabled={submit.isPending || staleDraftVersion}
         />
       </div>
     );
@@ -464,11 +484,15 @@ export function LongFormWriting53Workspace({
       elapsedSeconds={elapsedSeconds}
       autosaveStatus={status}
       lastSavedAt={lastSavedAt}
-      canSave={!submit.isPending && combinedText.length > 0}
+      canSave={
+        !submit.isPending && combinedText.length > 0 && !staleDraftVersion
+      }
       canSubmit={
         submittable &&
+        Boolean(draftId) &&
         !submit.isPending &&
-        !Boolean(problem.submitBlockedReason)
+        !Boolean(problem.submitBlockedReason) &&
+        !staleDraftVersion
       }
       isSaving={status === "syncing" && upsert.isPending}
       isSubmitting={submit.isPending}
@@ -478,6 +502,18 @@ export function LongFormWriting53Workspace({
       onRequestBack={exitGuard.requestNavigation}
     >
       <div className="writing-workspace writing-workspace--q53">
+        {staleDraftVersion &&
+        draft &&
+        canonicalQuestionId &&
+        canonicalImportId &&
+        canonicalPayloadHash ? (
+          <StaleDraftVersionAlert
+            draftId={draft.id}
+            questionId={canonicalQuestionId}
+            importId={canonicalImportId}
+            payloadHash={canonicalPayloadHash}
+          />
+        ) : null}
         {problem.submitBlockedReason ? (
           <Alert
             type="warning"

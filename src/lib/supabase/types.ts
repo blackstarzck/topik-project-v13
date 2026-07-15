@@ -311,8 +311,8 @@ export interface Database {
             foreignKeyName: "problem_assets_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
         ];
       };
@@ -368,8 +368,8 @@ export interface Database {
             foreignKeyName: "problem_attempts_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
         ];
       };
@@ -476,8 +476,8 @@ export interface Database {
             foreignKeyName: "recommendation_items_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
         ];
       };
@@ -490,6 +490,11 @@ export interface Database {
           answer_text: string | null;
           answer_json: Json | null;
           char_count: number | null;
+          canonical_question_id: string | null;
+          canonical_import_id: number | null;
+          canonical_payload_hash: string | null;
+          question_snapshot: Json | null;
+          legacy_cutover_snapshot: Json | null;
           autosave_status:
             | "clean"
             | "dirty"
@@ -508,6 +513,11 @@ export interface Database {
           answer_text?: string | null;
           answer_json?: Json | null;
           char_count?: number | null;
+          canonical_question_id?: string | null;
+          canonical_import_id?: number | null;
+          canonical_payload_hash?: string | null;
+          question_snapshot?: Json | null;
+          legacy_cutover_snapshot?: Json | null;
           autosave_status?:
             | "clean"
             | "dirty"
@@ -526,6 +536,11 @@ export interface Database {
           answer_text?: string | null;
           answer_json?: Json | null;
           char_count?: number | null;
+          canonical_question_id?: string | null;
+          canonical_import_id?: number | null;
+          canonical_payload_hash?: string | null;
+          question_snapshot?: Json | null;
+          legacy_cutover_snapshot?: Json | null;
           autosave_status?:
             | "clean"
             | "dirty"
@@ -548,8 +563,8 @@ export interface Database {
             foreignKeyName: "writing_drafts_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
         ];
       };
@@ -565,7 +580,13 @@ export interface Database {
           char_count: number;
           submitted_at: string;
           feedback_status: "pending" | "analyzing" | "complete" | "failed";
+          external_submission_id: string;
           parent_submission_id: string | null;
+          canonical_question_id: string | null;
+          canonical_import_id: number | null;
+          canonical_payload_hash: string | null;
+          question_snapshot: Json | null;
+          legacy_cutover_snapshot: Json | null;
         };
         Insert: {
           id?: string;
@@ -581,8 +602,14 @@ export interface Database {
             | "pending"
             | "analyzing"
             | "complete"
-            | "failed";
+             | "failed";
+          external_submission_id: string;
           parent_submission_id?: string | null;
+          canonical_question_id?: string | null;
+          canonical_import_id?: number | null;
+          canonical_payload_hash?: string | null;
+          question_snapshot?: Json | null;
+          legacy_cutover_snapshot?: Json | null;
         };
         Update: {
           id?: string;
@@ -598,8 +625,14 @@ export interface Database {
             | "pending"
             | "analyzing"
             | "complete"
-            | "failed";
+             | "failed";
+          external_submission_id?: string;
           parent_submission_id?: string | null;
+          canonical_question_id?: string | null;
+          canonical_import_id?: number | null;
+          canonical_payload_hash?: string | null;
+          question_snapshot?: Json | null;
+          legacy_cutover_snapshot?: Json | null;
         };
         Relationships: [
           {
@@ -613,8 +646,8 @@ export interface Database {
             foreignKeyName: "writing_submissions_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
           {
             foreignKeyName: "writing_submissions_draft_id_fkey";
@@ -1035,8 +1068,8 @@ export interface Database {
             foreignKeyName: "pdf_export_quota_usages_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
           {
             foreignKeyName: "pdf_export_quota_usages_export_file_id_fkey";
@@ -1077,8 +1110,8 @@ export interface Database {
             foreignKeyName: "pdf_export_quota_resets_problem_id_fkey";
             columns: ["problem_id"];
             isOneToOne: false;
-            referencedRelation: "problems";
-            referencedColumns: ["id"];
+            referencedRelation: "problem_identities";
+            referencedColumns: ["problem_id"];
           },
           {
             foreignKeyName: "pdf_export_quota_resets_created_by_fkey";
@@ -1672,11 +1705,139 @@ export interface Database {
           problem_id: string;
         }[];
       };
-      create_external_writing_submission: {
+      replace_stale_writing_draft: {
         Args: {
-          submission: Json;
+          p_draft_id: string;
+          p_current_question_id: string;
+          p_current_import_id: number;
+          p_current_payload_hash: string;
         };
         Returns: string;
+      };
+      get_writing_submission_control: {
+        Args: Record<string, never>;
+        Returns: {
+          submission_mode: "blocked" | "verification" | "canonical";
+          submission_contract_state:
+            | "unverified"
+            | "provider_verified"
+            | "local_outbox_verified";
+        }[];
+      };
+      prepare_writing_submission_intent: {
+        Args: {
+          p_intent_id: string;
+          p_submission: Json;
+        };
+        Returns: Json;
+      };
+      claim_writing_submission_intent: {
+        Args: { p_intent_id: string };
+        Returns: Json;
+      };
+      mark_writing_submission_intent_accepted: {
+        Args: {
+          p_intent_id: string;
+          p_external_submission_id: string;
+          p_provider_status: string;
+        };
+        Returns: undefined;
+      };
+      mark_writing_submission_intent_ambiguous: {
+        Args: { p_intent_id: string; p_reason_code: string };
+        Returns: undefined;
+      };
+      mark_writing_submission_intent_failed: {
+        Args: { p_intent_id: string; p_reason_code: string };
+        Returns: undefined;
+      };
+      list_writing_submission_intents_for_reconciliation: {
+        Args: {
+          p_states?: string[];
+          p_limit?: number;
+        };
+        Returns: {
+          intent_id: string;
+          local_submission_id: string;
+          provider_dispatch_key: string;
+          state: string;
+          attempt_count: number;
+          external_id_hash: string | null;
+          provider_status: string | null;
+          reason_code: string | null;
+          created_at: string;
+          updated_at: string;
+          terminal_at: string | null;
+          materialized_at: string | null;
+        }[];
+      };
+      list_writing_submission_intent_audit: {
+        Args: { p_intent_id: string };
+        Returns: {
+          audit_id: number;
+          old_state: string | null;
+          new_state: string;
+          attempt_count: number;
+          external_id_hash: string | null;
+          provider_status: string | null;
+          reason_code: string | null;
+          occurred_at: string;
+        }[];
+      };
+      reconcile_writing_submission_intent: {
+        Args: {
+          p_intent_id: string;
+          p_resolution: "accepted" | "failed";
+          p_external_submission_id?: string | null;
+          p_provider_status?: string | null;
+          p_reason_code?: string | null;
+        };
+        Returns: Json;
+      };
+      materialize_writing_submission_intent: {
+        Args: { p_intent_id: string };
+        Returns: string;
+      };
+      record_writing_submission_contract_evidence: {
+        Args: {
+          p_evidence_id: string;
+          p_verification_report_hash: string;
+          p_verified_by: string;
+          p_reason: string;
+        };
+        Returns: undefined;
+      };
+      get_available_writing_questions: {
+        Args: {
+          p_item_number?: number | null;
+          p_problem_id?: string | null;
+        };
+        Returns: {
+          problem_id: string;
+          question_id: string;
+          canonical_import_id: number;
+          payload_hash: string;
+          item_number: number;
+          topik_level: number;
+          difficulty: number | null;
+          title: string;
+          prompt: string;
+          tags: string[];
+          materials: Json;
+          source_created_at: string;
+          source_updated_at: string;
+        }[];
+      };
+      get_writing_submission_history_context: {
+        Args: {
+          p_submission_ids: string[];
+        };
+        Returns: {
+          submission_id: string;
+          problem_id: string;
+          question_no: number;
+          title: string | null;
+        }[];
       };
       get_dashboard_kpi: {
         Args: Record<string, never>;

@@ -52,12 +52,14 @@ export async function GET(request: Request) {
   if (!submission || submission.user_id !== user.id) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
+  const externalSubmissionId = submission.external_submission_id;
 
   const baseUrl = getTalkpikApiBaseUrl();
   if (
     !baseUrl ||
     submission.feedback_status === "complete" ||
-    submission.feedback_status === "failed"
+    submission.feedback_status === "failed" ||
+    !externalSubmissionId
   ) {
     return NextResponse.json({ feedback_status: submission.feedback_status });
   }
@@ -75,9 +77,9 @@ export async function GET(request: Request) {
     const status = await getExternalEvaluationStatus({
       baseUrl,
       accessToken,
-      submissionId,
+      submissionId: externalSubmissionId,
     });
-    if (status.submission_id !== submissionId) {
+    if (status.submission_id !== externalSubmissionId) {
       return NextResponse.json({ feedback_status: submission.feedback_status });
     }
 
@@ -122,9 +124,9 @@ export async function GET(request: Request) {
     const externalFeedback = await getExternalEvaluationFeedback({
       baseUrl,
       accessToken,
-      submissionId,
+      submissionId: externalSubmissionId,
     });
-    if (externalFeedback.submission_id !== submissionId) {
+    if (externalFeedback.submission_id !== externalSubmissionId) {
       return NextResponse.json({ feedback_status: submission.feedback_status });
     }
     const payload = mapExternalEvaluationFeedback(externalFeedback);

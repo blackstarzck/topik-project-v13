@@ -4,13 +4,13 @@
 // project and vitest can't resolve it. Importers must keep the server-only
 // boundary themselves (no "use client" file should import from this path).
 import { getLearningGoal } from "../learning/server";
-import { filterVisibleProblemIds } from "../problems/visibility";
 import type { SupabaseServerClient } from "../supabase/server";
 import type { Tables } from "../supabase/types";
 import { isWritingQuestionNo, questionRotationOrder } from "./next";
 import type { RecommendationItemCard } from "./recommendations";
 import { QUESTION_NOS, type QuestionNo } from "./types";
 import { getWeakDimensions, type WeakDimensionSummary } from "./weakness";
+import { getCanonicalWritingProblems } from "../writing/canonical-source";
 
 /**
  * C-01 rule-based transient recommendations. The executable contract lives in
@@ -96,24 +96,25 @@ const GOAL_TARGET_DIFFICULTY: Record<number, number> = {
   6: 5,
 };
 
-const CANDIDATE_PAGE_SIZE = 40;
-const CANDIDATE_MAX_PAGES_PER_TYPE = 2;
-/** Rows kept per type BEFORE the visibility RPC (headroom for filtering). */
-const CANDIDATE_PREVISIBILITY_TARGET = 12;
-/** Visible candidates kept per type for scoring. */
-const CANDIDATES_PER_TYPE = 6;
-
 export async function computeFallbackRecommendations(
   supabase: SupabaseServerClient,
   userId: string,
   questionNo: QuestionNo | null,
 ): Promise<ComputedRecommendations> {
   const signals = await collectSignals(supabase, userId);
-  const candidates = await collectCandidates(
+  const candidates = await collectCanonicalCandidates(
     supabase,
     signals.attemptedIds,
     questionNo,
   );
+  return buildComputedRecommendations(candidates, signals, questionNo);
+}
+
+function buildComputedRecommendations(
+  candidates: FallbackCandidate[],
+  signals: FallbackSignals,
+  questionNo: QuestionNo | null,
+): ComputedRecommendations {
   const ranked = rankFallbackCandidates(candidates, signals, questionNo);
 
   const items: RecommendationItemCard[] = ranked.map((entry, index) => ({
@@ -140,6 +141,27 @@ export async function computeFallbackRecommendations(
         : "rotation";
 
   return { items, availableTypes, summaryCode };
+}
+
+async function collectCanonicalCandidates(
+  supabase: SupabaseServerClient,
+  attemptedIds: Set<string>,
+  questionNo: QuestionNo | null,
+): Promise<FallbackCandidate[]> {
+  const problems = await getCanonicalWritingProblems({
+    supabase,
+    questionNo,
+  });
+  return problems
+    .filter((problem) => !attemptedIds.has(problem.id))
+    .map((problem) => ({
+      id: problem.id,
+      title: problem.title,
+      questionNo: problem.questionNo,
+      topikLevel: problem.topikLevel ?? null,
+      difficulty: problem.difficulty ?? null,
+      tags: problem.tags ?? [],
+    }));
 }
 
 /**
@@ -353,142 +375,4 @@ async function fetchWritingHistorySignals(
   latestCandidates.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   const latestQuestionNo = latestCandidates[0]?.questionNo ?? null;
   return { attemptedIds, latestQuestionNo };
-}
-
-type CandidateRow = {
-  id: string;
-  title: string;
-  question_no: number | null;
-  topik_level: number | null;
-  difficulty: number | null;
-  tags: string[] | null;
-  materials: unknown;
-};
-
-type CandidateQueryResult = {
-  data: CandidateRow[] | null;
-  error: { message: string } | null;
-};
-
-async function collectCandidates(
-  supabase: SupabaseServerClient,
-  attemptedIds: Set<string>,
-  questionNo: QuestionNo | null,
-): Promise<FallbackCandidate[]> {
-  // Per-type queries instead of one updated_at scan: a recent batch of
-  // problems in a single type would otherwise crowd out the other types and
-  // break the diversity re-rank.
-  const targetTypes = questionNo != null ? [questionNo] : [...QUESTION_NOS];
-  const byType: Array<[QuestionNo, FallbackCandidate[]]> = [];
-  for (const qn of targetTypes) {
-    byType.push([qn, await fetchTypeCandidates(supabase, qn, attemptedIds)]);
-  }
-
-  const allIds = byType.flatMap(([, rows]) => rows.map((row) => row.id));
-  const visibleIds = await filterVisibleProblemIds(supabase, allIds);
-
-  const result: FallbackCandidate[] = [];
-  for (const [, rows] of byType) {
-    result.push(
-      ...rows
-        .filter((row) => visibleIds.has(row.id))
-        .slice(0, CANDIDATES_PER_TYPE),
-    );
-  }
-  return result;
-}
-
-async function fetchTypeCandidates(
-  supabase: SupabaseServerClient,
-  questionNo: QuestionNo,
-  attemptedIds: Set<string>,
-): Promise<FallbackCandidate[]> {
-  const collect = async (
-    withLifecycle: boolean,
-  ): Promise<{
-    error: { message: string } | null;
-    rows: FallbackCandidate[];
-  }> => {
-    const rows: FallbackCandidate[] = [];
-    for (
-      let page = 0;
-      page < CANDIDATE_MAX_PAGES_PER_TYPE &&
-      rows.length < CANDIDATE_PREVISIBILITY_TARGET;
-      page++
-    ) {
-      let query = supabase
-        .from("problems")
-        .select(
-          "id, title, question_no, topik_level, difficulty, tags, materials",
-        )
-        .eq("domain", "writing")
-        .eq("publish_status", "published")
-        .eq("question_no", questionNo);
-      if (withLifecycle) {
-        query = query.eq("lifecycle_status", "active");
-      }
-      const result = (await query
-        .order("updated_at", { ascending: false })
-        .range(
-          page * CANDIDATE_PAGE_SIZE,
-          (page + 1) * CANDIDATE_PAGE_SIZE - 1,
-        )) as unknown as CandidateQueryResult;
-      if (result.error) return { error: result.error, rows };
-
-      const pageRows = result.data ?? [];
-      for (const row of pageRows) {
-        if (rows.length >= CANDIDATE_PREVISIBILITY_TARGET) break;
-        if (!isWritingQuestionNo(row.question_no)) continue;
-        if (attemptedIds.has(row.id)) continue;
-        if (isSeedFixtureProblem(row)) continue;
-        rows.push({
-          id: row.id,
-          title: row.title,
-          questionNo: row.question_no,
-          topikLevel: row.topik_level ?? null,
-          difficulty: row.difficulty ?? null,
-          tags: Array.isArray(row.tags) ? row.tags : [],
-        });
-      }
-      if (pageRows.length < CANDIDATE_PAGE_SIZE) break;
-    }
-    return { error: null, rows };
-  };
-
-  let outcome = await collect(true);
-  if (outcome.error && outcome.error.message.includes("lifecycle_status")) {
-    outcome = await collect(false);
-  }
-  if (outcome.error) {
-    throw new Error(
-      `computeFallbackRecommendations(candidates q${questionNo}): ${outcome.error.message}`,
-    );
-  }
-  return outcome.rows;
-}
-
-// Third copy of this predicate (writing-availability.ts, writing/server.ts) —
-// consolidation is tracked in the implementation brief's follow-up section.
-function isSeedFixtureProblem(row: {
-  tags: string[] | null;
-  materials: unknown;
-}): boolean {
-  if (
-    Array.isArray(row.tags) &&
-    row.tags.some((tag) => tag.startsWith("seed:"))
-  ) {
-    return true;
-  }
-  if (
-    row.materials &&
-    typeof row.materials === "object" &&
-    !Array.isArray(row.materials) &&
-    "seed_source" in row.materials
-  ) {
-    return (
-      (row.materials as { seed_source?: unknown }).seed_source ===
-      "wireframe_problem_fixtures"
-    );
-  }
-  return false;
 }

@@ -136,18 +136,16 @@ describe.skipIf(!canRun)("PDF export quota RPC integration", () => {
     if (signedIn.error) throw signedIn.error;
     userId = signedIn.data.user.id;
 
-    const problem = await service
-      .from("problems")
-      .select("id")
-      .eq("domain", "writing")
-      .eq("question_no", 51)
-      .eq("publish_status", "published")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    const problem = await userClient.rpc("get_available_writing_questions", {
+      p_item_number: 51,
+      p_problem_id: null,
+    });
     if (problem.error) throw problem.error;
-    if (!problem.data?.id) throw new Error("No published q51 problem found");
-    problemId = problem.data.id;
+    const canonicalProblemId = problem.data?.[0]?.problem_id;
+    if (!canonicalProblemId) {
+      throw new Error("No published canonical q51 problem found");
+    }
+    problemId = canonicalProblemId;
   });
 
   afterAll(async () => {

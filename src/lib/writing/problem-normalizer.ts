@@ -76,6 +76,12 @@ export type NormalizedEssayGuidance = {
 
 type NormalizedProblemCommon = {
   id: string;
+  canonicalQuestionId?: string | null;
+  canonicalImportId?: string | null;
+  payloadHash?: string | null;
+  topikLevel?: number | null;
+  difficulty?: number | null;
+  tags?: string[];
   title: string;
   textType: string | null;
   prompt: string;
@@ -133,6 +139,12 @@ export type NormalizedWritingProblem =
 
 export type WritingProblemNormalizerInput = {
   id: string;
+  canonicalQuestionId?: string | null;
+  canonicalImportId?: string | null;
+  payloadHash?: string | null;
+  topikLevel?: number | null;
+  difficulty?: number | null;
+  tags?: string[] | null;
   title: string;
   textType?: string | null;
   prompt: string;
@@ -868,6 +880,12 @@ export function normalizeWritingProblem(
 
   const common = {
     id: input.id,
+    canonicalQuestionId: input.canonicalQuestionId ?? null,
+    canonicalImportId: input.canonicalImportId ?? null,
+    payloadHash: input.payloadHash ?? null,
+    topikLevel: input.topikLevel ?? null,
+    difficulty: input.difficulty ?? null,
+    tags: input.tags ?? [],
     title: input.title,
     textType: input.textType ?? extractTextType(materials),
     prompt,
@@ -973,17 +991,29 @@ export function normalizeWritingProblem(
   const requiredQuestions =
     promptParts.requiredQuestions.length > 0
       ? promptParts.requiredQuestions
-      : [
-          getNestedString(scenario, "chart_a_focus"),
-          getNestedString(scenario, "chart_b_focus"),
-          getNestedString(scenario, "cross_chart_bridge"),
-        ]
-          .filter((item): item is string => Boolean(item))
-          .slice(0, 3);
+      : asStringList(materials?.prompt_questions).length > 0
+        ? asStringList(materials?.prompt_questions).slice(0, 3)
+        : [
+            getNestedString(scenario, "chart_a_focus"),
+            getNestedString(scenario, "chart_b_focus"),
+            getNestedString(scenario, "cross_chart_bridge"),
+          ]
+            .filter((item): item is string => Boolean(item))
+            .slice(0, 3);
   if (requiredQuestions.length < 3) {
     fallbackWarnings.push("missing_required_questions");
   }
-  if (baseRubric.criteria.length === 0) {
+  const safeStructureCriteria = asStringList(
+    materials?.required_structure,
+  ).slice(0, 5);
+  const q54Rubric = {
+    ...baseRubric,
+    criteria:
+      baseRubric.criteria.length > 0
+        ? baseRubric.criteria
+        : safeStructureCriteria,
+  };
+  if (q54Rubric.criteria.length === 0) {
     fallbackWarnings.push("missing_rubric");
   }
 
@@ -997,6 +1027,7 @@ export function normalizeWritingProblem(
     requiredQuestions,
     rubricSummary: summary,
     checklistItems: requiredQuestions,
+    rubric: q54Rubric,
     essayGuidance: normalizeEssayGuidance(
       materials,
       rubricCandidate,
@@ -1004,7 +1035,7 @@ export function normalizeWritingProblem(
     ),
     submitBlockedReason:
       common.submitBlockedReason ??
-      (requiredQuestions.length < 3 || baseRubric.criteria.length === 0
+      (requiredQuestions.length < 3 || q54Rubric.criteria.length === 0
         ? "problem_data_incomplete"
         : null),
   };

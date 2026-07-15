@@ -100,7 +100,9 @@ export function getPdfExportQuotaWindow(
 }
 
 export function getPdfExportProblemIds(items: PdfExportItem[]): string[] {
-  return Array.from(new Set(items.map((item) => item.problemId).filter(Boolean)));
+  return Array.from(
+    new Set(items.map((item) => item.problemId).filter(Boolean)),
+  );
 }
 
 function readQuotaDetails(
@@ -197,6 +199,14 @@ function formatDate(value: string): string {
   return parsed.isValid() ? parsed.format("YYYY-MM-DD") : value;
 }
 
+function getSnapshotTitle(snapshot: unknown): string | null {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+  const title = (snapshot as Record<string, unknown>).title;
+  return typeof title === "string" && title.trim().length > 0 ? title : null;
+}
+
 async function loadSubmissionItem(
   supabase: SupabaseServerClient,
   submissionId: string,
@@ -215,13 +225,20 @@ async function loadSubmissionItem(
     );
   }
 
-  // 문제 제목 — problems는 published만 읽힌다(공개 RLS). 이후 회수된 문제면
-  // null이 될 수 있으므로 제목 없이도 PDF는 만들어진다.
-  const { data: problem } = await supabase
-    .from("problems")
-    .select("title")
-    .eq("id", submission.problem_id)
-    .maybeSingle();
+  // Canonical submissions pin the learner-visible title in the immutable safe
+  // snapshot. Legacy-unversioned submissions use the owner-scoped retained
+  // mirror history repository, never the current canonical catalog.
+  let problemTitle = getSnapshotTitle(submission.question_snapshot);
+  if (!problemTitle) {
+    const { data: historyRows, error: historyError } = await supabase.rpc(
+      "get_writing_submission_history_context",
+      { p_submission_ids: [submission.id] },
+    );
+    if (historyError) {
+      throw new Error(`PDF submission history: ${historyError.message}`);
+    }
+    problemTitle = historyRows?.[0]?.title ?? null;
+  }
 
   const bundle = includeFeedback
     ? await getFeedbackBundle(submissionId, factory)
@@ -231,7 +248,7 @@ async function loadSubmissionItem(
     kind: "submission",
     problemId: submission.problem_id,
     questionNo: submission.question_no,
-    problemTitle: (problem as { title: string } | null)?.title ?? null,
+    problemTitle,
     submittedAt: formatDate(submission.submitted_at),
     answerText: submission.answer_text,
     charCount: submission.char_count,
