@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import koMessages from "../../../messages/ko.json";
+import { InstitutionInvitationModal } from "../../../src/components/notifications/InstitutionInvitationModal";
 import { NotificationBell } from "../../../src/components/notifications/NotificationBell";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -92,6 +93,34 @@ vi.mock("../../../src/components/notifications/notifications-data", () => ({
     }
     return result.status;
   },
+  resolveInstitutionInvitationExpiry: (
+    expiresAt: string | null | undefined,
+    now: Date,
+  ) => {
+    const expiry = expiresAt ? new Date(expiresAt) : null;
+    if (!expiry || !Number.isFinite(expiry.getTime())) {
+      return { status: "unknown" };
+    }
+    if (expiry.getTime() <= now.getTime()) return { status: "expired" };
+    const calendarDay = (value: Date) => {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(value);
+      const year = Number(parts.find((part) => part.type === "year")?.value);
+      const month = Number(parts.find((part) => part.type === "month")?.value);
+      const day = Number(parts.find((part) => part.type === "day")?.value);
+      return Date.UTC(year, month - 1, day);
+    };
+    return {
+      status: "active",
+      daysRemaining: Math.round(
+        (calendarDay(expiry) - calendarDay(now)) / 86_400_000,
+      ),
+    };
+  },
   resolveNotificationAction: (item: {
     template_key?: string;
     route_path?: string | null;
@@ -109,10 +138,15 @@ vi.mock("../../../src/components/notifications/notifications-data", () => ({
             typeof item.payload?.invitation_id === "string"
               ? item.payload.invitation_id
               : null,
-          code: typeof item.payload?.code === "string" ? item.payload.code : null,
+          code:
+            typeof item.payload?.code === "string" ? item.payload.code : null,
           codeLabel:
             typeof item.payload?.code_label === "string"
               ? item.payload.code_label
+              : null,
+          expiresAt:
+            typeof item.payload?.expires_at === "string"
+              ? item.payload.expires_at
               : null,
         },
       };
@@ -149,6 +183,8 @@ function makeInstitutionInvitationNotification(
     payload?: Record<string, unknown> | null;
   } = {},
 ) {
+  const { payload: payloadOverride, ...notificationOverrides } = overrides;
+
   return {
     ...makeNotification("n-invite", "기관 소속 초대가 도착했습니다"),
     template_key: "institution_invitation",
@@ -158,7 +194,21 @@ function makeInstitutionInvitationNotification(
       code: "CAMPAIGN-01",
       code_label: "캠페인 유입 유저",
     },
-    ...overrides,
+    ...(payloadOverride
+      ? {
+          payload: {
+            kind: "institution_invitation",
+            invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+            code: "CAMPAIGN-01",
+            code_label: "캠페인 유입 유저",
+            ...payloadOverride,
+          },
+        }
+      : undefined),
+    ...(payloadOverride && typeof payloadOverride.expires_at !== "string"
+      ? { payload: payloadOverride }
+      : undefined),
+    ...notificationOverrides,
   };
 }
 
@@ -192,6 +242,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
 });
 
@@ -276,9 +327,7 @@ describe("NotificationBell", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText(tInvitation.title)).toBeTruthy();
     expect(
-      within(dialog)
-        .getByText(tInvitation.description)
-        .getAttribute("class"),
+      within(dialog).getByText(tInvitation.description).getAttribute("class"),
     ).toContain("institution-invitation-modal__description");
     expect(screen.queryByText("캠페인 유입 유저")).toBeNull();
     const code = screen.getByText("CAMPAIGN-01");
@@ -290,6 +339,135 @@ describe("NotificationBell", () => {
       screen.queryByRole("button", { name: tInvitation.decline }),
     ).toBeNull();
     expect(screen.getByText(/기존 소속이 변경됩니다/)).toBeTruthy();
+  });
+
+  it("shows the institution invitation D-day in the notification list", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-13T15:00:00.000Z"));
+    fetchNotificationsMock.mockResolvedValue([
+      makeInstitutionInvitationNotification({
+        payload: { expires_at: "2026-07-15T14:59:59.000Z" },
+      }),
+    ]);
+
+    renderWithIntl(<NotificationBell userId="user-1" />);
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+
+    const expiryLabel = await screen.findByText("D-1");
+    const metadata = expiryLabel.parentElement;
+    expect(metadata?.classList.contains("app-notification-item__meta")).toBe(
+      true,
+    );
+    expect(metadata?.classList.contains("flex")).toBe(true);
+    expect(metadata?.classList.contains("min-w-0")).toBe(true);
+    expect(metadata?.classList.contains("items-center")).toBe(true);
+    expect(metadata?.classList.contains("gap-2")).toBe(true);
+    expect(metadata?.querySelector(".app-notification-item__time")).not.toBe(
+      null,
+    );
+    expect(
+      metadata?.querySelector(".app-notification-item__separator")?.textContent,
+    ).toBe("·");
+    const rowButton = screen.getByRole("listitem").querySelector("button");
+    if (!rowButton) throw new Error("notification row button not found");
+    fireEvent.click(rowButton);
+    expect(await screen.findByText(/만료일:/)).toBeTruthy();
+    vi.useRealTimers();
+  });
+
+  it("shows an expired state in the list and modal and disables acceptance", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-13T15:00:00.000Z"));
+    fetchNotificationsMock.mockResolvedValue([
+      makeInstitutionInvitationNotification({
+        payload: { expires_at: "2026-07-13T14:59:59.000Z" },
+      }),
+    ]);
+
+    renderWithIntl(<NotificationBell userId="user-1" />);
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+
+    expect(
+      await screen.findByText(
+        koMessages.notifications.institutionInvitation.expiredLabel,
+      ),
+    ).toBeTruthy();
+
+    const rowButton = screen.getByRole("listitem").querySelector("button");
+    if (!rowButton) throw new Error("notification row button not found");
+    fireEvent.click(rowButton);
+
+    expect(
+      await screen.findByText(
+        koMessages.notifications.institutionInvitation.expired,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: koMessages.notifications.institutionInvitation.accept,
+      }),
+    ).toHaveProperty("disabled", true);
+    expect(
+      screen.getByRole("button", {
+        name: koMessages.notifications.institutionInvitation.close,
+      }),
+    ).toHaveProperty("disabled", false);
+    vi.useRealTimers();
+  });
+
+  it("treats a retryable failure as expired when its deadline has passed", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-13T15:00:00.000Z"));
+
+    renderWithIntl(
+      <InstitutionInvitationModal
+        open
+        invitation={{
+          invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+          code: "CAMPAIGN-01",
+          codeLabel: null,
+          expiresAt: "2026-07-13T14:59:59.000Z",
+        }}
+        status="failed"
+        submitting={null}
+        onAccept={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(koMessages.notifications.institutionInvitation.expired),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: koMessages.notifications.institutionInvitation.accept,
+      }),
+    ).toHaveProperty("disabled", true);
+  });
+
+  it("does not submit when the invitation expires immediately before acceptance", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-13T15:00:00.000Z"));
+    fetchNotificationsMock.mockResolvedValue([
+      makeInstitutionInvitationNotification({
+        payload: { expires_at: "2026-07-13T15:00:01.000Z" },
+      }),
+    ]);
+
+    renderWithIntl(<NotificationBell userId="user-1" />);
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+    await screen.findByText("D-0");
+    const rowButton = screen.getByRole("listitem").querySelector("button");
+    if (!rowButton) throw new Error("notification row button not found");
+    fireEvent.click(rowButton);
+
+    vi.setSystemTime(new Date("2026-07-13T15:00:02.000Z"));
+    fireEvent.click(
+      await screen.findByRole("button", { name: tInvitation.accept }),
+    );
+
+    expect(respondInstitutionInvitationMock).not.toHaveBeenCalled();
+    expect(await screen.findByText(tInvitation.expired)).toBeTruthy();
   });
 
   it("submits an accepted invitation and refreshes the workspace state", async () => {
@@ -312,13 +490,17 @@ describe("NotificationBell", () => {
         true,
       );
     });
+    expect(respondInstitutionInvitationMock).not.toHaveBeenCalledWith(
+      "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+      false,
+    );
     expect(routerRefreshMock).toHaveBeenCalledTimes(1);
     expect(messageSuccessMock).toHaveBeenCalledWith(
       koMessages.notifications.institutionInvitation.accepted,
     );
   });
 
-  it("keeps institution invitations dismissible without rendering a decline action", async () => {
+  it("closes an invitation without sending a response or rendering a decline action", async () => {
     fetchNotificationsMock.mockResolvedValue([
       makeInstitutionInvitationNotification(),
     ]);
@@ -358,7 +540,9 @@ describe("NotificationBell", () => {
     if (!rowButton) throw new Error("notification row button not found");
     fireEvent.click(rowButton);
 
-    expect(await screen.findByText(/초대 정보를 확인할 수 없습니다/)).toBeTruthy();
+    expect(
+      await screen.findByText(/초대 정보를 확인할 수 없습니다/),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "수락" })).toHaveProperty(
       "disabled",
       true,

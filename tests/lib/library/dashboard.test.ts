@@ -99,7 +99,12 @@ function allSubmission(id: string, problemId: string, questionNo: number) {
   };
 }
 
-function makeDashboardClientForTimelineSubmissionFetch() {
+function makeDashboardClientForTimelineSubmissionFetch(
+  canonicalRows: Array<Record<string, unknown>> = [],
+  canonicalError: string | null = null,
+  historyRows: Array<Record<string, unknown>> = [],
+  nonWritingRows: Array<Record<string, unknown>> = [],
+) {
   const oldSubmissions = [
     {
       id: "s-old-report",
@@ -113,10 +118,6 @@ function makeDashboardClientForTimelineSubmissionFetch() {
       question_no: 53,
       parent_submission_id: null,
     },
-  ];
-  const problems = [
-    problem("p-old-report", 54, "Old report problem"),
-    problem("p-old-export", 53, "Old export problem"),
   ];
   const queries: Array<{
     table: string;
@@ -200,8 +201,8 @@ function makeDashboardClientForTimelineSubmissionFetch() {
             )?.values;
             return {
               data: ids
-                ? problems.filter((row) => ids.includes(row.id))
-                : problems,
+                ? nonWritingRows.filter((row) => ids.includes(row.id))
+                : nonWritingRows,
               error: null,
             };
           }
@@ -212,6 +213,7 @@ function makeDashboardClientForTimelineSubmissionFetch() {
         const chain = {
           select: () => chain,
           eq: () => chain,
+          neq: () => chain,
           order: () => chain,
           in: (column: string, values: unknown[]) => {
             query.inFilters.push({ column, values });
@@ -229,7 +231,24 @@ function makeDashboardClientForTimelineSubmissionFetch() {
         };
         return chain;
       },
-      rpc(_name: string, args: { p_problem_ids?: string[] }) {
+      rpc(
+        name: string,
+        args: {
+          p_problem_ids?: string[];
+          p_submission_ids?: string[];
+          p_item_number?: number | null;
+          p_problem_id?: string | null;
+        },
+      ) {
+        if (name === "get_writing_submission_history_context") {
+          return Promise.resolve({ data: historyRows, error: null });
+        }
+        if (name === "get_available_writing_questions") {
+          return Promise.resolve({
+            data: canonicalRows,
+            error: canonicalError ? { message: canonicalError } : null,
+          });
+        }
         return Promise.resolve({
           data: (args.p_problem_ids ?? []).map((problem_id) => ({
             problem_id,
@@ -802,8 +821,118 @@ describe("buildLibraryDashboardFromRows", () => {
 });
 
 describe("getLibraryDashboard", () => {
-  it("fetches payload-linked timeline submissions even when they are outside the recent submission cache", async () => {
-    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch();
+  it("hydrates writing timeline metadata from canonical instead of public mirrors", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch([
+      canonicalDashboardRow("p-old-report", 54, "Canonical report problem"),
+      canonicalDashboardRow("p-old-export", 53, "Canonical export problem"),
+    ]);
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline.map((item) => item.title)).toEqual([
+      "Canonical report problem",
+      "Canonical export problem",
+    ]);
+    expect(queries.some((query) => query.table === "problems")).toBe(true);
+  });
+
+  it("hydrates non-writing metadata from public.problems when canonical has no match", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch(
+      [canonicalDashboardRow("p-old-report", 54, "Canonical report problem")],
+      null,
+      [],
+      [problem("p-old-export", 53, "Old export problem")],
+    );
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline.map((item) => item.title)).toEqual([
+      "Canonical report problem",
+      "Old export problem",
+    ]);
+    expect(queries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          table: "problems",
+          inFilters: [
+            {
+              column: "id",
+              values: ["p-old-report", "p-old-export"],
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+
+  it("keeps historical non-writing metadata without depending on canonical availability", async () => {
+    const { client } = makeDashboardClientForTimelineSubmissionFetch(
+      [],
+      "catalog unavailable",
+      [],
+      [
+        {
+          ...problem("p-old-report", 54, "Archived report problem"),
+          publish_status: "archived",
+          visibility: "org",
+          lifecycle_status: "inactive",
+        },
+        {
+          ...problem("p-old-export", 53, "Inactive export problem"),
+          publish_status: "published",
+          visibility: "public",
+          lifecycle_status: "inactive",
+        },
+      ],
+    );
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline.map((item) => item.title)).toEqual([
+      "Archived report problem",
+      "Inactive export problem",
+    ]);
+  });
+
+  it("uses retained submission snapshots for historical cards even when current canonical content changed", async () => {
+    const pinnedTitle = "Pinned historical title";
+    const { client } = makeDashboardClientForTimelineSubmissionFetch(
+      [
+        canonicalDashboardRow("p-old-report", 54, "Current canonical title"),
+        canonicalDashboardRow("p-old-export", 53, "Current canonical title"),
+      ],
+      null,
+      [
+        { submission_id: "s-old-report", title: pinnedTitle },
+        { submission_id: "s-old-export", title: pinnedTitle },
+      ],
+    );
+
+    const view = await getLibraryDashboard(
+      "user-1",
+      async () => client as never,
+    );
+
+    expect(view.timeline).toHaveLength(2);
+    expect(view.timeline.every((item) => item.title === pinnedTitle)).toBe(
+      true,
+    );
+  });
+
+  it("fetches payload-linked historical submissions outside the recent cache", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch([
+      canonicalDashboardRow("p-old-report", 54, "Old report problem"),
+      canonicalDashboardRow("p-old-export", 53, "Old export problem"),
+    ]);
 
     const view = await getLibraryDashboard(
       "user-1",
@@ -831,13 +960,50 @@ describe("getLibraryDashboard", () => {
         expect.objectContaining({
           table: "writing_submissions",
           inFilters: [
-            {
-              column: "id",
-              values: ["s-old-report", "s-old-export"],
-            },
+            { column: "id", values: ["s-old-report", "s-old-export"] },
           ],
         }),
       ]),
     );
   });
+
+  it("surfaces canonical catalog failures instead of falling back to mirrored problem content", async () => {
+    const { client, queries } = makeDashboardClientForTimelineSubmissionFetch(
+      [],
+      "catalog unavailable",
+    );
+
+    await expect(
+      getLibraryDashboard("user-1", async () => client as never),
+    ).rejects.toThrow("getCanonicalWritingProblems: catalog unavailable");
+    expect(queries.some((query) => query.table === "problems")).toBe(true);
+  });
 });
+
+function canonicalDashboardRow(
+  problemId: string,
+  itemNumber: number,
+  title: string,
+) {
+  return {
+    problem_id: problemId,
+    question_id: `topik-writing-${itemNumber}-0001`,
+    canonical_import_id: 101,
+    payload_hash: `hash-${problemId}`,
+    item_number: itemNumber,
+    topik_level: 2,
+    difficulty: 3,
+    title,
+    prompt: "문항 안내",
+    tags: [],
+    materials:
+      itemNumber === 54
+        ? {
+            prompt_questions: ["질문 1", "질문 2", "질문 3"],
+            required_structure: ["도입", "본론", "결론"],
+          }
+        : {},
+    source_created_at: "2026-07-13T00:00:00.000Z",
+    source_updated_at: "2026-07-13T00:00:00.000Z",
+  };
+}

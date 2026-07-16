@@ -50,7 +50,13 @@ export type InstitutionInvitationPayload = {
   invitationId: string | null;
   code: string | null;
   codeLabel: string | null;
+  expiresAt: string | null;
 };
+
+export type InstitutionInvitationExpiry =
+  | { status: "active"; daysRemaining: number }
+  | { status: "expired" }
+  | { status: "unknown" };
 
 export type NotificationAction =
   | {
@@ -68,7 +74,8 @@ export type NotificationAction =
 export type InstitutionInvitationResponseStatus =
   | "accepted"
   | "declined"
-  | "canceled";
+  | "canceled"
+  | "expired";
 
 export type InstitutionInvitationResponse = {
   status: InstitutionInvitationResponseStatus;
@@ -94,6 +101,8 @@ export type InstitutionInvitationErrorKind =
   | "failed";
 
 const INSTITUTION_INVITATION_KEY = "institution_invitation";
+const ISO_UTC_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(?:Z|\+00:00)$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -154,6 +163,80 @@ function normalizeDisplayText(value: unknown, maxLength = 120): string | null {
   return `${text.slice(0, maxLength)}...`;
 }
 
+function normalizeTimestamp(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+
+  const timestamp = value.trim();
+  const match = ISO_UTC_TIMESTAMP_PATTERN.exec(timestamp);
+  const parsedTime = Date.parse(timestamp);
+  if (!match || !Number.isFinite(parsedTime)) return null;
+
+  const parsed = new Date(parsedTime);
+  const expectedMilliseconds = Number(
+    (match[7] ?? "").padEnd(3, "0").slice(0, 3),
+  );
+  const expectedParts = match.slice(1, 7).map(Number);
+  const parsedParts = [
+    parsed.getUTCFullYear(),
+    parsed.getUTCMonth() + 1,
+    parsed.getUTCDate(),
+    parsed.getUTCHours(),
+    parsed.getUTCMinutes(),
+    parsed.getUTCSeconds(),
+  ];
+  if (
+    parsedParts.some((part, index) => part !== expectedParts[index]) ||
+    parsed.getUTCMilliseconds() !== expectedMilliseconds
+  ) {
+    return null;
+  }
+  return timestamp;
+}
+
+function getSeoulCalendarDay(value: Date): number | null {
+  if (!Number.isFinite(value.getTime())) return null;
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+
+  if (![year, month, day].every(Number.isInteger)) return null;
+  return Date.UTC(year, month - 1, day);
+}
+
+export function resolveInstitutionInvitationExpiry(
+  expiresAt: string | null | undefined,
+  now: Date,
+): InstitutionInvitationExpiry {
+  const normalizedExpiresAt = normalizeTimestamp(expiresAt);
+  const expiryDate = normalizedExpiresAt ? new Date(normalizedExpiresAt) : null;
+  const expiryTime = expiryDate?.getTime() ?? Number.NaN;
+
+  if (
+    !expiryDate ||
+    !Number.isFinite(expiryTime) ||
+    !Number.isFinite(now.getTime())
+  ) {
+    return { status: "unknown" };
+  }
+  if (expiryTime <= now.getTime()) return { status: "expired" };
+
+  const expiryDay = getSeoulCalendarDay(expiryDate);
+  const nowDay = getSeoulCalendarDay(now);
+  if (expiryDay === null || nowDay === null) return { status: "unknown" };
+
+  return {
+    status: "active",
+    daysRemaining: Math.round((expiryDay - nowDay) / 86_400_000),
+  };
+}
+
 function normalizeInvitationId(value: unknown): string | null {
   if (typeof value !== "string") return null;
 
@@ -181,6 +264,7 @@ export function getInstitutionInvitationPayload(
     ),
     code: normalizeDisplayText(payload?.code ?? payload?.affiliation_code),
     codeLabel: normalizeDisplayText(payload?.code_label ?? payload?.codeLabel),
+    expiresAt: normalizeTimestamp(payload?.expires_at),
   };
 }
 
@@ -219,7 +303,8 @@ function normalizeRpcStatus(
 ): InstitutionInvitationResponseStatus | null {
   return status === "accepted" ||
     status === "declined" ||
-    status === "canceled"
+    status === "canceled" ||
+    status === "expired"
     ? status
     : null;
 }
@@ -238,10 +323,7 @@ export function mapInstitutionInvitationError(
     return "unauthenticated";
   }
   if (normalized.includes("already responded")) {
-    if (
-      normalized.includes("canceled") ||
-      normalized.includes("cancelled")
-    ) {
+    if (normalized.includes("canceled") || normalized.includes("cancelled")) {
       return "withdrawn";
     }
     return "alreadyResponded";

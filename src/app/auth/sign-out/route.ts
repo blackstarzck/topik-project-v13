@@ -1,7 +1,6 @@
 // Auth sign-out route handler (POST).
 //
-// docs/flow/sitemap.md row "Auth sign-out | /auth/sign-out | route handler (POST)":
-//   서버 사이드 세션 쿠키 정리.
+// APP_ROUTE_SPECS의 POST sign-out handler: 서버 사이드 세션 쿠키 정리.
 //
 // Flow:
 //   1. POST /auth/sign-out (form action or fetch from client)

@@ -482,7 +482,10 @@ export function LongFormEditor({
             setConfirmOpen(true);
           }}
           disabled={
-            !submittable || submit.isPending || Boolean(submitBlockedReason)
+            !submittable ||
+            !draftId ||
+            submit.isPending ||
+            Boolean(submitBlockedReason)
           }
         >
           {t("submit")}

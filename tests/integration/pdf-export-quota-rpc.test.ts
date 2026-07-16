@@ -34,9 +34,27 @@ const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const EMAIL = process.env.E2E_STUDENT_EMAIL;
-const PASSWORD = process.env.SUPABASE_TEST_PASSWORD;
+const PASSWORD =
+  process.env.E2E_STUDENT_PASSWORD ?? process.env.SUPABASE_TEST_PASSWORD;
+
+function isLoopbackUrl(value: string | undefined) {
+  if (!value) return false;
+  try {
+    return new Set(["localhost", "127.0.0.1", "::1", "[::1]"]).has(
+      new URL(value).hostname.toLowerCase(),
+    );
+  } catch {
+    return false;
+  }
+}
+
 const canRun = Boolean(
-  SUPABASE_URL && PUBLISHABLE_KEY && SERVICE_KEY && EMAIL && PASSWORD,
+  process.env.SUPABASE_LOCAL_STACK === "1" &&
+    isLoopbackUrl(SUPABASE_URL) &&
+    PUBLISHABLE_KEY &&
+    SERVICE_KEY &&
+    EMAIL &&
+    PASSWORD,
 );
 
 type ClaimResponse = {
@@ -118,18 +136,16 @@ describe.skipIf(!canRun)("PDF export quota RPC integration", () => {
     if (signedIn.error) throw signedIn.error;
     userId = signedIn.data.user.id;
 
-    const problem = await service
-      .from("problems")
-      .select("id")
-      .eq("domain", "writing")
-      .eq("question_no", 51)
-      .eq("publish_status", "published")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    const problem = await userClient.rpc("get_available_writing_questions", {
+      p_item_number: 51,
+      p_problem_id: null,
+    });
     if (problem.error) throw problem.error;
-    if (!problem.data?.id) throw new Error("No published q51 problem found");
-    problemId = problem.data.id;
+    const canonicalProblemId = problem.data?.[0]?.problem_id;
+    if (!canonicalProblemId) {
+      throw new Error("No published canonical q51 problem found");
+    }
+    problemId = canonicalProblemId;
   });
 
   afterAll(async () => {

@@ -6,7 +6,7 @@
  * enrichment 미로딩)을 뒤로 보내고, 문제 유형 정렬은 question_no null을
  * 뒤로 보낸다. 동률 tie-break는 항상 최근 저장 순(saved_at desc)이라
  * enrichment 도착 전후에도 순서가 예측 가능하다.
- * (근거: docs/sot-change-proposals/2026-07-04-library-problems-filter-panel.md)
+ * Sort unit tests가 enrichment 전후의 실행 계약을 고정한다.
  */
 
 import type { SubmissionEnrichment } from "./library-enrich-data";

@@ -1,16 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  evidenceRoot,
+  prepareEvidenceOutputDirectory,
+  resolveEvidenceOutput,
+  requireEvidenceSlug,
+} from "./evidence-paths.mjs";
 
 const cwd = process.cwd();
-const defaultManifest = path.join(
+const evidenceSlug = requireEvidenceSlug(process.env.UI_EVIDENCE_SLUG);
+if (!process.argv[2]) {
+  throw new Error(
+    "Manifest path is required inside .codex/work/<slug>/ui-evidence/.",
+  );
+}
+const requestedManifest = path.resolve(cwd, process.argv[2]);
+const manifestPath = resolveEvidenceOutput({
   cwd,
-  "docs",
-  "qa",
-  "reports",
-  "full-ui-state-capture-20260615-091636",
-  "manifest-20260615-091636.json",
-);
-const manifestPath = path.resolve(cwd, process.argv[2] ?? defaultManifest);
+  slug: evidenceSlug,
+  child: path.relative(evidenceRoot(cwd, evidenceSlug), requestedManifest),
+});
 const reportDir = path.dirname(manifestPath);
 const runId = path.basename(manifestPath).replace(/^manifest-/, "").replace(/\.json$/, "");
 const htmlPath = path.join(reportDir, `report-${runId}.html`);
@@ -222,8 +231,8 @@ ${nonOk
 
 - HTML 보고서: \`${path.relative(cwd, htmlPath).replaceAll("\\", "/")}\`
 - 전체 manifest: \`${path.relative(cwd, manifestPath).replaceAll("\\", "/")}\`
-- 스크린샷 위치: \`docs/Wireframe/<screen-folder>/browser-screenshot--<state>--<viewport>.png\`
-- 상세 기록 위치: \`docs/Wireframe/<screen-folder>/browser-screenshot--<state>--<viewport>.json\`
+- 스크린샷 위치: \`.codex/work/${evidenceSlug}/ui-evidence/<capture-run>/screens/<screen-folder>/browser-screenshot--<state>--<viewport>.png\`
+- 상세 기록 위치: \`.codex/work/${evidenceSlug}/ui-evidence/<capture-run>/screens/<screen-folder>/browser-screenshot--<state>--<viewport>.json\`
 `;
 
 const html = `<!doctype html>
@@ -407,6 +416,11 @@ ${cards}
 </body>
 </html>`;
 
+prepareEvidenceOutputDirectory({
+  cwd,
+  slug: evidenceSlug,
+  child: path.relative(evidenceRoot(cwd, evidenceSlug), reportDir),
+});
 fs.writeFileSync(htmlPath, html, "utf8");
 fs.writeFileSync(mdPath, md, "utf8");
 console.log(

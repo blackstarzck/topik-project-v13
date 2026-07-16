@@ -119,7 +119,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     expect(within(summary).getByText("이전 상태")).toBeTruthy();
   });
 
-  it("'시작' in fresh mode pushes the Wireframe-slug writing route with problem and fresh params", () => {
+  it("'시작' in fresh mode pushes the question-specific writing route with problem and fresh params", () => {
     const onClose = vi.fn();
     renderWithIntl(
       <RetryModal

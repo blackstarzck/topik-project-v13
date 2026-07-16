@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { upsertDraft } from "../../../src/lib/writing/mutations";
+import {
+  submitWriting,
+  upsertDraft,
+} from "../../../src/lib/writing/mutations";
+import {
+  WRITING_SUBMISSION_BLOCKED_MESSAGE,
+  WRITING_SUBMISSION_DRAFT_REQUIRED_MESSAGE,
+} from "../../../src/lib/writing/submit-errors";
 import type {
   WritingDraftInsert,
   WritingDraftRow,
@@ -23,6 +30,9 @@ const INPUT: WritingDraftInsert = {
   answer_text: "자동 저장할 답안",
   answer_json: null,
   char_count: 9,
+  canonical_question_id: "topik-writing-53-0001",
+  canonical_import_id: 321,
+  canonical_payload_hash: "payload-hash-321",
   autosave_status: "clean",
   last_saved_at: "2026-06-08T00:00:00.000Z",
 };
@@ -36,6 +46,11 @@ function makeRow(input: WritingDraftInsert, id = "draft-1"): WritingDraftRow {
     answer_text: input.answer_text ?? null,
     answer_json: input.answer_json ?? null,
     char_count: input.char_count ?? null,
+    canonical_question_id: input.canonical_question_id ?? null,
+    canonical_import_id: input.canonical_import_id ?? null,
+    canonical_payload_hash: input.canonical_payload_hash ?? null,
+    question_snapshot: input.question_snapshot ?? null,
+    legacy_cutover_snapshot: input.legacy_cutover_snapshot ?? null,
     autosave_status: input.autosave_status ?? "clean",
     last_saved_at: input.last_saved_at ?? null,
     created_at: "2026-06-08T00:00:00.000Z",
@@ -147,5 +162,45 @@ describe("upsertDraft", () => {
       "lookup",
       "update",
     ]);
+  });
+});
+
+describe("submitWriting", () => {
+  const input = {
+    problem_id: "00000000-0000-0000-0000-000000000001",
+    question_no: 54 as const,
+    answer_text: "제출 차단 응답 확인",
+    char_count: 11,
+  };
+
+  it("turns an expected runtime rejection into a client-side mutation error", async () => {
+    await expect(
+      submitWriting(input, async () => ({
+        rejection: {
+          code: "writing_submission_temporarily_blocked",
+          message: WRITING_SUBMISSION_BLOCKED_MESSAGE,
+        },
+      })),
+    ).rejects.toThrow(WRITING_SUBMISSION_BLOCKED_MESSAGE);
+  });
+
+  it("maps a missing durable draft to an actionable learner message", async () => {
+    await expect(
+      submitWriting(input, async () => {
+        throw new Error("writing_submission_draft_required");
+      }),
+    ).rejects.toThrow(WRITING_SUBMISSION_DRAFT_REQUIRED_MESSAGE);
+  });
+
+  it("returns a successful submission unchanged", async () => {
+    await expect(
+      submitWriting(input, async () => ({
+        submissionId: "00000000-0000-0000-0000-000000000099",
+        questionNo: 54,
+      })),
+    ).resolves.toEqual({
+      submissionId: "00000000-0000-0000-0000-000000000099",
+      questionNo: 54,
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getComparisonTargetCandidates,
@@ -11,6 +11,7 @@ import type {
   WritingFeedbackRow,
   WritingSubmissionRow,
 } from "../../../src/lib/writing/types";
+import { setWritingSubmissionControlForTests } from "../../../src/lib/writing/canonical-source";
 
 type QueryRow = {
   id: string;
@@ -61,6 +62,10 @@ const INCOMPLETE_51_ID = "11111111-1111-4111-8111-111111111151";
 const COMPLETE_51_ID = "22222222-2222-4222-8222-222222222251";
 const UNTOUCHED_51_ID = "44444444-4444-4444-8444-444444444451";
 
+afterEach(() => {
+  setWritingSubmissionControlForTests(null);
+  vi.restoreAllMocks();
+});
 const incomplete51: QueryRow = {
   id: INCOMPLETE_51_ID,
   title: "Incomplete 51",
@@ -407,7 +412,13 @@ function submissionRow(
     char_count: overrides.char_count ?? 100,
     submitted_at: overrides.submitted_at ?? "2026-06-20T10:00:00.000Z",
     feedback_status: overrides.feedback_status ?? "complete",
+    external_submission_id: overrides.external_submission_id ?? overrides.id,
     parent_submission_id: overrides.parent_submission_id ?? null,
+    canonical_question_id: overrides.canonical_question_id ?? null,
+    canonical_import_id: overrides.canonical_import_id ?? null,
+    canonical_payload_hash: overrides.canonical_payload_hash ?? null,
+    question_snapshot: overrides.question_snapshot ?? null,
+    legacy_cutover_snapshot: overrides.legacy_cutover_snapshot ?? null,
   };
 }
 
@@ -507,519 +518,181 @@ function makeComparisonClient(
   return client;
 }
 
-describe("getWritingProblem", () => {
-  it("uses the first submittable candidate for the default writing route", async () => {
-    const { client, calls } = makeClient([seed51, incomplete51, complete51]);
+function canonicalRow({
+  id = COMPLETE_51_ID,
+  questionNo = 51,
+  title = "Canonical writing problem",
+}: {
+  id?: string;
+  questionNo?: number;
+  title?: string;
+} = {}) {
+  return {
+    problem_id: id,
+    question_id: `topik-writing-${questionNo}-0001`,
+    canonical_import_id: 701,
+    payload_hash: `hash-${id}`,
+    item_number: questionNo,
+    topik_level: 2,
+    difficulty: 3,
+    title,
+    prompt: "Canonical prompt",
+    tags: [],
+    materials:
+      questionNo === 51 || questionNo === 52
+        ? { blanks: { blank_target_giyeok: "a", blank_target_nieun: "b" } }
+        : {},
+    source_created_at: "2026-07-14T00:00:00.000Z",
+    source_updated_at: "2026-07-14T00:00:00.000Z",
+  };
+}
 
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
+function makeCanonicalClient(
+  rows: ReturnType<typeof canonicalRow>[],
+  touchedIds: string[] = [],
+) {
+  const rpc = vi.fn(async (name: string, args: Record<string, unknown>) => {
+    expect(name).toBe("get_available_writing_questions");
+    const filtered = rows.filter(
+      (row) =>
+        (args.p_item_number == null ||
+          row.item_number === args.p_item_number) &&
+        (args.p_problem_id == null || row.problem_id === args.p_problem_id),
     );
-
-    expect(problem?.id).toBe(COMPLETE_51_ID);
-    expect(problem?.submitBlockedReason).toBeNull();
-    expect(calls).toContainEqual({ type: "range", from: 0, to: 24 });
+    return { data: filtered, error: null };
   });
-
-  it("prefers the first untouched candidate for a user's default writing route", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client } = makeClient({
-      problems: [complete51, untouched51],
-      writingSubmissions: [
-        {
-          user_id: "user-1",
-          problem_id: COMPLETE_51_ID,
-          feedback_status: "failed",
-        },
-      ],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(UNTOUCHED_51_ID);
-  });
-
-  it("treats any draft row, including superseded, as touched for default selection", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client } = makeClient({
-      problems: [complete51, untouched51],
-      writingDrafts: [
-        {
-          user_id: "user-1",
-          problem_id: COMPLETE_51_ID,
-          autosave_status: "superseded",
-        },
-      ],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(UNTOUCHED_51_ID);
-  });
-
-  it("ignores other users' submissions and drafts for untouched selection", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client } = makeClient({
-      problems: [complete51, untouched51],
-      writingSubmissions: [
-        {
-          user_id: "user-2",
-          problem_id: COMPLETE_51_ID,
-          feedback_status: "complete",
-        },
-      ],
-      writingDrafts: [
-        {
-          user_id: "user-2",
-          problem_id: COMPLETE_51_ID,
-          autosave_status: "dirty",
-        },
-      ],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(COMPLETE_51_ID);
-  });
-
-  it("continues scanning after the first candidate page when all visible candidates are touched", async () => {
-    const touchedRows = Array.from({ length: 25 }, (_, index) =>
-      complete51Problem(uuidFor51(index + 1), `Touched ${index + 1}`),
-    );
-    const untouched51 = complete51Problem(uuidFor51(26), "Untouched page 2");
-    const { client, calls } = makeClient({
-      problems: [...touchedRows, untouched51],
-      writingSubmissions: touchedRows.map((row) => ({
-        user_id: "user-1",
-        problem_id: row.id,
-        feedback_status: "complete",
-      })),
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(untouched51.id);
-    expect(calls).toContainEqual({ type: "range", from: 25, to: 49 });
-    expect(
-      calls.filter(
-        (call) => call.type === "from" && call.table === "writing_submissions",
-      ),
-    ).toHaveLength(1);
-    expect(
-      calls.filter(
-        (call) => call.type === "from" && call.table === "writing_drafts",
-      ),
-    ).toHaveLength(1);
-  });
-
-  it("skips untouched candidates that are not submittable", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client } = makeClient({
-      problems: [incomplete51, untouched51],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(UNTOUCHED_51_ID);
-    expect(problem?.submitBlockedReason).toBeNull();
-  });
-
-  it("falls back to the existing default when no untouched candidate remains", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client } = makeClient({
-      problems: [complete51, untouched51],
-      writingSubmissions: [
-        {
-          user_id: "user-1",
-          problem_id: COMPLETE_51_ID,
-          feedback_status: "pending",
-        },
-      ],
-      writingDrafts: [
-        {
-          user_id: "user-1",
-          problem_id: UNTOUCHED_51_ID,
-          autosave_status: "clean",
-        },
-      ],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(COMPLETE_51_ID);
-  });
-
-  it("does not apply untouched filtering to an explicit problem id", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client, calls } = makeClient({
-      problems: [complete51, untouched51],
-      writingSubmissions: [
-        {
-          user_id: "user-1",
-          problem_id: COMPLETE_51_ID,
-          feedback_status: "complete",
-        },
-      ],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      COMPLETE_51_ID,
-      async () => client as never,
-      { userId: "user-1" },
-    );
-
-    expect(problem?.id).toBe(COMPLETE_51_ID);
-    expect(calls).not.toContainEqual({
-      type: "from",
-      table: "writing_submissions",
-    });
-    expect(calls).not.toContainEqual({ type: "from", table: "writing_drafts" });
-  });
-
-  it("keeps the existing default behavior when no user id is supplied", async () => {
-    const untouched51 = complete51Problem(UNTOUCHED_51_ID, "Untouched 51");
-    const { client, calls } = makeClient({
-      problems: [complete51, untouched51],
-      writingSubmissions: [
-        {
-          user_id: "user-1",
-          problem_id: COMPLETE_51_ID,
-          feedback_status: "complete",
-        },
-      ],
-    });
-
-    const problem = await getWritingProblem(
-      51,
-      undefined,
-      async () => client as never,
-    );
-
-    expect(problem?.id).toBe(COMPLETE_51_ID);
-    expect(calls).not.toContainEqual({
-      type: "from",
-      table: "writing_submissions",
-    });
-    expect(calls).not.toContainEqual({ type: "from", table: "writing_drafts" });
-  });
-
-  it("does not return a seed fixture even when explicitly requested", async () => {
-    const { client, calls } = makeClient([seed51, complete51]);
-
-    const problem = await getWritingProblem(
-      51,
-      SEED_51_ID,
-      async () => client as never,
-    );
-
-    expect(problem).toBeNull();
-    expect(calls).toContainEqual({
-      type: "eq",
-      column: "id",
-      value: SEED_51_ID,
-    });
-  });
-
-  it("returns null for an explicit problem id hidden by institution visibility", async () => {
-    const { client } = makeClient([complete51]);
-    const hiddenClient = {
-      ...client,
-      rpc: async () => ({ data: [], error: null }),
-    };
-
-    const problem = await getWritingProblem(
-      51,
-      COMPLETE_51_ID,
-      async () => hiddenClient as never,
-    );
-
-    expect(problem).toBeNull();
-  });
-
-  it("keeps an explicit problem id even when the row is submit-blocked", async () => {
-    const { client, calls } = makeClient([incomplete51, complete51]);
-
-    const problem = await getWritingProblem(
-      51,
-      INCOMPLETE_51_ID,
-      async () => client as never,
-    );
-
-    expect(problem?.id).toBe(INCOMPLETE_51_ID);
-    expect(problem?.submitBlockedReason).toBe("problem_data_incomplete");
-    expect(calls).toContainEqual({
-      type: "eq",
-      column: "id",
-      value: INCOMPLETE_51_ID,
-    });
-    expect(calls).toContainEqual({ type: "limit", count: 1 });
-  });
-
-  it("returns null for a malformed (non-uuid) problem id without querying (D-3)", async () => {
-    const { client, calls } = makeClient([incomplete51, complete51]);
-
-    const problem = await getWritingProblem(
-      51,
-      "잘못된id",
-      async () => client as never,
-    );
-
-    expect(problem).toBeNull();
-    // uuid 형식 가드가 DB 조회 전에 끊어야 한다 — 쿼리 호출 0건.
-    expect(calls).toEqual([]);
-  });
-
-  it("treats an empty problem id as the default selection, not malformed", async () => {
-    const { client, calls } = makeClient([incomplete51, complete51]);
-
-    const problem = await getWritingProblem(
-      51,
-      "",
-      async () => client as never,
-    );
-
-    expect(problem?.id).toBe(COMPLETE_51_ID);
-    expect(calls).toContainEqual({ type: "range", from: 0, to: 24 });
-  });
-});
-
-describe("getWritingProblemAvailability", () => {
-  it("allows retry for published public active problems", async () => {
-    const { client } = makeAvailabilityClient({
-      publish_status: "published",
-      visibility: "public",
-      lifecycle_status: "active",
-      lifecycle_reason: null,
-      question_no: 51,
-    });
-    const availability = await getWritingProblemAvailability(
-      COMPLETE_51_ID,
-      async () => client as never,
-    );
-
-    expect(availability.canStart).toBe(true);
-    expect(availability.state).toBe("available");
-  });
-
-  it("blocks retry for published public inactive problems but keeps the reason", async () => {
-    const { client } = makeAvailabilityClient({
-      publish_status: "published",
-      visibility: "public",
-      lifecycle_status: "inactive",
-      lifecycle_reason: "Rotation ended",
-      question_no: 51,
-    });
-    const availability = await getWritingProblemAvailability(
-      COMPLETE_51_ID,
-      async () => client as never,
-    );
-
-    expect(availability.canStart).toBe(false);
-    expect(availability.state).toBe("soft_unavailable");
-    expect(availability.reason).toBe("Rotation ended");
-  });
-
-  it("blocks retry for institution users when the active problem is not assigned to the caller", async () => {
-    const { client, rpcCalls } = makeAvailabilityClient(
-      {
-        publish_status: "published",
-        visibility: "public",
-        lifecycle_status: "active",
-        lifecycle_reason: null,
-        question_no: 51,
-      },
-      false,
-    );
-
-    const availability = await getWritingProblemAvailability(
-      COMPLETE_51_ID,
-      async () => client as never,
-    );
-
-    expect(availability.canStart).toBe(false);
-    expect(availability.canSubmit).toBe(false);
-    expect(availability.state).toBe("hard_unavailable");
-    expect(rpcCalls).toEqual([
-      {
-        name: "is_writing_problem_visible_to_caller",
-        args: { p_problem_id: COMPLETE_51_ID, p_question_no: 51 },
-      },
-    ]);
-  });
-});
-
-describe("getNextWritingProblemStartHref", () => {
-  const firstId = "10000000-0000-4000-8000-000000000052";
-  const currentId = "20000000-0000-4000-8000-000000000052";
-  const nextId = "30000000-0000-4000-8000-000000000052";
-  const laterId = "40000000-0000-4000-8000-000000000052";
-
-  function idForOrder(index: number): string {
-    return `${index.toString(16).padStart(8, "0")}-0000-4000-8000-000000000052`;
-  }
-
-  function nextProblemRow(
-    id: string,
-    overrides: Partial<NextProblemRow> = {},
-  ): NextProblemRow {
-    return {
-      id,
-      domain: "writing",
-      question_no: 52,
-      publish_status: "published",
-      lifecycle_status: "active",
-      tags: [],
-      materials: {},
-      ...overrides,
-    };
-  }
-
-  it("builds a fresh writing URL for the next visible problem id in the same question", async () => {
-    const { client, calls } = makeNextProblemClient([
-      nextProblemRow(currentId),
-      nextProblemRow(nextId),
-      nextProblemRow(firstId),
-      nextProblemRow("00000000-0000-4000-8000-000000000053", {
-        question_no: 53,
-      }),
-    ]);
-
-    const href = await getNextWritingProblemStartHref({
-      currentProblemId: currentId,
-      questionNo: 52,
-      createClient: async () => client as never,
-    });
-
-    expect(href).toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
-    expect(href).not.toContain("retrySubmission");
-    expect(calls.filter((call) => call.type === "from")).toEqual([
-      { type: "from", table: "problems" },
-    ]);
-  });
-
-  it("wraps to the first eligible problem when the current id is last", async () => {
-    const { client } = makeNextProblemClient([
-      nextProblemRow(firstId),
-      nextProblemRow(currentId),
-      nextProblemRow(nextId),
-    ]);
-
-    const href = await getNextWritingProblemStartHref({
-      currentProblemId: nextId,
-      questionNo: 52,
-      createClient: async () => client as never,
-    });
-
-    expect(href).toBe(`/writing/answer-writing-52?problem=${firstId}&fresh=1`);
-  });
-
-  it("uses keyset lookup so more than 200 earlier problems do not force an early wrap", async () => {
-    const currentLargeSetId = idForOrder(200);
-    const nextLargeSetId = idForOrder(201);
-    const rows = [
-      ...Array.from({ length: 200 }, (_, index) =>
-        nextProblemRow(idForOrder(index)),
-      ),
-      nextProblemRow(currentLargeSetId),
-      nextProblemRow(nextLargeSetId),
-    ];
-    const { client } = makeNextProblemClient(rows);
-
-    const href = await getNextWritingProblemStartHref({
-      currentProblemId: currentLargeSetId,
-      questionNo: 52,
-      createClient: async () => client as never,
-    });
-
-    expect(href).toBe(
-      `/writing/answer-writing-52?problem=${nextLargeSetId}&fresh=1`,
-    );
-  });
-
-  it("skips unavailable, hidden, and seed fixture problems", async () => {
-    const hiddenId = "30000000-0000-4000-8000-000000000052";
-    const inactiveId = "35000000-0000-4000-8000-000000000052";
-    const draftId = "36000000-0000-4000-8000-000000000052";
-    const seedId = "37000000-0000-4000-8000-000000000052";
-    const { client } = makeNextProblemClient(
-      [
-        nextProblemRow(currentId),
-        nextProblemRow(hiddenId),
-        nextProblemRow(inactiveId, { lifecycle_status: "inactive" }),
-        nextProblemRow(draftId, { publish_status: "draft" }),
-        nextProblemRow(seedId, {
-          tags: ["seed:wireframe_problem_fixtures"],
+  const from = vi.fn((table: string) => {
+    const query = {
+      select: vi.fn(() => query),
+      eq: vi.fn(() => query),
+      in: vi.fn(() =>
+        Promise.resolve({
+          data:
+            table === "writing_submissions"
+              ? touchedIds.map((problem_id) => ({ problem_id }))
+              : [],
+          error: null,
         }),
-        nextProblemRow(laterId),
-      ],
-      [currentId, inactiveId, draftId, seedId, laterId],
+      ),
+    };
+    return query;
+  });
+  return { client: { rpc, from }, rpc, from };
+}
+
+describe("canonical writing catalog", () => {
+  it("reads an explicit detail from the canonical learner-safe RPC", async () => {
+    const { client, rpc, from } = makeCanonicalClient([canonicalRow()]);
+
+    const problem = await getWritingProblem(
+      51,
+      COMPLETE_51_ID,
+      async () => client as never,
     );
 
-    const href = await getNextWritingProblemStartHref({
-      currentProblemId: currentId,
-      questionNo: 52,
-      createClient: async () => client as never,
+    expect(problem?.id).toBe(COMPLETE_51_ID);
+    expect(problem?.canonicalImportId).toBe("701");
+    expect(rpc).toHaveBeenCalledWith("get_available_writing_questions", {
+      p_item_number: 51,
+      p_problem_id: COMPLETE_51_ID,
     });
-
-    expect(href).toBe(`/writing/answer-writing-52?problem=${laterId}&fresh=1`);
+    expect(from).not.toHaveBeenCalledWith("problems");
   });
 
-  it("opens the same problem as a fresh attempt when it is the only eligible candidate", async () => {
-    const { client } = makeNextProblemClient([nextProblemRow(currentId)]);
+  it("chooses the first untouched canonical problem for a user", async () => {
+    const untouched = "44444444-4444-4444-8444-444444444451";
+    const { client } = makeCanonicalClient(
+      [canonicalRow(), canonicalRow({ id: untouched, title: "Untouched" })],
+      [COMPLETE_51_ID],
+    );
 
-    const href = await getNextWritingProblemStartHref({
-      currentProblemId: currentId,
-      questionNo: 52,
-      createClient: async () => client as never,
+    const problem = await getWritingProblem(
+      51,
+      undefined,
+      async () => client as never,
+      { userId: "user-1" },
+    );
+
+    expect(problem?.id).toBe(untouched);
+  });
+
+  it("treats a missing canonical row as unavailable", async () => {
+    const { client } = makeCanonicalClient([]);
+    const availability = await getWritingProblemAvailability(
+      COMPLETE_51_ID,
+      async () => client as never,
+    );
+    expect(availability.canStart).toBe(false);
+  });
+
+  it("treats an incomplete canonical row as visible but not submittable", async () => {
+    const incomplete = canonicalRow();
+    incomplete.materials.blanks = {
+      blank_target_giyeok: "",
+      blank_target_nieun: "",
+    };
+    const { client } = makeCanonicalClient([incomplete]);
+
+    const availability = await getWritingProblemAvailability(
+      COMPLETE_51_ID,
+      async () => client as never,
+    );
+
+    expect(availability).toMatchObject({
+      state: "soft_unavailable",
+      canShowProblemIdentity: true,
+      canStart: false,
+      canSubmit: false,
+      reason: "problem_data_incomplete",
     });
+  });
 
-    expect(href).toBe(
-      `/writing/answer-writing-52?problem=${currentId}&fresh=1`,
+  it("builds the next canonical problem URL and wraps at the end", async () => {
+    const nextId = "55555555-5555-4555-8555-555555555552";
+    const { client } = makeCanonicalClient([
+      canonicalRow({ id: COMPLETE_51_ID, questionNo: 52 }),
+      canonicalRow({ id: nextId, questionNo: 52 }),
+    ]);
+
+    await expect(
+      getNextWritingProblemStartHref({
+        currentProblemId: COMPLETE_51_ID,
+        questionNo: 52,
+        createClient: async () => client as never,
+      }),
+    ).resolves.toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
+    await expect(
+      getNextWritingProblemStartHref({
+        currentProblemId: nextId,
+        questionNo: 52,
+        createClient: async () => client as never,
+      }),
+    ).resolves.toBe(
+      `/writing/answer-writing-52?problem=${COMPLETE_51_ID}&fresh=1`,
     );
   });
 
-  it("falls back to the problem list when no eligible next problem exists", async () => {
-    const { client } = makeNextProblemClient([]);
+  it("skips incomplete canonical rows when building the next problem URL", async () => {
+    const incompleteId = "66666666-6666-4666-8666-666666666652";
+    const nextId = "77777777-7777-4777-8777-777777777752";
+    const incomplete = canonicalRow({ id: incompleteId, questionNo: 52 });
+    incomplete.materials.blanks = {
+      blank_target_giyeok: "",
+      blank_target_nieun: "",
+    };
+    const { client } = makeCanonicalClient([
+      canonicalRow({ id: COMPLETE_51_ID, questionNo: 52 }),
+      incomplete,
+      canonicalRow({ id: nextId, questionNo: 52 }),
+    ]);
 
-    const href = await getNextWritingProblemStartHref({
-      currentProblemId: currentId,
-      questionNo: 52,
-      createClient: async () => client as never,
-    });
-
-    expect(href).toBe("/practice/problems");
+    await expect(
+      getNextWritingProblemStartHref({
+        currentProblemId: COMPLETE_51_ID,
+        questionNo: 52,
+        createClient: async () => client as never,
+      }),
+    ).resolves.toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
   });
 });
 

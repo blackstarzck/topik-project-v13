@@ -49,7 +49,7 @@ function statusFor(score: number) {
 
 /**
  * Phase 7-D Task 7 (P1-3) — X-07 dimension tabs.
- * IA spec: docs/Wireframe/29-X-07-weakness-based-recommendations/description.md §2.
+ * docs/prd.md 약점 기반 추천 범위와 component tests가 동작 계약을 고정한다.
  * 제약: 탭 4개, 선택 탭 1개만 활성. 예외: 답안 부족 탭은 비활성 및 필요한 답안 수 표시.
  */
 export function DimensionTabs({ dimensions, tabSummaries }: Props) {

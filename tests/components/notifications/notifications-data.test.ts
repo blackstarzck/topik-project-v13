@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   mapInstitutionInvitationError,
+  resolveInstitutionInvitationExpiry,
   resolveInstitutionInvitationStatus,
   respondInstitutionInvitation,
   resolveNotificationAction,
@@ -106,6 +107,7 @@ describe("resolveNotificationAction", () => {
       invitation: {
         invitationId: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
         code: "CAMPAIGN-01",
+        expiresAt: null,
         codeLabel: "캠페인 유입 유저",
       },
     });
@@ -144,10 +146,56 @@ describe("resolveNotificationAction", () => {
       invitation: {
         invitationId: null,
         code: "CAMPAIGN-01",
+        expiresAt: null,
         codeLabel: "캠페인 유입 유저",
       },
     });
   });
+});
+
+describe("resolveInstitutionInvitationExpiry", () => {
+  const now = new Date("2026-07-13T15:00:00.000Z");
+
+  it("returns the Seoul calendar-day difference for a future expiry", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-15T14:59:59.000Z", now),
+    ).toEqual({ status: "active", daysRemaining: 1 });
+  });
+
+  it("returns D-0 while the invitation expires later on the same Seoul date", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-14T14:59:59.000Z", now),
+    ).toEqual({ status: "active", daysRemaining: 0 });
+  });
+
+  it("returns expired at the exact expiry instant", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-13T15:00:00.000Z", now),
+    ).toEqual({ status: "expired" });
+  });
+
+  it("accepts Postgres-style microsecond precision", () => {
+    expect(
+      resolveInstitutionInvitationExpiry("2026-07-15T14:59:59.123456Z", now),
+    ).toEqual({ status: "active", daysRemaining: 1 });
+  });
+
+  it.each([
+    null,
+    "",
+    "not-a-date",
+    "2026-07-14",
+    "2026-07-14T14:59:59",
+    "2026-02-30T00:00:00Z",
+    "2026-04-31T00:00:00+00:00",
+  ])(
+    "does not infer a state for a missing or invalid expiry (%s)",
+    (expiresAt) => {
+      expect(resolveInstitutionInvitationExpiry(expiresAt, now)).toEqual({
+        status: "unknown",
+      });
+    },
+  );
 });
 
 describe("mapInstitutionInvitationError", () => {
@@ -181,9 +229,9 @@ describe("mapInstitutionInvitationError", () => {
         new Error("already affiliated with another institution"),
       ),
     ).toBe("alreadyAffiliatedOther");
-    expect(
-      mapInstitutionInvitationError(new Error("profile_not_found")),
-    ).toBe("invalid");
+    expect(mapInstitutionInvitationError(new Error("profile_not_found"))).toBe(
+      "invalid",
+    );
   });
 });
 
@@ -215,7 +263,7 @@ describe("respondInstitutionInvitation", () => {
     });
   });
 
-  it("declines an invitation through the institution invitation response RPC", async () => {
+  it("preserves the shared RPC false argument for non-modal compatibility", async () => {
     rpcMock.mockResolvedValue({
       data: {
         status: "declined",
@@ -239,6 +287,30 @@ describe("respondInstitutionInvitation", () => {
     expect(rpcMock).toHaveBeenCalledWith("respond_institution_invitation", {
       p_invitation_id: "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
       p_accept: false,
+    });
+  });
+
+  it("preserves the RPC expired result as the final server status", async () => {
+    rpcMock.mockResolvedValue({
+      data: {
+        status: "expired",
+        error: "invitation_expired",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      },
+      error: null,
+    });
+
+    await expect(
+      respondInstitutionInvitation(
+        "2a2ff7b8-cc31-4f4d-a455-283aaad28f30",
+        true,
+      ),
+    ).resolves.toEqual({
+      status: "expired",
+      error: "invitation_expired",
+      code: "CAMPAIGN-01",
+      code_label: "Campaign",
     });
   });
 

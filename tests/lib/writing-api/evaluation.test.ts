@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getTalkpikApiBaseUrl,
   mapExternalEvaluationFeedback,
+  submitExternalWriting,
   toExternalTaskType,
 } from "../../../src/lib/writing-api/evaluation";
 
@@ -43,6 +44,50 @@ describe("writing evaluation API adapter", () => {
     expect(toExternalTaskType(52)).toBe("Q52");
     expect(toExternalTaskType(53)).toBe("Q53");
     expect(toExternalTaskType(54)).toBe("Q54");
+  });
+
+  it("aborts an indeterminate provider submit at the configured timeout", async () => {
+    const fetchImpl = vi.fn(
+      async (_url: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        }),
+    ) as unknown as typeof fetch;
+
+    await expect(
+      submitExternalWriting({
+        baseUrl: "https://api.example.test",
+        accessToken: "access-token",
+        payload: { task_type: "Q54", text: "answer" },
+        timeoutMs: 5,
+        fetchImpl,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  it("does not invent an unsupported provider idempotency header", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          submission_id: "provider-string-id",
+          status: "processing",
+          message: "accepted",
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await submitExternalWriting({
+      baseUrl: "https://api.example.test",
+      accessToken: "access-token",
+      payload: { task_type: "Q54", text: "answer" },
+      fetchImpl,
+    });
+
+    const request = fetchImpl.mock.calls[0]?.[1] as RequestInit;
+    expect(request.headers).not.toHaveProperty("Idempotency-Key");
   });
 
   it("maps OpenAPI evaluation feedback into the internal feedback payload", () => {

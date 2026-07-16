@@ -2,7 +2,7 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "../supabase/server";
-import { filterVisibleProblemIds } from "../problems/visibility";
+import { getCanonicalWritingProblems } from "../writing/canonical-source";
 import {
   computeFallbackRecommendations,
   type ComputedSummaryCode,
@@ -172,6 +172,27 @@ async function fetchVisibleRecommendationItems(
   questionNo: QuestionNo | null,
   nowIso: string,
 ): Promise<RawRecommendationItem[]> {
+  return fetchCanonicalRecommendationItems(
+    supabase,
+    userId,
+    questionNo,
+    nowIso,
+  );
+}
+
+async function fetchCanonicalRecommendationItems(
+  supabase: SupabaseServerClient,
+  userId: string,
+  questionNo: QuestionNo | null,
+  nowIso: string,
+): Promise<RawRecommendationItem[]> {
+  const canonical = await getCanonicalWritingProblems({
+    supabase,
+    questionNo,
+  });
+  const canonicalById = new Map(
+    canonical.map((problem) => [problem.id, problem]),
+  );
   const visibleRows: RawRecommendationItem[] = [];
 
   for (
@@ -180,39 +201,42 @@ async function fetchVisibleRecommendationItems(
     visibleRows.length < RECOMMENDATION_ITEM_TARGET;
     offset += RECOMMENDATION_SCAN_PAGE_SIZE
   ) {
-    let itemQuery = supabase
+    const { data, error } = await supabase
       .from("recommendation_items")
       .select(
         "id, run_id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
-          " recommendation_runs!inner(expires_at)," +
-          " problems!inner(id, title, question_no, publish_status)",
+          " recommendation_runs!inner(expires_at)",
       )
       .eq("user_id", userId)
       .eq("status", "active")
-      .eq("problems.publish_status", "published")
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
         referencedTable: "recommendation_runs",
-      });
-    if (questionNo != null) {
-      itemQuery = itemQuery.eq("problems.question_no", questionNo);
-    }
-
-    const { data, error } = await itemQuery
+      })
       .order("rank", { ascending: true })
+      .order("id", { ascending: true })
       .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
     if (error) {
       throw new Error(`queryRecommendationBundle(items): ${error.message}`);
     }
 
-    const rows = (data ?? []) as unknown as RawRecommendationItem[];
-    const visibleIds = await filterVisibleProblemIds(
-      supabase,
-      rows.map((row) => row.problem_id),
-    );
-    visibleRows.push(...rows.filter((row) => visibleIds.has(row.problem_id)));
-
-    if (rows.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+    const page = (data ?? []) as unknown as Array<
+      Omit<RawRecommendationItem, "problems">
+    >;
+    for (const row of page) {
+      const problem = canonicalById.get(row.problem_id);
+      if (!problem) continue;
+      visibleRows.push({
+        ...row,
+        problems: {
+          id: problem.id,
+          title: problem.title,
+          question_no: problem.questionNo,
+        },
+      });
+      if (visibleRows.length >= RECOMMENDATION_ITEM_TARGET) break;
+    }
+    if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
   }
 
-  return visibleRows.slice(0, RECOMMENDATION_ITEM_TARGET);
+  return visibleRows;
 }

@@ -1,83 +1,33 @@
-import { describe, expect, it } from "vitest";
-
+import { describe, expect, it, vi } from "vitest";
 import { listLibraryProblemDrafts } from "../../../src/lib/library/problems-page";
 
-type QueryRow = Record<string, unknown>;
+type Row = Record<string, unknown>;
 
-function makeClient({
-  drafts,
-  problems,
-}: {
-  drafts: QueryRow[];
-  problems: QueryRow[];
-}) {
-  const calls: QueryRow[] = [];
-
-  const client = {
-    from: (table: string) => {
-      const filters: Array<{ column: string; value: unknown }> = [];
-      const neqFilters: Array<{ column: string; value: unknown }> = [];
-      const inFilters: Array<{ column: string; values: unknown[] }> = [];
-      const rows = table === "writing_drafts" ? drafts : problems;
-
-      const resolveRows = () =>
-        rows
-          .filter((row) =>
-            filters.every((filter) => row[filter.column] === filter.value),
-          )
-          .filter((row) =>
-            neqFilters.every((filter) => row[filter.column] !== filter.value),
-          )
-          .filter((row) =>
-            inFilters.every((filter) =>
-              filter.values.includes(row[filter.column]),
-            ),
-          );
-
-      const query = {
-        select: (columns: string) => {
-          calls.push({ type: "select", table, columns });
-          return query;
-        },
-        eq: (column: string, value: unknown) => {
-          calls.push({ type: "eq", table, column, value });
-          filters.push({ column, value });
-          return query;
-        },
-        neq: (column: string, value: unknown) => {
-          calls.push({ type: "neq", table, column, value });
-          neqFilters.push({ column, value });
-          return query;
-        },
-        in: (column: string, values: unknown[]) => {
-          calls.push({ type: "in", table, column, values });
-          inFilters.push({ column, values });
-          return query;
-        },
-        order: (column: string, options?: QueryRow) => {
-          calls.push({ type: "order", table, column, options });
-          return query;
-        },
-        then: (
-          resolve: (value: { data: QueryRow[]; error: null }) => unknown,
-          reject?: (reason: unknown) => unknown,
-        ) => Promise.resolve({ data: resolveRows(), error: null }).then(resolve, reject),
-      };
-
-      return query;
-    },
+function canonicalRow(problemId: string, itemNumber: number, title: string) {
+  return {
+    problem_id: problemId,
+    question_id: `topik-writing-${itemNumber}-0001`,
+    canonical_import_id: 101,
+    payload_hash: `hash-${problemId}`,
+    item_number: itemNumber,
+    topik_level: 2,
+    difficulty: 3,
+    title,
+    prompt: "Writing prompt",
+    tags: [],
+    materials: {},
+    source_created_at: "2026-07-13T00:00:00.000Z",
+    source_updated_at: "2026-07-13T00:00:00.000Z",
   };
-
-  return { client, calls };
 }
 
-function draftRow(overrides: QueryRow = {}): QueryRow {
+function draft(overrides: Row = {}): Row {
   return {
     id: "draft-1",
     user_id: "user-1",
     problem_id: "problem-51",
     question_no: 51,
-    answer_text: "draft answer",
+    answer_text: "saved answer",
     answer_json: null,
     char_count: 12,
     autosave_status: "clean",
@@ -88,59 +38,76 @@ function draftRow(overrides: QueryRow = {}): QueryRow {
   };
 }
 
-describe("listLibraryProblemDrafts", () => {
-  it("maps meaningful active writing drafts as temporary-save library rows", async () => {
-    const { client, calls } = makeClient({
-      drafts: [
-        draftRow(),
-        draftRow({
-          id: "draft-empty",
-          problem_id: "problem-empty",
-          answer_text: "  ",
-          char_count: 2,
-          last_saved_at: "2026-07-02T10:00:00.000Z",
-        }),
-        draftRow({
-          id: "draft-superseded",
-          problem_id: "problem-old",
-          autosave_status: "superseded",
-          answer_text: "submitted answer",
-        }),
-      ],
-      problems: [
-        {
-          id: "problem-51",
-          title: "No. 51 - Draft answer problem",
-          question_no: 51,
-        },
-      ],
-    });
+function makeClient(rows: Row[], canonicalRows: Row[], canonicalError?: string) {
+  const from = vi.fn((table: string) => {
+    if (table !== "writing_drafts") throw new Error(`unexpected table ${table}`);
+    let current = rows;
+    const query = {
+      select: () => query,
+      eq: (column: string, value: unknown) => {
+        current = current.filter((row) => row[column] === value);
+        return query;
+      },
+      neq: (column: string, value: unknown) => {
+        current = current.filter((row) => row[column] !== value);
+        return query;
+      },
+      order: () => query,
+      then: (resolve: (value: { data: Row[]; error: null }) => unknown) =>
+        Promise.resolve({ data: current, error: null }).then(resolve),
+    };
+    return query;
+  });
+  const rpc = vi.fn().mockResolvedValue({
+    data: canonicalRows,
+    error: canonicalError ? { message: canonicalError } : null,
+  });
+  return { from, rpc };
+}
 
-    const result = await listLibraryProblemDrafts(
-      "user-1",
-      async () => client as never,
+describe("listLibraryProblemDrafts", () => {
+  it("keeps the saved answer and hydrates only current metadata from canonical", async () => {
+    const client = makeClient(
+      [draft(), draft({ id: "empty", answer_text: "  ", char_count: 2 })],
+      [canonicalRow("problem-51", 51, "Canonical question 51")],
     );
 
+    const result = await listLibraryProblemDrafts("user-1", async () => client as never);
+
     expect(result).toEqual([
-      {
-        kind: "draft",
+      expect.objectContaining({
         id: "draft-1",
         problem_id: "problem-51",
-        problem_title: "No. 51 - Draft answer problem",
+        problem_title: "Canonical question 51",
         question_no: 51,
-        answer_text: "draft answer",
-        char_count: 12,
-        autosave_status: "clean",
+        answer_text: "saved answer",
         item_id: "draft:draft-1",
-        saved_at: "2026-07-01T10:00:00.000Z",
-        last_saved_at: "2026-07-01T10:00:00.000Z",
-      },
+      }),
     ]);
-    expect(calls).toContainEqual({
-      type: "neq",
-      table: "writing_drafts",
-      column: "autosave_status",
-      value: "superseded",
+    expect(client.rpc).toHaveBeenCalledWith("get_available_writing_questions", {
+      p_item_number: null,
+      p_problem_id: null,
     });
+  });
+
+  it("preserves an existing draft when its question is no longer in the current catalog", async () => {
+    const client = makeClient([draft()], []);
+
+    const result = await listLibraryProblemDrafts("user-1", async () => client as never);
+
+    expect(result[0]).toEqual(expect.objectContaining({
+      problem_title: null,
+      question_no: 51,
+      answer_text: "saved answer",
+    }));
+  });
+
+  it("surfaces canonical catalog failures and never queries public.problems", async () => {
+    const client = makeClient([draft()], [], "catalog unavailable");
+
+    await expect(
+      listLibraryProblemDrafts("user-1", async () => client as never),
+    ).rejects.toThrow("getCanonicalWritingProblems: catalog unavailable");
+    expect(client.from).not.toHaveBeenCalledWith("problems");
   });
 });

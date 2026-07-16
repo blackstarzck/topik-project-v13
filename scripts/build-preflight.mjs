@@ -1,9 +1,9 @@
 // M5 — build hygiene preflight.
 //
-// Running `pnpm build` (`next build`) while a `next dev` server is alive mixes
-// dev + prod artifacts in `.next` → stale/500 chunks → fake runtime errors
-// (e.g. "next-intl context not found"). See memory:
-// project-pnpm-build-clobbers-dev-server and PLAN.md §강제성 게이트 표 (M5).
+// Legacy Next versions could mix `next dev` + `next build` artifacts in `.next`
+// and produce stale/500 chunks. Next 16's isolatedDevBuild separates development
+// output into `.next/dev`; the project must opt into that contract explicitly
+// before this preflight permits a build while any dev port is alive.
 //
 // This preflight runs *before* `build` in the integration gate sequence. It
 // detects a server on the dev port and BLOCKS the build (non-zero exit) unless
@@ -20,10 +20,24 @@ import { pathToFileURL } from "node:url";
  * Pure decision: given whether a dev server was detected and whether the user
  * forced the build, decide whether to block and with what exit code/message.
  *
- * @param {{ devServerDetected: boolean, force?: boolean }} input
+ * @param {{ devServerDetected: boolean, isolatedDevBuild?: boolean, force?: boolean }} input
  * @returns {{ block: boolean, code: number, message: string, warn?: boolean }}
  */
-export function evaluateBuildPreflight({ devServerDetected, force = false }) {
+export function evaluateBuildPreflight({
+  devServerDetected,
+  isolatedDevBuild = false,
+  force = false,
+}) {
+  if (devServerDetected && isolatedDevBuild) {
+    return {
+      block: false,
+      code: 0,
+      warn: true,
+      message:
+        "dev server detected; proceeding because isolatedDevBuild keeps " +
+        "development output in .next/dev and production output in .next.",
+    };
+  }
   if (devServerDetected && !force) {
     return {
       block: true,
@@ -54,14 +68,21 @@ export function evaluateBuildPreflight({ devServerDetected, force = false }) {
 
 export function evaluateSupabaseRemoteApplyBoundary({
   env = {},
+  tempInspection,
   supabaseTempExists = false,
 } = {}) {
   const violations = [];
   if (env.SUPABASE_ACCESS_TOKEN) {
     violations.push("SUPABASE_ACCESS_TOKEN");
   }
-  if (supabaseTempExists) {
-    violations.push("supabase/.temp");
+
+  const inspectedViolations = Array.isArray(tempInspection?.violations)
+    ? tempInspection.violations
+    : supabaseTempExists
+      ? ["supabase/.temp"]
+      : [];
+  for (const violation of inspectedViolations) {
+    violations.push(sanitizeSupabaseTempLabel(violation));
   }
 
   if (violations.length > 0) {
@@ -82,6 +103,110 @@ export function evaluateSupabaseRemoteApplyBoundary({
   };
 }
 
+const SUPABASE_TEMP_LABEL = "supabase/.temp";
+const ALLOWED_SUPABASE_TEMP_ENTRY = "cli-latest";
+
+function sanitizeSupabaseTempLabel(value) {
+  if (value === SUPABASE_TEMP_LABEL) return value;
+  if (
+    typeof value === "string" &&
+    /^supabase\/\.temp\/[A-Za-z0-9._-]+$/.test(value)
+  ) {
+    return value;
+  }
+  return SUPABASE_TEMP_LABEL;
+}
+
+function safeSupabaseTempEntryLabel(entryName) {
+  if (
+    typeof entryName === "string" &&
+    /^[A-Za-z0-9._-]+$/.test(entryName)
+  ) {
+    return `${SUPABASE_TEMP_LABEL}/${entryName}`;
+  }
+  return SUPABASE_TEMP_LABEL;
+}
+
+function normalizedRealPath(value) {
+  const resolved = path.resolve(value);
+  return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+}
+
+/**
+ * Inspect Supabase CLI metadata without reading file content. A regular
+ * `cli-latest` file is harmless version metadata. Every other entry, linked
+ * path, non-regular file, or inspection error fails closed.
+ *
+ * @param {{ rootDir?: string, fsApi?: typeof fs }} input
+ * @returns {{ violations: string[] }}
+ */
+export function inspectSupabaseTempBoundary({
+  rootDir = process.cwd(),
+  fsApi = fs,
+} = {}) {
+  const tempPath = path.join(rootDir, "supabase", ".temp");
+  let tempStats;
+  try {
+    tempStats = fsApi.lstatSync(tempPath);
+  } catch (error) {
+    if (error?.code === "ENOENT") return { violations: [] };
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  if (tempStats.isSymbolicLink() || !tempStats.isDirectory()) {
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  let tempRealPath;
+  try {
+    const rootRealPath = fsApi.realpathSync(rootDir);
+    tempRealPath = fsApi.realpathSync(tempPath);
+    const expectedTempPath = path.join(rootRealPath, "supabase", ".temp");
+    if (
+      normalizedRealPath(tempRealPath) !== normalizedRealPath(expectedTempPath)
+    ) {
+      return { violations: [SUPABASE_TEMP_LABEL] };
+    }
+  } catch {
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  let entryNames;
+  try {
+    entryNames = fsApi.readdirSync(tempPath);
+  } catch {
+    return { violations: [SUPABASE_TEMP_LABEL] };
+  }
+
+  const violations = [];
+  for (const entryName of entryNames) {
+    const entryLabel = safeSupabaseTempEntryLabel(entryName);
+    if (entryName !== ALLOWED_SUPABASE_TEMP_ENTRY) {
+      violations.push(entryLabel);
+      continue;
+    }
+
+    const entryPath = path.join(tempPath, entryName);
+    try {
+      const entryStats = fsApi.lstatSync(entryPath);
+      const entryRealPath = fsApi.realpathSync(entryPath);
+      const expectedEntryPath = path.join(tempRealPath, entryName);
+      if (
+        entryStats.isSymbolicLink() ||
+        !entryStats.isFile() ||
+        normalizedRealPath(entryRealPath) !==
+          normalizedRealPath(expectedEntryPath)
+      ) {
+        violations.push(entryLabel);
+      }
+    } catch {
+      violations.push(entryLabel);
+    }
+  }
+
+  return { violations: [...new Set(violations)] };
+}
+
 /**
  * Impure: probe a TCP port to see whether something is listening (a running
  * dev/start server). Resolves true on connect, false on error/timeout.
@@ -97,6 +222,56 @@ export function normalizePort(value) {
   const n = Number(value);
   if (!Number.isInteger(n) || n <= 0 || n >= 65536) return null;
   return n;
+}
+
+export function supportsIsolatedDevBuild(nextVersion) {
+  if (typeof nextVersion !== "string") return false;
+  const major = Number.parseInt(nextVersion.split(".")[0], 10);
+  return major === 16;
+}
+
+export function hasIsolatedDevBuildOptOut(nextConfigSource) {
+  if (typeof nextConfigSource !== "string") return true;
+  const mentions = nextConfigSource.match(/\bisolatedDevBuild\b/g) ?? [];
+  if (mentions.length === 0) return false;
+
+  const literalSettings = [
+    ...nextConfigSource.matchAll(
+      /["']?isolatedDevBuild["']?\s*:\s*(true|false)\b/g,
+    ),
+  ];
+  if (literalSettings.length !== mentions.length) return true;
+  return literalSettings.some((match) => match[1] !== "true");
+}
+
+function readInstalledNextVersion(rootDir = process.cwd()) {
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(rootDir, "node_modules", "next", "package.json"), "utf8"),
+    );
+    return typeof packageJson.version === "string" ? packageJson.version : null;
+  } catch {
+    return null;
+  }
+}
+
+function readNextConfigSource(rootDir = process.cwd()) {
+  for (const filename of [
+    "next.config.ts",
+    "next.config.mts",
+    "next.config.js",
+    "next.config.mjs",
+    "next.config.cjs",
+  ]) {
+    const configPath = path.join(rootDir, filename);
+    if (!fs.existsSync(configPath)) continue;
+    try {
+      return fs.readFileSync(configPath, "utf8");
+    } catch {
+      return null;
+    }
+  }
+  return "";
 }
 
 // Ports dev actually uses: 3000 (Next default), its auto-retry range (3001+ when
@@ -171,9 +346,16 @@ async function main() {
   const argv = process.argv.slice(2);
   const force =
     argv.includes("--force") || process.env.AI_BUILD_PREFLIGHT_FORCE === "1";
+  const isolatedDevBuildRequested = argv.includes("--isolated-dev-build");
+  const nextVersion = readInstalledNextVersion();
+  const nextConfigSource = readNextConfigSource();
+  const isolatedDevBuild =
+    isolatedDevBuildRequested &&
+    supportsIsolatedDevBuild(nextVersion) &&
+    !hasIsolatedDevBuildOptOut(nextConfigSource);
   const supabaseBoundary = evaluateSupabaseRemoteApplyBoundary({
     env: process.env,
-    supabaseTempExists: fs.existsSync(path.join(process.cwd(), "supabase", ".temp")),
+    tempInspection: inspectSupabaseTempBoundary(),
   });
   if (supabaseBoundary.block) {
     console.error(`[M5 build-preflight] BLOCK: ${supabaseBoundary.message}`);
@@ -181,9 +363,15 @@ async function main() {
   }
   const ports = resolveProbePorts(argv, process.env);
   const { detected, port } = await detectAnyDevServer(ports);
-  const result = evaluateBuildPreflight({ devServerDetected: detected, force });
+  const result = evaluateBuildPreflight({
+    devServerDetected: detected,
+    isolatedDevBuild,
+    force,
+  });
   const tag = "[M5 build-preflight]";
-  const where = `probed ${ports.join(",")}${detected ? ` — alive on ${port}` : ""}`;
+  const where =
+    `probed ${ports.join(",")}${detected ? ` — alive on ${port}` : ""}; ` +
+    `Next ${nextVersion ?? "unknown"}; isolated dev output ${isolatedDevBuild ? "enabled" : "disabled"}`;
   if (result.block) {
     console.error(
       `${tag} BLOCK (${where}): ${result.message} (if that port is NOT a dev server, use --force.)`,

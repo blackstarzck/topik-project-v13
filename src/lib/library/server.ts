@@ -35,6 +35,13 @@ type LibraryProblemRpcRow = {
   can_retry: boolean | null;
 };
 
+type WritingSubmissionHistoryRow = {
+  submission_id: string;
+  problem_id: string;
+  question_no: number;
+  title: string | null;
+};
+
 /**
  * Fetch the user's saved library items for one tab.
  *
@@ -113,26 +120,30 @@ async function joinSubmissions(
 
   const { data, error } = await supabase
     .from("writing_submissions")
-    .select("id, problem_id, question_no, submitted_at, char_count")
+    .select(
+      "id, problem_id, question_no, submitted_at, char_count, question_snapshot",
+    )
     .in("id", ids);
   if (error) {
     throw new Error(`listLibraryItems(submissions) join: ${error.message}`);
   }
 
-  const problemIds = uniqueIds((data ?? []).map((row) => row.problem_id));
-  const { data: problems, error: problemError } = await supabase
-    .from("problems")
-    .select("id, title")
-    .in("id", problemIds);
-  if (problemError) {
+  const { data: historyRows, error: historyError } = await supabase.rpc(
+    "get_writing_submission_history_context",
+    { p_submission_ids: ids },
+  );
+  if (historyError) {
     throw new Error(
-      `listLibraryItems(submissions) problem join: ${problemError.message}`,
+      `listLibraryItems(submissions) history join: ${historyError.message}`,
     );
   }
 
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
-  const problemTitleById = new Map(
-    (problems ?? []).map((row) => [row.id, row.title]),
+  const historyTitleBySubmissionId = new Map(
+    ((historyRows ?? []) as WritingSubmissionHistoryRow[]).map((row) => [
+      row.submission_id,
+      row.title,
+    ]),
   );
   const out: LibrarySubmissionView[] = [];
   for (const item of items) {
@@ -143,7 +154,10 @@ async function joinSubmissions(
       kind: "submission",
       id: sub.id,
       problem_id: sub.problem_id,
-      problem_title: problemTitleById.get(sub.problem_id) ?? null,
+      problem_title:
+        questionSnapshotTitle(sub.question_snapshot) ??
+        historyTitleBySubmissionId.get(sub.id) ??
+        null,
       question_no: typeof sub.question_no === "number" ? sub.question_no : null,
       submitted_at: sub.submitted_at,
       char_count: sub.char_count,
@@ -153,6 +167,14 @@ async function joinSubmissions(
     });
   }
   return out;
+}
+
+function questionSnapshotTitle(snapshot: unknown): string | null {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+  const title = (snapshot as Record<string, unknown>).title;
+  return typeof title === "string" && title.trim() ? title : null;
 }
 
 async function joinReports(

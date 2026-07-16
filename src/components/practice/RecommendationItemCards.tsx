@@ -24,6 +24,11 @@ const DEFAULT_MINUTES_BY_QUESTION: Record<number, number> = {
   54: 50,
 };
 
+const secondaryCardClassNames = {
+  body: "flex-1",
+  actions: "app-card-footer-actions [&>li]:!px-3 [&>li]:!pb-3",
+};
+
 function ctaHref(card: RecommendationItemCard): string {
   return writingProblemHref({
     questionNo: card.questionNo,
@@ -199,7 +204,23 @@ export function SecondaryRecommendationCard({
     card.title.length > 32 ? `${card.title.slice(0, 32)}…` : card.title;
   return (
     <AppCard
-      className="h-full"
+      className="flex h-full flex-col"
+      classNames={secondaryCardClassNames}
+      actions={[
+        <Link
+          key="continue"
+          href={ctaHref(card) as never}
+          className="block w-full"
+        >
+          <Button
+            className="inline-flex items-center justify-center gap-2"
+            block
+          >
+            {t("continueProblem")}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Button>
+        </Link>,
+      ]}
       size="small"
       title={
         card.questionNo
@@ -221,14 +242,6 @@ export function SecondaryRecommendationCard({
         </Paragraph>
       ) : null}
       <WeaknessTags tags={card.weaknessTags} />
-      <div className="mt-3">
-        <Link href={ctaHref(card) as never}>
-          <Button block>
-            {t("continueProblem")}
-            <ArrowRight size={16} aria-hidden="true" />
-          </Button>
-        </Link>
-      </div>
     </AppCard>
   );
 }

@@ -15,7 +15,6 @@ const ALLOWED_REFERENCES = new Set([
   "src/lib/routes.ts",
   "tests/scripts/check-admin-boundary.test.mjs",
   "tests/scripts/check-notification-transition-route.test.mjs",
-  "tests/scripts/check-notification-retirement-gate.test.mjs",
 ]);
 
 const SKIP_DIRS = new Set([
@@ -91,7 +90,7 @@ export function formatNotificationTransitionRouteReport(result) {
     for (const hit of result.unexpectedCallers) {
       lines.push(`- ${hit.file}: ${hit.term}`);
     }
-    lines.push("Move worker invocation to topik-ai or document an SOT-approved transition exception.");
+    lines.push("Move worker invocation to topik-ai or approve the transition in docs/prd.md.");
     return lines.join("\n");
   }
 

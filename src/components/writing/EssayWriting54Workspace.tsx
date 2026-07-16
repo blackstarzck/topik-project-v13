@@ -10,6 +10,7 @@ import { logStudyEvent } from "@/lib/events/study-events";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
 import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
+import { isWritingDraftVersionStale } from "@/lib/writing/draft-version";
 import {
   getCharLimit,
   isCountInRecommendedRange,
@@ -37,6 +38,7 @@ import { ManuscriptPreview } from "./ManuscriptPreview";
 import { QuestionPrompt } from "./QuestionPrompt";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import { SubmissionFailedModal } from "./SubmissionFailedModal";
+import { StaleDraftVersionAlert } from "./StaleDraftVersionAlert";
 import {
   SubmittedAnalysisPanel,
   type SubmittedAnalysisState,
@@ -101,6 +103,14 @@ export function EssayWriting54Workspace({
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
   const answerSource = retrySeed ?? draft;
+  const canonicalQuestionId = problem.canonicalQuestionId ?? null;
+  const canonicalImportId = problem.canonicalImportId ?? null;
+  const canonicalPayloadHash = problem.payloadHash ?? null;
+  const staleDraftVersion = isWritingDraftVersionStale(draft, {
+    questionId: canonicalQuestionId,
+    importId: canonicalImportId,
+    payloadHash: canonicalPayloadHash,
+  });
   const [state, setState] = useState<Question54State>(() =>
     readInitial54(answerSource),
   );
@@ -135,7 +145,7 @@ export function EssayWriting54Workspace({
     100,
     Math.round((charCount / limit.hardMax) * 100),
   );
-  const locked = Boolean(problem.submitBlockedReason);
+  const locked = Boolean(problem.submitBlockedReason) || staleDraftVersion;
   const currentAnswerSnapshot = useMemo(
     () => serializeWritingAnswerSnapshot(build54Json(state)),
     [state],
@@ -198,6 +208,7 @@ export function EssayWriting54Workspace({
     nextText: string,
     isManual: boolean,
   ) {
+    if (staleDraftVersion) return;
     const nextSnapshot = serializeWritingAnswerSnapshot(build54Json(nextState));
     setStatus("syncing");
     const seq = ++saveSeqRef.current;
@@ -211,6 +222,11 @@ export function EssayWriting54Workspace({
         char_count: nextText.length,
         autosave_status: "clean",
         last_saved_at: new Date().toISOString(),
+        canonical_question_id: canonicalQuestionId,
+        canonical_import_id: canonicalImportId
+          ? Number(canonicalImportId)
+          : null,
+        canonical_payload_hash: canonicalPayloadHash,
       },
       {
         onSuccess: (row) => {
@@ -278,6 +294,9 @@ export function EssayWriting54Workspace({
         answer_text: state.text,
         answer_json: JSON.parse(JSON.stringify(build54Json(state))),
         char_count: charCount,
+        canonical_question_id: canonicalQuestionId,
+        canonical_import_id: canonicalImportId,
+        canonical_payload_hash: canonicalPayloadHash,
       },
       {
         onSuccess: (result) => {
@@ -343,7 +362,7 @@ export function EssayWriting54Workspace({
       autosaveStatus={status}
       lastSavedAt={lastSavedAt}
       canSave={!submit.isPending && state.text.length > 0 && !locked}
-      canSubmit={submittable && !submit.isPending && !locked}
+      canSubmit={submittable && Boolean(draftId) && !submit.isPending && !locked}
       isSaving={status === "syncing" && upsert.isPending}
       isSubmitting={submit.isPending}
       problemBookmark={{ userId, problemId: problem.id }}
@@ -352,6 +371,18 @@ export function EssayWriting54Workspace({
       onRequestBack={exitGuard.requestNavigation}
     >
       <div className="writing-workspace writing-workspace--q54">
+        {staleDraftVersion &&
+        draft &&
+        canonicalQuestionId &&
+        canonicalImportId &&
+        canonicalPayloadHash ? (
+          <StaleDraftVersionAlert
+            draftId={draft.id}
+            questionId={canonicalQuestionId}
+            importId={canonicalImportId}
+            payloadHash={canonicalPayloadHash}
+          />
+        ) : null}
         {problem.submitBlockedReason ? (
           <Alert
             type="warning"

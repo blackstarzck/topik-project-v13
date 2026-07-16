@@ -33,6 +33,9 @@ export function SubmissionFailedModal({
   const resolvedErrorKind =
     errorKind ?? classifySubmitWritingError(submitError);
   const problemUnavailable = resolvedErrorKind === "problem_unavailable";
+  const submissionBlocked = resolvedErrorKind === "submission_blocked";
+  const submissionAmbiguous = resolvedErrorKind === "submission_ambiguous";
+  const retryBlocked = submissionBlocked || submissionAmbiguous;
 
   return (
     <AppModal
@@ -53,20 +56,36 @@ export function SubmissionFailedModal({
         data-testid="submission-failed-modal"
       >
         <Alert
-          type="error"
+          type={retryBlocked ? "warning" : "error"}
           showIcon
-          title={t("submitFailedTitle")}
-          description={t(
-            problemUnavailable
-              ? "submitUnavailableDescription"
-              : "submitFailedDescription",
-            {
-              submitError: submitError ?? "",
-            },
+          title={t(
+            submissionBlocked
+              ? "submissionBlockedTitle"
+              : submissionAmbiguous
+                ? "submissionAmbiguousTitle"
+                : "submitFailedTitle",
           )}
+          description={
+            submissionBlocked
+              ? t("submissionBlockedDescription")
+              : submissionAmbiguous
+                ? t("submissionAmbiguousDescription")
+                : t(
+                    problemUnavailable
+                      ? "submitUnavailableDescription"
+                      : "submitFailedDescription",
+                    { submitError: submitError ?? "" },
+                  )
+          }
         />
 
-        <div className="grid grid-cols-[2fr_3fr] gap-3">
+        <div
+          className={
+            submissionBlocked
+              ? "grid grid-cols-1 gap-3"
+              : "grid grid-cols-1 gap-3 sm:grid-cols-[2fr_3fr]"
+          }
+        >
           <Button
             block
             size="large"
@@ -76,7 +95,19 @@ export function SubmissionFailedModal({
           >
             {tCommon("cancel")}
           </Button>
-          {problemUnavailable ? (
+          {submissionBlocked ? null : submissionAmbiguous ? (
+            <Button
+              block
+              size="large"
+              type="primary"
+              href={APP_ROUTES.library as never}
+              icon={<ListChecks aria-hidden size={16} />}
+              disabled={loading}
+              data-testid="submission-failed-history"
+            >
+              {t("checkSubmissionHistory")}
+            </Button>
+          ) : problemUnavailable ? (
             <Link href={APP_ROUTES.practiceProblems as never}>
               <Button
                 block

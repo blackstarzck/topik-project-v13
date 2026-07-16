@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -14,52 +14,27 @@ import {
   type SidebarItem,
 } from "@/lib/routes";
 
-type WireframePageRoute = {
-  iaCode: string;
-  route: string;
-};
-
-function wireframePageRoutes(): WireframePageRoute[] {
-  const root = join(process.cwd(), "docs", "Wireframe");
-
-  return readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(root, entry.name, "functional-spec.md"))
-    .filter((path) => existsSync(path))
-    .map((path) => {
-      const content = readFileSync(path, "utf8");
-      const iaCode = content.match(
-        /^#\s+([A-Z]-\d{2}|[A-Z]-M\d|X-\d{2})\b/m,
-      )?.[1];
-      const route = content.match(/^- Route:\s+`([^`]+)`/m)?.[1];
-      const routeType = content.match(/^- Route type:\s+(.+)$/m)?.[1];
-
-      if (!iaCode || !route || !routeType?.startsWith("page")) {
-        return null;
-      }
-
-      return { iaCode, route };
-    })
-    .filter((route): route is WireframePageRoute => route !== null)
-    .sort((a, b) => a.iaCode.localeCompare(b.iaCode));
-}
-
 describe("user-flow route contract", () => {
-  it("covers every Wireframe page route in the central flow route registry", () => {
-    const registryByIa = new Map(
-      FLOW_ROUTE_SPECS.filter((spec) => spec.routeType.startsWith("page")).map(
-        (spec) => [spec.iaCode, spec],
-      ),
+  it("keeps central flow route ids and IA codes unique", () => {
+    const ids = FLOW_ROUTE_SPECS.map((spec) => spec.id);
+    const iaCodes = FLOW_ROUTE_SPECS.map((spec) => spec.iaCode);
+
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(iaCodes).size).toBe(iaCodes.length);
+  });
+
+  it("maps every page flow to an executable App Router route contract", () => {
+    const appPaths = new Set(
+      APP_ROUTE_SPECS.map((spec) => spec.pathPattern ?? spec.path),
     );
 
-    for (const expected of wireframePageRoutes()) {
-      const actual = registryByIa.get(expected.iaCode);
-
+    for (const flow of FLOW_ROUTE_SPECS.filter((spec) =>
+      spec.routeType.startsWith("page"),
+    )) {
       expect(
-        actual,
-        `${expected.iaCode} is missing from FLOW_ROUTE_SPECS`,
-      ).toBeDefined();
-      expect(actual?.pathPattern ?? actual?.path).toBe(expected.route);
+        appPaths.has(flow.pathPattern ?? flow.path),
+        `${flow.iaCode} is missing from APP_ROUTE_SPECS`,
+      ).toBe(true);
     }
   });
 

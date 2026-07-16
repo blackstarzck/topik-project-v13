@@ -1,106 +1,70 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getWritingAvailability } from "../../../src/lib/practice/writing-availability";
 
-type ProblemRow = {
-  id: string;
-  question_no: number | null;
-  tags?: string[] | null;
-  materials?: unknown;
-};
-
-function makeClient(opts: {
-  rows: ProblemRow[];
-  visibleProblemIds?: string[];
-}) {
-  const calls: Array<{ type: "eq"; column: string; value: unknown }> = [];
+function canonicalRow(problemId: string, itemNumber: number) {
   return {
-    calls,
-    rpc(name: string, args: { p_problem_ids?: string[] }) {
-      if (name !== "filter_visible_writing_problem_ids") {
-        throw new Error(`unexpected rpc ${name}`);
-      }
-      const allowed = new Set(opts.visibleProblemIds ?? args.p_problem_ids);
-      return Promise.resolve({
-        data: (args.p_problem_ids ?? [])
-          .filter((id) => allowed.has(id))
-          .map((id) => ({ problem_id: id })),
-        error: null,
-      });
-    },
-    from(table: string) {
-      if (table !== "problems") throw new Error(`unexpected table ${table}`);
-      const chain = {
-        select: () => chain,
-        eq: (column: string, value: unknown) => {
-          calls.push({ type: "eq", column, value });
-          return chain;
-        },
-        order: () => chain,
-        limit: () => Promise.resolve({ data: opts.rows, error: null }),
-      };
-      return chain;
-    },
+    problem_id: problemId,
+    question_id: `topik-writing-${itemNumber}-0001`,
+    canonical_import_id: 1,
+    payload_hash: `hash-${itemNumber}`,
+    item_number: itemNumber,
+    topik_level: 2,
+    difficulty: 3,
+    title: `${itemNumber}번 문제`,
+    prompt: "문제 본문",
+    tags: [],
+    materials: {},
+    source_created_at: "2026-07-13T00:00:00.000Z",
+    source_updated_at: "2026-07-13T00:00:00.000Z",
   };
 }
 
+function makeClient(rows: ReturnType<typeof canonicalRow>[], error?: string) {
+  const rpc = vi.fn().mockResolvedValue({
+    data: rows,
+    error: error ? { message: error } : null,
+  });
+  return { rpc };
+}
+
 describe("getWritingAvailability", () => {
-  it("returns available and locked question types from the visibility RPC", async () => {
-    const client = makeClient({
-      rows: [
-        { id: "p-51", question_no: 51 },
-        { id: "p-52", question_no: 52 },
-        {
-          id: "seed-53",
-          question_no: 53,
-          tags: ["seed:wireframe_problem_fixtures"],
-        },
-      ],
-      visibleProblemIds: ["p-52", "seed-53"],
-    });
+  it("derives available question types exclusively from the canonical catalog", async () => {
+    const client = makeClient([
+      canonicalRow("canonical-51", 51),
+      canonicalRow("canonical-54", 54),
+      canonicalRow("ignored-50", 50),
+    ]);
 
-    const availability = await getWritingAvailability(
-      async () => client as never,
-    );
-
-    expect(availability).toEqual({
-      availableTypes: [52],
-      lockedTypes: [51, 53, 54],
+    await expect(
+      getWritingAvailability(async () => client as never),
+    ).resolves.toEqual({
+      availableTypes: [51, 54],
+      lockedTypes: [52, 53],
       hasAny: true,
     });
-    expect(client.calls).toContainEqual({
-      type: "eq",
-      column: "domain",
-      value: "writing",
-    });
-    expect(client.calls).toContainEqual({
-      type: "eq",
-      column: "publish_status",
-      value: "published",
-    });
-    expect(client.calls).toContainEqual({
-      type: "eq",
-      column: "lifecycle_status",
-      value: "active",
+    expect(client.rpc).toHaveBeenCalledWith("get_available_writing_questions", {
+      p_item_number: null,
+      p_problem_id: null,
     });
   });
 
-  it("returns all types locked when no visible writing problem exists", async () => {
-    const client = makeClient({
-      rows: [
-        { id: "p-51", question_no: 51 },
-        { id: "p-54", question_no: 54 },
-      ],
-      visibleProblemIds: [],
-    });
+  it("locks every writing type when the canonical catalog is empty", async () => {
+    const client = makeClient([]);
 
-    const availability = await getWritingAvailability(
-      async () => client as never,
-    );
-
-    expect(availability).toEqual({
+    await expect(
+      getWritingAvailability(async () => client as never),
+    ).resolves.toEqual({
       availableTypes: [],
       lockedTypes: [51, 52, 53, 54],
       hasAny: false,
     });
+  });
+
+  it("surfaces a canonical catalog failure instead of reading mirror content", async () => {
+    const client = makeClient([], "catalog unavailable");
+
+    await expect(
+      getWritingAvailability(async () => client as never),
+    ).rejects.toThrow("getCanonicalWritingProblems: catalog unavailable");
   });
 });

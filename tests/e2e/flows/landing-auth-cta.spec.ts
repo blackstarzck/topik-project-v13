@@ -135,8 +135,7 @@ test.describe("anonymous landing", () => {
     const errors = collectErrors(page);
     const signUpRequests = await mockSignUpSuccess(page);
 
-    // 2026-07-01 institution-invite flow (docs/sot-change-proposals/
-    // 2026-07-01-institution-invite-flow.md): an anonymous `?aff=` entry on any
+    // APP_ROUTES institution-invite flow: an anonymous `?aff=` entry on any
     // route stores the code and routes to /auth/institution-invite, where the
     // visitor picks new sign-up / existing login / continue without invite.
     await page.goto("/?aff=EXPO2026-BOOTH-A", { waitUntil: "networkidle" });

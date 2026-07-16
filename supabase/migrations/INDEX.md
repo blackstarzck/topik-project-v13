@@ -5,7 +5,7 @@
 실제 SQL 파일은 **Supabase CLI 호환을 위해 `supabase/migrations/` 디렉토리 바로 아래에 flat 으로 위치**합니다 (CLI는 하위 폴더 SQL을 스캔하지 않음). 본 문서는 가독성을 위한 메타 정리입니다.
 
 명명 규칙·idempotency·CLI 적용 명령은 [`../README.md`](../README.md) 참조.
-테이블 컬럼·RLS·ER 등 스키마 상세는 각 migration SQL 본문, 본 인덱스, 관련 Wireframe 기능명세와 `docs/Wireframe/data-usage-index.md`를 함께 참조.
+테이블 컬럼·RLS·RPC의 실행 가능한 정본은 timestamp 순으로 재생한 migration SQL 본문이다. 사람이 읽는 도메인·보안 계약은 `docs/supabase/`를 함께 참조한다.
 
 ---
 
@@ -156,7 +156,7 @@
 
 #### 22 (월) — 회원 탈퇴 소프트 삭제 (self-service 계정 삭제)
 
-> 구현 브리프: `docs/sot-change-proposals/2026-06-22-account-deletion-self-service.md`. 확정 SOT(`01-core-decisions` "탈퇴 30일 복구 유예") 기준. *소프트 삭제* 단계만. 하드 삭제 cron/storage 파기·복구 RPC는 후속(비-6·22-blocking). down 미러 동반.
+> 사용자 앱의 계정 탈퇴 소프트 삭제와 30일 복구 유예를 추가했다. 하드 삭제 cron, Storage 파기와 복구 RPC는 이 migration에 포함하지 않는다. 실제 계약은 SQL 본문과 `docs/supabase/security-and-ownership.md`를 따른다.
 
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
@@ -171,7 +171,7 @@
 2. **파일 작성**: `supabase/migrations/<timestamp>_<짧은_설명>.sql` 로 flat 위치에 둠. 하위 폴더 만들지 말 것 — Supabase CLI가 못 본다.
 3. **본 INDEX.md 갱신**: 해당 날짜 섹션에 표 한 줄 추가. 새 연/월/일이면 트리 헤더 (`### 06`, `#### 05`) 부터 추가.
 4. **`supabase/README.md`** 의 요약 정보가 영향받으면 같이 갱신.
-5. 관련 Wireframe 기능명세, `docs/Wireframe/data-usage-index.md`, 그리고 필요한 경우 `README.md`/`AGENTS.md`의 경계 규칙도 같이 갱신.
+5. `docs/supabase/`의 사람용 계약과 필요한 경우 `README.md`/`AGENTS.md`의 경계 규칙도 같이 갱신.
 
 ## 빠른 검증 체크리스트
 
@@ -180,7 +180,7 @@
 - [ ] SQL이 idempotent (`if not exists`, `or replace`, `drop ... if exists`)?
 - [ ] FK 참조 테이블이 이전 timestamp 파일에 존재하는가?
 - [ ] RLS-적용 대상이라면 RLS enable + force + 정책이 같은 또는 후속 마이그레이션에 있는가?
-- [ ] INDEX.md / 관련 Wireframe 기능명세 / data-usage-index / README.md 또는 AGENTS.md 중 영향받는 곳을 모두 갱신했는가?
+- [ ] INDEX.md / `docs/supabase/` / 관련 source·tests / 필요시 README.md 또는 AGENTS.md 중 영향받는 owner를 모두 갱신했는가?
 ## 2026-06-23 추가 migration
 
 | # | timestamp | file | scope |
@@ -192,7 +192,7 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 58 | `00:12:57` | [`20260625001257_restrict_auth_completion_gate_anon.sql`](./20260625001257_restrict_auth_completion_gate_anon.sql) | Removes explicit `anon` execute permission from `public.complete_auth_gate(text,text,text,boolean)` after remote grant drift, while preserving authenticated execution for the `/auth/consent` completion gate. |
-| 59 | `11:30:00` | [`20260625113000_auto_locale_detection.sql`](./20260625113000_auto_locale_detection.sql) | Adds `profiles.ui_locale_source` provenance (`legacy/default/auto/manual`) and updates `handle_new_user()` to seed validated UI locale metadata without persisting raw request language hints. |
+| 59 | `11:30:00` | [`20260625113000_auto_locale_detection.sql`](./20260625113000_auto_locale_detection.sql) | Adds `profiles.ui_locale_source` provenance (`legacy/default/auto/manual`) and updates `handle_new_user()` to seed validated UI locale metadata without persisting raw request language hints. Also introduces the locale-aware `complete_auth_gate(text,text,text,boolean,text,text)` overload (granted to `authenticated`, PUBLIC revoked; no explicit anon revoke). NOTE: this overload was later superseded by the 7/9-arg gender/phone overloads (72/74) but not dropped there; migration #76 (`20260710093000`) drops it to close the anon grant-drift window. |
 | 60 | `12:00:00` | [`20260625120000_feedback_language_dimension.sql`](./20260625120000_feedback_language_dimension.sql) | Adds `language` to `feedback_dimension_scores.dimension` and the `private.assert_submission_payload` dimension validator so external feedback sync can persist backend-normalized language trait scores. |
 | 61 | `15:30:00` | [`20260625153000_auto_submission_library_item.sql`](./20260625153000_auto_submission_library_item.sql) | Adds `private.ensure_submission_library_item(uuid, uuid)` and redefines `public.create_external_writing_submission(jsonb)` so backend-created writing submissions are idempotently saved to F-01 `library_items` when inserted or when draft dedup returns an existing submission. |
 
@@ -239,3 +239,33 @@
 | 73 | `15:40:00` | [`20260709154000_profiles_phone_prompt_dismissed.sql`](./20260709154000_profiles_phone_prompt_dismissed.sql) | Adds nullable `profiles.phone_number_prompt_dismissed_at` timestamp so the non-blocking workspace phone-number reminder banner can be permanently dismissed per account. New rows default to NULL (not dismissed); no backfill or RLS/trigger change needed. |
 | 74 | `16:50:00` | [`20260709165000_profiles_split_phone_country_code.sql`](./20260709165000_profiles_split_phone_country_code.sql) | Follows up the optional phone profile migration for already-applied environments by adding `profiles.phone_country_code`, replacing the optional auth-gate RPC overloads with split phone country/local-number parameters, and restating `handle_new_user()` split phone metadata seeding. |
 | 75 | `17:00:00` | [`20260709170000_library_problem_answer_preview.sql`](./20260709170000_library_problem_answer_preview.sql) | Redefines `public.list_user_library_problem_items()` so available bookmarked problem rows can include the caller's latest active draft/submission `answer_text` preview while preserving the existing availability and metadata privacy gates. |
+
+## 2026-07-10 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 76 | `09:30:00` | [`20260710093000_revoke_anon_superseded_auth_gate.sql`](./20260710093000_revoke_anon_superseded_auth_gate.sql) | Hardens anon EXECUTE grant drift on two authenticated-only SECURITY DEFINER RPCs: drops the superseded locale-aware `complete_auth_gate(text,text,text,boolean,text,text)` overload (created by #59, never dropped by 72/74; unreachable — app calls only 7/9-arg, delegation chain 9→7→4-arg base) which removes its anon grant, and revokes `anon` EXECUTE on `list_user_library_problem_items()` (#75 revoked PUBLIC only). Forward-only, idempotent; both functions already reject unauthenticated callers, so this is defense-in-depth. Remote apply is handled by the separate ops procedure (not applied from v13). |
+| 77 | `09:40:00` | [`20260710094000_auth_gate_trusted_consent_docs.sql`](./20260710094000_auth_gate_trusted_consent_docs.sql) | Fixes a consent desync: the base `complete_auth_gate(text,text,text,boolean)` overload selected required consent docs with only `status='published' AND requires_consent` and, unlike the app layer (`fetchRequiredConsentDocuments` trust filter `source_policy_id`/`is_placeholder`), could pick a newer UNTRUSTED published row as `latest per doc_type` and record consent against it while post-auth checks the trusted row → permanent /auth/consent bounce. Adds the same trust filter to all four doc-selection subqueries (count + insert × localized + ko-fallback). create-or-replace preserves other logic; re-asserts authenticated-only grant. Remote apply via ops (not from v13). |
+| 78 | `09:50:00` | [`20260710095000_profiles_country_code_iso_check.sql`](./20260710095000_profiles_country_code_iso_check.sql) | Adds IMMUTABLE `public.is_supported_country_code(text)` over the 249-code ISO 3166-1 alpha-2 set (mirrors `src/lib/geo/country-codes.ts` ISO_COUNTRY_CODES, derived from country-flag-icons@1.6.17) and re-points both `profiles_phone_country_code_check` and `profiles_nationality_country_code_format` at it. `phone_country_code` is tightened from the loose `^[A-Z]{2}$` shape check to the ISO set; `nationality_country_code` keeps the exact same accepted set (249 == 249, verified identical to the prior 20260617195000 inline array and to the app list) but is now single-sourced via the function. RPC/trigger phone regex left unchanged on purpose (the CHECK is the authoritative backstop, and re-creating the base `complete_auth_gate(text,text,text,boolean)` would risk regressing the 20260710094000 trusted-consent filter). Dev data already valid (nationality ISO, phone NULL) so no backfill; NOT VALID → VALIDATE, forward-only, idempotent. Remote apply via the ops procedure (not from v13). |
+
+## 2026-07-13 migration
+
+> Migrations 79-83 record the first canonical-read cutover. They are applied to the dev project only and are superseded by the 2026-07-14 identity-registry corrective migration. Production remains unchanged.
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 79 | `08:00:15` | [`20260713080015_writing_problem_identity_anchor.sql`](./20260713080015_writing_problem_identity_anchor.sql) | Adds the service-role-only writing identity anchor and requires the learner UUID to equal `md5(question_id)::uuid`; provenance-only `legacy_problem_id` is not accepted as a learner identifier. |
+| 80 | `08:15:59` | [`20260713081559_writing_question_version_snapshot.sql`](./20260713081559_writing_question_version_snapshot.sql) | Pins the canonical question/import/hash and learner-safe snapshot on drafts and submissions, including an atomic stale-draft supersede-and-copy path. |
+| 81 | `08:30:00` | [`20260713083000_writing_canonical_read_security_gate.sql`](./20260713083000_writing_canonical_read_security_gate.sql) | Introduces the initial canonical reader, runtime control, fail-closed submission gate, and draft reconciliation evidence. The later identity-registry migration removes its legacy/shadow read modes. |
+| 82 | `08:40:00` | [`20260713084000_writing_cutover_serialization_guard.sql`](./20260713084000_writing_cutover_serialization_guard.sql) | Serializes the initial runtime and mirror-Cron transition and requires fresh reconciliation evidence before cutover mutations. |
+| 83 | `08:45:00` | [`20260713084500_retire_writing_problem_mirror_cron.sql`](./20260713084500_retire_writing_problem_mirror_cron.sql) | Retires only `sync-writing-problems`, snapshots its definition, rejects an in-flight target run, and leaves unrelated Cron jobs unchanged. The target job is absent in dev. |
+
+## 2026-07-14 migration
+
+> Migrations 84-86 plus the Admin-owned bridge migration `20260714150000` are applied to the dev project. Migration 85 was applied from the Admin operations surface, exercised through a down/up rehearsal, and verified by operations-owned live fault injection plus a real provider Q54 canary. The canary was fail-closed afterward, so dev remains `blocked + unverified` until an explicit service-resume operation selects the recorded evidence. Production remains unchanged.
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 84 | `14:00:00` | [`20260714140000_writing_problem_identity_registry_cutover.sql`](./20260714140000_writing_problem_identity_registry_cutover.sql) | Replaces `public.problems` writing anchors with the private immutable `problem_identities` registry, preserves learner-safe history snapshots and rollback backups, retargets every audited FK with validation, removes writing catalog rows after proof gates, and makes canonical reads permanent while submissions stay fail-closed. |
+| 85 | `14:10:00` | [`20260714141000_writing_submission_outbox.sql`](./20260714141000_writing_submission_outbox.sql) | Adds a private durable submission intent/outbox with one-shot claims, explicit accepted/ambiguous/failed states, separate provider submission IDs, retry-safe accepted materialization, redacted service-only reconciliation/audit RPCs, and an independently verified evidence gate for enabling canonical submission. Installation alone never enables submission. |
+| 86 | `16:00:00` | [`20260714160000_writing_snapshot_constraint_execution_fix.sql`](./20260714160000_writing_snapshot_constraint_execution_fix.sql) | Grants authenticated and service-role writers execute permission on the immutable, table-free forbidden-key classifier used by writing snapshot CHECK constraints. Anonymous execution remains denied; the fix changes no data and exposes no snapshot constructor. |

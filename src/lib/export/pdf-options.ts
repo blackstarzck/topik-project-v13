@@ -1,6 +1,6 @@
 // F-M1 서버 PDF 내보내기 — 클라이언트(모달)와 서버(route)가 공유하는 순수
-// 옵션 계약. options JSON 허용 키는 브리프(docs/pdf-export-real-file-brief-
-// 20260612.md) §2-5에서 확정: filename / includeAnswers / includeFeedback /
+// 옵션 계약. docs/prd.md의 PDF 사용자 약속과 이 모듈의 tests가 허용 키를 고정한다:
+// filename / includeAnswers / includeFeedback /
 // layout / orientation (+ 서버가 source: 'server_render'를 덧붙인다).
 import { z } from "zod";
 

@@ -1,8 +1,6 @@
 /**
- * Single source of truth for sitemap-aligned route data.
- *
- * Keep this file in sync with docs/flow/user-flow.md and
- * docs/flow/sitemap.md when a route moves.
+ * Single source of truth for application routes, flow ownership, middleware,
+ * and learner sidebar placement. Update the route contract tests with changes.
  */
 
 import type { AppRole } from "./auth/roles";

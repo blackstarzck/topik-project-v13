@@ -5,10 +5,6 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import { getProblemAvailability } from "../problems/availability";
-import {
-  filterVisibleProblemIds,
-  isWritingProblemVisibleToCaller,
-} from "../problems/visibility";
 import type {
   ComparisonReportRow,
   FeedbackBundle,
@@ -19,22 +15,11 @@ import type {
   WritingSubmissionRow,
 } from "./types";
 import { isQuestionNo } from "./types";
-import {
-  normalizeWritingProblem,
-  type NormalizedWritingProblem,
-  type ProblemLifecycleStatus,
-} from "./problem-normalizer";
+import type { NormalizedWritingProblem } from "./problem-normalizer";
 import { writingProblemHref } from "./routes";
+import { getCanonicalWritingProblems } from "./canonical-source";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
-
-type ProblemAvailabilityQueryRow = {
-  publish_status: string | null;
-  visibility: string | null;
-  lifecycle_status: string | null;
-  lifecycle_reason: string | null;
-  question_no: number | null;
-};
 
 export async function getActiveDraft(
   userId: string,
@@ -248,32 +233,6 @@ export async function getComparisonTargetCandidates(
 }
 
 export type WritingProblem = NormalizedWritingProblem;
-const DEFAULT_PROBLEM_CANDIDATE_LIMIT = 25;
-const PROBLEM_SCAN_PAGE_SIZE = 25;
-const MAX_VISIBILITY_SCAN_ROWS = 200;
-
-type WritingProblemQueryRow = {
-  id: string;
-  title: string;
-  prompt: string;
-  question_no: number | null;
-  tags?: string[] | null;
-  materials: unknown;
-  answer_key: unknown;
-  rubric: unknown;
-  lifecycle_status?: ProblemLifecycleStatus | null;
-  lifecycle_reason?: string | null;
-};
-
-type NextWritingProblemCandidateRow = Pick<
-  WritingProblemQueryRow,
-  "id" | "question_no" | "tags" | "materials"
->;
-
-type WritingProblemQueryResult = {
-  data: WritingProblemQueryRow[] | null;
-  error: { message: string } | null;
-};
 
 type WritingProblemHistoryRow = {
   problem_id: string | null;
@@ -284,62 +243,9 @@ type WritingProblemHistoryQueryResult = {
   error: { message: string } | null;
 };
 
-type NextWritingProblemCandidateResult = {
-  data: NextWritingProblemCandidateRow[] | null;
-  error: { message: string } | null;
-};
-
 type GetWritingProblemOptions = {
   userId?: string | null;
 };
-
-type RunWritingProblemQuery = (
-  withLifecycle: boolean,
-  range: { from: number; to: number } | null,
-) => Promise<WritingProblemQueryResult>;
-
-function normalizeWritingProblemRow(
-  row: WritingProblemQueryRow,
-  questionNo: QuestionNo,
-): WritingProblem {
-  return normalizeWritingProblem({
-    id: row.id,
-    title: row.title,
-    prompt: row.prompt,
-    questionNo,
-    materials: row.materials,
-    answerKey: row.answer_key,
-    rubric: row.rubric,
-    lifecycleStatus:
-      "lifecycle_status" in row
-        ? (row.lifecycle_status as ProblemLifecycleStatus)
-        : "active",
-    lifecycleReason:
-      "lifecycle_reason" in row
-        ? (row.lifecycle_reason as string | null)
-        : null,
-  });
-}
-
-function isSeedFixtureProblem(
-  row: Pick<WritingProblemQueryRow, "tags" | "materials">,
-): boolean {
-  if (
-    Array.isArray(row.tags) &&
-    row.tags.some((tag) => tag.startsWith("seed:"))
-  ) {
-    return true;
-  }
-  if (
-    row.materials &&
-    typeof row.materials === "object" &&
-    !Array.isArray(row.materials) &&
-    "seed_source" in row.materials
-  ) {
-    return row.materials.seed_source === "wireframe_problem_fixtures";
-  }
-  return false;
-}
 
 // problems.id는 uuid 컬럼 — 형식이 아닌 값을 .eq("id", …)에 넘기면 PostgREST가
 // uuid 캐스트 오류(22P02)로 500을 돌려줘 서버 에러 바운더리에 도달한다 (D-3,
@@ -384,90 +290,27 @@ async function getNextWritingProblemTarget({
   questionNo: number | null | undefined;
   createClient: ClientFactory;
 }): Promise<{ problemId: string; questionNo: QuestionNo } | null> {
+  const supabase = await createClient();
   if (!isQuestionNo(questionNo) || !isProblemIdLikeUuid(currentProblemId)) {
     return null;
   }
 
-  const supabase = await createClient();
-  const findFirstEligibleProblemAfter = async (
-    afterProblemId: string | null,
-  ): Promise<{ problemId: string; questionNo: QuestionNo } | null> => {
-    const scan = async (
-      withLifecycle: boolean,
-    ): Promise<{
-      error: NextWritingProblemCandidateResult["error"];
-      target: { problemId: string; questionNo: QuestionNo } | null;
-    }> => {
-      let cursor = afterProblemId;
-
-      for (;;) {
-        let query = supabase
-          .from("problems")
-          .select("id, question_no, tags, materials")
-          .eq("domain", "writing")
-          .eq("question_no", questionNo)
-          .eq("publish_status", "published");
-
-        if (withLifecycle) {
-          query = query.eq("lifecycle_status", "active");
-        }
-        if (cursor) {
-          query = query.gt("id", cursor);
-        }
-
-        const result = (await query
-          .order("id", { ascending: true })
-          .limit(
-            MAX_VISIBILITY_SCAN_ROWS,
-          )) as unknown as NextWritingProblemCandidateResult;
-        if (result.error) return { error: result.error, target: null };
-
-        const pageRows = (result.data ?? [])
-          .filter((row) => isQuestionNo(row.question_no))
-          .sort((a, b) => a.id.localeCompare(b.id));
-        if (pageRows.length === 0) return { error: null, target: null };
-
-        const candidates = pageRows.filter((row) => !isSeedFixtureProblem(row));
-        const visibleIds = await filterVisibleProblemIds(
-          supabase,
-          candidates.map((row) => row.id),
-        );
-        const firstVisible = candidates.find((row) => visibleIds.has(row.id));
-        if (firstVisible) {
-          return {
-            error: null,
-            target: { problemId: firstVisible.id, questionNo },
-          };
-        }
-
-        const nextCursor = pageRows[pageRows.length - 1]?.id ?? null;
-        if (
-          !nextCursor ||
-          (cursor && nextCursor.localeCompare(cursor) <= 0) ||
-          pageRows.length < MAX_VISIBILITY_SCAN_ROWS
-        ) {
-          return { error: null, target: null };
-        }
-        cursor = nextCursor;
-      }
-    };
-
-    let result = await scan(true);
-    if (result.error && result.error.message.includes("lifecycle_status")) {
-      result = await scan(false);
-    }
-    if (result.error) {
-      throw new Error(
-        `getNextWritingProblemStartHref: ${result.error.message}`,
-      );
-    }
-    return result.target;
-  };
-
-  return (
-    (await findFirstEligibleProblemAfter(currentProblemId)) ??
-    (await findFirstEligibleProblemAfter(null))
+  const canonicalProblems = await getCanonicalWritingProblems({
+    supabase,
+    questionNo,
+  });
+  const submittableProblems = canonicalProblems.filter(
+    (problem) => problem.submitBlockedReason === null,
   );
+  const currentIndex = submittableProblems.findIndex(
+    (problem) => problem.id === currentProblemId,
+  );
+  const target =
+    submittableProblems[currentIndex + 1] ?? submittableProblems[0] ?? null;
+
+  return target
+    ? { problemId: target.id, questionNo: target.questionNo }
+    : null;
 }
 
 async function getTouchedWritingProblemIds(
@@ -512,236 +355,61 @@ async function getTouchedWritingProblemIds(
   );
 }
 
-async function selectDefaultWritingProblemForUser({
-  questionNo,
-  userId,
-  supabase,
-  runQuery,
-  withLifecycle,
-}: {
-  questionNo: QuestionNo;
-  userId: string;
-  supabase: SupabaseServerClient;
-  runQuery: RunWritingProblemQuery;
-  withLifecycle: boolean;
-}): Promise<{
-  problem: WritingProblem | null;
-  error: WritingProblemQueryResult["error"];
-}> {
-  const submittableProblems: WritingProblem[] = [];
-
-  for (
-    let offset = 0;
-    offset < MAX_VISIBILITY_SCAN_ROWS;
-    offset += PROBLEM_SCAN_PAGE_SIZE
-  ) {
-    const result = await runQuery(withLifecycle, {
-      from: offset,
-      to: offset + PROBLEM_SCAN_PAGE_SIZE - 1,
-    });
-    if (result.error) return { problem: null, error: result.error };
-
-    const pageRows = result.data ?? [];
-    const nonSeedRows = pageRows.filter((row) => !isSeedFixtureProblem(row));
-    const visibleIds = await filterVisibleProblemIds(
-      supabase,
-      nonSeedRows.map((row) => row.id),
-    );
-    submittableProblems.push(
-      ...nonSeedRows
-        .filter((row) => visibleIds.has(row.id))
-        .map((row) => normalizeWritingProblemRow(row, questionNo))
-        .filter((problem) => problem.submitBlockedReason === null),
-    );
-
-    if (pageRows.length < PROBLEM_SCAN_PAGE_SIZE) break;
-  }
-
-  const touchedIds = await getTouchedWritingProblemIds(
-    supabase,
-    userId,
-    submittableProblems.map((problem) => problem.id),
-  );
-  const untouched = submittableProblems.find(
-    (problem) => !touchedIds.has(problem.id),
-  );
-  if (untouched) return { problem: untouched, error: null };
-
-  return { problem: null, error: null };
-}
-
 export async function getWritingProblem(
   questionNo: number,
   problemId: string | undefined,
   createClient: ClientFactory = createSupabaseServerClient,
   options: GetWritingProblemOptions = {},
 ): Promise<WritingProblem | null> {
+  const supabase = await createClient();
   if (!isQuestionNo(questionNo)) return null;
   if (problemId && !isProblemIdLikeUuid(problemId)) return null;
-  const explicitProblemId = problemId || null;
-  const supabase = await createClient();
-  const runQuery = async (
-    withLifecycle: boolean,
-    range: { from: number; to: number } | null,
-  ) => {
-    let query = supabase
-      .from("problems")
-      .select(
-        withLifecycle
-          ? "id, title, prompt, question_no, tags, materials, answer_key, rubric, lifecycle_status, lifecycle_reason"
-          : "id, title, prompt, question_no, tags, materials, answer_key, rubric",
-      )
-      .eq("domain", "writing")
-      .eq("question_no", questionNo)
-      .eq("publish_status", "published");
-    if (withLifecycle) {
-      query = query.eq("lifecycle_status", "active");
-    }
-    // Default selection (no explicit problemId) must be deterministic and stable.
-    // Order before limit so direct/deep-link entry surfaces the same published
-    // candidate set and can skip incomplete rows below.
-    query = query
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true });
-    const result = explicitProblemId
-      ? await query.eq("id", explicitProblemId).limit(1)
-      : await query.range(
-          range?.from ?? 0,
-          range?.to ?? PROBLEM_SCAN_PAGE_SIZE - 1,
-        );
-    return result as unknown as WritingProblemQueryResult;
-  };
 
-  const collectVisibleRows = async (withLifecycle: boolean) => {
-    const rows: WritingProblemQueryRow[] = [];
-    let lastError: WritingProblemQueryResult["error"] = null;
+  const canonicalProblems = await getCanonicalWritingProblems({
+    supabase,
+    questionNo,
+    problemId: problemId ?? null,
+  });
 
-    if (explicitProblemId) {
-      const result = await runQuery(withLifecycle, null);
-      if (result.error) return result;
-      const nonSeedRows = (result.data ?? []).filter(
-        (row) => !isSeedFixtureProblem(row),
-      );
-      const visibleIds = await filterVisibleProblemIds(
-        supabase,
-        nonSeedRows.map((row) => row.id),
-      );
-      return {
-        data: nonSeedRows.filter((row) => visibleIds.has(row.id)),
-        error: null,
-      } satisfies WritingProblemQueryResult;
-    }
-
-    for (
-      let offset = 0;
-      offset < MAX_VISIBILITY_SCAN_ROWS &&
-      rows.length < DEFAULT_PROBLEM_CANDIDATE_LIMIT;
-      offset += PROBLEM_SCAN_PAGE_SIZE
-    ) {
-      const result = await runQuery(withLifecycle, {
-        from: offset,
-        to: offset + PROBLEM_SCAN_PAGE_SIZE - 1,
-      });
-      if (result.error) {
-        lastError = result.error;
-        break;
-      }
-      const pageRows = result.data ?? [];
-      const nonSeedRows = pageRows.filter((row) => !isSeedFixtureProblem(row));
-      const visibleIds = await filterVisibleProblemIds(
-        supabase,
-        nonSeedRows.map((row) => row.id),
-      );
-      rows.push(...nonSeedRows.filter((row) => visibleIds.has(row.id)));
-      if (pageRows.length < PROBLEM_SCAN_PAGE_SIZE) break;
-    }
-
-    return { data: rows, error: lastError } satisfies WritingProblemQueryResult;
-  };
-
-  if (!explicitProblemId && options.userId) {
-    let userDefault = await selectDefaultWritingProblemForUser({
-      questionNo,
-      userId: options.userId,
-      supabase,
-      runQuery,
-      withLifecycle: true,
-    });
-    if (
-      userDefault.error &&
-      userDefault.error.message.includes("lifecycle_status")
-    ) {
-      userDefault = await selectDefaultWritingProblemForUser({
-        questionNo,
-        userId: options.userId,
-        supabase,
-        runQuery,
-        withLifecycle: false,
-      });
-    }
-    if (userDefault.error) {
-      throw new Error(`getWritingProblem: ${userDefault.error.message}`);
-    }
-    if (userDefault.problem) return userDefault.problem;
-  }
-
-  let { data, error } = await collectVisibleRows(true);
-  if (error && error.message.includes("lifecycle_status")) {
-    ({ data, error } = await collectVisibleRows(false));
-  }
-  if (error) throw new Error(`getWritingProblem: ${error.message}`);
-  const problems = (data ?? []).map((row) =>
-    normalizeWritingProblemRow(row, questionNo),
-  );
-  if (problems.length === 0) return null;
-  if (!explicitProblemId) {
-    return (
-      problems.find((problem) => problem.submitBlockedReason === null) ??
-      problems[0]
+  if (problemId) return canonicalProblems[0] ?? null;
+  if (options.userId) {
+    const submittable = canonicalProblems.filter(
+      (problem) => problem.submitBlockedReason === null,
     );
+    const touchedIds = await getTouchedWritingProblemIds(
+      supabase,
+      options.userId,
+      submittable.map((problem) => problem.id),
+    );
+    return submittable.find((problem) => !touchedIds.has(problem.id)) ?? null;
   }
-  return problems[0];
+  return (
+    canonicalProblems.find((problem) => problem.submitBlockedReason === null) ??
+    canonicalProblems[0] ??
+    null
+  );
 }
 
 export async function getWritingProblemAvailability(
   problemId: string | null | undefined,
   createClient: ClientFactory = createSupabaseServerClient,
 ) {
-  if (!isProblemIdLikeUuid(problemId)) return getProblemAvailability(null);
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("problems")
-    .select(
-      "publish_status, visibility, lifecycle_status, lifecycle_reason, question_no",
-    )
-    .eq("id", problemId)
-    .maybeSingle();
-  if (error) throw new Error(`getWritingProblemAvailability: ${error.message}`);
-  const row = data as ProblemAvailabilityQueryRow | null;
-  const availability = getProblemAvailability(
-    row
+  if (!isProblemIdLikeUuid(problemId)) return getProblemAvailability(null);
+
+  const canonicalProblems = await getCanonicalWritingProblems({
+    supabase,
+    problemId,
+  });
+  return getProblemAvailability(
+    canonicalProblems[0]
       ? {
-          publishStatus: row.publish_status,
-          visibility: row.visibility,
-          lifecycleStatus: row.lifecycle_status,
-          lifecycleReason: row.lifecycle_reason,
+          publishStatus: "published",
+          visibility: "public",
+          lifecycleStatus: "active",
+          lifecycleReason: null,
+          submitBlockedReason: canonicalProblems[0].submitBlockedReason,
         }
       : null,
   );
-
-  if (!row || !availability.canStart) {
-    return availability;
-  }
-
-  if (!isQuestionNo(row.question_no)) {
-    return getProblemAvailability(null);
-  }
-
-  const visible = await isWritingProblemVisibleToCaller(
-    supabase,
-    problemId,
-    row.question_no,
-  );
-
-  return visible ? availability : getProblemAvailability(null);
 }

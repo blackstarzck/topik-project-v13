@@ -1,0 +1,22 @@
+# Workflow policy and enforcement surfaces require repository-owner review.
+/.github/CODEOWNERS @blackstarzck
+/.github/workflows/ci.yml @blackstarzck
+/AGENTS.md @blackstarzck
+/docs/prd.md @blackstarzck
+/docs/supabase/ @blackstarzck
+/scripts/check-project-structure.mjs @blackstarzck
+/.codex/skills/ @blackstarzck
+/.claude/skills/ @blackstarzck
+/CLAUDE.md @blackstarzck
+/scripts/check-agent-skill-policy.mjs @blackstarzck
+/scripts/sync-agent-skills.mjs @blackstarzck
+/scripts/check-ui-contract.mjs @blackstarzck
+/scripts/run-trusted-ui-contract.mjs @blackstarzck
+/scripts/lib/ui-contract.mjs @blackstarzck
+/scripts/lib/ui-contract-trust.mjs @blackstarzck
+/scripts/lib/task-lifecycle-registry.mjs @blackstarzck
+/scripts/lib/task-lifecycle-schema.mjs @blackstarzck
+/scripts/lib/worktree-lifecycle.mjs @blackstarzck
+/scripts/report-worktree-lifecycle.mjs @blackstarzck
+/config/ui-contract-*.json @blackstarzck
+/config/ui-contract-runtime/ @blackstarzck

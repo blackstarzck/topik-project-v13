@@ -73,10 +73,9 @@ throw → `void handler()`라 unhandled rejection → `setLoading(false)` 미도
     `src/app/auth/sign-out/route.ts`가 POST 전용(CSRF 보호) + 303→`/login`이며
     주석에 "form action or fetch from client" 명시 — form post가 가장 단순·정합.
 - **i18n**: `nav.logout` 키 ko/en/vi 3로케일 추가 (catalog-parity 게이트).
-- **문서 정합(CLAUDE.md 게이트)**:
-  - `docs/flow/user-flow.md`: B01 -. "로그아웃" .-> A02 엣지 추가
-  - `docs/Wireframe/04-B-01-home-dashboard/description.md`: 사이드 내비 설명에
-    로그아웃 반영
+- **계약 정합**:
+  - `docs/prd.md`: 로그아웃과 안전한 인증 복귀 약속 확인
+  - `src/lib/routes.ts`와 route contract tests: 사이드 내비·로그아웃 route 정합 확인
 - **e2e**: 신규 spec 1개 (desktop-1280 한정).
   - ⚠️ **공유 storageState로 로그아웃 금지** — signOut이 토큰을 revoke해 잔여
     테스트의 세션을 깨뜨릴 수 있음. `auth.setup.ts` 패턴대로 **자체 컨텍스트에서
@@ -143,8 +142,8 @@ throw → `void handler()`라 unhandled rejection → `setLoading(false)` 미도
 ## Docs consulted
 
 - `docs/qa/reports/qa-report-20260612-1205.html` — 결함/갭/UNVERIFIED 출처
-- `docs/flow/user-flow.md` — 로그아웃·D-M3 흐름 정합 기준
-- `docs/Wireframe/04-B-01-home-dashboard/description.md` — 사이드 내비 명세
+- `docs/prd.md` — 로그아웃과 사용자 흐름 약속
+- `src/lib/routes.ts`, route contract tests — 사이드 내비와 route 실행 계약
 - `src/lib/auth/redirect-url.ts`, `src/app/auth/sign-out/route.ts`,
   `src/lib/writing/server.ts`, `src/components/app/SidebarNav.tsx`,
   `src/components/shared/AppNotFound.tsx` — 수정 지점 코드 근거

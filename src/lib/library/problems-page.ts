@@ -5,6 +5,7 @@ import {
   type SupabaseServerClient,
 } from "../supabase/server";
 import { isDashboardContinueDraftCandidate } from "../writing/dashboard-drafts";
+import { getCanonicalWritingProblems } from "../writing/canonical-source";
 import type { WritingDraftRow } from "../writing/types";
 import type {
   LibraryDraftView,
@@ -70,20 +71,19 @@ export async function listLibraryProblemDrafts(
   );
   if (drafts.length === 0) return [];
 
-  const { data: problems, error: problemError } = await supabase
-    .from("problems")
-    .select("id, title, question_no")
-    .in("id", uniqueIds(drafts.map((row) => row.problem_id)));
+  const draftProblemIds = uniqueIds(drafts.map((row) => row.problem_id));
+  const requestedIds = new Set(draftProblemIds);
+  const problemRows: LibraryDraftProblemRow[] = (
+    await getCanonicalWritingProblems({ supabase })
+  )
+    .filter((problem) => requestedIds.has(problem.id))
+    .map((problem) => ({
+      id: problem.id,
+      title: problem.title,
+      question_no: problem.questionNo,
+    }));
 
-  if (problemError) {
-    throw new Error(
-      `listLibraryProblemDrafts problem join: ${problemError.message}`,
-    );
-  }
-
-  const problemById = new Map(
-    ((problems ?? []) as LibraryDraftProblemRow[]).map((row) => [row.id, row]),
-  );
+  const problemById = new Map(problemRows.map((row) => [row.id, row]));
 
   return drafts.map((row) => {
     const problem = problemById.get(row.problem_id);

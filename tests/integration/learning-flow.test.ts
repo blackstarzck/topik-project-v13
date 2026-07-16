@@ -71,6 +71,12 @@ vi.mock("@/lib/supabase/server", () => {
     createSupabaseServerClient: () =>
       Promise.resolve({
         from: () => emptyChain,
+        rpc: (name: string) => {
+          if (name === "get_available_writing_questions") {
+            return Promise.resolve({ data: [], error: null });
+          }
+          return Promise.resolve({ data: null, error: null });
+        },
       }),
   };
 });

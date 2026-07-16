@@ -117,7 +117,7 @@ Just realized you forgot TDD.
 Options:
 A) Delete 200 lines, start fresh tomorrow with TDD
 B) Commit now, add tests tomorrow
-C) Write tests now (30 min), then commit
+C) Write tests now (30 min), followed by the commit outcome
 
 Choose A, B, or C. Be honest.
 ```

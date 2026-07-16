@@ -5,11 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useUnsavedChangesGuard } from "../../src/hooks/useUnsavedChangesGuard";
 
 const pushMock = vi.fn();
+const replaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: pushMock,
-    replace: vi.fn(),
+    replace: replaceMock,
     back: vi.fn(),
     forward: vi.fn(),
   }),
@@ -51,6 +52,7 @@ function GuardHarness({ when }: { when: boolean }) {
 describe("useUnsavedChangesGuard", () => {
   beforeEach(() => {
     pushMock.mockClear();
+    replaceMock.mockClear();
     window.history.pushState(null, "", "/writing/short-answer-writing-51");
   });
 
@@ -124,5 +126,37 @@ describe("useUnsavedChangesGuard", () => {
     fireEvent.popState(window);
 
     expect(screen.getByTestId("pending-kind").textContent).toBe("history");
+  });
+
+  it("preserves a URL normalized while the dirty-history sentinel is removed", () => {
+    const back = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => undefined);
+    window.history.replaceState(
+      null,
+      "",
+      "/writing/short-answer-writing-51?problem=problem-1&fresh=1",
+    );
+    const { rerender } = render(<GuardHarness when />);
+    window.history.replaceState(
+      null,
+      "",
+      "/writing/short-answer-writing-51?problem=problem-1",
+    );
+
+    rerender(<GuardHarness when={false} />);
+    expect(back).toHaveBeenCalledTimes(1);
+
+    window.history.replaceState(
+      null,
+      "",
+      "/writing/short-answer-writing-51?problem=problem-1&fresh=1",
+    );
+    fireEvent.popState(window);
+
+    expect(replaceMock).toHaveBeenCalledWith(
+      "/writing/short-answer-writing-51?problem=problem-1",
+      { scroll: false },
+    );
   });
 });

@@ -16,8 +16,6 @@ function createTempRoot() {
   tempDirs.push(root);
   mkdirSync(join(root, "src"), { recursive: true });
   mkdirSync(join(root, "tests"), { recursive: true });
-  mkdirSync(join(root, "docs", "Wireframe"), { recursive: true });
-  mkdirSync(join(root, "docs", "superpowers", "plans"), { recursive: true });
   return root;
 }
 
@@ -46,7 +44,7 @@ describe("check-admin-boundary", () => {
       term: "admin_update_problem",
     });
     expect(formatAdminBoundaryReport(result)).toContain(
-      "FAIL: v13 code/tests reference admin-owned objects",
+      "FAIL: v13 source references admin-owned objects",
     );
   });
 
@@ -67,22 +65,62 @@ describe("check-admin-boundary", () => {
     });
   });
 
-  it("warns for active docs that still contain admin ownership cleanup terms", () => {
+  it("fails when an admin page is introduced in the user app route tree", () => {
     const root = createTempRoot();
     write(
       root,
-      "docs/Wireframe/data-usage-index.md",
-      "| rpc | public.get_admin_users | admin app |",
+      "src/app/admin/page.tsx",
+      "export default function AdminPage() {}\n",
     );
 
     const result = evaluateAdminBoundary({ rootDir: root });
 
-    expect(result.codeFailures).toEqual([]);
-    expect(result.docWarnings).toContainEqual({
-      file: "docs/Wireframe/data-usage-index.md",
-      term: "get_admin_users",
+    expect(result.codeFailures).toContainEqual({
+      file: "src/app/admin/page.tsx",
+      term: "admin route",
     });
-    expect(formatAdminBoundaryReport(result)).toContain("WARN: active docs");
+  });
+
+  it("fails when an admin route group is introduced", () => {
+    const root = createTempRoot();
+    write(
+      root,
+      "src/app/(admin)/users/page.tsx",
+      "export default function UsersPage() {}\n",
+    );
+
+    expect(
+      evaluateAdminBoundary({ rootDir: root }).codeFailures,
+    ).toContainEqual({
+      file: "src/app/(admin)/users/page.tsx",
+      term: "admin route",
+    });
+  });
+
+  it("fails when the route registry exposes an admin URL", () => {
+    const root = createTempRoot();
+    write(
+      root,
+      "src/lib/routes.ts",
+      'export const adminUsers = "/admin/users";\n',
+    );
+
+    expect(
+      evaluateAdminBoundary({ rootDir: root }).codeFailures,
+    ).toContainEqual({
+      file: "src/lib/routes.ts",
+      term: "admin route",
+    });
+  });
+
+  it("uses source as the executable boundary without retired document warnings", () => {
+    const root = createTempRoot();
+    write(root, "src/app/page.tsx", "export default function HomePage() {}\n");
+
+    expect(evaluateAdminBoundary({ rootDir: root })).toEqual({
+      codeFailures: [],
+      sharedEvidence: [],
+    });
   });
 
   it("fails when v13 source references expanded topik-ai admin-owned objects", () => {

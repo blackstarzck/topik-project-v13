@@ -3,9 +3,8 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 // C-01 problem-type recommendations — COMPUTED (rule-based fallback) UI states.
 //
 // The bundle is assembled server-side (stored recommendation_items first, else
-// a transient rule-based computation from the user's history — implementation
-// brief: docs/sot-change-proposals/2026-07-09-c01-rule-fallback-recommendations-
-// implementation-brief.md). These specs pin the UI contract for a computed
+// a transient rule-based computation from the user's history. These specs pin
+// the UI contract for a computed
 // bundle by stubbing the API route: success (hero + reason panel + honest
 // tags), loading (skeletons), and error (alert + retry recovers). The rule
 // logic itself is covered by tests/lib/practice/recommendation-fallback.test.ts;
@@ -117,9 +116,33 @@ test("C-01 computed bundle renders an honest rule-based recommendation", async (
   await expect(page.getByText(STRINGS.otherRecommendations)).toBeVisible();
   await expect(page.getByText(STRINGS.secondaryTitle)).toBeVisible();
   await expect(page.getByText(STRINGS.unattemptedReason)).toBeVisible();
+  const continueButton = page.getByRole("button", {
+    name: STRINGS.continueProblem,
+  });
+  await expect(continueButton).toBeVisible();
+  const secondaryCard = continueButton.locator(
+    "xpath=ancestor::div[contains(concat(' ', normalize-space(@class), ' '), ' ant-card ')][1]",
+  );
+  const cardBody = secondaryCard.locator(":scope > .ant-card-body");
+  const cardActions = secondaryCard.locator(":scope > .ant-card-actions");
+  await expect(cardActions).toHaveClass(/app-card-footer-actions/);
   await expect(
-    page.getByRole("button", { name: STRINGS.continueProblem }),
-  ).toBeVisible();
+    continueButton.locator(
+      "xpath=ancestor::div[contains(@class, 'ant-card-body')]",
+    ),
+  ).toHaveCount(0);
+  const [bodyPadding, actionPadding] = await Promise.all([
+    cardBody.evaluate(
+      (element) => getComputedStyle(element).paddingInlineStart,
+    ),
+    cardActions
+      .locator(":scope > li")
+      .evaluate((element) => getComputedStyle(element).paddingInlineStart),
+  ]);
+  expect(actionPadding).toBe(bodyPadding);
+
+  await expect(continueButton).toHaveCSS("display", "inline-flex");
+  await expect(continueButton).toHaveCSS("align-items", "center");
 
   // Both cards link into the writing workspace with their problem ids.
   await expect(
@@ -162,9 +185,9 @@ test("C-01 shows loading skeletons while the computed bundle is in flight", asyn
   release?.();
 
   await expect(page.getByText(STRINGS.primaryBadge)).toBeVisible();
-  await expect(
-    page.getByTestId("recommendation-results-skeleton"),
-  ).toHaveCount(0);
+  await expect(page.getByTestId("recommendation-results-skeleton")).toHaveCount(
+    0,
+  );
 });
 
 test("C-01 surfaces the error state on a 500 and recovers via retry", async ({

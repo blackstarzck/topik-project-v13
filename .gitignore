@@ -1,8 +1,7 @@
 # Local AI harness installs and runtime state
-.omx/
 .agents/
 
-# Codex keeps only Superpowers workflow skills and an optional gstack skill.
+# Codex keeps only the 14 Superpowers workflow skills and project-local frontend-design.
 .codex/*
 !.codex/skills/
 .codex/skills/*
@@ -14,6 +13,8 @@
 !.codex/skills/executing-plans/**
 !.codex/skills/finishing-a-development-branch/
 !.codex/skills/finishing-a-development-branch/**
+!.codex/skills/frontend-design/
+!.codex/skills/frontend-design/**
 !.codex/skills/receiving-code-review/
 !.codex/skills/receiving-code-review/**
 !.codex/skills/requesting-code-review/
@@ -34,8 +35,6 @@
 !.codex/skills/writing-plans/**
 !.codex/skills/writing-skills/
 !.codex/skills/writing-skills/**
-!.codex/skills/gstack/
-!.codex/skills/gstack/**
 
 # Ignore local Claude config, but TRACK the shared project settings.json.
 # settings.local.json (personal permissions / machine paths) stays ignored.
@@ -44,13 +43,15 @@
 !.claude/settings.json
 !.claude/skills/
 .claude/skills/*
+!.claude/skills/*/
+.claude/skills/*/*
+!.claude/skills/*/SKILL.md
 
 # Local test/session artifacts (gitignored).
 tests/e2e/auth-state/
 screenshots/
 test-results/
 analysis/
-.design-review-shots/
 .env.local.bak
 
 # Dependencies and build outputs

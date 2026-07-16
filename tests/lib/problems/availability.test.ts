@@ -29,6 +29,21 @@ describe("getProblemAvailability", () => {
     });
   });
 
+  it("keeps incomplete canonical identity visible but blocks start and submit", () => {
+    expect(
+      getProblemAvailability(
+        row({ submitBlockedReason: "problem_data_incomplete" }),
+      ),
+    ).toEqual({
+      state: "soft_unavailable",
+      canShowProblemIdentity: true,
+      canStart: false,
+      canSubmit: false,
+      labelKey: null,
+      reason: "problem_data_incomplete",
+    });
+  });
+
   it("keeps public inactive problems identifiable but blocks start and submit", () => {
     expect(
       getProblemAvailability(

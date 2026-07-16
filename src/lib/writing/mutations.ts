@@ -1,12 +1,16 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
+
+import { markWritingDraftRoutePersisted } from "@/lib/writing/fresh-route";
 import { USER_PROBLEMS_RPC_QUERY_KEY_ROOT } from "@/lib/practice/problem-list-query-key";
 import { createSupabaseBrowserClient } from "../supabase/browser";
 import {
   createComparisonReportAction,
   createComparisonReportWithViewAction,
   submitWritingAction,
+  type SubmitWritingActionResult,
   type CreateComparisonReportInput,
   type SubmitWritingInput,
   type SubmitWritingResult,
@@ -14,9 +18,13 @@ import {
 import type { ComparisonReportViewModel } from "./comparison-report-view-model";
 import { draftQueryKey } from "./queries";
 import type { WritingDraftInsert, WritingDraftRow } from "./types";
+import { toSubmitWritingErrorMessage } from "./submit-errors";
 
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 type ClientFactory = () => BrowserClient;
+type SubmitWritingAction = (
+  input: SubmitWritingInput,
+) => Promise<SubmitWritingActionResult>;
 
 export async function upsertDraft(
   input: WritingDraftInsert,
@@ -95,15 +103,16 @@ export function useUpsertDraft() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: WritingDraftInsert) => upsertDraft(input),
-    onSuccess: async (_data, variables) => {
-      await Promise.all([
+    onSuccess: (_data, variables) => {
+      markWritingDraftRoutePersisted();
+      void Promise.all([
         qc.invalidateQueries({
           queryKey: draftQueryKey(variables.user_id, variables.problem_id),
         }),
         qc.invalidateQueries({
           queryKey: USER_PROBLEMS_RPC_QUERY_KEY_ROOT,
         }),
-      ]);
+      ]).catch(() => undefined);
     },
   });
 }
@@ -113,10 +122,72 @@ export function useUpsertDraft() {
 // Those keys have no mounted query at the time of invalidation (the caller
 // navigates to /feedback/[id] right after, and that page mounts fresh), so the
 // invalidations were dead. Drop them.
-export function useSubmitWriting() {
+export function useSubmitWriting(
+  action: SubmitWritingAction = submitWritingAction,
+) {
+  const intentRef = useRef<{ fingerprint: string; intentId: string } | null>(
+    null,
+  );
   return useMutation<SubmitWritingResult, Error, SubmitWritingInput>({
-    mutationFn: (input) => submitWritingAction(input),
+    mutationFn: (input) => {
+      const fingerprint = writingSubmissionFingerprint(input);
+      if (intentRef.current?.fingerprint !== fingerprint) {
+        intentRef.current = {
+          fingerprint,
+          intentId: crypto.randomUUID(),
+        };
+      }
+      return submitWriting(
+        {
+          ...input,
+          submission_intent_id: intentRef.current.intentId,
+        },
+        action,
+      );
+    },
+    onSuccess: () => {
+      intentRef.current = null;
+    },
+    onError: (error) => {
+      // A confirmed provider rejection is terminal for this intent, but safe
+      // to retry with a new one. Ambiguous/accepted states must retain the
+      // original intent so they can never dispatch the provider twice.
+      if (error.message.includes("writing_submission_dispatch_failed")) {
+        intentRef.current = null;
+      }
+    },
   });
+}
+
+function writingSubmissionFingerprint(input: SubmitWritingInput): string {
+  return JSON.stringify({
+    draft_id: input.draft_id ?? null,
+    parent_submission_id: input.parent_submission_id ?? null,
+    problem_id: input.problem_id,
+    question_no: input.question_no,
+    answer_text: input.answer_text,
+    answer_json: input.answer_json ?? null,
+    char_count: input.char_count,
+    canonical_question_id: input.canonical_question_id ?? null,
+    canonical_import_id: input.canonical_import_id ?? null,
+    canonical_payload_hash: input.canonical_payload_hash ?? null,
+  });
+}
+
+export async function submitWriting(
+  input: SubmitWritingInput,
+  action: SubmitWritingAction = submitWritingAction,
+): Promise<SubmitWritingResult> {
+  try {
+    const result = await action(input);
+    if ("rejection" in result) {
+      throw new Error(result.rejection.message);
+    }
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(toSubmitWritingErrorMessage(message));
+  }
 }
 
 export function useCreateComparisonReport() {

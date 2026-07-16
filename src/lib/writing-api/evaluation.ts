@@ -81,10 +81,8 @@ export type ExternalSubmitWritingRequest = {
   // §7 question_id (= 외부 API의 question_id, GET /api/writing/tasks가 반환; 예 'topik-writing-51-0001').
   // 채점이 이 문항의 prompt/모범답안/루브릭을 사용한다. null이면 task_type의 임의 문항으로 ad-hoc 채점.
   question_id?: string | null;
-  // Q51/Q52 빈칸형: 학생이 보는 라벨(ㄱ/ㄴ)→답. 백엔드가 ㄱ→blank_1로 매핑. text보다 우선.
-  blanks?: Record<string, string>;
-  // Q53/Q54 본문(또는 빈칸 구조가 없을 때의 폴백). blanks와 택일.
-  text?: string;
+  // Provider OpenAPI의 필수 본문. Q51/Q52도 정규화된 답안 텍스트를 함께 보낸다.
+  text: string;
   user_id?: string | null;
   lang?: string;
   // Q51/Q52: ㄱ/ㄴ 빈칸이 있는 원문 지문(DB에 없으면 프론트에서 전달; question_id가 있으면 백엔드가 로드).
@@ -183,17 +181,20 @@ export async function submitExternalWriting({
   baseUrl,
   accessToken,
   payload,
+  timeoutMs = 20_000,
   fetchImpl = fetch,
 }: {
   baseUrl: string;
   accessToken: string;
   payload: ExternalSubmitWritingRequest;
+  timeoutMs?: number;
   fetchImpl?: typeof fetch;
 }): Promise<ExternalSubmitWritingResponse> {
   return requestJson(`${baseUrl.replace(/\/$/, "")}/api/writing/submit`, {
     accessToken,
     method: "POST",
     body: payload,
+    timeoutMs,
     fetchImpl,
   }) as Promise<ExternalSubmitWritingResponse>;
 }
@@ -238,29 +239,41 @@ async function requestJson(
     accessToken,
     method,
     body,
+    timeoutMs = 15_000,
     fetchImpl,
   }: {
     accessToken: string;
     method: "GET" | "POST";
     body?: unknown;
+    timeoutMs?: number;
     fetchImpl: typeof fetch;
   },
 ): Promise<unknown> {
   if (!accessToken.trim()) throw new Error("accessToken is required");
-
-  const response = await fetchImpl(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: body == null ? undefined : JSON.stringify(body),
-  });
-  const parsed = await parseJson(response);
-  if (!response.ok) {
-    throw new ExternalEvaluationApiError(response.status, parsed);
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("timeoutMs must be a positive number");
   }
-  return parsed;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: body == null ? undefined : JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const parsed = await parseJson(response);
+    if (!response.ok) {
+      throw new ExternalEvaluationApiError(response.status, parsed);
+    }
+    return parsed;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function parseJson(response: Response): Promise<unknown> {
