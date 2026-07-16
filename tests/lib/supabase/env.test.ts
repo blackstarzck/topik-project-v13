@@ -29,6 +29,19 @@ describe("supabase env validation", () => {
     expect(env.publishableKey).toBe("sb_publishable_xxxxx");
   });
 
+  it("removes a leading BOM and surrounding whitespace from public values", async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL =
+      "\uFEFF https://example.supabase.co \r\n";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
+      "\uFEFFsb_publishable_xxxxx\r\n";
+
+    const { getPublicEnv } = await loadEnvModule();
+    const env = getPublicEnv();
+
+    expect(env.url).toBe("https://example.supabase.co");
+    expect(env.publishableKey).toBe("sb_publishable_xxxxx");
+  });
+
   it("getPublicEnv throws a descriptive error when URL is missing", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_xxxxx";
 
