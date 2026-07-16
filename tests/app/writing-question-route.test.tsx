@@ -7,6 +7,7 @@ const getWritingProblemMock = vi.hoisted(() => vi.fn());
 const getActiveDraftMock = vi.hoisted(() => vi.fn());
 const getRetrySubmissionSeedMock = vi.hoisted(() => vi.fn());
 const getComparisonReportMock = vi.hoisted(() => vi.fn());
+const getSubmissionMock = vi.hoisted(() => vi.fn());
 const writingPageContentMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next-intl/server", () => ({
@@ -31,6 +32,7 @@ vi.mock("@/lib/writing/server", () => ({
     getRetrySubmissionSeedMock(...args),
   getComparisonReport: (...args: unknown[]) =>
     getComparisonReportMock(...args),
+  getSubmission: (...args: unknown[]) => getSubmissionMock(...args),
   isProblemIdLikeUuid: (value: unknown) =>
     typeof value === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -110,6 +112,7 @@ describe("renderWritingQuestionPage", () => {
     requireUserMock.mockResolvedValue({ id: "user-1" });
     getWritingProblemMock.mockResolvedValue({ id: problemId, kind: "q51" });
     getActiveDraftMock.mockResolvedValue(null);
+    getSubmissionMock.mockResolvedValue(null);
     getRetrySubmissionSeedMock.mockResolvedValue({
       parent_submission_id: submissionId,
       answer_text: "answer",
@@ -154,6 +157,63 @@ describe("renderWritingQuestionPage", () => {
     render(mismatched);
 
     expect(writingPageContentMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ returnHref: "/practice/problems" }),
+    );
+  });
+
+  it("accepts an owned feedback return target for the feedback next-problem flow", async () => {
+    const problemId = "00000000-0000-4000-8000-000000000052";
+    const submissionId = "00000000-0000-4000-8000-000000000152";
+    requireUserMock.mockResolvedValue({ id: "user-1" });
+    getWritingProblemMock.mockResolvedValue({ id: problemId, kind: "q52" });
+    getActiveDraftMock.mockResolvedValue(null);
+    getSubmissionMock.mockResolvedValue({
+      id: submissionId,
+      user_id: "user-1",
+      question_no: 51,
+    });
+
+    const element = await renderWritingQuestionPage(
+      52,
+      Promise.resolve({
+        problem: problemId,
+        fresh: "1",
+        returnTo: `/writing/feedback/short/${submissionId}`,
+      }),
+    );
+    render(element);
+
+    expect(getSubmissionMock).toHaveBeenCalledWith(submissionId);
+    expect(writingPageContentMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        returnHref: `/writing/feedback/short/${submissionId}`,
+      }),
+    );
+  });
+
+  it("rejects a feedback return target that is not owned by the current user", async () => {
+    const problemId = "00000000-0000-4000-8000-000000000052";
+    const submissionId = "00000000-0000-4000-8000-000000000152";
+    requireUserMock.mockResolvedValue({ id: "user-1" });
+    getWritingProblemMock.mockResolvedValue({ id: problemId, kind: "q52" });
+    getActiveDraftMock.mockResolvedValue(null);
+    getSubmissionMock.mockResolvedValue({
+      id: submissionId,
+      user_id: "user-2",
+      question_no: 51,
+    });
+
+    const element = await renderWritingQuestionPage(
+      52,
+      Promise.resolve({
+        problem: problemId,
+        fresh: "1",
+        returnTo: `/writing/feedback/short/${submissionId}`,
+      }),
+    );
+    render(element);
+
+    expect(writingPageContentMock).toHaveBeenCalledWith(
       expect.objectContaining({ returnHref: "/practice/problems" }),
     );
   });

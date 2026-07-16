@@ -177,6 +177,27 @@ describe("useUnsavedChangesGuard", () => {
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
+  it("goes back one entry when autosave already removed the sentinel", () => {
+    const back = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => undefined);
+    const go = vi
+      .spyOn(window.history, "go")
+      .mockImplementation(() => undefined);
+    const { rerender } = render(<GuardHarness when />);
+
+    fireEvent.popState(window);
+    expect(screen.getByTestId("pending-kind").textContent).toBe("history");
+
+    rerender(<GuardHarness when={false} />);
+    expect(back).toHaveBeenCalledTimes(1);
+    fireEvent.popState(window);
+    fireEvent.click(screen.getByRole("button", { name: "Proceed" }));
+
+    expect(go).toHaveBeenCalledWith(-1);
+    expect(go).not.toHaveBeenCalledWith(-2);
+  });
+
   it("preserves a URL normalized while the dirty-history sentinel is removed", () => {
     const back = vi
       .spyOn(window.history, "back")

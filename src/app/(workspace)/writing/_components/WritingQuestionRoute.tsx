@@ -7,11 +7,13 @@ import {
   getActiveDraft,
   getComparisonReport,
   getRetrySubmissionSeed,
+  getSubmission,
   getWritingProblem,
   isProblemIdLikeUuid,
 } from "@/lib/writing/server";
 import {
   getWritingComparisonReturnReportId,
+  getWritingFeedbackReturnSubmissionId,
   resolveWritingReturnTo,
   writingFeedbackHref,
 } from "@/lib/writing/routes";
@@ -64,6 +66,21 @@ export async function renderWritingQuestionPage(
         })
       : null;
   const allowedDynamicPathnames: string[] = [];
+  const requestedFeedbackSubmissionId =
+    getWritingFeedbackReturnSubmissionId(returnTo);
+  if (requestedFeedbackSubmissionId) {
+    const returnSubmission = await getSubmission(
+      requestedFeedbackSubmissionId,
+    ).catch(() => null);
+    if (returnSubmission?.user_id === user.id) {
+      allowedDynamicPathnames.push(
+        writingFeedbackHref({
+          questionNo: returnSubmission.question_no,
+          submissionId: returnSubmission.id,
+        }),
+      );
+    }
+  }
   if (retrySeed) {
     allowedDynamicPathnames.push(
       writingFeedbackHref({

@@ -71,6 +71,17 @@ export function getWritingComparisonReturnReportId(
   return /^\/writing\/reports\/([^/?#]+)\/compare$/.exec(pathname)?.[1] ?? null;
 }
 
+export function getWritingFeedbackReturnSubmissionId(
+  value: string | string[] | null | undefined,
+): string | null {
+  if (typeof value !== "string" || value.includes("%")) return null;
+  const pathname = writingReturnPathname(value);
+  return (
+    /^\/writing\/feedback\/(?:short|long)\/([^/?#]+)$/.exec(pathname)?.[1] ??
+    null
+  );
+}
+
 function writingReturnToParam(
   value: string | null | undefined,
 ): string | null {

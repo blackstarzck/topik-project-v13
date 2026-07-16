@@ -140,9 +140,10 @@ export function useUnsavedChangesGuard({
         navigateToHref(pendingNavigation.href, pendingNavigation.mode);
       }
     } else if (typeof window !== "undefined") {
-        allowNextPopRef.current = true;
-        sentinelPushedRef.current = false;
-        window.history.go(-2);
+      const historyDelta = sentinelPushedRef.current ? -2 : -1;
+      allowNextPopRef.current = true;
+      sentinelPushedRef.current = false;
+      window.history.go(historyDelta);
     }
   }, [navigateToHref, pendingNavigation]);
 
