@@ -127,6 +127,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
         onClose={onClose}
         problemId="p-1"
         questionNo={53}
+        returnTo="/library/problems"
         hasAttempt
         hasSubmission={false}
       />,
@@ -137,7 +138,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
     fireEvent.click(screen.getByRole("button", { name: "시작" }));
     // handleStart no longer calls onClose; the route push drives the transition.
     expect(pushMock).toHaveBeenCalledWith(
-      "/writing/long-form-writing-53?problem=p-1&fresh=1",
+      "/writing/long-form-writing-53?problem=p-1&fresh=1&returnTo=%2Flibrary%2Fproblems",
     );
   });
 

@@ -121,7 +121,7 @@ describe("WeaknessView", () => {
     });
     expect(consumeRecommendationItemMock).toHaveBeenCalledWith(null);
     expect(pushMock).toHaveBeenCalledWith(
-      "/writing/answer-writing-52?problem=prob-42",
+      "/writing/answer-writing-52?problem=prob-42&returnTo=%2Fpractice%2Fweakness",
     );
   });
 

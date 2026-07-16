@@ -2,11 +2,11 @@
 
 import { Button, Progress, Typography } from "antd";
 import {
-  ArrowLeft,
   Clock3,
   PenLine,
   SendHorizontal,
 } from "@/components/shared/AppIcons";
+import { AppBackControl } from "@/components/shared/AppBackControl";
 import { useTranslations } from "next-intl";
 import { useMemo, type ReactNode } from "react";
 
@@ -95,14 +95,11 @@ export function WritingExamShell({
     <div className="writing-exam-shell">
       <header className="writing-exam-header">
         <div className="writing-exam-header__identity">
-          <button
-            type="button"
+          <AppBackControl
             className="writing-exam-header__back"
-            aria-label="문제 목록으로 돌아가기"
-            onClick={() => onRequestBack()}
-          >
-            <ArrowLeft aria-hidden size={20} />
-          </button>
+            label={t("back")}
+            onClick={onRequestBack}
+          />
           <div className="writing-exam-header__titles">
             <div className="writing-exam-header__title-row">
               <h1 className="writing-exam-header__title">{title}</h1>

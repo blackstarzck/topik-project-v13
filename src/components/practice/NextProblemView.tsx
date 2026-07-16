@@ -144,6 +144,7 @@ export function NextProblemView({ bundle }: Props) {
       writingProblemHref({
         questionNo: selectedTarget.questionNo,
         problemId: selectedTarget.problemId,
+        returnTo: "/practice/next",
       }) as never,
     );
   }

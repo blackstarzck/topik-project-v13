@@ -361,6 +361,7 @@ export function buildLibraryDashboardFromRows(
             questionNo: row.submission.question_no,
             problemId: row.submission.problem_id,
             fresh: true,
+            returnTo: "/library",
             retrySubmissionId: row.submission.id,
           })
         : null,
@@ -662,6 +663,7 @@ function buildReviewCandidate(
           questionNo: submission.question_no,
           problemId: submission.problem_id,
           fresh: true,
+          returnTo: "/library",
           retrySubmissionId: submission.id,
         })
       : null,

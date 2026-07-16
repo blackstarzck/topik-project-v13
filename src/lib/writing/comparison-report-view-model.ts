@@ -164,6 +164,8 @@ export async function getComparisonReportViewModel(
       ? writingProblemHref({
           questionNo: currentQuestionNo,
           problemId: current.problem_id,
+          retrySubmissionId: current.id,
+          returnTo: `/writing/reports/${encodeURIComponent(report.id)}/compare`,
         })
       : null,
     reportId: report.id,

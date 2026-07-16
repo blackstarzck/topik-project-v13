@@ -114,7 +114,30 @@ describe("NextProblemView (Phase 7-D bundle signature)", () => {
       payload: { source: "next" },
     });
     expect(pushMock).toHaveBeenCalledWith(
-      "/writing/long-form-writing-53?problem=p-1",
+      "/writing/long-form-writing-53?problem=p-1&returnTo=%2Fpractice%2Fnext",
+    );
+  });
+
+  it("carries the next-problem source into the locked alternative paywall", () => {
+    const bundle = makeBundle(primary, 1);
+    bundle.alternatives = [
+      {
+        id: "locked-54",
+        itemId: null,
+        title: "locked",
+        questionNo: 54,
+        domain: "writing",
+        reason: null,
+        locked: true,
+      },
+    ];
+
+    renderWithIntl(<NextProblemView bundle={bundle} />);
+    const lockedCard = screen.getByTestId("next-alternative-locked");
+    fireEvent.click(lockedCard.querySelector("button")!);
+
+    expect(pushMock).toHaveBeenCalledWith(
+      "/paywall?returnTo=%2Fpractice%2Fnext",
     );
   });
 });

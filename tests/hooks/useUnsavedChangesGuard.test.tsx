@@ -27,7 +27,9 @@ function GuardHarness({ when }: { when: boolean }) {
       <a href="/dashboard">Dashboard</a>
       <button
         type="button"
-        onClick={() => guard.requestNavigation("/practice/problems")}
+        onClick={() =>
+          guard.requestNavigation("/practice/problems", { mode: "replace" })
+        }
       >
         Back
       </button>
@@ -43,6 +45,11 @@ function GuardHarness({ when }: { when: boolean }) {
       <span data-testid="pending-href">
         {guard.pendingNavigation?.kind === "href"
           ? guard.pendingNavigation.href
+          : ""}
+      </span>
+      <span data-testid="pending-mode">
+        {guard.pendingNavigation?.kind === "href"
+          ? guard.pendingNavigation.mode
           : ""}
       </span>
     </div>
@@ -66,7 +73,8 @@ describe("useUnsavedChangesGuard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
+    expect(replaceMock).toHaveBeenCalledWith("/practice/problems");
+    expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("pending-kind").textContent).toBe("none");
   });
 
@@ -80,6 +88,7 @@ describe("useUnsavedChangesGuard", () => {
     expect(screen.getByTestId("pending-href").textContent).toBe(
       "/practice/problems",
     );
+    expect(screen.getByTestId("pending-mode").textContent).toBe("replace");
   });
 
   it("captures same-origin link clicks while an answer change is unsaved", () => {
@@ -90,9 +99,13 @@ describe("useUnsavedChangesGuard", () => {
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("pending-kind").textContent).toBe("href");
     expect(screen.getByTestId("pending-href").textContent).toBe("/dashboard");
+    expect(screen.getByTestId("pending-mode").textContent).toBe("push");
   });
 
-  it("cancels or proceeds with a pending href navigation", () => {
+  it("cancels or proceeds with a pending replace after removing the sentinel", () => {
+    const back = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => undefined);
     render(<GuardHarness when />);
 
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
@@ -102,8 +115,30 @@ describe("useUnsavedChangesGuard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     fireEvent.click(screen.getByRole("button", { name: "Proceed" }));
 
-    expect(pushMock).toHaveBeenCalledWith("/practice/problems");
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(replaceMock).not.toHaveBeenCalled();
+    fireEvent.popState(window);
+
+    expect(replaceMock).toHaveBeenCalledWith("/practice/problems");
+    expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("pending-kind").textContent).toBe("none");
+  });
+
+  it("removes the sentinel before proceeding with a captured push link", () => {
+    const back = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => undefined);
+    render(<GuardHarness when />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Dashboard" }));
+    fireEvent.click(screen.getByRole("button", { name: "Proceed" }));
+
+    expect(back).toHaveBeenCalledTimes(1);
+    expect(pushMock).not.toHaveBeenCalled();
+    fireEvent.popState(window);
+
+    expect(pushMock).toHaveBeenCalledWith("/dashboard");
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("uses native beforeunload prevention only when an answer change is unsaved", () => {
@@ -126,6 +161,41 @@ describe("useUnsavedChangesGuard", () => {
     fireEvent.popState(window);
 
     expect(screen.getByTestId("pending-kind").textContent).toBe("history");
+  });
+
+  it("uses native history when a captured browser back is approved", () => {
+    const go = vi
+      .spyOn(window.history, "go")
+      .mockImplementation(() => undefined);
+    render(<GuardHarness when />);
+
+    fireEvent.popState(window);
+    fireEvent.click(screen.getByRole("button", { name: "Proceed" }));
+
+    expect(go).toHaveBeenCalledWith(-2);
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("goes back one entry when autosave already removed the sentinel", () => {
+    const back = vi
+      .spyOn(window.history, "back")
+      .mockImplementation(() => undefined);
+    const go = vi
+      .spyOn(window.history, "go")
+      .mockImplementation(() => undefined);
+    const { rerender } = render(<GuardHarness when />);
+
+    fireEvent.popState(window);
+    expect(screen.getByTestId("pending-kind").textContent).toBe("history");
+
+    rerender(<GuardHarness when={false} />);
+    expect(back).toHaveBeenCalledTimes(1);
+    fireEvent.popState(window);
+    fireEvent.click(screen.getByRole("button", { name: "Proceed" }));
+
+    expect(go).toHaveBeenCalledWith(-1);
+    expect(go).not.toHaveBeenCalledWith(-2);
   });
 
   it("preserves a URL normalized while the dirty-history sentinel is removed", () => {

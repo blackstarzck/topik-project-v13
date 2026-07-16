@@ -5,6 +5,7 @@ import { Button, Col, Empty, Row, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AppCard } from "@/components/shared/AppCard";
+import { paywallHref } from "@/lib/paywall/routes";
 import { writingProblemHref } from "@/lib/writing/routes";
 import { SPACING } from "@/theme/spacing";
 import { difficultyKey } from "./difficulty";
@@ -91,7 +92,11 @@ export function AlternativeCardsGrid({
                     <Text type="secondary">{t("lockedNotice")}</Text>
                     <Button
                       size="small"
-                      onClick={() => router.push("/paywall" as never)}
+                      onClick={() =>
+                        router.push(
+                          paywallHref({ returnTo: "/practice/next" }) as never,
+                        )
+                      }
                     >
                       {t("upgradeInfo")}
                     </Button>
@@ -110,6 +115,7 @@ export function AlternativeCardsGrid({
               writingProblemHref({
                 questionNo: alternative.questionNo,
                 problemId: alternative.id,
+                returnTo: "/practice/next",
               }) as never,
             );
           };

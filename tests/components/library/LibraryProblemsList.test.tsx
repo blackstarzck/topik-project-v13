@@ -289,7 +289,7 @@ describe("LibraryProblemsList", () => {
       within(menu).getByRole("menuitem", { name: actionMenuLabels.retry }),
     );
     expect(routerPushMock).toHaveBeenLastCalledWith(
-      "/writing/answer-writing-52?problem=problem-52",
+      "/writing/answer-writing-52?problem=problem-52&returnTo=%2Flibrary%2Fproblems",
     );
   });
 
@@ -453,7 +453,7 @@ describe("LibraryProblemsList", () => {
       within(menu).getByRole("menuitem", { name: actionMenuLabels.retry }),
     );
     expect(routerPushMock).toHaveBeenLastCalledWith(
-      "/writing/long-form-writing-53?problem=problem-53&fresh=1&retrySubmission=sub-1",
+      "/writing/long-form-writing-53?problem=problem-53&fresh=1&retrySubmission=sub-1&returnTo=%2Flibrary%2Fproblems",
     );
   });
 
@@ -791,7 +791,7 @@ describe("LibraryProblemsList", () => {
       }),
     );
     expect(routerPushMock).toHaveBeenLastCalledWith(
-      "/writing/short-answer-writing-51?problem=problem-51",
+      "/writing/short-answer-writing-51?problem=problem-51&returnTo=%2Flibrary%2Fproblems",
     );
   });
 

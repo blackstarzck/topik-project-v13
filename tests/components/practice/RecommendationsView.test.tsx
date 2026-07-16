@@ -33,6 +33,7 @@ vi.mock("../../../src/components/practice/writing-availability-data", () => ({
 }));
 
 beforeEach(() => {
+  window.history.replaceState({}, "", "/");
   mocks.replace.mockReset();
   mocks.searchParams = "";
   mocks.useRecommendationBundle.mockReturnValue({
@@ -289,6 +290,7 @@ describe("RecommendationsView", () => {
 
   it("renders a real 51번 recommendation with the same hero metric layout", () => {
     mocks.searchParams = "type=51";
+    window.location.hash = "#recommendations";
     mocks.useRecommendationBundle.mockReturnValue({
       data: {
         run: null,
@@ -332,7 +334,9 @@ describe("RecommendationsView", () => {
           name: koMessages.practice.recommendations.startFromThis,
         })
         .getAttribute("href"),
-    ).toBe("/writing/short-answer-writing-51?problem=problem-51");
+    ).toBe(
+      "/writing/short-answer-writing-51?problem=problem-51&returnTo=%2Fpractice%2Frecommendations%3Ftype%3D51%23recommendations",
+    );
   });
 
   it("shows retry guidance instead of an endless spinner when recommendations fail", () => {

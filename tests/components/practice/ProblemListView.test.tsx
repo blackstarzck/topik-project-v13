@@ -219,6 +219,7 @@ function rpcRow(row: RpcProblemRow, index: number) {
 }
 
 beforeEach(() => {
+  window.history.replaceState({}, "", "/");
   navState.push.mockReset();
   navState.replace.mockReset();
   navState.search = "";
@@ -525,6 +526,8 @@ describe("ProblemListView", () => {
   });
 
   it("starts an unsolved problem when the learner selects the problem row", async () => {
+    navState.search = "type=51&sort=oldest&page=2";
+    window.location.hash = "#results";
     rpcMock.mockResolvedValueOnce({
       data: [
         rpcRow(
@@ -552,7 +555,7 @@ describe("ProblemListView", () => {
     fireEvent.click(row!);
 
     expect(navState.push).toHaveBeenCalledWith(
-      "/writing/short-answer-writing-51?problem=problem-128",
+      "/writing/short-answer-writing-51?problem=problem-128&returnTo=%2Fpractice%2Fproblems%3Ftype%3D51%26sort%3Doldest%26page%3D2%23results",
     );
   });
 

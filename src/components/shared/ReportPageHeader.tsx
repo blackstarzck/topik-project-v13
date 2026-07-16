@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Typography } from "antd";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { AppBackControl } from "./AppBackControl";
 
 const { Title } = Typography;
 
@@ -45,14 +44,11 @@ export function ReportPageHeader({
           className="flex min-w-0 items-center gap-3"
         >
           {backHref ? (
-            <Link
-              aria-label={backLabel}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-              data-testid={backTestId}
+            <AppBackControl
               href={backHref}
-            >
-              <ArrowLeft aria-hidden size={22} strokeWidth={2} />
-            </Link>
+              label={backLabel}
+              testId={backTestId}
+            />
           ) : null}
           <Title level={3} className="!m-0 text-2xl">
             {title}

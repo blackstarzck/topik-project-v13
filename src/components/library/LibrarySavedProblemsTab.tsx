@@ -99,7 +99,11 @@ export function LibrarySavedProblemsTab({
               tab="problems"
               tags={item.tags}
               trailingActions={[
-                <LibraryProblemsRetryAction key="retry" item={item} />,
+                <LibraryProblemsRetryAction
+                  key="retry"
+                  item={item}
+                  returnTo="/library"
+                />,
               ]}
             >
               <div className="flex w-full min-w-0 flex-col gap-1">
