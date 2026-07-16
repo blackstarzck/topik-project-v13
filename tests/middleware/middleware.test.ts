@@ -40,6 +40,17 @@ describe("middleware route protection", () => {
     expect(matcher.test("/assets/landing-hero-video.mp4")).toBe(false);
   });
 
+  it("does not refresh the session before the OAuth callback handles its PKCE cookie", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const response = await callMiddleware(
+      "http://localhost/auth/callback?code=fresh-oauth-code&next=/dashboard",
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockGetUser).not.toHaveBeenCalled();
+  });
+
   it("redirects anon user from /dashboard to /login", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
     const response = await callMiddleware("http://localhost/dashboard");
