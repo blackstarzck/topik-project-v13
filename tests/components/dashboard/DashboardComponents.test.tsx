@@ -285,7 +285,7 @@ describe("DashboardBody", () => {
 
     const cta = screen.getByRole("link", { name: dashboard.hub.solveNow });
     expect(cta.getAttribute("href")).toContain(
-      "/writing/short-answer-writing-51?problem=fallback-problem",
+      "/writing/short-answer-writing-51?problem=fallback-problem&returnTo=%2Fdashboard",
     );
   });
 
@@ -319,7 +319,7 @@ describe("DashboardBody", () => {
     expect(continueCard.getByText(dashboard.hub.continueCta)).toBeTruthy();
     const link = continueCard.getByText(dashboard.hub.continueCta).closest("a");
     expect(link?.getAttribute("href")).toContain(
-      "/writing/answer-writing-52?problem=draft-problem",
+      "/writing/answer-writing-52?problem=draft-problem&returnTo=%2Fdashboard",
     );
   });
 });

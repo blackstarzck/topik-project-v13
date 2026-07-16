@@ -50,6 +50,7 @@ export function FeedbackPageContent({
   dimensionCardLimit,
   showDetailPanel = withSentences,
   retryLabelKey,
+  reloadHref,
   userId,
   saveLocked = false,
   alreadySaved = false,
@@ -61,6 +62,7 @@ export function FeedbackPageContent({
   const tReport = useTranslations("feedback.report") as ReportTranslator;
   const router = useRouter();
   const status = submission.feedback_status;
+  const reportTitle = tReport("title", { questionNo: submission.question_no });
 
   useEffect(() => {
     if (!bundle) return;
@@ -74,12 +76,29 @@ export function FeedbackPageContent({
 
   if (!bundle) {
     return (
-      <Alert
-        type={status === "failed" ? "error" : "info"}
-        showIcon
-        title={t("loadFailedTitle")}
-        description={t("loadFailedDescription")}
-      />
+      <div className="flex min-h-full w-full flex-col bg-background">
+        <ReportPageHeader
+          testId="feedback-page-header"
+          backHref={APP_ROUTES.library}
+          backLabel={t("backToLibrary")}
+          backTestId="feedback-header-back-link"
+          title={
+            <FeedbackReportTitle
+              title={reportTitle}
+              questionNo={submission.question_no}
+            />
+          }
+          actions={null}
+        />
+        <div className="app-workspace-body app-workspace-body--workspace w-full px-4 py-6 sm:px-6">
+          <Alert
+            type={status === "failed" ? "error" : "info"}
+            showIcon
+            title={t("loadFailedTitle")}
+            description={t("loadFailedDescription")}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -91,6 +110,7 @@ export function FeedbackPageContent({
     problemId: submission.problem_id,
     fresh: true,
     retrySubmissionId: submission.id,
+    returnTo: reloadHref,
   });
   const showShortReportOverview =
     withSentences && !showDetailPanel && dimensionCardLimit === 4;
@@ -108,7 +128,6 @@ export function FeedbackPageContent({
   const retryDisabledReason = retryDisabled
     ? tActions("retryUnavailable")
     : undefined;
-  const reportTitle = tReport("title", { questionNo: submission.question_no });
 
   return (
     <div
@@ -123,7 +142,7 @@ export function FeedbackPageContent({
         <ReportPageHeader
           testId="feedback-page-header"
           backHref={APP_ROUTES.library}
-          backLabel="내 서재로 돌아가기"
+          backLabel={t("backToLibrary")}
           backTestId="feedback-header-back-link"
           title={
             <FeedbackReportTitle

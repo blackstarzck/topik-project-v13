@@ -170,8 +170,10 @@ export function LibraryProblemsProblemRow({
 
 export function LibraryProblemsRetryAction({
   item,
+  returnTo = "/library/problems",
 }: {
   item: LibraryProblemView;
+  returnTo?: string;
 }) {
   const tSaved = useTranslations("library.saved");
   const canRetry = item.canRetry && item.question_no !== null;
@@ -196,6 +198,7 @@ export function LibraryProblemsRetryAction({
         writingProblemHref({
           questionNo: item.question_no,
           problemId: item.id,
+          returnTo,
         }) as never
       }
     >
@@ -264,6 +267,7 @@ export function LibraryProblemsDraftAction({
         writingProblemHref({
           questionNo: item.question_no,
           problemId: item.problem_id,
+          returnTo: "/library/problems",
         }) as never
       }
     >

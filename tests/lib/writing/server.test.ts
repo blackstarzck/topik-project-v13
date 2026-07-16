@@ -658,9 +658,12 @@ describe("canonical writing catalog", () => {
       getNextWritingProblemStartHref({
         currentProblemId: COMPLETE_51_ID,
         questionNo: 52,
+        returnTo: "/writing/feedback/short/submission-1",
         createClient: async () => client as never,
       }),
-    ).resolves.toBe(`/writing/answer-writing-52?problem=${nextId}&fresh=1`);
+    ).resolves.toBe(
+      `/writing/answer-writing-52?problem=${nextId}&fresh=1&returnTo=%2Fwriting%2Ffeedback%2Fshort%2Fsubmission-1`,
+    );
     await expect(
       getNextWritingProblemStartHref({
         currentProblemId: nextId,

@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
+import { AppBackControl } from "@/components/shared/AppBackControl";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 import {
@@ -51,7 +52,7 @@ type LoadState =
  * - Exception (기존 구독자는 구독 관리로 유도): if the user already has a
  *   subscription row, we redirect to /subscription.
  */
-export function PaywallShell() {
+export function PaywallShell({ returnHref }: { returnHref: string }) {
   const t = useTranslations("paywall");
   const router = useRouter();
   const { message } = App.useApp();
@@ -107,6 +108,11 @@ export function PaywallShell() {
   return (
     <div data-testid="paywall-shell" className="w-full">
       <div className="flex w-full flex-col gap-6">
+        <AppBackControl
+          href={returnHref}
+          label={t("backCta")}
+          testId="paywall-back-control"
+        />
         {/* Region 1: 결제 선택 제목. IA 코드는 사용자 화면에 노출하지 않는다. */}
         <div>
           <PageHeader title={t("heading")} subtitle={t("subheading")} />
@@ -275,9 +281,6 @@ export function PaywallShell() {
               <Link href="/subscription">
                 <Button>{t("viewManageCta")}</Button>
               </Link>
-              <Button type="link" onClick={() => router.back()}>
-                {t("backCta")}
-              </Button>
             </div>
           </>
         )}

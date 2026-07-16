@@ -1443,6 +1443,7 @@
       "showMore": "Show more ({count})"
     },
     "page": {
+      "backToLibrary": "Back to my library",
       "loadFailedTitle": "Couldn't load feedback",
       "loadFailedDescription": "Try again shortly, or refresh the screen.",
       "partialTitle": "Only part of the analysis is complete",
@@ -1532,6 +1533,7 @@
       "changed": "Expression changed"
     },
     "comparison": {
+      "backToFeedback": "Back to feedback",
       "heading": "Comparison report",
       "title": "Question {questionNo} comparison report",
       "share": "Share",
@@ -1734,6 +1736,7 @@
       "requiredQuestionsLabel": "Required points"
     },
     "editor": {
+      "back": "Back to the previous screen",
       "materialsTitle": "Problem materials",
       "materialsChartTitle": "Problem materials ({type})",
       "materialsChartPlaceholder": "[Chart] {count} data points — actual chart rendering comes after Tier 2 OOS-2 Realtime / chart library integration",

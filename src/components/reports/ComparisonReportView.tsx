@@ -11,6 +11,7 @@ import { trackButtonClick } from "@/lib/analytics/google-analytics";
 import { logStudyEvent } from "@/lib/events/study-events";
 import type { ComparisonReportViewModel } from "@/lib/writing/comparison-report-view-model";
 import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
+import { writingFeedbackHref } from "@/lib/writing/routes";
 import { BlankTraitComparisonPanel } from "./BlankTraitComparisonPanel";
 import { ComparisonTargetDrawer } from "./ComparisonTargetDrawer";
 import { DimensionComparisonCards } from "./DimensionComparisonCards";
@@ -171,6 +172,12 @@ export function ComparisonReportView(initialReport: Props) {
     >
       <ReportPageHeader
         testId="comparison-page-header"
+        backHref={writingFeedbackHref({
+          questionNo: currentQuestionNo,
+          submissionId: currentSubmissionId,
+        })}
+        backLabel={t("backToFeedback")}
+        backTestId="comparison-header-back-link"
         title={
           <ComparisonReportTitle
             questionNo={currentQuestionNo}

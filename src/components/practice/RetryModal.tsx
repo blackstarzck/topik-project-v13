@@ -45,6 +45,7 @@ type Props = {
    */
   submissionId?: string;
   feedbackStatus?: FeedbackStatus | null;
+  returnTo?: string;
   /**
    * C-03 §2 예외 — 문제 만료 시 시작 대신 만료 안내 + 닫기만 제공.
    * 만료 정책은 아직 미정이므로 기본 false; 상위에서 확정된 정책값을
@@ -112,6 +113,7 @@ export function RetryModal({
   hasAttempt,
   submissionId,
   feedbackStatus,
+  returnTo,
   expired = false,
 }: Props) {
   const t = useTranslations("practice.retry");
@@ -184,6 +186,7 @@ export function RetryModal({
           problemId,
           fresh: mode === "fresh",
           hint: canUseHintMode && mode === "hint",
+          returnTo,
         }) as never,
       );
     } catch {

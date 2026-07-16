@@ -657,7 +657,33 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(within(header).getByTestId("feedback-action-pdf")).toBeTruthy();
     expect(within(header).queryByTestId("feedback-action-save")).toBeNull();
     expect(within(header).getByTestId("feedback-action-compare")).toBeTruthy();
+    const retryLink = within(header).getByTestId("feedback-action-retry");
+    fireEvent.click(retryLink);
+    const retryUrl = new URL(
+      String(routerPushMock.mock.calls.at(-1)?.[0] ?? ""),
+      "https://talkpik.test",
+    );
+    expect(retryUrl.searchParams.get("returnTo")).toBe(
+      "/writing/feedback/short/sub-1",
+    );
     expect(screen.getAllByTestId("feedback-actions")).toHaveLength(1);
+  });
+
+  it("keeps a semantic library back control when feedback cannot load", () => {
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({ feedback_status: "failed" })}
+        bundle={null}
+        withSentences
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const backLink = screen.getByTestId("feedback-header-back-link");
+    expect(backLink.getAttribute("href")).toBe("/library");
+    expect(backLink.getAttribute("aria-label")).toBe("내 서재로 돌아가기");
+    expect(screen.getByText("피드백을 불러오지 못했어요")).toBeTruthy();
   });
 
   it("navigates the short feedback next action to the provided fresh problem URL", () => {
@@ -999,7 +1025,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     fireEvent.click(screen.getByTestId("feedback-action-retry"));
 
     expect(routerPushMock).toHaveBeenCalledWith(
-      "/writing/essay-writing-54?problem=problem-1&fresh=1&retrySubmission=submission-1",
+      "/writing/essay-writing-54?problem=problem-1&fresh=1&retrySubmission=submission-1&returnTo=%2Fwriting%2Ffeedback%2Flong%2Fsubmission-1",
     );
   });
 

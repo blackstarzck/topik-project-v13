@@ -1443,6 +1443,7 @@
       "showMore": "더보기 ({count}개)"
     },
     "page": {
+      "backToLibrary": "내 서재로 돌아가기",
       "loadFailedTitle": "피드백을 불러오지 못했어요",
       "loadFailedDescription": "잠시 후 다시 시도하거나 화면을 새로고침해 주세요.",
       "partialTitle": "일부 분석만 완료됐어요",
@@ -1532,6 +1533,7 @@
       "changed": "표현 변경"
     },
     "comparison": {
+      "backToFeedback": "피드백으로 돌아가기",
       "heading": "비교 리포트",
       "title": "{questionNo}번 비교 리포트",
       "share": "공유",
@@ -1734,6 +1736,7 @@
       "requiredQuestionsLabel": "필수 포함 조건"
     },
     "editor": {
+      "back": "이전 화면으로 돌아가기",
       "materialsTitle": "문제 자료",
       "materialsChartTitle": "문제 자료 ({type})",
       "materialsChartPlaceholder": "[차트] 데이터 {count}건 — 실 차트 렌더링은 Tier 2 OOS-2 Realtime/차트 라이브러리 통합 후",

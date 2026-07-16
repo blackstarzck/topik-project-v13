@@ -244,10 +244,13 @@ describe("PaywallShell (i18n chrome)", () => {
       },
     ]);
 
-    renderShell(<PaywallShell />);
+    renderShell(<PaywallShell returnHref="/practice/next" />);
 
     expect(screen.getByText("구독 시작하기")).toBeTruthy();
     expect(screen.queryByText("X-03")).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "뒤로 가기" }).getAttribute("href"),
+    ).toBe("/practice/next");
 
     await waitFor(() => {
       // recommended badge + ICU "{cadence} 구독 선택" with cadence "분기".
@@ -266,7 +269,7 @@ describe("PaywallShell (i18n chrome)", () => {
     fetchMySubscriptionMock.mockResolvedValue(null);
     fetchActivePlansMock.mockResolvedValue([]);
 
-    renderShell(<PaywallShell />);
+    renderShell(<PaywallShell returnHref="/dashboard" />);
 
     await waitFor(() => {
       expect(
