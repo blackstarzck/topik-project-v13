@@ -164,6 +164,32 @@ describe("WritingExamShell", () => {
     expect(onRequestBack).toHaveBeenCalledTimes(1);
   });
 
+  it("uses the localized semantic label for contextual back navigation", () => {
+    renderWithIntl(
+      <WritingExamShell
+        title="53"
+        subtitle="subtitle"
+        progressPercent={10}
+        elapsedSeconds={0}
+        autosaveStatus="clean"
+        lastSavedAt={null}
+        canSave={false}
+        canSubmit={false}
+        isSaving={false}
+        isSubmitting={false}
+        onSave={vi.fn()}
+        onSubmit={vi.fn()}
+        onRequestBack={vi.fn()}
+      >
+        <div>content</div>
+      </WritingExamShell>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "이전 화면으로 돌아가기" }),
+    ).toBeTruthy();
+  });
+
   it("renders the elapsed timer from workspace metrics", () => {
     const { container } = renderWithIntl(
       <WritingExamShell

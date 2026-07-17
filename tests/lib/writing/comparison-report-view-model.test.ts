@@ -57,4 +57,23 @@ describe("getComparisonReportViewModel", () => {
       "00000000-0000-0000-0000-000000000051",
     );
   });
+
+  it("returns retry navigation to the current comparison report", async () => {
+    serverMocks.getWritingProblemAvailability.mockResolvedValue({
+      state: "available",
+      canShowProblemIdentity: true,
+      canStart: true,
+      canSubmit: true,
+      labelKey: "available",
+      reason: null,
+    });
+    const { getComparisonReportViewModel } =
+      await import("../../../src/lib/writing/comparison-report-view-model");
+
+    const viewModel = await getComparisonReportViewModel("report-1");
+
+    expect(viewModel?.retryHref).toBe(
+      "/writing/short-answer-writing-51?problem=00000000-0000-0000-0000-000000000051&retrySubmission=submission-1&returnTo=%2Fwriting%2Freports%2Freport-1%2Fcompare",
+    );
+  });
 });

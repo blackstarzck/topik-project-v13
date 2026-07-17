@@ -5,16 +5,25 @@ import { WritingPageContent } from "@/components/writing/WritingPageContent";
 import { requireUser } from "@/lib/auth/session";
 import {
   getActiveDraft,
+  getComparisonReport,
   getRetrySubmissionSeed,
+  getSubmission,
   getWritingProblem,
   isProblemIdLikeUuid,
 } from "@/lib/writing/server";
+import {
+  getWritingComparisonReturnReportId,
+  getWritingFeedbackReturnSubmissionId,
+  resolveWritingReturnTo,
+  writingFeedbackHref,
+} from "@/lib/writing/routes";
 import type { QuestionNo } from "@/lib/writing/types";
 
 export type WritingQuestionSearchParams = Promise<{
   problem?: string;
   fresh?: string;
   retrySubmission?: string;
+  returnTo?: string | string[];
 }>;
 
 export async function generateWritingQuestionMetadata(): Promise<Metadata> {
@@ -27,7 +36,12 @@ export async function renderWritingQuestionPage(
   searchParams: WritingQuestionSearchParams,
 ) {
   const user = await requireUser();
-  const { problem: problemId, fresh, retrySubmission } = await searchParams;
+  const {
+    problem: problemId,
+    fresh,
+    retrySubmission,
+    returnTo,
+  } = await searchParams;
   const problem = await getWritingProblem(questionNo, problemId, undefined, {
     userId: user.id,
   });
@@ -51,6 +65,45 @@ export async function renderWritingQuestionPage(
           questionNo,
         })
       : null;
+  const allowedDynamicPathnames: string[] = [];
+  const requestedFeedbackSubmissionId =
+    getWritingFeedbackReturnSubmissionId(returnTo);
+  if (requestedFeedbackSubmissionId) {
+    const returnSubmission = await getSubmission(
+      requestedFeedbackSubmissionId,
+    ).catch(() => null);
+    if (returnSubmission?.user_id === user.id) {
+      allowedDynamicPathnames.push(
+        writingFeedbackHref({
+          questionNo: returnSubmission.question_no,
+          submissionId: returnSubmission.id,
+        }),
+      );
+    }
+  }
+  if (retrySeed) {
+    allowedDynamicPathnames.push(
+      writingFeedbackHref({
+        questionNo,
+        submissionId: retrySeed.parent_submission_id,
+      }),
+    );
+
+    const requestedReportId = getWritingComparisonReturnReportId(returnTo);
+    if (requestedReportId) {
+      const report = await getComparisonReport(requestedReportId).catch(
+        () => null,
+      );
+      if (report?.current_submission_id === retrySeed.parent_submission_id) {
+        allowedDynamicPathnames.push(
+          `/writing/reports/${encodeURIComponent(report.id)}/compare`,
+        );
+      }
+    }
+  }
+  const returnHref = resolveWritingReturnTo(returnTo, {
+    allowedDynamicPathnames,
+  });
 
   return (
     <WritingPageContent
@@ -61,6 +114,7 @@ export async function renderWritingQuestionPage(
       retrySeed={draft ? null : retrySeed}
       parentSubmissionId={retrySeed?.parent_submission_id ?? null}
       canRetryProblemLoad={canRetryProblemLoad}
+      returnHref={returnHref}
     />
   );
 }

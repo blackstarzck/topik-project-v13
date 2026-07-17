@@ -124,6 +124,7 @@ export function LibraryProblemsActionMenu({ kind, item }: Props) {
               writingProblemHref({
                 questionNo: item.question_no,
                 problemId: item.id,
+                returnTo: APP_ROUTES.libraryProblems,
               }),
             );
           },
@@ -144,6 +145,7 @@ export function LibraryProblemsActionMenu({ kind, item }: Props) {
               writingProblemHref({
                 questionNo: item.question_no,
                 problemId: item.problem_id,
+                returnTo: APP_ROUTES.libraryProblems,
               }),
             );
           },
@@ -156,6 +158,7 @@ export function LibraryProblemsActionMenu({ kind, item }: Props) {
       problemId: item.problem_id,
       fresh: true,
       retrySubmissionId: item.id,
+      returnTo: APP_ROUTES.libraryProblems,
     });
 
     return [

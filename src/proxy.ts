@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { getAuthEntryRedirectPath } from "./lib/auth/completion-routes";
-import { AUTH_ENTRY_PATHS, PUBLIC_PATHS } from "./lib/routes";
+import { APP_ROUTES, AUTH_ENTRY_PATHS, PUBLIC_PATHS } from "./lib/routes";
 import { getPublicEnv } from "./lib/supabase/env";
 import type { Database } from "./lib/supabase/types";
 
@@ -68,6 +68,14 @@ function buildInstitutionInviteRedirectUrl(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // The callback route must read the original PKCE verifier cookie before any
+  // session refresh can mutate the request cookies.
+  if (pathname === APP_ROUTES.authCallback) {
+    return NextResponse.next({ request });
+  }
+
   const env = getPublicEnv();
   let response = NextResponse.next({ request });
 
@@ -91,8 +99,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   if (
     user &&

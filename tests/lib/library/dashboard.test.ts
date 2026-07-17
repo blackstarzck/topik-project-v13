@@ -642,7 +642,7 @@ describe("buildLibraryDashboardFromRows", () => {
         (candidate) => candidate.problemId === "p-visible",
       )?.retryHref,
     ).toBe(
-      "/writing/long-form-writing-53?problem=p-visible&fresh=1&retrySubmission=s-visible",
+      "/writing/long-form-writing-53?problem=p-visible&fresh=1&retrySubmission=s-visible&returnTo=%2Flibrary",
     );
     expect(
       view.reviewCandidates.find(

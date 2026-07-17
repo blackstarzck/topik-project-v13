@@ -58,9 +58,10 @@ const TYPE_META: Record<
 
 type Props = {
   lockedTypes?: Set<QuestionNo>;
+  returnTo: string;
 };
 
-export function TypeSelectCards({ lockedTypes }: Props) {
+export function TypeSelectCards({ lockedTypes, returnTo }: Props) {
   const t = useTranslations("practice.recommendations");
   const tCommon = useTranslations("practice.common");
   return (
@@ -134,7 +135,7 @@ export function TypeSelectCards({ lockedTypes }: Props) {
           ) : (
             <Link
               key={qn}
-              href={writingQuestionHref(qn) as never}
+              href={writingQuestionHref(qn, { returnTo }) as never}
               className="block h-full text-inherit no-underline"
               aria-label={t("typeStartAria", { type: typeLabel })}
             >

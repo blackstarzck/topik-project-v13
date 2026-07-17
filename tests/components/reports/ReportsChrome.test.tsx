@@ -691,6 +691,14 @@ describe("ComparisonReportView next action chrome", () => {
     const actionRegion = within(stickyHeader).getByTestId(
       "report-page-header-actions",
     );
+    const backLink = within(titleRegion).getByTestId(
+      "comparison-header-back-link",
+    );
+    expect(backLink.getAttribute("href")).toBe(
+      "/writing/feedback/long/current-1",
+    );
+    expect(backLink.getAttribute("aria-label")).toBe("피드백으로 돌아가기");
+    expect(actionRegion.contains(backLink)).toBe(false);
     const body = screen.getByTestId("comparison-page-body");
     expect(body.className).toContain("gap-20");
     expect(body.className).not.toContain("gap-10");

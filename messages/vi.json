@@ -1443,6 +1443,7 @@
       "showMore": "Xem thêm ({count})"
     },
     "page": {
+      "backToLibrary": "Quay lại thư viện của tôi",
       "loadFailedTitle": "Không thể tải nhận xét",
       "loadFailedDescription": "Hãy thử lại sau, hoặc làm mới màn hình.",
       "partialTitle": "Chỉ một phần phân tích hoàn tất",
@@ -1532,6 +1533,7 @@
       "changed": "Đổi cách diễn đạt"
     },
     "comparison": {
+      "backToFeedback": "Quay lại nhận xét",
       "heading": "Báo cáo so sánh",
       "title": "Báo cáo so sánh câu {questionNo}",
       "share": "Chia sẻ",
@@ -1734,6 +1736,7 @@
       "requiredQuestionsLabel": "Ý bắt buộc"
     },
     "editor": {
+      "back": "Quay lại màn hình trước",
       "materialsTitle": "Tài liệu đề bài",
       "materialsChartTitle": "Tài liệu đề bài ({type})",
       "materialsChartPlaceholder": "[Biểu đồ] {count} điểm dữ liệu — biểu đồ thực sẽ hiển thị sau khi tích hợp thư viện Realtime/biểu đồ Tier 2 OOS-2",
