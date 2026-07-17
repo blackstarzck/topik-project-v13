@@ -170,7 +170,16 @@ describe("classifySupabaseRestRequest", () => {
     ).toBe("fulfill-expected-analytics");
   });
 
-  it("blocks unrelated Supabase REST mutations and POST RPCs", () => {
+  it.each([
+    "https://sample.supabase.co/rest/v1/rpc/get_available_writing_questions",
+    "https://sample.supabase.co/rest/v1/rpc/get_available_writing_questions?p_item_number=53",
+  ])("continues the exact known read-only POST RPC %s", (url) => {
+    expect(
+      classifySupabaseRestRequest(url, "POST", origins.supabaseOrigin),
+    ).toBe("continue");
+  });
+
+  it("blocks unrelated Supabase REST mutations and unknown POST RPCs", () => {
     expect(
       classifySupabaseRestRequest(
         "https://sample.supabase.co/rest/v1/writing_drafts?id=eq.1",
@@ -180,8 +189,15 @@ describe("classifySupabaseRestRequest", () => {
     ).toBe("block-unexpected-mutation");
     expect(
       classifySupabaseRestRequest(
-        "https://sample.supabase.co/rest/v1/rpc/get_available_writing_questions",
+        "https://sample.supabase.co/rest/v1/rpc/unknown_read",
         "POST",
+        origins.supabaseOrigin,
+      ),
+    ).toBe("block-unexpected-mutation");
+    expect(
+      classifySupabaseRestRequest(
+        "https://sample.supabase.co/rest/v1/study_events?id=eq.1",
+        "DELETE",
         origins.supabaseOrigin,
       ),
     ).toBe("block-unexpected-mutation");

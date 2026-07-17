@@ -13,6 +13,8 @@ export type SupabaseRestRequestClassification =
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const AVAILABLE_WRITING_QUESTIONS_RPC_PATH =
+  "/rest/v1/rpc/get_available_writing_questions";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -109,6 +111,12 @@ export function classifySupabaseRestRequest(
 
   const normalizedMethod = method.toUpperCase();
   if (READ_METHODS.has(normalizedMethod)) {
+    return "continue";
+  }
+  if (
+    normalizedMethod === "POST" &&
+    requestUrl.pathname === AVAILABLE_WRITING_QUESTIONS_RPC_PATH
+  ) {
     return "continue";
   }
   if (
