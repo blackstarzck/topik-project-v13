@@ -1,7 +1,27 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import {
+  classifySupabaseRestRequest,
+  hasTrackedRequestsSettled,
+  isTrackedRuntimeUrl,
+  isUnexpectedTrackedResponse,
+  selectCanonicalProblemId,
+  shouldCollectRuntimeConsoleError,
+  type WritingComposerQuestionNo,
+  type WritingComposerRuntimeOrigins,
+} from "../support/writing-composer-runtime";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const PUBLISHABLE_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+const STUDENT_EMAIL = process.env.E2E_STUDENT_EMAIL?.trim();
+const STUDENT_PASSWORD =
+  process.env.E2E_STUDENT_PASSWORD?.trim() ||
+  process.env.SUPABASE_TEST_PASSWORD?.trim();
 
 type WritingComposerCase = {
   label: "Q53" | "Q54";
+  questionNo: WritingComposerQuestionNo;
   route: string;
   path: RegExp;
   heading: RegExp;
@@ -12,7 +32,8 @@ type WritingComposerCase = {
 const CASES: WritingComposerCase[] = [
   {
     label: "Q53",
-    route: "/writing/long-form-writing-53?fresh=1",
+    questionNo: 53,
+    route: "/writing/long-form-writing-53",
     path: /\/writing\/long-form-writing-53/,
     heading: /53번/,
     writePanelTestId: "q53-composer-write-panel",
@@ -20,7 +41,8 @@ const CASES: WritingComposerCase[] = [
   },
   {
     label: "Q54",
-    route: "/writing/essay-writing-54?fresh=1",
+    questionNo: 54,
+    route: "/writing/essay-writing-54",
     path: /\/writing\/essay-writing-54/,
     heading: /54번/,
     writePanelTestId: "q54-composer-write-panel",
@@ -28,17 +50,13 @@ const CASES: WritingComposerCase[] = [
   },
 ];
 
-function collectRuntimeFailures(page: Page) {
+function collectRuntimeFailures(
+  page: Page,
+  origins: WritingComposerRuntimeOrigins,
+) {
   const failures: string[] = [];
   const pendingRequests = new Set<Request>();
-
-  const shouldTrackRequest = (request: Request) => {
-    const url = new URL(request.url());
-    return (
-      (url.protocol === "http:" || url.protocol === "https:") &&
-      url.hostname !== "www.google-analytics.com"
-    );
-  };
+  let lastActivityAt = Date.now();
 
   const requestLabel = (request: Request) => {
     const url = new URL(request.url());
@@ -46,7 +64,10 @@ function collectRuntimeFailures(page: Page) {
   };
 
   page.on("console", (message) => {
-    if (message.type() === "error") {
+    if (
+      message.type() === "error" &&
+      shouldCollectRuntimeConsoleError(message.location().url, origins)
+    ) {
       failures.push(`console: ${message.text()}`);
     }
   });
@@ -54,20 +75,29 @@ function collectRuntimeFailures(page: Page) {
     failures.push(`pageerror: ${error.message}`);
   });
   page.on("request", (request) => {
-    if (shouldTrackRequest(request)) pendingRequests.add(request);
+    if (isTrackedRuntimeUrl(request.url(), origins)) {
+      lastActivityAt = Date.now();
+      pendingRequests.add(request);
+    }
   });
   page.on("requestfinished", (request) => {
-    pendingRequests.delete(request);
+    if (isTrackedRuntimeUrl(request.url(), origins)) {
+      lastActivityAt = Date.now();
+      pendingRequests.delete(request);
+    }
   });
   page.on("requestfailed", (request) => {
+    if (!isTrackedRuntimeUrl(request.url(), origins)) return;
+    lastActivityAt = Date.now();
     pendingRequests.delete(request);
-    if (!shouldTrackRequest(request)) return;
     failures.push(
       `requestfailed: ${requestLabel(request)} ${request.failure()?.errorText ?? "unknown"}`,
     );
   });
   page.on("response", (response) => {
-    if (response.status() >= 500) {
+    if (
+      isUnexpectedTrackedResponse(response.url(), response.status(), origins)
+    ) {
       failures.push(
         `response: ${response.status()} ${requestLabel(response.request())}`,
       );
@@ -77,26 +107,153 @@ function collectRuntimeFailures(page: Page) {
   return {
     failures,
     async waitForSettled() {
-      await page.waitForLoadState("networkidle");
       await expect
-        .poll(() => pendingRequests.size, {
-          message: "application requests should settle before error review",
-        })
-        .toBe(0);
+        .poll(
+          () =>
+            hasTrackedRequestsSettled(
+              pendingRequests.size,
+              lastActivityAt,
+              Date.now(),
+            ),
+          {
+            message:
+              "application requests should settle and remain quiet before error review",
+          },
+        )
+        .toBe(true);
     },
   };
+}
+
+async function installSupabaseRestMutationGuard(
+  page: Page,
+  origins: WritingComposerRuntimeOrigins,
+  failures: string[],
+) {
+  await page.route(`${origins.supabaseOrigin}/rest/v1/**`, async (route) => {
+    const request = route.request();
+    const classification = classifySupabaseRestRequest(
+      request.url(),
+      request.method(),
+      origins.supabaseOrigin,
+    );
+
+    if (classification === "continue") {
+      await route.continue();
+      return;
+    }
+
+    if (classification === "block-unexpected-mutation") {
+      failures.push(
+        `unexpected mutation blocked: ${request.method()} ${new URL(request.url()).pathname}`,
+      );
+    }
+
+    await route.fulfill({
+      body: "[]",
+      contentType: "application/json",
+      headers: {
+        "access-control-allow-origin": origins.appOrigin,
+      },
+      status: classification === "fulfill-expected-analytics" ? 201 : 200,
+    });
+  });
 }
 
 test.describe("writing composer mode", () => {
   test.describe.configure({ retries: 0 });
 
+  let canonicalProblemIds: Record<WritingComposerQuestionNo, string>;
+  let supabaseOrigin: string;
+
+  test.beforeAll(async () => {
+    if (
+      !SUPABASE_URL ||
+      !PUBLISHABLE_KEY ||
+      !STUDENT_EMAIL ||
+      !STUDENT_PASSWORD
+    ) {
+      throw new Error(
+        "writing composer mode e2e requires NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, E2E_STUDENT_EMAIL, and E2E_STUDENT_PASSWORD or SUPABASE_TEST_PASSWORD.",
+      );
+    }
+
+    try {
+      supabaseOrigin = new URL(SUPABASE_URL).origin;
+    } catch {
+      throw new Error(
+        "writing composer mode e2e requires a valid NEXT_PUBLIC_SUPABASE_URL.",
+      );
+    }
+
+    const client = createClient(SUPABASE_URL, PUBLISHABLE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        persistSession: false,
+      },
+    });
+    const signIn = await client.auth.signInWithPassword({
+      email: STUDENT_EMAIL,
+      password: STUDENT_PASSWORD,
+    });
+    if (signIn.error) {
+      throw new Error(
+        `writing composer mode e2e student sign-in failed: ${signIn.error.message}`,
+      );
+    }
+    if (!signIn.data.user || !signIn.data.session) {
+      throw new Error(
+        "writing composer mode e2e student sign-in returned no authenticated session.",
+      );
+    }
+
+    const problemIds = {} as Record<WritingComposerQuestionNo, string>;
+
+    for (const questionNo of [53, 54] as const) {
+      const { data, error } = await client.rpc(
+        "get_available_writing_questions",
+        {
+          p_item_number: questionNo,
+          p_problem_id: null,
+        },
+      );
+      if (error) {
+        throw new Error(
+          `Canonical Q${questionNo} writing sample query failed: ${error.message}`,
+        );
+      }
+      problemIds[questionNo] = selectCanonicalProblemId(data, questionNo);
+    }
+
+    canonicalProblemIds = problemIds;
+  });
+
   for (const writingCase of CASES) {
     test(`${writingCase.label} switches write to manuscript and back before input`, async ({
       page,
+      baseURL,
     }) => {
-      const runtime = collectRuntimeFailures(page);
+      const configuredAppUrl = baseURL ?? process.env.E2E_BASE_URL;
+      if (!configuredAppUrl) {
+        throw new Error(
+          "writing composer mode e2e requires Playwright baseURL or E2E_BASE_URL.",
+        );
+      }
+      const origins = {
+        appOrigin: new URL(configuredAppUrl).origin,
+        supabaseOrigin,
+      };
+      const runtime = collectRuntimeFailures(page, origins);
+      await installSupabaseRestMutationGuard(
+        page,
+        origins,
+        runtime.failures,
+      );
+      const problemId = canonicalProblemIds[writingCase.questionNo];
+      const route = `${writingCase.route}?problem=${encodeURIComponent(problemId)}&fresh=1`;
 
-      const response = await page.goto(writingCase.route, {
+      const response = await page.goto(route, {
         waitUntil: "domcontentloaded",
       });
       expect(response?.status()).toBeLessThan(400);
