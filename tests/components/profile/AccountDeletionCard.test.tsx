@@ -7,10 +7,15 @@ const navMock = vi.hoisted(() => ({
   replace: vi.fn(),
   searchParams: new URLSearchParams(),
 }));
+const recoveryCleanupMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: navMock.replace }),
   useSearchParams: () => navMock.searchParams,
+}));
+
+vi.mock("@/lib/writing/client-recovery-cleanup", () => ({
+  clearClientRecoveryForAccountDeletion: recoveryCleanupMock,
 }));
 
 import { AccountDeletionCard } from "../../../src/components/profile/AccountDeletionCard";
@@ -24,12 +29,19 @@ describe("AccountDeletionCard", () => {
   beforeEach(() => {
     navMock.replace.mockReset();
     navMock.searchParams = new URLSearchParams();
+    recoveryCleanupMock.mockReset();
+    recoveryCleanupMock.mockResolvedValue(true);
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
 
   it("renders the danger-zone title and delete trigger", () => {
-    const { container } = renderWithIntl(<AccountDeletionCard />);
+    const { container } = renderWithIntl(
+      <AccountDeletionCard userId="user-1" />,
+    );
     const openButton = screen.getByTestId("account-delete-open");
     expect(openButton).toBeTruthy();
     expect(openButton.classList.contains("ant-btn-primary")).toBe(true);
@@ -55,7 +67,7 @@ describe("AccountDeletionCard", () => {
   });
 
   it("posts the deletion form to the account-delete route handler", async () => {
-    renderWithIntl(<AccountDeletionCard />);
+    renderWithIntl(<AccountDeletionCard userId="user-1" />);
     openModal();
 
     const submit = (await screen.findByTestId(
@@ -67,7 +79,7 @@ describe("AccountDeletionCard", () => {
   });
 
   it("keeps the confirm button disabled until the keyword is typed exactly", async () => {
-    renderWithIntl(<AccountDeletionCard />);
+    renderWithIntl(<AccountDeletionCard userId="user-1" />);
     openModal();
 
     const submit = (await screen.findByTestId(
@@ -88,7 +100,7 @@ describe("AccountDeletionCard", () => {
   });
 
   it("prevents native form submission until the keyword matches (Enter-key bypass guard)", async () => {
-    renderWithIntl(<AccountDeletionCard />);
+    renderWithIntl(<AccountDeletionCard userId="user-1" />);
     openModal();
 
     const submit = (await screen.findByTestId(
@@ -108,7 +120,9 @@ describe("AccountDeletionCard", () => {
   });
 
   it("closes the modal on cancel", async () => {
-    const { baseElement } = renderWithIntl(<AccountDeletionCard />);
+    const { baseElement } = renderWithIntl(
+      <AccountDeletionCard userId="user-1" />,
+    );
     openModal();
 
     await screen.findByTestId("account-delete-confirm-submit");
@@ -121,6 +135,81 @@ describe("AccountDeletionCard", () => {
       expect(
         baseElement.querySelector(".ant-modal.ant-zoom-leave"),
       ).toBeTruthy(),
+    );
+  });
+
+  it("clears all user recovery records only after server-confirmed deletion", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<AccountDeletionCard userId="user-1" />);
+    openModal();
+    fireEvent.change(screen.getByTestId("account-delete-confirm-input"), {
+      target: { value: "삭제" },
+    });
+    const submit = await screen.findByTestId("account-delete-confirm-submit");
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    expect(recoveryCleanupMock).toHaveBeenCalledWith("user-1");
+    await waitFor(() =>
+      expect(navMock.replace).toHaveBeenCalledWith("/login?reason=withdrawn"),
+    );
+  });
+
+  it("keeps recovery records when account deletion is not confirmed", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: false }), {
+        headers: { "content-type": "application/json" },
+        status: 503,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<AccountDeletionCard userId="user-1" />);
+    openModal();
+    fireEvent.change(screen.getByTestId("account-delete-confirm-input"), {
+      target: { value: "삭제" },
+    });
+    const submit = await screen.findByTestId("account-delete-confirm-submit");
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    expect(recoveryCleanupMock).not.toHaveBeenCalled();
+    expect(navMock.replace).not.toHaveBeenCalledWith("/login?reason=withdrawn");
+  });
+
+  it("retries only local cleanup when deletion succeeded but cleanup failed", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    recoveryCleanupMock
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    renderWithIntl(<AccountDeletionCard userId="user-1" />);
+    openModal();
+    fireEvent.change(screen.getByTestId("account-delete-confirm-input"), {
+      target: { value: "삭제" },
+    });
+    const submit = await screen.findByTestId("account-delete-confirm-submit");
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+
+    await waitFor(() => expect(recoveryCleanupMock).toHaveBeenCalledTimes(1));
+    expect(navMock.replace).not.toHaveBeenCalledWith("/login?reason=withdrawn");
+    expect(await screen.findByText("다시 시도")).toBeTruthy();
+
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    await waitFor(() => expect(recoveryCleanupMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(navMock.replace).toHaveBeenCalledWith("/login?reason=withdrawn"),
     );
   });
 });

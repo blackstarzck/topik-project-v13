@@ -48,6 +48,7 @@
 !.claude/skills/*/SKILL.md
 
 # Local test/session artifacts (gitignored).
+.scratch/
 tests/e2e/auth-state/
 screenshots/
 test-results/

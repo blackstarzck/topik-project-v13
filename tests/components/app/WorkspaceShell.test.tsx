@@ -29,6 +29,7 @@ const navMock = vi.hoisted(() => ({
   pathname: "/dashboard",
   authCallback: null as ((event: string) => void) | null,
 }));
+const recoveryCleanupMock = vi.hoisted(() => vi.fn());
 type WritingAvailabilityMockValue = {
   data:
     | {
@@ -105,6 +106,10 @@ vi.mock("@/lib/supabase/browser", () => ({
   }),
 }));
 
+vi.mock("@/lib/writing/client-recovery-cleanup", () => ({
+  clearClientRecoveryForLogout: recoveryCleanupMock,
+}));
+
 vi.mock("@/components/practice/writing-availability-data", () => ({
   useWritingAvailability: () => writingAvailabilityMock.value,
 }));
@@ -131,6 +136,8 @@ describe("WorkspaceShell", () => {
     navMock.routerReplace.mockClear();
     navMock.pathname = "/dashboard";
     navMock.authCallback = null;
+    recoveryCleanupMock.mockReset();
+    recoveryCleanupMock.mockResolvedValue(true);
     window.sessionStorage.clear();
     writingAvailabilityMock.value = {
       data: {
@@ -343,6 +350,46 @@ describe("WorkspaceShell", () => {
       "z-index: 1",
     );
     expect(cssRule(".app-profile-popover-action--danger")).toBe("");
+  });
+
+  it("clears eligible local recovery data before profile-menu sign-out", async () => {
+    const nativeSubmit = vi
+      .spyOn(HTMLFormElement.prototype, "submit")
+      .mockImplementation(() => undefined);
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="student@example.com"
+        nickname="talkpik-chan"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    fireEvent.click(
+      within(container).getByRole("button", {
+        name: koMessages.app.userSummary,
+      }),
+    );
+    const logout = await waitFor(() => {
+      const item = Array.from(
+        document.body.querySelectorAll(
+          ".app-profile-popover-panel [role='menuitem']",
+        ),
+      ).find((candidate) =>
+        candidate.textContent?.includes(koMessages.nav.logout),
+      );
+      expect(item).toBeTruthy();
+      return item as HTMLElement;
+    });
+    fireEvent.click(logout);
+
+    await waitFor(() =>
+      expect(recoveryCleanupMock).toHaveBeenCalledWith("user-1"),
+    );
+    expect(nativeSubmit).toHaveBeenCalledOnce();
+    nativeSubmit.mockRestore();
   });
 
   it("renders Iconsax icons in the sidebar menu", () => {
@@ -1002,7 +1049,12 @@ describe("WorkspaceShell", () => {
     navMock.pathname = "/dashboard";
 
     renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+      >
         <div>body</div>
       </WorkspaceShell>,
     );

@@ -1,4 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import { assertLocalPrivilegedMutationTarget } from "../../../scripts/lib/supabase-target-safety.mjs";
 
 // G6 (QA 2026-06-12): 프로필 화면 하단 로그아웃 진입점.
 //
@@ -13,6 +15,122 @@ import { test, expect } from "@playwright/test";
 
 const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const PASSWORD = process.env.SUPABASE_TEST_PASSWORD ?? "";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const RECOVERY_DATABASE = "talkpik-client-recovery";
+const RECOVERY_STORE = "writing-drafts";
+
+async function getStudentUserId() {
+  assertLocalPrivilegedMutationTarget(process.env);
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    throw new Error("Local logout recovery fixture is not configured.");
+  }
+  const client = createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data, error } = await client.auth.admin.listUsers({
+    page: 1,
+    perPage: 1_000,
+  });
+  if (error) throw new Error("Local logout recovery user lookup failed.");
+  const user = data.users.find((candidate) => candidate.email === EMAIL);
+  if (!user) throw new Error("Local logout recovery user is missing.");
+  return user.id;
+}
+
+async function seedLogoutRecoveryRecords(page: Page, userId: string) {
+  const savedAt = new Date().toISOString();
+  const expiresAt = new Date(
+    Date.parse(savedAt) + 24 * 60 * 60 * 1_000,
+  ).toISOString();
+  const base = {
+    answerJson: null,
+    answerText: "local recovery boundary fixture",
+    canonicalQuestionId: null,
+    draftId: null,
+    expiresAt,
+    firstStoredAt: savedAt,
+    importId: null,
+    payloadHash: null,
+    questionNo: 51,
+    retention: "default",
+    savedAt,
+    schemaVersion: 1,
+    userId,
+  };
+  await page.evaluate(
+    async ({ base, databaseName, storeName }) =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open(databaseName, 1);
+        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains(storeName)) {
+            request.result.createObjectStore(storeName, { keyPath: "key" });
+          }
+        };
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction(storeName, "readwrite");
+          const store = transaction.objectStore(storeName);
+          store.put({
+            ...base,
+            key: `${base.userId}:logout-synced:51`,
+            problemId: "logout-synced",
+            serverSyncedAt: base.savedAt,
+          });
+          store.put({
+            ...base,
+            key: `${base.userId}:logout-unsynced:51`,
+            problemId: "logout-unsynced",
+          });
+          transaction.onerror = () => reject(transaction.error);
+          transaction.oncomplete = () => {
+            database.close();
+            resolve();
+          };
+        };
+      }),
+    { base, databaseName: RECOVERY_DATABASE, storeName: RECOVERY_STORE },
+  );
+}
+
+async function readRecoveryKeys(page: Page, userId: string) {
+  return page.evaluate(
+    async ({ databaseName, storeName, userId }) =>
+      new Promise<string[]>((resolve, reject) => {
+        const request = indexedDB.open(databaseName, 1);
+        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains(storeName)) {
+            request.result.createObjectStore(storeName, { keyPath: "key" });
+          }
+        };
+        request.onsuccess = () => {
+          const database = request.result;
+          const getAll = database
+            .transaction(storeName, "readonly")
+            .objectStore(storeName)
+            .getAll();
+          getAll.onerror = () => reject(getAll.error);
+          getAll.onsuccess = () => {
+            database.close();
+            resolve(
+              getAll.result
+                .filter(
+                  (record) =>
+                    typeof record === "object" &&
+                    record !== null &&
+                    (record as { userId?: unknown }).userId === userId,
+                )
+                .map((record) => (record as { key: string }).key)
+                .sort(),
+            );
+          };
+        };
+      }),
+    { databaseName: RECOVERY_DATABASE, storeName: RECOVERY_STORE, userId },
+  );
+}
 
 test("account settings logout signs out and protects workspace routes (G6)", async ({
   browser,
@@ -25,6 +143,8 @@ test("account settings logout signs out and protects workspace routes (G6)", asy
     PASSWORD,
     "SUPABASE_TEST_PASSWORD must be set in .env.local for the logout flow",
   ).not.toBe("");
+  assertLocalPrivilegedMutationTarget(process.env);
+  const userId = await getStudentUserId();
 
   const context = await browser.newContext({
     storageState: { cookies: [], origins: [] },
@@ -49,11 +169,20 @@ test("account settings logout signs out and protects workspace routes (G6)", asy
     // 프로필 화면 하단 로그아웃 → form POST /auth/sign-out → 303 → /login.
     await page.goto("/settings/account", { waitUntil: "networkidle" });
     await expect(page).toHaveURL(/\/settings\/account/);
+    const recoveryOrigin = new URL(page.url()).origin;
+    await seedLogoutRecoveryRecords(page, userId);
+    await expect.poll(() => readRecoveryKeys(page, userId)).toHaveLength(2);
     const logoutButton = page.getByTestId("profile-logout");
     await expect(logoutButton).toBeVisible();
     await logoutButton.click();
     await page.waitForURL("**/login**", { timeout: 15_000 });
     await expect(page).toHaveURL(/\/login/);
+    const recoveryPage = await context.newPage();
+    await recoveryPage.goto(`${recoveryOrigin}/login`);
+    await expect
+      .poll(() => readRecoveryKeys(recoveryPage, userId))
+      .toEqual([`${userId}:logout-unsynced:51`]);
+    await recoveryPage.close();
 
     // 로그아웃 뒤 보호 라우트 재접근은 로그인으로 돌려보내야 한다.
     await page.goto("/dashboard");

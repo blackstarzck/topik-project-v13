@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  submitWriting,
-  upsertDraft,
-} from "../../../src/lib/writing/mutations";
+import { submitWriting, upsertDraft } from "../../../src/lib/writing/mutations";
 import {
   WRITING_SUBMISSION_BLOCKED_MESSAGE,
   WRITING_SUBMISSION_DRAFT_REQUIRED_MESSAGE,
@@ -123,10 +120,33 @@ function makeClient(opts: {
 }
 
 describe("upsertDraft", () => {
+  it("persists a completed autosave as clean with the actual save time", async () => {
+    const client = makeClient({ lookupIds: ["draft-active"] });
+    const savedAt = "2026-07-18T02:03:04.000Z";
+
+    await upsertDraft(
+      { ...INPUT, autosave_status: "dirty", last_saved_at: null },
+      () => client as never,
+      () => savedAt,
+    );
+
+    expect(client.calls[1]).toMatchObject({
+      type: "update",
+      payload: {
+        autosave_status: "clean",
+        last_saved_at: savedAt,
+      },
+    });
+  });
+
   it("updates the active draft instead of targeting a partial unique index with upsert", async () => {
     const client = makeClient({ lookupIds: ["draft-active"] });
 
-    const result = await upsertDraft(INPUT, () => client as never);
+    const result = await upsertDraft(
+      INPUT,
+      () => client as never,
+      () => INPUT.last_saved_at!,
+    );
 
     expect(result.id).toBe("draft-active");
     expect(client.calls.map((call) => call.type)).toEqual(["lookup", "update"]);

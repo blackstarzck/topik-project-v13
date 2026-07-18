@@ -13,6 +13,7 @@ export type AuthCompletionStatus =
 export type LandingAuthStatus =
   | AuthCompletionStatus
   | "email-unverified"
+  | "profile-unavailable"
   | "authenticated-recovery";
 
 export const POST_AUTH_LOGIN_PATH = `${APP_ROUTES.authPostAuth}?intent=login`;

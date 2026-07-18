@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   exportPdfWithPrintFallback,
+  getPdfExportErrorMessage,
   PdfExportApiError,
   PdfExportDownloadError,
 } from "../../../src/lib/export/pdf-export-client";
@@ -84,9 +85,17 @@ describe("exportPdfWithPrintFallback", () => {
     await expect(exportPdfWithPrintFallback(request)).resolves.toEqual({
       mode: "print",
       exportId: "print-1",
-      fallbackReason: "render failed",
+      fallbackReason: "server_generation_unavailable",
     });
     expect(triggerPdfExport).toHaveBeenCalledWith(request);
+  });
+
+  it("never returns a raw client or provider error as user-facing copy", () => {
+    const raw = "private storage path and provider detail";
+
+    expect(
+      getPdfExportErrorMessage(new Error(raw), "다시 시도해 주세요."),
+    ).toBe("다시 시도해 주세요.");
   });
 
   it("does not print-fallback for quota exceeded errors", async () => {
@@ -135,9 +144,12 @@ describe("exportPdfWithPrintFallback", () => {
     });
     vi.mocked(triggerPdfExport).mockResolvedValue({ exportId: "print-1" });
 
-    await expect(exportPdfWithPrintFallback(request)).rejects.toBeInstanceOf(
-      PdfExportDownloadError,
+    const error = await exportPdfWithPrintFallback(request).catch(
+      (reason) => reason,
     );
+    expect(error).toBeInstanceOf(PdfExportDownloadError);
+    expect(error).toMatchObject({ message: "pdf_download_failed" });
+    expect(String(error)).not.toContain("storage unavailable");
     expect(triggerPdfExport).not.toHaveBeenCalled();
   });
 });

@@ -183,12 +183,9 @@ export function LearningGoalForm({
       });
       notification.success({ title: t("saveSuccess") });
       router.push("/dashboard");
-    } catch (err) {
+    } catch {
       setFieldErrors({
-        __save:
-          err instanceof Error
-            ? t("errors.saveFailedDetail", { detail: err.message })
-            : t("errors.saveFailed"),
+        __save: t("errors.saveFailed"),
       });
     }
   });

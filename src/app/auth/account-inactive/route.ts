@@ -35,10 +35,8 @@ export async function GET(request: NextRequest) {
   // extra global revoke network call (deletion already revoked globally).
   const { error } = await supabase.auth.signOut({ scope: "local" });
   if (error) {
-    console.error("[auth/account-inactive] signOut error", {
-      code: error.code,
-      message: error.message,
-      status: error.status,
+    console.error("auth_inactive_session_clear_failed", {
+      stage: "local_sign_out",
     });
   }
 

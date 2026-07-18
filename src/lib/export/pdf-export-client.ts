@@ -16,6 +16,10 @@ import {
 import type { PdfExportErrorCode } from "./pdf-export-errors";
 import { triggerPdfExport } from "./pdf-export";
 import { sanitizePdfFilename, type PdfExportRequest } from "./pdf-options";
+import {
+  createClientOperationalEvent,
+  emitClientOperationalEvent,
+} from "../operations/client-operational-event";
 
 const BUCKET = "generated-exports";
 
@@ -30,10 +34,20 @@ type BrowserClientFactory = typeof createSupabaseBrowserClient;
 export { PdfExportApiError };
 
 export class PdfExportDownloadError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor() {
+    super("pdf_download_failed");
     this.name = "PdfExportDownloadError";
   }
+}
+
+function recordPdfExportFailure() {
+  const created = createClientOperationalEvent({
+    code: "operation_failed",
+    feature: "pdf_export",
+    operation: "download",
+    result: "failure",
+  });
+  if (created.ok) void emitClientOperationalEvent(created.event);
 }
 
 function shouldUsePrintFallback(error: unknown): boolean {
@@ -57,7 +71,7 @@ export function getPdfExportErrorMessage(
       : undefined;
     return localized ?? fallbackMessage;
   }
-  return error instanceof Error ? error.message : fallbackMessage;
+  return fallbackMessage;
 }
 
 function triggerBrowserDownload(blob: Blob, filename: string): void {
@@ -92,7 +106,8 @@ export async function downloadStoredPdfExport(
     .from(BUCKET)
     .download(input.storagePath);
   if (error || !data) {
-    throw new PdfExportDownloadError(error?.message ?? "download failed");
+    recordPdfExportFailure();
+    throw new PdfExportDownloadError();
   }
   triggerBrowserDownload(
     data,
@@ -132,7 +147,7 @@ export type PdfExportMode = "file" | "print";
 export type PdfExportOutcome = {
   mode: PdfExportMode;
   exportId: string;
-  /** mode='print'일 때 서버 생성이 실패한 원인 (안내용). */
+  /** mode='print'일 때의 안정된 실패 범주. 원본 오류 내용은 포함하지 않는다. */
   fallbackReason?: string;
 };
 
@@ -146,12 +161,12 @@ export async function exportPdfWithPrintFallback(
     if (!shouldUsePrintFallback(err)) {
       throw err;
     }
-    const reason = err instanceof Error ? err.message : String(err);
+    recordPdfExportFailure();
     const printed = await triggerPdfExport(input);
     return {
       mode: "print",
       exportId: printed.exportId,
-      fallbackReason: reason,
+      fallbackReason: "server_generation_unavailable",
     };
   }
 }

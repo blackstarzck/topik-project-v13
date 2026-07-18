@@ -16,9 +16,16 @@ import {
   type SubmitWritingResult,
 } from "./server-actions";
 import type { ComparisonReportViewModel } from "./comparison-report-view-model";
+import type {
+  ClientSubmissionIntent,
+  SubmissionIntentPersistence,
+} from "./client-recovery";
 import { draftQueryKey } from "./queries";
 import type { WritingDraftInsert, WritingDraftRow } from "./types";
-import { toSubmitWritingErrorMessage } from "./submit-errors";
+import {
+  classifySubmitWritingError,
+  toSubmitWritingErrorMessage,
+} from "./submit-errors";
 
 type BrowserClient = ReturnType<typeof createSupabaseBrowserClient>;
 type ClientFactory = () => BrowserClient;
@@ -29,24 +36,38 @@ type SubmitWritingAction = (
 export async function upsertDraft(
   input: WritingDraftInsert,
   createClient: ClientFactory = createSupabaseBrowserClient,
+  now: () => string = () => new Date().toISOString(),
 ): Promise<WritingDraftRow> {
   const supabase = createClient();
+  const persistedInput: WritingDraftInsert = {
+    ...input,
+    autosave_status: "clean",
+    last_saved_at: now(),
+  };
 
   // `writing_drafts_active_unique` is a partial unique index
   // `(user_id, problem_id) where autosave_status <> 'superseded'`.
   // PostgREST upsert cannot target that predicate, so autosave has to resolve
   // the active draft explicitly instead of using `onConflict`.
-  const activeDraftId = await findActiveDraftId(supabase, input);
+  const activeDraftId = await findActiveDraftId(supabase, persistedInput);
   if (activeDraftId) {
-    const updated = await updateActiveDraft(supabase, activeDraftId, input);
+    const updated = await updateActiveDraft(
+      supabase,
+      activeDraftId,
+      persistedInput,
+    );
     if (updated) return updated;
   }
 
-  const inserted = await insertDraft(supabase, input);
+  const inserted = await insertDraft(supabase, persistedInput);
   if (inserted.error && isUniqueViolation(inserted.error)) {
-    const racedDraftId = await findActiveDraftId(supabase, input);
+    const racedDraftId = await findActiveDraftId(supabase, persistedInput);
     if (racedDraftId) {
-      const updated = await updateActiveDraft(supabase, racedDraftId, input);
+      const updated = await updateActiveDraft(
+        supabase,
+        racedDraftId,
+        persistedInput,
+      );
       if (updated) return updated;
     }
   }
@@ -124,54 +145,180 @@ export function useUpsertDraft() {
 // invalidations were dead. Drop them.
 export function useSubmitWriting(
   action: SubmitWritingAction = submitWritingAction,
+  options: {
+    createFingerprint?: (input: SubmitWritingInput) => Promise<string>;
+    createIntentId?: () => string;
+    intentPersistence?: SubmissionIntentPersistence;
+    now?: () => string;
+  } = {},
 ) {
-  const intentRef = useRef<{ fingerprint: string; intentId: string } | null>(
-    null,
+  const volatileIntentRef = useRef<ClientSubmissionIntent | null>(null);
+  const intentResolutionRef = useRef<Promise<void>>(Promise.resolve());
+  const submissionOperationsRef = useRef(
+    new Map<string, Promise<SubmitWritingResult>>(),
   );
-  return useMutation<SubmitWritingResult, Error, SubmitWritingInput>({
-    mutationFn: (input) => {
-      const fingerprint = writingSubmissionFingerprint(input);
-      if (intentRef.current?.fingerprint !== fingerprint) {
-        intentRef.current = {
-          fingerprint,
-          intentId: crypto.randomUUID(),
+  const volatilePersistence: SubmissionIntentPersistence = {
+    async clear(intentId) {
+      if (volatileIntentRef.current?.intentId === intentId) {
+        volatileIntentRef.current = null;
+      }
+    },
+    async find(fingerprint) {
+      return volatileIntentRef.current?.fingerprint === fingerprint
+        ? volatileIntentRef.current
+        : null;
+    },
+    async markAmbiguous(intentId) {
+      if (volatileIntentRef.current?.intentId === intentId) {
+        volatileIntentRef.current = {
+          ...volatileIntentRef.current,
+          state: "ambiguous",
         };
       }
-      return submitWriting(
-        {
-          ...input,
-          submission_intent_id: intentRef.current.intentId,
-        },
-        action,
-      );
     },
-    onSuccess: () => {
-      intentRef.current = null;
+    async persist(intent) {
+      volatileIntentRef.current = intent;
     },
-    onError: (error) => {
-      // A confirmed provider rejection is terminal for this intent, but safe
-      // to retry with a new one. Ambiguous/accepted states must retain the
-      // original intent so they can never dispatch the provider twice.
-      if (error.message.includes("writing_submission_dispatch_failed")) {
-        intentRef.current = null;
+  };
+  const persistence = options.intentPersistence ?? volatilePersistence;
+  const createFingerprint =
+    options.createFingerprint ?? createWritingSubmissionFingerprint;
+  const createIntentId =
+    options.createIntentId ?? (() => globalThis.crypto.randomUUID());
+  const now = options.now ?? (() => new Date().toISOString());
+
+  function resolveIntent(fingerprint: string) {
+    const operation = intentResolutionRef.current.then(async () => {
+      const existing = await persistence.find(fingerprint);
+      if (existing) return existing;
+      const intent: ClientSubmissionIntent = {
+        createdAt: now(),
+        fingerprint,
+        intentId: createIntentId(),
+        state: "pending",
+      };
+      await persistence.persist(intent);
+      return intent;
+    });
+    intentResolutionRef.current = operation.then(
+      () => undefined,
+      () => undefined,
+    );
+    return operation;
+  }
+
+  return useMutation<SubmitWritingResult, Error, SubmitWritingInput>({
+    mutationFn: async (input) => {
+      let fingerprint: string;
+      try {
+        fingerprint = await createFingerprint(input);
+      } catch {
+        throw new Error(toSubmitWritingErrorMessage("preflight_failed"));
+      }
+      const existingOperation =
+        submissionOperationsRef.current.get(fingerprint);
+      if (existingOperation) return existingOperation;
+
+      const operation = (async () => {
+        let intent: ClientSubmissionIntent;
+        try {
+          intent = await resolveIntent(fingerprint);
+        } catch {
+          throw new Error(toSubmitWritingErrorMessage("preflight_failed"));
+        }
+        try {
+          const result = await submitWriting(
+            { ...input, submission_intent_id: intent.intentId },
+            action,
+          );
+          try {
+            await persistence.clear(intent.intentId);
+          } catch {
+            // The durable server result is authoritative. A stale local intent
+            // is safe to reuse because the server deduplicates the payload.
+          }
+          return result;
+        } catch (error) {
+          try {
+            if (
+              error instanceof Error &&
+              classifySubmitWritingError(error.message) ===
+                "submission_ambiguous"
+            ) {
+              await persistence.markAmbiguous(intent.intentId);
+            } else {
+              await persistence.clear(intent.intentId);
+            }
+          } catch {
+            // Keep the original, already-sanitized submit result for the UI.
+          }
+          throw new Error(
+            toSubmitWritingErrorMessage(
+              error instanceof Error ? error.message : "submit_failed",
+            ),
+          );
+        }
+      })();
+      submissionOperationsRef.current.set(fingerprint, operation);
+      try {
+        return await operation;
+      } finally {
+        if (submissionOperationsRef.current.get(fingerprint) === operation) {
+          submissionOperationsRef.current.delete(fingerprint);
+        }
       }
     },
   });
 }
 
-function writingSubmissionFingerprint(input: SubmitWritingInput): string {
-  return JSON.stringify({
-    draft_id: input.draft_id ?? null,
-    parent_submission_id: input.parent_submission_id ?? null,
-    problem_id: input.problem_id,
-    question_no: input.question_no,
-    answer_text: input.answer_text,
-    answer_json: input.answer_json ?? null,
-    char_count: input.char_count,
-    canonical_question_id: input.canonical_question_id ?? null,
-    canonical_import_id: input.canonical_import_id ?? null,
-    canonical_payload_hash: input.canonical_payload_hash ?? null,
-  });
+function canonicalFingerprintValue(value: unknown): unknown {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    (typeof value === "number" && Number.isFinite(value))
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(canonicalFingerprintValue);
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, child]) => child !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, canonicalFingerprintValue(child)]),
+    );
+  }
+  throw new Error("writing_submission_fingerprint_invalid");
+}
+
+export async function createWritingSubmissionFingerprint(
+  input: SubmitWritingInput,
+): Promise<string> {
+  const canonical = JSON.stringify(
+    canonicalFingerprintValue({
+      draft_id: input.draft_id ?? null,
+      parent_submission_id: input.parent_submission_id ?? null,
+      problem_id: input.problem_id,
+      question_no: input.question_no,
+      answer_text: input.answer_text,
+      answer_json: input.answer_json ?? null,
+      char_count: input.char_count,
+      canonical_question_id: input.canonical_question_id ?? null,
+      canonical_import_id: input.canonical_import_id ?? null,
+      canonical_payload_hash: input.canonical_payload_hash ?? null,
+    }),
+  );
+  if (!globalThis.crypto?.subtle) {
+    throw new Error("writing_submission_fingerprint_unavailable");
+  }
+  const digest = await globalThis.crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(canonical),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export async function submitWriting(

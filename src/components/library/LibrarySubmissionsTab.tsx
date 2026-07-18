@@ -1,21 +1,13 @@
 "use client";
 
-import {
-  Alert,
-  Button,
-  DatePicker,
-  Empty,
-  Select,
-  Spin,
-  Tag,
-  Typography,
-} from "antd";
+import { Button, DatePicker, Empty, Select, Spin, Tag, Typography } from "antd";
 import type { Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useLibraryItems } from "@/lib/library/queries";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 import type {
   LibraryItemView,
   LibrarySubmissionView,
@@ -97,6 +89,7 @@ export function LibrarySubmissionsTab({
   onSelectionChange,
 }: Props) {
   const t = useTranslations("library.submissions");
+  const errorT = useTranslations("shared.error");
   const query = useLibraryItems("submissions");
   // Memoize so the reference is stable across renders. Recomputing `.filter`
   // inline produced a NEW array every render → the `filtered` useMemo (which
@@ -192,12 +185,16 @@ export function LibrarySubmissionsTab({
   }
   if (query.error) {
     return (
-      <Alert
-        type="error"
-        title={t("loadError")}
-        description={
-          query.error instanceof Error ? query.error.message : undefined
-        }
+      <UnavailableState
+        variant="resource"
+        actions={[
+          {
+            key: "retry",
+            label: errorT("retry"),
+            onClick: () => void query.refetch(),
+            primary: true,
+          },
+        ]}
       />
     );
   }

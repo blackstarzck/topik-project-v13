@@ -30,6 +30,9 @@ type SupabaseRpcErrorLike = {
   hint?: unknown;
   message?: unknown;
 };
+type ConsentDocumentSnapshot = { id: string; version: string };
+
+const SAFE_RPC_ERROR_CODES = new Set(["PGRST202", "42501", "23505"]);
 
 function buildConsentRetryPath(
   next: string,
@@ -37,6 +40,57 @@ function buildConsentRetryPath(
 ): string {
   const params = new URLSearchParams({ next, error });
   return `/auth/consent?${params.toString()}`;
+}
+
+function parseConsentDocumentSnapshots(
+  formData: FormData,
+): ConsentDocumentSnapshot[] | null {
+  const snapshots: ConsentDocumentSnapshot[] = [];
+  const ids = new Set<string>();
+
+  for (const value of formData.getAll("consent_document")) {
+    if (typeof value !== "string") return null;
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed) ||
+        Object.keys(parsed).sort().join(",") !== "id,version"
+      ) {
+        return null;
+      }
+      const { id, version } = parsed as Record<string, unknown>;
+      if (
+        typeof id !== "string" ||
+        id.trim().length === 0 ||
+        typeof version !== "string" ||
+        version.trim().length === 0 ||
+        ids.has(id)
+      ) {
+        return null;
+      }
+      ids.add(id);
+      snapshots.push({ id, version });
+    } catch {
+      return null;
+    }
+  }
+
+  return snapshots.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function consentDocumentSnapshotsMatch(
+  submitted: ConsentDocumentSnapshot[] | null,
+  current: ConsentDocumentSnapshot[],
+): boolean {
+  if (submitted === null || submitted.length !== current.length) return false;
+  const expected = [...current].sort((a, b) => a.id.localeCompare(b.id));
+  return expected.every(
+    (document, index) =>
+      submitted[index]?.id === document.id &&
+      submitted[index]?.version === document.version,
+  );
 }
 
 function isNicknameUniqueError(error: unknown): boolean {
@@ -105,31 +159,20 @@ function logAuthCompletionRpcFailure({
   error,
   missingConsentCount,
   missingProfileFieldCount,
-  next,
 }: {
   error: unknown;
   missingConsentCount: number;
   missingProfileFieldCount: number;
-  next: string;
 }) {
   const candidate =
     error && typeof error === "object" ? (error as SupabaseRpcErrorLike) : {};
+  const rawCode = typeof candidate.code === "string" ? candidate.code : "";
 
   console.error("auth_consent_rpc_failed", {
     category: getRpcFailureCategory(error),
-    code: typeof candidate.code === "string" ? candidate.code : candidate.code,
-    details:
-      typeof candidate.details === "string"
-        ? candidate.details
-        : candidate.details,
-    hint: typeof candidate.hint === "string" ? candidate.hint : candidate.hint,
-    message:
-      typeof candidate.message === "string"
-        ? candidate.message
-        : candidate.message,
+    code: SAFE_RPC_ERROR_CODES.has(rawCode) ? rawCode : "other",
     missingConsentCount,
     missingProfileFieldCount,
-    next,
     route: "/auth/consent",
   });
 }
@@ -201,11 +244,20 @@ export async function completeAuthGateAction(formData: FormData) {
       : null;
   const localeForDocuments = localeSeed?.locale ?? profile.ui_locale;
 
-  const missingDocuments = await getMissingRequiredConsentDocuments(
-    user.id,
-    localeForDocuments,
-    createClient,
-  );
+  let missingDocuments;
+  try {
+    missingDocuments = await getMissingRequiredConsentDocuments(
+      user.id,
+      localeForDocuments,
+      createClient,
+    );
+  } catch {
+    redirect(buildConsentRetryPath(next, "save-failed"));
+  }
+  const submittedDocuments = parseConsentDocumentSnapshots(formData);
+  if (!consentDocumentSnapshotsMatch(submittedDocuments, missingDocuments)) {
+    redirect(buildConsentRetryPath(next, "save-failed"));
+  }
   const acceptRequiredConsents = missingDocuments.length > 0;
   if (acceptRequiredConsents && formData.get("accept") === null) {
     redirect(buildConsentRetryPath(next, "required"));
@@ -242,7 +294,6 @@ export async function completeAuthGateAction(formData: FormData) {
       error,
       missingConsentCount: missingDocuments.length,
       missingProfileFieldCount: missingProfileFields.length,
-      next,
     });
     if (isNicknameUniqueError(error)) {
       redirect(buildConsentRetryPath(next, "nickname-taken"));

@@ -19,4 +19,24 @@ describe("ShortAnswerWriting51Workspace structure", () => {
     expect(source).toContain('tPage("tipsPlaceholder")');
     expect(source).toContain('tPage("hintPlaceholder")');
   });
+
+  it("delegates local recovery, latest-save flushing, and conflicts to the shared resilience controller", () => {
+    const source = readFileSync(sourcePath, "utf8");
+
+    expect(source).toContain("useWritingResilience");
+    expect(source).toContain("intentPersistence");
+    expect(source).toContain("prepareForSubmit");
+    expect(source).toContain("clearAfterSubmitSuccess");
+    expect(source).toContain("WritingRecoveryConflictModal");
+    expect(source).toContain("recoveryState={resilience.state.recoveryState}");
+    expect(source).toContain("resilience.edit(buildSnapshot(nextAnswers))");
+    expect(source).toContain(
+      "const submittedAnswers = latest.draft.answer_json.blanks",
+    );
+    expect(source).toContain("draft_id: savedDraft.id");
+    expect(source).toContain("setBlankAnswers(");
+    expect(source).not.toContain("debounceRef");
+    expect(source).not.toContain("saveSeqRef");
+    expect(source).not.toContain("legacy_cutover_snapshot:");
+  });
 });

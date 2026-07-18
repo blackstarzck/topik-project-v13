@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { Alert, Button, Descriptions, Tag, Typography } from "antd";
-import { useTranslations } from "next-intl";
+import { Button, Descriptions, Tag, Typography } from "antd";
+import { useLocale, useTranslations } from "next-intl";
 import { AppModal } from "@/components/shared/AppModal";
 
 const { Paragraph, Text } = Typography;
@@ -25,7 +24,7 @@ type Props = {
    * D-M3 §4 — 복구 상태(가능/불가/확인중). 미지정 시 lastSavedAt 으로 추정:
    * 저장 기록 있으면 'possible', 없으면 'impossible'.
    */
-  recoveryState?: RecoveryState;
+  recoveryState: RecoveryState;
   onKeep: () => void;
   onRetry: () => void;
   onProceed: () => void;
@@ -33,14 +32,19 @@ type Props = {
 
 function describeTrigger(
   trigger: WarningTrigger,
+  recoveryState: RecoveryState,
   t: WarningTranslate,
-): { title: string; body: string; warn?: string } {
+): { title: string; body: string } {
   switch (trigger) {
     case "save_failure":
       return {
         title: t("warnSaveFailureTitle"),
-        body: t("warnSaveFailureBody"),
-        warn: t("warnSaveFailureWarn"),
+        body:
+          recoveryState === "possible"
+            ? t("saveDelayedLocalAvailable")
+            : recoveryState === "impossible"
+              ? t("saveDelayedLocalUnavailable")
+              : t("saveDelayedLocalChecking"),
       };
     case "disable_attempt":
       return {
@@ -75,16 +79,13 @@ export function AutosaveWarningModal({
   onRetry,
   onProceed,
 }: Props) {
+  const locale = useLocale();
   const t = useTranslations("writing.autosave");
   if (!trigger) return null;
-  const { title, body, warn } = describeTrigger(trigger, t);
-
-  // §4 — recoveryState 미지정 시 저장 기록으로 추정.
-  const recovery: RecoveryState =
-    recoveryState ?? (lastSavedAt ? "possible" : "impossible");
+  const { title, body } = describeTrigger(trigger, recoveryState, t);
 
   const savedLabel = lastSavedAt
-    ? new Date(lastSavedAt).toLocaleString("ko-KR")
+    ? new Date(lastSavedAt).toLocaleString(locale)
     : t("noSaveRecord");
 
   return (
@@ -108,17 +109,6 @@ export function AutosaveWarningModal({
           {body}
         </Paragraph>
 
-        {/* §3 예외 — 네트워크 끊김/복구 불가 별도 경고 문구. */}
-        {warn ? (
-          <Alert
-            data-testid="autosave-warning-alert"
-            type="warning"
-            showIcon
-            className="mb-3"
-            title={warn}
-          />
-        ) : null}
-
         {/* §4 — 마지막 저장 시각(필수) + 복구 상태(가능/불가/확인중). */}
         <Descriptions
           data-testid="autosave-warning-state"
@@ -133,26 +123,14 @@ export function AutosaveWarningModal({
           </Descriptions.Item>
           <Descriptions.Item label={t("recoveryStateLabel")}>
             <span data-testid="autosave-warning-recovery-state">
-              {recoveryTag(recovery, t)}
+              {recoveryTag(recoveryState, t)}
             </span>
           </Descriptions.Item>
         </Descriptions>
 
-        {/* §4 예외 — 저장 정보 없음/복구 불가 시 도움말 링크. */}
-        {recovery === "impossible" ? (
-          <Paragraph
-            data-testid="autosave-warning-no-backup"
-            type="secondary"
-            className="text-xs"
-          >
-            {t("noBackup")}{" "}
-            <Link href={"/library" as never}>{t("backupHelpLink")}</Link>
-          </Paragraph>
-        ) : null}
-
         <div className="flex w-full flex-col gap-2">
           <Button block data-testid="autosave-warning-keep" onClick={onKeep}>
-            {t("keepAutosave")}
+            {trigger === "exit_with_dirty" ? t("stayHere") : t("keepAutosave")}
           </Button>
           <Button
             block
@@ -164,7 +142,9 @@ export function AutosaveWarningModal({
           >
             {trigger === "disable_attempt"
               ? t("retryDisabledFallback")
-              : t("retryNow")}
+              : trigger === "exit_with_dirty"
+                ? t("saveAndLeave")
+                : t("retryNow")}
           </Button>
           <Button
             block
@@ -175,7 +155,9 @@ export function AutosaveWarningModal({
             <Text type="danger">
               {trigger === "disable_attempt"
                 ? t("proceedDisable")
-                : t("proceedAnyway")}
+                : trigger === "exit_with_dirty"
+                  ? t("leaveWithoutSaving")
+                  : t("proceedAnyway")}
             </Text>
           </Button>
         </div>

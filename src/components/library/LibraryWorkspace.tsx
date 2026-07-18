@@ -39,8 +39,8 @@ export function LibraryWorkspace({ activeTab, initialItems, stats }: Props) {
       const reviewSetId = await createReviewSet(selection.map((s) => s.itemId));
       message.success(t("reviewSetCreated", { count: selection.length }));
       router.push(`/practice/problems?reviewSet=${reviewSetId}` as never);
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : t("reviewSetFailed"));
+    } catch {
+      message.error(t("reviewSetFailed"));
     } finally {
       setReviewPending(false);
     }

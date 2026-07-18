@@ -34,6 +34,13 @@ describe("agent workflow runtime contract", () => {
     expect(agents).toContain("현재 worktree runtime임을 증명하지 못하면 해당 UI 검증은 미완료");
   });
 
+  it("requires every completion report to state remaining work", () => {
+    const agents = readProjectFile("AGENTS.md");
+
+    expect(agents).toContain("모든 작업 완료 보고에는 남은 작업을 반드시 명시한다");
+    expect(agents).toContain("남은 작업 없음");
+  });
+
   it("wires prebuild to the project structure checker and removes retired gates", () => {
     const packageJson = JSON.parse(readProjectFile("package.json"));
     const scripts = packageJson.scripts;

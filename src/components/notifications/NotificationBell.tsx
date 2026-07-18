@@ -25,6 +25,10 @@ import {
   type InstitutionInvitationModalStatus,
 } from "./InstitutionInvitationModal";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
+import {
+  createClientOperationalEvent,
+  emitClientOperationalEvent,
+} from "@/lib/operations/client-operational-event";
 
 const { Paragraph, Text } = Typography;
 
@@ -47,6 +51,18 @@ type InvitationModalState = {
   invitation: InstitutionInvitationPayload;
   status: InstitutionInvitationModalStatus;
 };
+
+function recordNotificationFailure(
+  operation: "load" | "mark_read" | "mark_all_read",
+) {
+  const created = createClientOperationalEvent({
+    code: "operation_failed",
+    feature: "notification_inbox",
+    operation,
+    result: "failure",
+  });
+  if (created.ok) void emitClientOperationalEvent(created.event);
+}
 
 /**
  * Workspace notification bell + popover inbox (user_notifications).
@@ -112,10 +128,11 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
       setItems(list);
       setUnreadCount(count);
       setListLoad({ status: "ready" });
-    } catch (err) {
+    } catch {
+      recordNotificationFailure("load");
       setListLoad({
         status: "error",
-        message: err instanceof Error ? err.message : t("loadError"),
+        message: t("loadError"),
       });
     }
   }, [userId, t]);
@@ -132,12 +149,13 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
       setUnreadCount((prev) => Math.max(0, prev - 1));
       try {
         await markNotificationRead(item.id);
-      } catch (err) {
+      } catch {
         setItems((prev) =>
           prev.map((n) => (n.id === item.id ? { ...n, read_at: null } : n)),
         );
         setUnreadCount((prev) => prev + 1);
-        message.error(err instanceof Error ? err.message : t("markReadError"));
+        recordNotificationFailure("mark_read");
+        message.error(t("markReadError"));
       } finally {
         pendingReadIdsRef.current.delete(item.id);
         setPendingReadIds(new Set(pendingReadIdsRef.current));
@@ -211,8 +229,9 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
         prev.map((n) => (n.read_at ? n : { ...n, read_at: readAt })),
       );
       setUnreadCount(0);
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : t("markAllError"));
+    } catch {
+      recordNotificationFailure("mark_all_read");
+      message.error(t("markAllError"));
     }
   }
   const { pending: reloadListPending, run: reloadList } =

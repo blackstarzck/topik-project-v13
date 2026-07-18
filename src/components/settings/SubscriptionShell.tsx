@@ -130,11 +130,10 @@ export function SubscriptionShell() {
         planName = plan?.name ?? subscription.plan_key;
       }
       setSub({ status: "ready", subscription, planName, plan });
-    } catch (err) {
+    } catch {
       setSub({
         status: "error",
-        message:
-          err instanceof Error ? err.message : t("subscriptionLoadError"),
+        message: t("subscriptionLoadError"),
       });
     }
   }, [t]);
@@ -144,10 +143,10 @@ export function SubscriptionShell() {
       try {
         const { rows, total } = await fetchPaymentHistory(pageIndex, PAGE_SIZE);
         setHistory({ status: "ready", rows, total });
-      } catch (err) {
+      } catch {
         setHistory({
           status: "error",
-          message: err instanceof Error ? err.message : t("historyLoadError"),
+          message: t("historyLoadError"),
         });
       }
     },

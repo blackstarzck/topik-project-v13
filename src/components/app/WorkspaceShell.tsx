@@ -4,7 +4,14 @@ import { Avatar, Button, Grid, Layout, Popover, Typography } from "antd";
 import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { BrandLogo } from "@/components/shared/BrandLogo";
@@ -12,6 +19,7 @@ import { avatarPublicUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
 import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { clearClientRecoveryForLogout } from "@/lib/writing/client-recovery-cleanup";
 import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
 
@@ -59,6 +67,7 @@ export function WorkspaceShell({
   const router = useRouter();
   const screens = useBreakpoint();
   const signOutFormRef = useRef<HTMLFormElement>(null);
+  const signingOutRef = useRef(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   // 멀티 탭/기기 동기화: 다른 탭·기기에서 로그아웃되거나 회원 탈퇴로 세션이
@@ -146,6 +155,13 @@ export function WorkspaceShell({
     if (key === "logout") {
       signOutFormRef.current?.requestSubmit();
     }
+  };
+  const handleSignOutSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (signingOutRef.current) return;
+    signingOutRef.current = true;
+    const form = event.currentTarget;
+    void clearClientRecoveryForLogout(userId).finally(() => form.submit());
   };
   const profilePopoverContent = profileName ? (
     <div className="app-profile-popover-panel">
@@ -310,6 +326,7 @@ export function WorkspaceShell({
         method="post"
         action={APP_ROUTES.authSignOut}
         className="app-profile-menu-signout"
+        onSubmit={handleSignOutSubmit}
         hidden
       />
     </Layout>

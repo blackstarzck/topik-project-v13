@@ -377,6 +377,14 @@ export function AuthConsentPanel({
                       className="auth-consent-document-card"
                       data-testid="auth-consent-document-card"
                     >
+                      <input
+                        type="hidden"
+                        name="consent_document"
+                        value={JSON.stringify({
+                          id: doc.id,
+                          version: doc.version,
+                        })}
+                      />
                       <Flex vertical gap={8} className="w-full">
                         <Text strong>{doc.title}</Text>
                         <Text type="secondary">

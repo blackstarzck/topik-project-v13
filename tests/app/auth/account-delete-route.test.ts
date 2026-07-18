@@ -122,6 +122,13 @@ describe("/auth/account-delete route handler", () => {
     expect(res.headers.get("location")).toContain("/login?reason=withdrawn");
   });
 
+  it("returns a minimal success response for the client cleanup handshake", async () => {
+    const res = await POST(postRequest({ accept: "application/json" }));
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ ok: true });
+  });
+
   it("redirects to settings without local deletion when the external base URL is missing", async () => {
     helpers.getTalkpikApiBaseUrl.mockReturnValue(null);
 
@@ -149,8 +156,9 @@ describe("/auth/account-delete route handler", () => {
   });
 
   it("redirects to settings without local deletion when external profile deletion fails", async () => {
+    const privateProviderMessage = "private provider failure payload";
     helpers.deleteTalkpikAccountProfile.mockRejectedValue(
-      new Error("external failed"),
+      new Error(privateProviderMessage),
     );
 
     const res = await POST(postRequest());
@@ -160,6 +168,12 @@ describe("/auth/account-delete route handler", () => {
     );
     expect(helpers.rpc).not.toHaveBeenCalled();
     expect(helpers.signOut).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith("account_delete_failed", {
+      stage: "external_profile",
+    });
+    expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain(
+      privateProviderMessage,
+    );
   });
 
   it("continues local deletion when the external profile is already gone", async () => {
@@ -204,6 +218,15 @@ describe("/auth/account-delete route handler", () => {
     );
     expect(helpers.deleteTalkpikAccountProfile).toHaveBeenCalledOnce();
     expect(helpers.signOut).not.toHaveBeenCalled();
+  });
+
+  it("does not confirm client cleanup when account deletion fails", async () => {
+    helpers.rpc.mockResolvedValue({ error: { code: "P0001", message: "x" } });
+
+    const res = await POST(postRequest({ accept: "application/json" }));
+
+    expect(res.status).toBe(503);
+    await expect(res.json()).resolves.toEqual({ ok: false });
   });
 
   it("still redirects withdrawn even if signOut fails (status already set)", async () => {

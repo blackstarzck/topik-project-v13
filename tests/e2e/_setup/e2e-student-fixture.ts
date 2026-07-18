@@ -1,8 +1,8 @@
 import { createClient, type User } from "@supabase/supabase-js";
+import { assertLocalPrivilegedMutationTarget } from "../../../scripts/lib/supabase-target-safety.mjs";
 
 export type E2EStudentConfig = {
   email: string;
-  envLabel: string;
   password: string;
   publishableKey: string;
   serviceRoleKey: string;
@@ -67,16 +67,6 @@ export type E2EAdminClientLike = {
   };
 };
 
-const ALLOWED_NON_PROD_LABELS = new Set([
-  "dev",
-  "development",
-  "local",
-  "preview",
-  "qa",
-  "staging",
-  "test",
-  "testing",
-]);
 const STUDENT_METADATA = {
   display_name: "E2E Student",
   nationality_country_code: "KR",
@@ -103,25 +93,34 @@ function readPassword(
   return readRequiredEnv(env, "SUPABASE_TEST_PASSWORD");
 }
 
+function readPrivilegedKey(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined>,
+): string {
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceRoleKey != null && serviceRoleKey.trim() !== "") {
+    return serviceRoleKey;
+  }
+  const secretKey = env.SUPABASE_SECRET_KEY;
+  if (secretKey != null && secretKey.trim() !== "") return secretKey;
+  throw new Error(
+    "SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY must be set for Playwright e2e account setup.",
+  );
+}
+
 export function resolveE2EStudentConfig(
   env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
 ): E2EStudentConfig {
-  const envLabel = readRequiredEnv(env, "SUPABASE_ENV_LABEL").toLowerCase();
-  if (!ALLOWED_NON_PROD_LABELS.has(envLabel)) {
-    throw new Error(
-      `SUPABASE_ENV_LABEL must be a known non-production label before creating or updating an e2e student account. Received: ${envLabel}.`,
-    );
-  }
+  const serviceRoleKey = readPrivilegedKey(env);
+  assertLocalPrivilegedMutationTarget(env);
 
   return {
     email: readRequiredEnv(env, "E2E_STUDENT_EMAIL"),
-    envLabel,
     password: readPassword(env),
     publishableKey: readRequiredEnv(
       env,
       "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
     ),
-    serviceRoleKey: readRequiredEnv(env, "SUPABASE_SERVICE_ROLE_KEY"),
+    serviceRoleKey,
     supabaseUrl: readRequiredEnv(env, "NEXT_PUBLIC_SUPABASE_URL"),
   };
 }

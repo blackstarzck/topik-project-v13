@@ -23,13 +23,28 @@ export type RequiredConsentDocument = Pick<
   | "body"
   | "effective_at"
   | "created_at"
+  | "is_placeholder"
+  | "source_policy_id"
 >;
+
+export class LegalDocumentsUnavailableError extends Error {
+  readonly code = "legal_documents_unavailable";
+
+  constructor() {
+    super("Required legal documents are unavailable.");
+    this.name = "LegalDocumentsUnavailableError";
+  }
+}
 
 const FALLBACK_LOCALE: LegalLocale = "ko";
 const LEGAL_LOCALES = new Set<LegalLocale>(["ko", "en", "vi"]);
 const RANDOM_NICKNAME_PREFIX = "talkpik";
 const RANDOM_NICKNAME_LENGTH = 6;
 const RANDOM_NICKNAME_SPACE = 36 ** RANDOM_NICKNAME_LENGTH;
+const REQUIRED_DOCUMENT_TYPES = new Set<RequiredConsentDocument["doc_type"]>([
+  "privacy",
+  "terms",
+]);
 
 function coerceLegalLocale(value: string | null | undefined): LegalLocale {
   return LEGAL_LOCALES.has(value as LegalLocale)
@@ -38,7 +53,11 @@ function coerceLegalLocale(value: string | null | undefined): LegalLocale {
 }
 
 function rowTime(row: RequiredConsentDocument): number {
-  return Date.parse(row.effective_at ?? row.created_at);
+  const parsed = Date.parse(row.effective_at ?? row.created_at);
+  if (!Number.isFinite(parsed)) {
+    throw new LegalDocumentsUnavailableError();
+  }
+  return parsed;
 }
 
 function latestByDocType(
@@ -46,18 +65,46 @@ function latestByDocType(
 ): RequiredConsentDocument[] {
   const latest = new Map<
     RequiredConsentDocument["doc_type"],
-    RequiredConsentDocument
+    { ambiguous: boolean; row: RequiredConsentDocument; time: number }
   >();
 
   for (const row of rows) {
+    const time = rowTime(row);
     const current = latest.get(row.doc_type);
-    if (!current || rowTime(row) > rowTime(current)) {
-      latest.set(row.doc_type, row);
+    if (!current || time > current.time) {
+      latest.set(row.doc_type, { ambiguous: false, row, time });
+      continue;
+    }
+    if (time === current.time && row.id !== current.row.id) {
+      latest.set(row.doc_type, { ...current, ambiguous: true });
     }
   }
 
-  return [...latest.values()].sort((a, b) =>
-    a.doc_type.localeCompare(b.doc_type),
+  if ([...latest.values()].some(({ ambiguous }) => ambiguous)) {
+    throw new LegalDocumentsUnavailableError();
+  }
+
+  return [...latest.values()]
+    .map(({ row }) => row)
+    .sort((a, b) => a.doc_type.localeCompare(b.doc_type));
+}
+
+function isTrustedOfficialDocument(row: RequiredConsentDocument): boolean {
+  return (
+    typeof row.source_policy_id === "string" &&
+    row.source_policy_id.trim().length > 0 &&
+    row.is_placeholder === false
+  );
+}
+
+function isCompletionRpcCandidate(row: RequiredConsentDocument): boolean {
+  return row.source_policy_id !== null || row.is_placeholder === true;
+}
+
+function hasCompleteRequiredSet(rows: RequiredConsentDocument[]): boolean {
+  const available = new Set(rows.map((row) => row.doc_type));
+  return [...REQUIRED_DOCUMENT_TYPES].every((docType) =>
+    available.has(docType),
   );
 }
 
@@ -69,16 +116,13 @@ async function fetchRequiredConsentDocuments(
   const { data, error } = await supabase
     .from("legal_documents")
     .select(
-      "id, doc_type, version, locale, title, summary, body, effective_at, created_at",
+      "id, doc_type, version, locale, title, summary, body, effective_at, created_at, is_placeholder, source_policy_id",
     )
     .eq("locale", locale)
     .eq("status", "published")
     .eq("requires_consent", true)
-    // Trust only documents that came through the admin projection
-    // (source_policy_id set) or seeded placeholders. Rows inserted directly into
-    // legal_documents (e.g. E2E test seeds, which never set source_policy_id and
-    // are not placeholders) must never surface in the consent gate.
-    .or("source_policy_id.not.is.null,is_placeholder.is.true");
+    .not("source_policy_id", "is", null)
+    .eq("is_placeholder", false);
 
   if (error) {
     throw new Error(
@@ -86,7 +130,69 @@ async function fetchRequiredConsentDocuments(
     );
   }
 
-  return latestByDocType(data ?? []);
+  return latestByDocType(
+    ((data ?? []) as RequiredConsentDocument[]).filter(
+      isTrustedOfficialDocument,
+    ),
+  );
+}
+
+async function fetchCompletionRpcCandidateDocuments(
+  locale: LegalLocale,
+  createClient: ClientFactory,
+): Promise<RequiredConsentDocument[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("legal_documents")
+    .select(
+      "id, doc_type, version, locale, title, summary, body, effective_at, created_at, is_placeholder, source_policy_id",
+    )
+    .eq("locale", locale)
+    .eq("status", "published")
+    .eq("requires_consent", true);
+
+  if (error) {
+    throw new Error(
+      `Failed to validate legal document projection: ${error.message}`,
+    );
+  }
+
+  return latestByDocType(
+    ((data ?? []) as RequiredConsentDocument[]).filter(
+      isCompletionRpcCandidate,
+    ),
+  );
+}
+
+async function assertCompletionRpcProjectionMatches(
+  locale: string | null | undefined,
+  requiredDocuments: RequiredConsentDocument[],
+  createClient: ClientFactory,
+): Promise<void> {
+  const requestedLocale = coerceLegalLocale(locale);
+  let rpcDocuments = await fetchCompletionRpcCandidateDocuments(
+    requestedLocale,
+    createClient,
+  );
+  if (rpcDocuments.length === 0 && requestedLocale !== FALLBACK_LOCALE) {
+    rpcDocuments = await fetchCompletionRpcCandidateDocuments(
+      FALLBACK_LOCALE,
+      createClient,
+    );
+  }
+
+  const requiredByType = new Map(
+    requiredDocuments.map((document) => [document.doc_type, document.id]),
+  );
+  const projectionMatches =
+    rpcDocuments.length === requiredDocuments.length &&
+    rpcDocuments.every(
+      (document) => requiredByType.get(document.doc_type) === document.id,
+    );
+
+  if (!projectionMatches) {
+    throw new LegalDocumentsUnavailableError();
+  }
 }
 
 export async function getRequiredConsentDocuments(
@@ -98,10 +204,17 @@ export async function getRequiredConsentDocuments(
     requestedLocale,
     createClient,
   );
-  if (localized.length > 0 || requestedLocale === FALLBACK_LOCALE) {
+  if (hasCompleteRequiredSet(localized)) {
     return localized;
   }
-  return fetchRequiredConsentDocuments(FALLBACK_LOCALE, createClient);
+  if (requestedLocale !== FALLBACK_LOCALE) {
+    const fallback = await fetchRequiredConsentDocuments(
+      FALLBACK_LOCALE,
+      createClient,
+    );
+    if (hasCompleteRequiredSet(fallback)) return fallback;
+  }
+  throw new LegalDocumentsUnavailableError();
 }
 
 export async function getMissingRequiredConsentDocuments(
@@ -113,8 +226,11 @@ export async function getMissingRequiredConsentDocuments(
     locale,
     createClient,
   );
-  if (requiredDocuments.length === 0) return [];
-
+  await assertCompletionRpcProjectionMatches(
+    locale,
+    requiredDocuments,
+    createClient,
+  );
   const supabase = await createClient();
   const documentIds = requiredDocuments.map((doc) => doc.id);
   const { data, error } = await supabase

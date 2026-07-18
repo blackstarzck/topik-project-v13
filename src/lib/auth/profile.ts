@@ -17,6 +17,10 @@ type ClientFactory = () => Promise<SupabaseServerClient>;
 // supabase chain into a client bundle.
 export { ADMIN_ROLES, type AppRole };
 
+export type ProfileResolution =
+  | { status: "available"; profile: Tables<"profiles"> }
+  | { status: "unavailable" };
+
 /**
  * Idempotent profile lookup.
  *
@@ -63,6 +67,27 @@ export async function bootstrapProfile(
     );
   }
   return data;
+}
+
+/**
+ * Read-only profile resolution for UI routing decisions.
+ *
+ * Missing rows, RLS-hidden rows, and transient query failures intentionally
+ * collapse to the same unavailable state. Callers must not interpret that
+ * state as a new account or start profile creation.
+ */
+export async function resolveProfile(
+  userId: string,
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<ProfileResolution> {
+  try {
+    return {
+      status: "available",
+      profile: await bootstrapProfile(userId, createClient),
+    };
+  } catch {
+    return { status: "unavailable" };
+  }
 }
 
 /**

@@ -30,4 +30,5 @@ Supabase Data API는 DB schema에서 자동 생성된다. object 접근은 grant
 
 - v13은 학습자용 user app과 그 서버 경로를 소유한다.
 - admin 운영 UI, quota reset, 콘텐츠 관리와 production DB 적용은 별도 소유 앱·운영 절차의 책임이다.
+- 클라이언트 안전과 백업·복구 운영의 책임 경계는 [`../operations/cross-repo-recovery-boundary.md`](../operations/cross-repo-recovery-boundary.md)를 따른다.
 - `docs/swagger-api/`는 외부 백엔드 OpenAPI 참고이며 Supabase migration의 대체물이 아니다.

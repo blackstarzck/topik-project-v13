@@ -28,6 +28,14 @@ const retiredFixturePath = path.join(
   "project-structure-retired-references.json",
 );
 const retiredFixtures = JSON.parse(readFileSync(retiredFixturePath, "utf8"));
+const operationsReadme = "docs/operations/README.md";
+const operationsPolicyPaths = [
+  operationsReadme,
+  "docs/operations/client-resilience-policy.md",
+  "docs/operations/cross-repo-recovery-boundary.md",
+  "docs/operations/environment-and-agent-safety.md",
+  "docs/operations/topik-ai-operations-handoff.md",
+];
 
 function tempRoot() {
   const root = mkdtempSync(path.join(tmpdir(), "talkpik-structure-"));
@@ -76,6 +84,75 @@ afterEach(() => {
 });
 
 describe("project structure allowlist", () => {
+  it("registers every approved operations policy as a required owner", () => {
+    expect(requiredOwnerPaths).toEqual(
+      expect.arrayContaining(operationsPolicyPaths),
+    );
+  });
+
+  it("accepts the canonical operations owner tree", () => {
+    const root = createValidTree();
+    for (const policy of operationsPolicyPaths) write(root, policy);
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
+  it.each(operationsPolicyPaths)(
+    "rejects a missing operations policy: %s",
+    (policy) => {
+      const root = createValidTree();
+      for (const approvedPolicy of operationsPolicyPaths)
+        write(root, approvedPolicy);
+      rmSync(path.join(root, policy));
+
+      expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            new RegExp(
+              `missing required owner.*${policy.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&",
+              )}`,
+              "i",
+            ),
+          ),
+        ]),
+      );
+    },
+  );
+
+  it("rejects an unapproved operations policy", () => {
+    const root = createValidTree();
+    for (const policy of operationsPolicyPaths) write(root, policy);
+    write(root, "docs/operations/unapproved-policy.md");
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /unknown docs\/operations.*unapproved-policy\.md/i,
+        ),
+      ]),
+    );
+  });
+
+  it("rejects the operations root when it is a junction", () => {
+    const root = createValidTree();
+    const outside = tempRoot();
+    const target = path.join(root, "docs", "operations");
+    rmSync(target, { recursive: true, force: true });
+    symlinkSync(
+      outside,
+      target,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/operations.*symbolic|operations.*reparse/i),
+      ]),
+    );
+  });
+
   it("accepts the minimal canonical owner tree", () => {
     const root = createValidTree();
     expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
@@ -185,6 +262,24 @@ describe("docs/qa root allowlist", () => {
 });
 
 describe("active reference scan", () => {
+  it("scans active operations policy files for retired docs references", () => {
+    const root = createValidTree();
+    write(root, operationsReadme);
+    write(
+      root,
+      "docs/operations/client-resilience-policy.md",
+      `Retired owner: ${retiredDocsPath}\n`,
+    );
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /forbidden docs reference.*client-resilience-policy/i,
+        ),
+      ]),
+    );
+  });
+
   it.each([
     [".github/workflows/ci.yml", retiredFixtures.ciCommand],
     [".github/CODEOWNERS", retiredFixtures.codeowners],
@@ -572,6 +667,52 @@ describe("active reference scan", () => {
       );
     },
   );
+
+  it.each(["tracked", "untracked-nonignored"])(
+    "reports a %s .scratch session artifact without reading its content",
+    (mode) => {
+      const root = createValidTree();
+      const sentinel = `SCRATCH_${mode}_SECRET_MUST_NOT_LEAK`;
+      write(
+        root,
+        ".scratch/student-state.json",
+        `${retiredDocsPath}=${sentinel}\n`,
+      );
+      if (mode === "tracked") {
+        git(root, "add", "--force", ".scratch/student-state.json");
+      }
+
+      const errors = evaluateProjectStructure({ rootDir: root }).errors;
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            /sensitive runtime path.*\.scratch\/student-state\.json/i,
+          ),
+        ]),
+      );
+      expect(errors.join("\n")).not.toContain(sentinel);
+      expect(errors).not.toEqual(
+        expect.arrayContaining([expect.stringMatching(/forbidden docs/i)]),
+      );
+    },
+  );
+
+  it("does not report a tracked .scratch artifact after it is deleted from the worktree", () => {
+    const root = createValidTree();
+    write(root, ".scratch/student-state.json", "session artifact\n");
+    git(root, "add", "--force", ".scratch/student-state.json");
+    rmSync(path.join(root, ".scratch/student-state.json"));
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
+  it("allows an ordinary tracked .scratch QA artifact without reading it", () => {
+    const root = createValidTree();
+    write(root, ".scratch/ui-check/screenshot.png", "qa evidence\n");
+    git(root, "add", "--force", ".scratch/ui-check/screenshot.png");
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
 
   it("fails an active dangling symlink returned by Git inventory", () => {
     const root = createValidTree();

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { assertLocalPrivilegedMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 /**
  * Integration tests for the auth completion RPC added in
@@ -11,10 +12,15 @@ import { describe, expect, it } from "vitest";
  *
  *     supabase start
  *     supabase db reset
- *     SUPABASE_LOCAL_STACK=1 pnpm test tests/integration/auth-completion-gate-rpc.test.ts
+ *     SUPABASE_LOCAL_STACK=1 E2E_ALLOW_DEV_DB_MUTATION=1 \
+ *       pnpm test tests/integration/auth-completion-gate-rpc.test.ts
  */
 
 const ENABLED = process.env.SUPABASE_LOCAL_STACK === "1";
+
+if (ENABLED) {
+  assertLocalPrivilegedMutationTarget(process.env);
+}
 
 type SignedInUser = {
   supabase: Awaited<ReturnType<typeof createAnonClient>>;

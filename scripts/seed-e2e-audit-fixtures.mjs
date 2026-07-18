@@ -3,13 +3,14 @@
 // on (tests/e2e/screens/screens-authed.spec.ts references fixed ids
 // a0d17000-...-051 short / a0d17000-...-053 long as "existing audit submissions
 // not created by this suite"). Idempotent: re-inserts the two bundles for the
-// E2E student. Uses SUPABASE_SERVICE_ROLE_KEY. Non-production only.
+// E2E student. Uses SUPABASE_SERVICE_ROLE_KEY. Local Supabase stack only.
 //
 // Usage: node scripts/seed-e2e-audit-fixtures.mjs   (loads .env.local)
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { assertLocalPrivilegedMutationTarget } from "./lib/supabase-target-safety.mjs";
 
 function loadEnvLocal() {
   try {
@@ -42,16 +43,13 @@ const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error("Missing NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY");
   process.exit(1);
 }
-if (ENV_LABEL === "prod" || ENV_LABEL === "production") {
-  console.error(`Refusing to seed: SUPABASE_ENV_LABEL=${ENV_LABEL}`);
-  process.exit(1);
-}
+
+assertLocalPrivilegedMutationTarget(process.env);
 
 const SUB_SHORT = "a0d17000-0000-4000-8000-000000000051";
 const SUB_LONG = "a0d17000-0000-4000-8000-000000000053";
