@@ -71,7 +71,7 @@ export function SubmissionConfirmModal({
             type="error"
             showIcon
             title={t("submitFailedTitle")}
-            description={t("submitFailedDescription", { submitError })}
+            description={t("submitFailedDescription")}
           />
         ) : null}
 

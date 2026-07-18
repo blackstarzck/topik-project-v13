@@ -198,6 +198,7 @@ describe("completeAuthGateAction", () => {
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
+      p_consent_documents: [{ id: "terms-1", version: "v1" }],
       p_display_name: "민준",
       p_gender: null,
       p_nationality_country_code: "KR",
@@ -225,6 +226,7 @@ describe("completeAuthGateAction", () => {
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: false,
+      p_consent_documents: [],
       p_display_name: null,
       p_gender: "female",
       p_nationality_country_code: null,
@@ -275,6 +277,10 @@ describe("completeAuthGateAction", () => {
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
+      p_consent_documents: [
+        { id: "privacy-1", version: "v1" },
+        { id: "terms-1", version: "v1" },
+      ],
       p_display_name: "Minji",
       p_gender: null,
       p_nationality_country_code: "KR",
@@ -312,6 +318,7 @@ describe("completeAuthGateAction", () => {
     );
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: false,
+      p_consent_documents: [],
       p_display_name: null,
       p_gender: null,
       p_nationality_country_code: null,

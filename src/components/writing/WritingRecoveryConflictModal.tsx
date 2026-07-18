@@ -7,6 +7,14 @@ import { AppModal } from "@/components/shared/AppModal";
 import type { WritingRecoveryConflict } from "@/lib/writing/writing-resilience";
 
 const { Paragraph } = Typography;
+const RECOVERY_PREVIEW_MAX_CHARS = 1_000;
+
+function recoveryPreview(answerText: string) {
+  const normalized = answerText.replace(/\r\n?/gu, "\n");
+  return normalized.length > RECOVERY_PREVIEW_MAX_CHARS
+    ? `${normalized.slice(0, RECOVERY_PREVIEW_MAX_CHARS)}…`
+    : normalized;
+}
 
 type Props = {
   choosing?: "prior" | "current" | null;
@@ -38,9 +46,20 @@ export function WritingRecoveryConflictModal({
         <Paragraph>{t("recoveryConflictBody")}</Paragraph>
         <Descriptions bordered colon={false} column={1} size="small">
           <Descriptions.Item label={t("priorContentLabel")}>
-            <span data-testid="writing-recovery-prior-time">
-              {formatTimestamp(conflict.priorSavedAt)}
-            </span>
+            <div className="flex min-w-0 flex-col gap-1">
+              <span
+                className="text-xs text-text-secondary"
+                data-testid="writing-recovery-prior-time"
+              >
+                {formatTimestamp(conflict.priorSavedAt)}
+              </span>
+              <span
+                className="max-h-32 overflow-auto whitespace-pre-wrap break-words text-sm"
+                data-testid="writing-recovery-prior-preview"
+              >
+                {recoveryPreview(conflict.prior.answerText)}
+              </span>
+            </div>
           </Descriptions.Item>
           <Descriptions.Item
             label={
@@ -49,11 +68,22 @@ export function WritingRecoveryConflictModal({
                 : t("currentContentLabel")
             }
           >
-            <span data-testid="writing-recovery-current-time">
-              {conflict.currentDirty
-                ? t("notSavedYet")
-                : formatTimestamp(conflict.currentSavedAt)}
-            </span>
+            <div className="flex min-w-0 flex-col gap-1">
+              <span
+                className="text-xs text-text-secondary"
+                data-testid="writing-recovery-current-time"
+              >
+                {conflict.currentDirty
+                  ? t("notSavedYet")
+                  : formatTimestamp(conflict.currentSavedAt)}
+              </span>
+              <span
+                className="max-h-32 overflow-auto whitespace-pre-wrap break-words text-sm"
+                data-testid="writing-recovery-current-preview"
+              >
+                {recoveryPreview(conflict.current.draft.answer_text ?? "")}
+              </span>
+            </div>
           </Descriptions.Item>
         </Descriptions>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">

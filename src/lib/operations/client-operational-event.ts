@@ -235,10 +235,8 @@ export async function emitClientOperationalEvent(
     };
   }
 
-  if (!sink) return { ok: true, status: "skipped" };
-
   try {
-    await sink(validation.event);
+    await (sink ?? deliverClientOperationalEvent)(validation.event);
     return { ok: true, status: "emitted" };
   } catch {
     return {
@@ -247,6 +245,18 @@ export async function emitClientOperationalEvent(
       reason: "sink_failed",
     };
   }
+}
+
+async function deliverClientOperationalEvent(event: ClientOperationalEvent) {
+  const response = await fetch("/api/internal/client-operational-events", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(event),
+    credentials: "same-origin",
+    cache: "no-store",
+    keepalive: true,
+  });
+  if (!response.ok) throw new Error("client_operational_event_delivery_failed");
 }
 
 function invalidEvent(): { ok: false; reason: "invalid_event" } {

@@ -39,7 +39,12 @@ export type ClientRecoveryRecordV1 = {
 
 export type ClientRecoveryScope = Pick<
   ClientRecoveryRecordV1,
-  "problemId" | "questionNo" | "userId"
+  | "canonicalQuestionId"
+  | "importId"
+  | "payloadHash"
+  | "problemId"
+  | "questionNo"
+  | "userId"
 >;
 
 export type ClientRecoverySaveInput = Pick<
@@ -71,7 +76,7 @@ export interface ClientRecoveryStorageAdapter {
   put(value: unknown): Promise<void>;
   putIfUnchanged(
     key: string,
-    expected: ClientRecoveryRecordV1,
+    expected: ClientRecoveryRecordV1 | undefined,
     replacement: ClientRecoveryRecordV1,
   ): Promise<boolean>;
 }
@@ -282,13 +287,24 @@ export function buildClientRecoveryKey(scope: ClientRecoveryScope) {
   if (
     !isNonEmptyString(scope.userId) ||
     !isNonEmptyString(scope.problemId) ||
-    scope.userId.includes(":") ||
-    scope.problemId.includes(":") ||
+    !isNullableString(scope.canonicalQuestionId) ||
+    !isNullableString(scope.importId) ||
+    !isNullableString(scope.payloadHash) ||
     !isQuestionNo(scope.questionNo)
   ) {
     throw new ClientRecoveryError("invalid_record");
   }
-  return `${scope.userId}:${scope.problemId}:${scope.questionNo}`;
+  return JSON.stringify([
+    "talkpik-writing-recovery",
+    CLIENT_RECOVERY_VERSION,
+    scope.userId,
+    scope.problemId,
+    scope.questionNo,
+    scope.canonicalQuestionId,
+    scope.importId,
+    scope.payloadHash,
+    `${scope.questionNo}.v1`,
+  ]);
 }
 
 function isQuotaExceeded(error: unknown) {
@@ -316,8 +332,9 @@ function sameRecoveryValue(
 
 function sameStoredRecord(
   current: unknown,
-  expected: ClientRecoveryRecordV1,
+  expected: ClientRecoveryRecordV1 | undefined,
 ): boolean {
+  if (expected === undefined) return current === undefined;
   if (!validateRecord(current)) return false;
   try {
     return (
@@ -341,16 +358,23 @@ export class ClientRecoveryRepository {
 
   async save(
     input: ClientRecoverySaveInput,
-    options: { retention?: ClientRecoveryRetention } = {},
+    options: {
+      expected?: ClientRecoveryRecordV1 | null;
+      retention?: ClientRecoveryRetention;
+    } = {},
   ): Promise<ClientRecoveryRecordV1> {
     const key = buildClientRecoveryKey(input);
     const now = this.now();
     let existing: ClientRecoveryRecordV1 | undefined;
     let raw: unknown;
-    try {
-      raw = await this.storage.get(key);
-    } catch {
-      throw new ClientRecoveryError("storage_failed");
+    if (Object.hasOwn(options, "expected")) {
+      raw = options.expected ?? undefined;
+    } else {
+      try {
+        raw = await this.storage.get(key);
+      } catch {
+        throw new ClientRecoveryError("storage_failed");
+      }
     }
     if (isRecord(raw) && typeof raw.schemaVersion === "number") {
       if (raw.schemaVersion !== 1) {
@@ -411,7 +435,7 @@ export class ClientRecoveryRepository {
     ) {
       throw new ClientRecoveryError("record_too_large");
     }
-    await this.putWithQuotaRecovery(candidate);
+    await this.putWithQuotaRecovery(candidate, existing);
     return candidate;
   }
 
@@ -476,7 +500,7 @@ export class ClientRecoveryRepository {
     const loaded = await this.load(scope);
     if (loaded.status !== "found") return loaded;
     const record = { ...loaded.record, serverSyncedAt: syncedAt };
-    await this.putWithQuotaRecovery(record);
+    await this.putWithQuotaRecovery(record, loaded.record);
     return { record, status: "found" } as const;
   }
 
@@ -669,11 +693,20 @@ export class ClientRecoveryRepository {
     }
   }
 
-  private async putWithQuotaRecovery(record: ClientRecoveryRecordV1) {
+  private async putWithQuotaRecovery(
+    record: ClientRecoveryRecordV1,
+    expected: ClientRecoveryRecordV1 | undefined,
+  ) {
     try {
-      await this.storage.put(record);
+      const updated = await this.storage.putIfUnchanged(
+        record.key,
+        expected,
+        record,
+      );
+      if (!updated) throw new ClientRecoveryError("record_changed");
       return;
     } catch (error) {
+      if (error instanceof ClientRecoveryError) throw error;
       if (!isQuotaExceeded(error)) {
         throw new ClientRecoveryError("storage_failed");
       }
@@ -711,8 +744,14 @@ export class ClientRecoveryRepository {
     }
 
     try {
-      await this.storage.put(record);
+      const updated = await this.storage.putIfUnchanged(
+        record.key,
+        expected,
+        record,
+      );
+      if (!updated) throw new ClientRecoveryError("record_changed");
     } catch (error) {
+      if (error instanceof ClientRecoveryError) throw error;
       throw new ClientRecoveryError(
         isQuotaExceeded(error) ? "quota_exceeded" : "storage_failed",
       );

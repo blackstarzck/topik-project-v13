@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen } from "@testing-library/react";
 
 import { WritingRecoveryConflictModal } from "../../../src/components/writing/WritingRecoveryConflictModal";
+import { buildClientRecoveryKey } from "../../../src/lib/writing/client-recovery";
 import type { WritingRecoveryConflict } from "../../../src/lib/writing/writing-resilience";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -35,7 +36,14 @@ const conflict: WritingRecoveryConflict = {
     expiresAt: "2026-07-19T00:00:00.000Z",
     firstStoredAt: "2026-07-18T00:00:00.000Z",
     importId: "701",
-    key: "user-1:problem-1:54",
+    key: buildClientRecoveryKey({
+      canonicalQuestionId: "question-54",
+      importId: "701",
+      payloadHash: "hash",
+      problemId: "problem-1",
+      questionNo: 54,
+      userId: "user-1",
+    }),
     payloadHash: "hash",
     problemId: "problem-1",
     questionNo: 54,
@@ -48,7 +56,7 @@ const conflict: WritingRecoveryConflict = {
 };
 
 describe("WritingRecoveryConflictModal", () => {
-  it("shows only localized timestamps and requires an explicit prior/current choice", () => {
+  it("shows safely escaped answer previews and requires an explicit prior/current choice", () => {
     const onChoose = vi.fn();
     renderWithIntl(
       <WritingRecoveryConflictModal conflict={conflict} onChoose={onChoose} />,
@@ -62,13 +70,39 @@ describe("WritingRecoveryConflictModal", () => {
     expect(
       screen.getByTestId("writing-recovery-current-time").textContent,
     ).toContain("2026");
-    expect(document.body.textContent).not.toContain("prior-secret");
-    expect(document.body.textContent).not.toContain("current-secret");
+    expect(
+      screen.getByTestId("writing-recovery-prior-preview").textContent,
+    ).toBe("prior-secret");
+    expect(
+      screen.getByTestId("writing-recovery-current-preview").textContent,
+    ).toBe("current-secret");
 
     fireEvent.click(screen.getByTestId("writing-recovery-choose-prior"));
     fireEvent.click(screen.getByTestId("writing-recovery-choose-current"));
     expect(onChoose).toHaveBeenNthCalledWith(1, "prior");
     expect(onChoose).toHaveBeenNthCalledWith(2, "current");
+  });
+
+  it("renders untrusted answer markup as bounded plain text", () => {
+    const markup = '<img src=x onerror="alert(1)">';
+    const answerText = `${markup}${"x".repeat(1_100)}`;
+    renderWithIntl(
+      <WritingRecoveryConflictModal
+        conflict={{
+          ...conflict,
+          prior: { ...conflict.prior, answerText },
+        }}
+        onChoose={vi.fn()}
+      />,
+    );
+
+    const preview = screen.getByTestId(
+      "writing-recovery-prior-preview",
+    ).textContent;
+    expect(preview?.startsWith(markup)).toBe(true);
+    expect(preview?.length).toBe(1_001);
+    expect(preview?.endsWith("…")).toBe(true);
+    expect(document.querySelector("img")).toBeNull();
   });
 
   it("renders nothing without a conflict", () => {

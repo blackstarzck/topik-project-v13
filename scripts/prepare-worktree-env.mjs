@@ -328,6 +328,8 @@ function validateEnvironment(content, profile, { source = false } = {}) {
   const target = parseSupabaseTarget(env.NEXT_PUBLIC_SUPABASE_URL);
   if (profile === "e2e") {
     assertLocalPrivilegedMutationTarget(env);
+  } else if (target.kind === "remote" && target.environment === "production") {
+    throw new Error("App environment rejects production Supabase targets.");
   } else if (!source && hasPrivilegedEnvironment(env)) {
     throw new Error("App environment forbids privileged credentials.");
   } else if (

@@ -39,6 +39,7 @@ export async function upsertDraft(
   now: () => string = () => new Date().toISOString(),
 ): Promise<WritingDraftRow> {
   const supabase = createClient();
+  const expectedLastSavedAt = input.last_saved_at ?? null;
   const persistedInput: WritingDraftInsert = {
     ...input,
     autosave_status: "clean",
@@ -55,8 +56,10 @@ export async function upsertDraft(
       supabase,
       activeDraftId,
       persistedInput,
+      expectedLastSavedAt,
     );
     if (updated) return updated;
+    throw new Error("writing_draft_revision_conflict");
   }
 
   const inserted = await insertDraft(supabase, persistedInput);
@@ -67,8 +70,10 @@ export async function upsertDraft(
         supabase,
         racedDraftId,
         persistedInput,
+        expectedLastSavedAt,
       );
       if (updated) return updated;
+      throw new Error("writing_draft_revision_conflict");
     }
   }
   if (inserted.error) throw inserted.error;
@@ -95,11 +100,16 @@ async function updateActiveDraft(
   supabase: BrowserClient,
   draftId: string,
   input: WritingDraftInsert,
+  expectedLastSavedAt: string | null,
 ): Promise<WritingDraftRow | null> {
-  const { data, error } = await supabase
+  const update = supabase
     .from("writing_drafts")
     .update(input)
-    .eq("id", draftId)
+    .eq("id", draftId);
+  const guardedUpdate = expectedLastSavedAt
+    ? update.eq("last_saved_at", expectedLastSavedAt)
+    : update.is("last_saved_at", null);
+  const { data, error } = await guardedUpdate
     .neq("autosave_status", "superseded")
     .select("*")
     .maybeSingle();

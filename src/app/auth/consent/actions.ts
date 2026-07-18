@@ -271,6 +271,7 @@ export async function completeAuthGateAction(formData: FormData) {
     p_phone_country_code: string | null;
     p_phone_number: string | null;
     p_accept_required_consents: boolean;
+    p_consent_documents: ConsentDocumentSnapshot[];
     p_ui_locale?: Locale;
     p_ui_locale_source?: RequestLocaleSource;
   } = {
@@ -281,6 +282,7 @@ export async function completeAuthGateAction(formData: FormData) {
     p_phone_country_code: input.phone_country_code,
     p_phone_number: input.phone_number,
     p_accept_required_consents: acceptRequiredConsents,
+    p_consent_documents: submittedDocuments ?? [],
   };
   if (localeSeed) {
     rpcInput.p_ui_locale = localeSeed.locale;

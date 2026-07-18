@@ -11,6 +11,7 @@ const expectedLocalEnvKeys = [
   "NEXT_PUBLIC_GA_MEASUREMENT_ID",
   "E2E_STUDENT_EMAIL",
   "E2E_STUDENT_PASSWORD",
+  "E2E_NTF_PASSWORD",
   "SUPABASE_TEST_PASSWORD",
   "TALKPIK_API_BASE_URL",
   "SMTP_HOST",
@@ -44,5 +45,14 @@ describe(".env.example contract", () => {
     expect(example).not.toContain(
       "real hosted project key in this file or any Vercel Preview/Production scope",
     );
+  });
+
+  it("declares each active environment variable only once", () => {
+    const example = readFileSync(join(process.cwd(), ".env.example"), "utf8");
+    const declarations = [...example.matchAll(/^([A-Z][A-Z0-9_]*)=/gmu)].map(
+      ([, key]) => key,
+    );
+
+    expect(declarations).toEqual([...new Set(declarations)]);
   });
 });

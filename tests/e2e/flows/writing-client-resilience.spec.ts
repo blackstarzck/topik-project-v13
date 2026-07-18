@@ -258,6 +258,12 @@ test.describe("guarded local draft persistence", () => {
     await expect(
       secondPage.getByTestId("writing-recovery-current-time"),
     ).toBeVisible();
+    await expect(
+      secondPage.getByTestId("writing-recovery-prior-preview"),
+    ).toContainText(answer);
+    await expect(
+      secondPage.getByTestId("writing-recovery-current-preview"),
+    ).toBeVisible();
 
     await secondPage.getByTestId("writing-recovery-choose-prior").click();
     await expect(conflict).toBeHidden();
@@ -529,9 +535,7 @@ for (const writingCase of [
         });
         return;
       }
-      unexpectedMutations.push(
-        `${request.method()} ${requestUrl.pathname}`,
-      );
+      unexpectedMutations.push(`${request.method()} ${requestUrl.pathname}`);
       await route.fulfill({
         body: JSON.stringify({ message: "unexpected mutation blocked" }),
         contentType: "application/json",

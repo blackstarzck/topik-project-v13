@@ -3,7 +3,7 @@
 ## Auth gate
 
 - public 인증 화면은 session이 없어도 동작하며 user-owned table 접근을 전제로 하지 않는다.
-- callback의 `next`는 앱 내부 상대 경로로 sanitize한다. token과 provider raw error는 사용자 화면과 redirect URL에 노출하지 않는다. 현재 callback server log에는 provider `error_description`과 Supabase `error.message`가 남을 수 있으므로 canonical reason만 기록하도록 보강하기 전까지 로그 비노출을 보장하지 않는다.
+- callback의 `next`는 앱 내부 상대 경로로 sanitize한다. token과 provider raw error는 사용자 화면과 redirect URL에 노출하지 않는다. callback server log도 provider `error_description`과 Supabase 원본 오류를 남기지 않고 canonical stage만 기록한다.
 - email 확인, 필수 동의와 profile 완료 gate는 server와 DB 계약을 함께 확인한다.
 - browser에는 publishable key만 허용한다. secret/service-role key는 server-only다.
 

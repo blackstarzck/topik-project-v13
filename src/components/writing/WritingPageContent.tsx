@@ -12,6 +12,7 @@ import type {
   WritingRetrySeed,
 } from "@/lib/writing/types";
 import type { WritingProblem } from "@/lib/writing/server";
+import { buildClientRecoveryKey } from "@/lib/writing/client-recovery";
 
 type Props = {
   questionNo: QuestionNo;
@@ -64,7 +65,9 @@ export async function WritingPageContent({
           {showRetry ? (
             <Link
               href={
-                writingQuestionHref(questionNo, { returnTo: returnHref }) as never
+                writingQuestionHref(questionNo, {
+                  returnTo: returnHref,
+                }) as never
               }
             >
               <Button type="primary">{t("retry")}</Button>
@@ -79,9 +82,22 @@ export async function WritingPageContent({
       </Empty>
     );
   }
+  const workspaceKey = buildClientRecoveryKey({
+    canonicalQuestionId: problem.canonicalQuestionId ?? null,
+    importId:
+      problem.canonicalImportId === null ||
+      problem.canonicalImportId === undefined
+        ? null
+        : String(problem.canonicalImportId),
+    payloadHash: problem.payloadHash ?? null,
+    problemId: problem.id,
+    questionNo,
+    userId,
+  });
   if (problem.kind === "q51") {
     return (
       <ShortAnswerWriting51Workspace
+        key={workspaceKey}
         userId={userId}
         problem={problem}
         draft={draft}
@@ -94,6 +110,7 @@ export async function WritingPageContent({
   if (problem.kind === "q52") {
     return (
       <ShortAnswerWriting52Workspace
+        key={workspaceKey}
         userId={userId}
         problem={problem}
         draft={draft}
@@ -106,6 +123,7 @@ export async function WritingPageContent({
   if (problem.kind === "q53") {
     return (
       <LongFormWriting53Workspace
+        key={workspaceKey}
         userId={userId}
         problem={problem}
         draft={draft}
@@ -118,6 +136,7 @@ export async function WritingPageContent({
   if (problem.kind === "q54") {
     return (
       <EssayWriting54Workspace
+        key={workspaceKey}
         userId={userId}
         problem={problem}
         draft={draft}

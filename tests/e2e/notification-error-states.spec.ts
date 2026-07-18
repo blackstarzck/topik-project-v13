@@ -16,7 +16,11 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 // a notification_settings row. See tests/e2e/_tmp-seed-notif.mjs.
 
 const EMAIL = "ntf-user-optin@e2e-notification.test";
-const PASSWORD = process.env.E2E_NTF_PASSWORD ?? "Ntf-e2e-2026!seed";
+const PASSWORD = process.env.E2E_NTF_PASSWORD?.trim();
+if (!PASSWORD) {
+  throw new Error("E2E_NTF_PASSWORD must be set for notification e2e.");
+}
+const VERIFIED_PASSWORD: string = PASSWORD;
 
 // Supabase REST table endpoints (NEXT_PUBLIC_SUPABASE_URL/rest/v1/<table>).
 const SETTINGS_ROUTE = "**/rest/v1/notification_settings**";
@@ -43,7 +47,9 @@ async function login(page: Page) {
   await page.goto("/login");
   // Same locale-agnostic selectors auth.setup.ts relies on (antd Input attrs).
   await page.locator('input[autocomplete="email"]').fill(EMAIL);
-  await page.locator('input[autocomplete="current-password"]').fill(PASSWORD);
+  await page
+    .locator('input[autocomplete="current-password"]')
+    .fill(VERIFIED_PASSWORD);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL("**/dashboard", { timeout: 20_000 });
 }

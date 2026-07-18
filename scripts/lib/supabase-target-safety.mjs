@@ -224,6 +224,27 @@ export function assertPublicDevMutationTarget(env, options) {
   return target;
 }
 
+export function assertLocalPublicMutationTarget(env) {
+  resolvePublicSupabaseKey(env);
+  let target;
+  try {
+    target = parseSupabaseTarget(env.NEXT_PUBLIC_SUPABASE_URL);
+  } catch {
+    throw policyError("Local public mutation is not approved.");
+  }
+
+  if (
+    target.kind !== "local" ||
+    !PRIVILEGED_LOOPBACK_HOSTS.has(target.hostname) ||
+    env.SUPABASE_LOCAL_STACK !== "1" ||
+    env.E2E_ALLOW_DEV_DB_MUTATION !== "1"
+  ) {
+    throw policyError("Local public mutation is not approved.");
+  }
+
+  return target;
+}
+
 export function assertLocalPrivilegedMutationTarget(env) {
   resolvePublicSupabaseKey(env);
   let target;

@@ -261,7 +261,7 @@ export function EssayWriting54Workspace({
         !isLongFormDraftJson(record.answerJson) ||
         record.answerJson._v !== "54.v1"
       ) {
-        return current;
+        return undefined;
       }
       const restoredState = readInitial54({
         answer_json: record.answerJson,

@@ -47,7 +47,10 @@ export interface WritingRecoveryRepository {
     expected: ClientRecoveryRecordV1,
   ): Promise<boolean | void>;
   load(scope: ClientRecoveryScope): Promise<ClientRecoveryLoadResult>;
-  save(input: ClientRecoverySaveInput): Promise<ClientRecoveryRecordV1>;
+  save(
+    input: ClientRecoverySaveInput,
+    options?: { expected?: ClientRecoveryRecordV1 | null },
+  ): Promise<ClientRecoveryRecordV1>;
 }
 
 type VersionedSnapshot = {
@@ -71,7 +74,7 @@ type ControllerOptions = {
   restorePrior?: (
     record: ClientRecoveryRecordV1,
     current: WritingResilienceSnapshot,
-  ) => WritingResilienceSnapshot;
+  ) => WritingResilienceSnapshot | undefined;
   saveServer: (draft: WritingDraftInsert) => Promise<WritingDraftRow>;
   scope: ClientRecoveryScope;
 };
@@ -214,8 +217,10 @@ export function createWritingResilienceController({
   let latestServerRequestedRevision = 0;
   let lastReportedServerRevision = 0;
   let preparedRecoveryRecord: ClientRecoveryRecordV1 | undefined;
+  let recoveryBaseline: ClientRecoveryRecordV1 | null | undefined;
   let recoveryCleanup: { promise: Promise<void>; revision: number } | undefined;
   let revision = 0;
+  let serverBaselineLastSavedAt = initialLastSavedAt;
   let state: WritingResilienceState = {
     conflict: null,
     hydrated: false,
@@ -234,11 +239,26 @@ export function createWritingResilienceController({
     VersionedSnapshot,
     ClientRecoveryRecordV1
   > = createLatestOnlySaveQueue({
-    save: ({ snapshot }) => repository.save(toRecoveryInput(snapshot)),
+    save: async ({ snapshot }) => {
+      const expected = recoveryBaseline;
+      const saved = await repository.save(
+        toRecoveryInput(snapshot),
+        expected === undefined ? {} : { expected },
+      );
+      recoveryBaseline = saved;
+      return saved;
+    },
   });
   const serverQueue: LatestOnlySaveQueue<VersionedSnapshot, WritingDraftRow> =
     createLatestOnlySaveQueue({
-      save: ({ snapshot }) => saveServer(snapshot.draft),
+      save: async ({ snapshot }) => {
+        const row = await saveServer({
+          ...snapshot.draft,
+          last_saved_at: serverBaselineLastSavedAt,
+        });
+        serverBaselineLastSavedAt = row.last_saved_at ?? null;
+        return row;
+      },
     });
 
   function blocked() {
@@ -289,16 +309,24 @@ export function createWritingResilienceController({
         if (disposed || entry.revision !== latest?.revision) return;
         const beforeDelete = await repository.load(scope);
         if (
+          beforeDelete.status === "missing" ||
+          beforeDelete.status === "expired"
+        ) {
+          recoveryBaseline = null;
+        }
+        if (
           beforeDelete.status !== "found" ||
           !sameRecoverySnapshot(beforeDelete.record, entry.snapshot)
         ) {
           emit({ recoveryState: "possible" });
           return;
         }
+        recoveryBaseline = beforeDelete.record;
         const deleted = await repository.clearIfUnchanged(
           scope,
           beforeDelete.record,
         );
+        if (deleted) recoveryBaseline = null;
         if (!disposed && entry.revision === latest?.revision) {
           emit({ recoveryState: deleted ? "impossible" : "possible" });
         }
@@ -360,14 +388,17 @@ export function createWritingResilienceController({
 
   function startLatestWork(scheduleServer: boolean) {
     if (!latest || blocked() || !state.hydrated || state.conflict) return;
+    cancelDebounce();
     const entry = latest;
     const localOutcome = recordLocal(entry);
     if (!scheduleServer || !autosaveEnabled) {
       cancelDebounce();
       return;
     }
-    void localOutcome.then(() => {
+    void localOutcome.then((result) => {
       if (
+        result.status === "saved" &&
+        result.isLatest &&
         !disposed &&
         autosaveEnabled &&
         entry.revision === latest?.revision &&
@@ -416,11 +447,14 @@ export function createWritingResilienceController({
 
   async function manualSave() {
     if (blocked()) throw new WritingResilienceBlockedError();
+    if (state.conflict) throw new WritingResilienceBlockedError();
     if (latest) {
+      recordLocal(latest);
       try {
         await localQueue.flush();
       } catch {
         emit({ recoveryState: "impossible" });
+        throw new WritingServerSaveBlockedError("impossible");
       }
     }
     return flushLatestServer();
@@ -463,6 +497,7 @@ export function createWritingResilienceController({
         emit({ conflict: null, hydrated: true, recoveryState: "impossible" });
         return;
       }
+      recoveryBaseline = loaded.record;
       if (!sameRecoverySnapshot(loaded.record, effectiveCurrent)) {
         cancelDebounce();
         emit({
@@ -483,6 +518,9 @@ export function createWritingResilienceController({
       }
       emit({ conflict: null, hydrated: true, recoveryState: "possible" });
     } else {
+      if (loaded.status === "missing" || loaded.status === "expired") {
+        recoveryBaseline = null;
+      }
       emit({ conflict: null, hydrated: true, recoveryState: "impossible" });
     }
     if (!latest && !state.conflict) {
@@ -509,12 +547,15 @@ export function createWritingResilienceController({
           scope,
           conflict.prior,
         );
+        if (disposed || state.conflict !== conflict) return conflict.current;
+        if (deleted) recoveryBaseline = null;
         emit({
           conflict: null,
           recoveryState: deleted ? "impossible" : "possible",
           status: "clean",
         });
       } catch {
+        if (disposed || state.conflict !== conflict) return conflict.current;
         emit({ conflict: null, recoveryState: "possible", status: "clean" });
       }
       return conflict.current;
@@ -526,6 +567,7 @@ export function createWritingResilienceController({
       return undefined;
     }
     const selected = restorePrior(conflict.prior, conflict.current);
+    if (!selected) return undefined;
     emit({ conflict: null });
     edit(selected);
     return selected;
@@ -539,6 +581,7 @@ export function createWritingResilienceController({
       const deleted = expected
         ? await repository.clearIfUnchanged(scope, expected)
         : false;
+      if (deleted) recoveryBaseline = null;
       emit({
         conflict: null,
         recoveryState: deleted ? "impossible" : "possible",

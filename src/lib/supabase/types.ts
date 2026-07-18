@@ -1701,6 +1701,7 @@ export interface Database {
           p_phone_country_code: string | null;
           p_phone_number: string | null;
           p_accept_required_consents: boolean;
+          p_consent_documents: Json;
           p_ui_locale?: "ko" | "en" | "vi";
           p_ui_locale_source?: "auto" | "manual";
         };

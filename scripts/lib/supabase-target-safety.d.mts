@@ -35,6 +35,9 @@ export function assertPublicDevMutationTarget(
   env: SupabaseSafetyEnvironment,
   options: { expectedProjectRef: string },
 ): SupabaseRemoteTarget;
+export function assertLocalPublicMutationTarget(
+  env: SupabaseSafetyEnvironment,
+): SupabaseLocalTarget;
 export function assertLocalPrivilegedMutationTarget(
   env: SupabaseSafetyEnvironment,
 ): SupabaseLocalTarget;

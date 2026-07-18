@@ -63,7 +63,7 @@ Future 항목은 제품 방향이지 현재 제공 약속이 아니다. 사용�
 3. 완료된 사용자는 홈에서 학습 상태와 다음 행동을 확인한다.
 4. callback 실패, 만료, 재전송 제한은 안전한 인증 오류 안내와 재시도 행동으로 연결된다.
 
-인증 redirect는 앱 내부의 허용된 상대 경로만 사용해 open redirect를 막는다. 외부 URL을 `next`로 실행하지 않는다. access/refresh token과 provider raw error는 사용자 URL과 화면에 표시하지 않고 canonical 오류 이유로 바꾼다. 현재 callback server log에는 provider `error_description`과 Supabase `error.message`가 기록될 수 있다. 운영 완료 기준은 token을 절대 기록하지 않고, raw 설명 대신 canonical reason과 민감하지 않은 진단 정보만 남기는 것이다. 재전송이나 로그인 제한에는 남은 대기시간과 대체 행동을 보여주며, countdown 동안 중복 요청을 막는다. 등록 여부를 노출할 수 있는 계정 찾기·재설정 응답은 동일한 안전 문구를 사용한다.
+인증 redirect는 앱 내부의 허용된 상대 경로만 사용해 open redirect를 막는다. 외부 URL을 `next`로 실행하지 않는다. access/refresh token과 provider raw error는 사용자 URL과 화면에 표시하지 않고 canonical 오류 이유로 바꾼다. callback server log도 token, provider `error_description`, Supabase 원본 오류를 기록하지 않고 canonical stage와 민감하지 않은 최소 진단 정보만 남긴다. 재전송이나 로그인 제한에는 남은 대기시간과 대체 행동을 보여주며, countdown 동안 중복 요청을 막는다. 등록 여부를 노출할 수 있는 계정 찾기·재설정 응답은 동일한 안전 문구를 사용한다.
 
 로그인한 사용자의 프로필 조회 실패나 누락은 신규 가입 또는 가입 미완료로 간주하지 않는다. 사용자 화면은 재시도 가능한 일시적 이용 불가 상태를 보여주며, 일반 조회 경로에서 프로필을 자동 생성하지 않는다. 필수 이용약관과 개인정보처리방침은 관리자 원본에서 발행된 비-placeholder 문서가 둘 다 있을 때만 공식 문서와 동의 대상으로 인정한다. 문서가 누락되거나 조회에 실패하면 동의 완료와 다음 화면 이동을 차단한다.
 

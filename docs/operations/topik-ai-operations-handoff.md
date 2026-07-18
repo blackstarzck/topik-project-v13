@@ -111,7 +111,7 @@ RPO 24시간이 제품·법무·결제 요구에 부족하면 `topik-prod`를 �
 
 ## 6. P0-C: 약관 projection과 동의 원자성
 
-현재 v13은 공식 문서 집합과 기존 `complete_auth_gate`가 선택할 문서 집합을 RPC 호출 직전에 비교해 불일치 시 가입 완료를 막는다. 이 사전검사는 확인과 기록 사이에 공식 문서가 바뀌는 경쟁을 제거하지 못한다. DB가 화면에 표시된 정확한 문서를 입력으로 받고 같은 transaction 안에서 검증·동의 기록·프로필 완료를 처리해야 한다.
+v13 source에는 `20260718120000_auth_gate_exact_consent_snapshots.sql`과 그 typed caller가 준비되어 있다. action의 사전 비교에 더해 새 RPC가 화면에 표시된 정확한 문서를 입력으로 받고 같은 transaction 안에서 공식 문서 집합 lock·검증·동의 기록·프로필 완료를 처리한다. 다만 v13은 원격 DB에 migration을 적용하지 않으므로 topik-ai가 dev·production 적용과 evidence를 완료하기 전에는 운영 원자성이 확보됐다고 선언하지 않는다.
 
 ### 관리자 projection 계약
 
@@ -123,12 +123,12 @@ RPO 24시간이 제품·법무·결제 요구에 부족하면 `topik-prod`를 �
 
 ### 동의 RPC 계약
 
-- topik-ai는 현재 `complete_auth_gate`의 최종 profile 입력과 함께 화면에 표시한 consent document ID 집합을 받는 새 계약을 정의한다.
+- topik-ai는 v13 `20260718120000`의 snapshot-aware `complete_auth_gate` 계약을 검토·적용하고 최종 profile 입력과 함께 화면에 표시한 consent document `{id, version}` 배열을 받는 signature를 운영 정본에 반영한다.
 - 한 transaction 안에서 `auth.uid()`와 profile owner를 확인하고, 전달된 ID가 해당 사용자의 locale fallback 규칙으로 결정되는 현재의 비-placeholder·trusted·published·required 문서 집합과 정확히 같은지 확인한다.
 - 누락, 추가, 중복, locale 불일치, 최신 시각 동률, projection 변경이 있으면 어떤 profile 변경이나 consent 기록도 남기지 않고 안정적인 canonical 오류 코드로 실패한다.
 - 성공 시 profile 완료와 `user_consents` append-only 기록이 함께 commit된다. 재시도는 동일 사용자의 동일 문서에 중복 consent를 만들지 않는다.
 - `SECURITY DEFINER`가 필요하면 고정 `search_path`, 함수 내부 사용자 검증, 최소 owner, 명시적인 `REVOKE`/`GRANT EXECUTE`를 함께 적용한다.
-- 최종 함수명·인자·반환 shape를 migration과 topik-ai 계약 문서에 고정하고 v13에 typed handback을 제공한다. v13은 handback 반영 전까지 기존 사전검사와 fail-close를 유지한다.
+- 최종 함수명·인자·반환 shape는 v13 migration과 파생 타입에 고정되어 있다. topik-ai는 적용 version/hash, role별 EXECUTE와 stale rollback 결과를 typed handback evidence로 제공하고, v13은 그 handback 확인 전까지 사전검사와 fail-close를 유지한다.
 
 ## 7. P0-D: Data API grant·RLS·RPC 권한 migration
 

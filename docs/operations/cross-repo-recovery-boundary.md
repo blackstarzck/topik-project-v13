@@ -28,14 +28,14 @@ v13은 원격 백업을 만들거나 보존 기간을 집행하지 않으며, re
 
 - `complete_auth_gate`가 v13과 동일하게 관리자 원본에서 동기화된 비-placeholder 공식 약관만 선택하고, locale fallback과 최신 버전 판정도 동일하게 수행하도록 맞춘다.
 - 같은 문서 종류에서 최신 효력 시각이 같은 두 행이 있으면 임의 선택하지 않고 중단하거나, 관리자 정책 식별자까지 포함한 단일 결정 규칙을 DB에서 강제한다.
-- `complete_auth_gate`가 화면에 표시된 문서 ID·버전을 입력으로 받고, 같은 transaction 안에서 현재 동의 대상과 정확히 일치할 때만 동의 행을 기록하도록 forward migration을 만든다. 화면과 저장 action의 사전 비교만으로는 그 확인과 RPC 실행 사이의 변경 경쟁을 제거할 수 없다.
+- v13에는 `20260718120000_auth_gate_exact_consent_snapshots.sql`을 두어 `complete_auth_gate`가 화면에 표시된 문서 ID·버전을 받고, 같은 transaction 안에서 현재 동의 대상과 정확히 일치할 때만 캡처한 동의 행을 기록하도록 했다. topik-ai는 이 forward migration의 dev·production 적용과 role별 검증 evidence를 소유한다.
 - 공식 약관 동기화 함수는 빈 source policy 식별자를 거부하고, 관리자 앱이 projection table을 직접 수정하지 못하도록 RPC 경계를 DB 권한으로 강제한다.
 - 새 환경에서도 RLS policy만 믿지 않고 Data API table privilege를 forward migration에 명시한다. 최소 계약은 `legal_documents`의 `anon`·`authenticated` 읽기, `user_consents`의 `authenticated` 본인 읽기·추가이며, `legal_documents`의 공개 쓰기와 `user_consents`의 `anon` 접근·수정·삭제는 명시적으로 회수한다. 실제 행 허용 범위는 기존 RLS가 추가로 제한하고, 관리자 projection 쓰기와 원자적 동의 기록은 승인된 RPC의 `EXECUTE` 권한으로만 연다.
 - 위 권한 migration에는 약관 projection RPC와 정확한 문서 ID·버전을 받는 동의 RPC의 `EXECUTE` 대상도 명시하고, `public` 또는 불필요한 role에 남은 실행 권한을 회수하는 검증을 포함한다.
 - `topik-prod`에 위 계약과 공식 terms/privacy 두 문서가 적용·동기화됐다는 evidence를 남긴 뒤 가입 acceptance를 수행한다.
 - 로컬 E2E가 service-role로 직접 넣는 공식 약관 fixture는 loopback 검증 데이터일 뿐이며, 관리자 RPC 경계나 운영 동기화 완료의 evidence로 사용하지 않는다.
 
-v13은 화면이 표시한 문서 ID·버전을 저장 요청에 포함하고, 가입 처리 직전에 현재 공식 문서 집합 및 DB 완료 함수가 선택할 수 있는 문서 집합과 비교한다. 서로 다르거나 최신 시각이 동률이면 placeholder나 다른 버전에 동의한 것으로 기록하지 않고 넓은 재시도 안내로 종료한다. 이 방어는 화면 표시 후 변경을 줄이는 사전검사이며, check와 write를 한 transaction으로 묶는 topik-ai의 DB 계약 교정을 대체하지 않는다.
+v13은 화면이 표시한 문서 ID·버전을 저장 요청과 snapshot-aware RPC에 포함한다. action의 사전 비교는 빠른 fail-close를 제공하고, `20260718120000` RPC는 공식 문서 집합 lock·정확 일치 비교·동의 기록을 한 transaction으로 묶어 그 사이의 변경 경쟁을 닫는다. 원격 환경은 topik-ai가 해당 migration을 적용하고 catalog·stale rollback evidence를 남기기 전까지 기존 DB 계약으로 간주한다.
 
 ## 복구 후 읽기 전용 acceptance
 

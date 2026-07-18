@@ -1,13 +1,12 @@
 export const WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE =
-  "현재 제출할 수 없는 문제입니다. 다른 문제를 선택해 주세요.";
+  "problem_not_submittable";
 export const WRITING_SUBMISSION_BLOCKED_MESSAGE =
-  "현재 시스템 전환 점검 중이라 작문을 제출할 수 없습니다. 작성한 답안은 임시저장되며, 제출이 재개된 뒤 다시 시도해 주세요.";
+  "writing_submission_temporarily_blocked";
 export const WRITING_SUBMISSION_AMBIGUOUS_MESSAGE =
-  "제출 요청이 외부 채점 시스템에 전달됐는지 확인 중입니다. 중복 제출을 막기 위해 자동 재시도하지 않습니다. 잠시 후 제출 기록을 확인해 주세요.";
+  "writing_submission_dispatch_ambiguous";
 export const WRITING_SUBMISSION_DRAFT_REQUIRED_MESSAGE =
-  "제출 전에 답안을 임시저장해야 합니다. 임시저장이 완료된 뒤 다시 제출해 주세요.";
-export const WRITING_SUBMISSION_RETRY_MESSAGE =
-  "제출을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  "writing_submission_draft_required";
+export const WRITING_SUBMISSION_RETRY_MESSAGE = "writing_submission_retryable";
 
 export type SubmitWritingErrorKind =
   | "retryable"

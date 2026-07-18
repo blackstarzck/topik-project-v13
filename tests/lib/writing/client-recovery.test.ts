@@ -58,9 +58,14 @@ class MemoryStorage implements ClientRecoveryStorageAdapter {
 
   async putIfUnchanged(
     key: string,
-    expected: ClientRecoveryRecordV1,
+    expected: ClientRecoveryRecordV1 | undefined,
     replacement: ClientRecoveryRecordV1,
   ) {
+    this.putAttempts += 1;
+    if (this.quotaFailures > 0) {
+      this.quotaFailures -= 1;
+      throw new DOMException("private quota detail", "QuotaExceededError");
+    }
     this.beforeConditionalPut?.();
     this.beforeConditionalPut = undefined;
     const current = this.records.get(key) as ClientRecoveryRecordV1 | undefined;
@@ -76,6 +81,9 @@ class MemoryStorage implements ClientRecoveryStorageAdapter {
 
 function scope(overrides: Partial<{ userId: string; problemId: string }> = {}) {
   return {
+    canonicalQuestionId: "topik-writing-54-0001",
+    importId: "701",
+    payloadHash: "payload-hash",
     problemId: "problem-1",
     questionNo: 54 as const,
     userId: "user-1",
@@ -106,7 +114,11 @@ function record(overrides: Partial<ClientRecoveryRecordV1> = {}) {
     savedAt: new Date(START).toISOString(),
     schemaVersion: 1,
   };
-  return { ...base, ...overrides };
+  const value = { ...base, ...overrides };
+  return {
+    ...value,
+    key: overrides.key ?? buildClientRecoveryKey(value),
+  };
 }
 
 describe("client recovery record", () => {
@@ -159,6 +171,70 @@ describe("client recovery record", () => {
     });
     expect(repeated.firstStoredAt).toBe(first.firstStoredAt);
     expect(repeated.expiresAt).toBe(new Date(START + 7 * DAY).toISOString());
+  });
+
+  it("keeps canonical question revisions in separate recovery records", async () => {
+    const storage = new MemoryStorage();
+    const repository = new ClientRecoveryRepository(storage, {
+      now: () => START,
+    });
+    const previousRevision = input({ payloadHash: "payload-hash-previous" });
+    const currentRevision = input({ payloadHash: "payload-hash-current" });
+
+    const previous = await repository.save(previousRevision);
+    const current = await repository.save(currentRevision);
+
+    expect(previous.key).not.toBe(current.key);
+    await expect(repository.load(previousRevision)).resolves.toMatchObject({
+      record: { answerText: previousRevision.answerText, key: previous.key },
+      status: "found",
+    });
+    await expect(repository.load(currentRevision)).resolves.toMatchObject({
+      record: { answerText: currentRevision.answerText, key: current.key },
+      status: "found",
+    });
+    expect(storage.records.size).toBe(2);
+  });
+
+  it("rejects a concurrent first save instead of silently overwriting the winner", async () => {
+    const storage = new MemoryStorage();
+    const repository = new ClientRecoveryRepository(storage, {
+      now: () => START,
+    });
+    const winner = record({ answerText: "other tab answer" });
+    storage.beforeConditionalPut = () => {
+      storage.records.set(winner.key, winner);
+    };
+
+    await expect(
+      repository.save(input({ answerText: "this tab answer" })),
+    ).rejects.toMatchObject({ code: "record_changed" });
+    expect(storage.records.get(winner.key)).toEqual(winner);
+  });
+
+  it("preserves the winner when two tabs both observed an empty recovery slot", async () => {
+    const storage = new MemoryStorage();
+    const firstTab = new ClientRecoveryRepository(storage, {
+      now: () => START,
+    });
+    const secondTab = new ClientRecoveryRepository(storage, {
+      now: () => START,
+    });
+    await expect(firstTab.load(input())).resolves.toEqual({
+      status: "missing",
+    });
+    await expect(secondTab.load(input())).resolves.toEqual({
+      status: "missing",
+    });
+
+    const winner = await firstTab.save(input({ answerText: "first tab" }), {
+      expected: null,
+    });
+
+    await expect(
+      secondTab.save(input({ answerText: "second tab" }), { expected: null }),
+    ).rejects.toMatchObject({ code: "record_changed" });
+    expect(storage.records.get(winner.key)).toEqual(winner);
   });
 
   it("does not report an already seven-day-expired record as newly recoverable", async () => {
@@ -398,17 +474,14 @@ describe("client recovery record", () => {
       now: () => START + 3 * DAY,
     });
     const expiredUnsynced = record({
-      key: "user-1:expired-unsynced:54",
       problemId: "expired-unsynced",
     });
     const expiredSynced = record({
-      key: "user-1:expired-synced:54",
       problemId: "expired-synced",
       serverSyncedAt: new Date(START).toISOString(),
     });
     const unexpired = record({
       expiresAt: new Date(START + 7 * DAY).toISOString(),
-      key: "user-1:unexpired:54",
       problemId: "unexpired",
       retention: "extended",
     });
@@ -463,20 +536,17 @@ describe("client recovery record", () => {
     });
     const currentKey = buildClientRecoveryKey(scope());
     const expiredSynced = record({
-      key: "user-1:expired:54",
       problemId: "expired",
       serverSyncedAt: new Date(START).toISOString(),
     });
     const oldSynced = record({
       expiresAt: new Date(START + 7 * DAY).toISOString(),
-      key: "user-1:synced:54",
       problemId: "synced",
       retention: "extended",
       savedAt: new Date(START + DAY).toISOString(),
       serverSyncedAt: new Date(START + DAY).toISOString(),
     });
     const expiredUnsynced = record({
-      key: "user-1:unsynced:54",
       problemId: "unsynced",
     });
     const currentSynced = record({
@@ -511,7 +581,6 @@ describe("client recovery record", () => {
       now: () => START + 3 * DAY,
     });
     const expired = record({
-      key: "user-1:expired:54",
       problemId: "expired",
     });
     const newer = { ...expired, answerText: "newer tab content" };

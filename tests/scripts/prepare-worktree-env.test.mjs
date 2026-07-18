@@ -606,7 +606,6 @@ describe("prepareWorktreeEnvironment", () => {
 
   it.each([
     devUrl,
-    prodUrl,
     "http://localhost:54321",
     "http://127.0.0.1:54321",
   ])("accepts an approved remote or loopback app URL: %s", async (url) => {
@@ -621,6 +620,20 @@ describe("prepareWorktreeEnvironment", () => {
         dependencies,
       }),
     ).resolves.toMatchObject({ action: "copied" });
+  });
+
+  it("rejects the production Supabase target for a local app worktree", async () => {
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: appEnv({ NEXT_PUBLIC_SUPABASE_URL: prodUrl }),
+    });
+
+    await expect(
+      prepareWorktreeEnvironment({
+        currentRoot,
+        profile: "app",
+        dependencies,
+      }),
+    ).rejects.toThrow(/app environment.*production/i);
   });
 
   it.each([

@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildClientRecoveryKey,
   ClientRecoveryRepository,
   type ClientRecoverySaveInput,
   type ClientRecoveryStorageAdapter,
@@ -145,7 +146,14 @@ describe("useWritingResilience", () => {
       notifyConflict = () =>
         onConflict({
           eventId: "other-tab",
-          key: "user-1:problem-1:54",
+          key: buildClientRecoveryKey({
+            canonicalQuestionId: "question-54",
+            importId: "701",
+            payloadHash: "hash",
+            problemId: "problem-1",
+            questionNo: 54,
+            userId: "user-1",
+          }),
           savedAt: NOW,
           schemaVersion: 1,
         });
@@ -190,7 +198,14 @@ describe("useWritingResilience", () => {
       ),
     );
     expect(createRecoveryCoordinator).toHaveBeenCalledWith({
-      key: "user-1:problem-1:54",
+      key: buildClientRecoveryKey({
+        canonicalQuestionId: "question-54",
+        importId: "701",
+        payloadHash: "hash",
+        problemId: "problem-1",
+        questionNo: 54,
+        userId: "user-1",
+      }),
       onConflict: expect.any(Function),
     });
   }, 10_000);

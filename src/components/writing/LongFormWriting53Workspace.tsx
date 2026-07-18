@@ -299,7 +299,7 @@ export function LongFormWriting53Workspace({
         !isLongFormDraftJson(record.answerJson) ||
         record.answerJson._v !== "53.v1"
       ) {
-        return current;
+        return undefined;
       }
       const restoredState = { ...record.answerJson.sections };
       const answerText = combine53Sections(restoredState);

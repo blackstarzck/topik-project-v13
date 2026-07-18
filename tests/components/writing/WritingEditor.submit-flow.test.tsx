@@ -279,7 +279,10 @@ describe("WritingEditor submit flow", () => {
     expect(
       screen.getByText(koMessages.writing.submit.submitFailedTitle),
     ).toBeTruthy();
-    expect(screen.getByText(/network down/)).toBeTruthy();
+    expect(
+      screen.getByText(koMessages.writing.submit.submitFailedDescription),
+    ).toBeTruthy();
+    expect(screen.queryByText(/network down/)).toBeNull();
     expect(helpers.clearAfterSubmitSuccessMock).not.toHaveBeenCalled();
   });
 

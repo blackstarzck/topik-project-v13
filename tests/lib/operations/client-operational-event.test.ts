@@ -250,11 +250,23 @@ describe("emitClientOperationalEvent", () => {
     expect(sink).toHaveBeenCalledWith(event);
   });
 
-  it("defaults to a dependency-free no-op sink", async () => {
+  it("delivers allowlisted events through the authenticated same-origin boundary by default", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
     await expect(emitClientOperationalEvent(validEvent())).resolves.toEqual({
       ok: true,
-      status: "skipped",
+      status: "emitted",
     });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/internal/client-operational-events",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(validEvent()),
+        credentials: "same-origin",
+        keepalive: true,
+      }),
+    );
   });
 
   it("does not throw or log payload values when a sink fails", async () => {

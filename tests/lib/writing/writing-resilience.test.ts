@@ -10,6 +10,7 @@ import type {
   ClientRecoveryRecordV1,
   ClientRecoverySaveInput,
 } from "../../../src/lib/writing/client-recovery";
+import { buildClientRecoveryKey } from "../../../src/lib/writing/client-recovery";
 import type { WritingDraftRow } from "../../../src/lib/writing/types";
 
 const NOW = "2026-07-18T00:00:00.000Z";
@@ -55,7 +56,7 @@ function recoveryRecord(
     ...input,
     expiresAt: "2026-07-19T00:00:00.000Z",
     firstStoredAt: NOW,
-    key: `${input.userId}:${input.problemId}:${input.questionNo}`,
+    key: buildClientRecoveryKey(input),
     retention: "default",
     savedAt: NOW,
     schemaVersion: 1,
@@ -122,18 +123,25 @@ function createController(
     restorePrior?: (
       record: ClientRecoveryRecordV1,
       current: WritingResilienceSnapshot,
-    ) => WritingResilienceSnapshot;
+    ) => WritingResilienceSnapshot | undefined;
   } = {},
 ) {
   return createWritingResilienceController({
     debounceMs: 1_000,
-    initialLastSavedAt: null,
+    initialLastSavedAt: NOW,
     initialStatus: "clean",
     now: () => NOW,
     repository,
     ...options,
     saveServer,
-    scope: { problemId: "problem-1", questionNo: 54, userId: "user-1" },
+    scope: {
+      canonicalQuestionId: "topik-writing-54-0001",
+      importId: "701",
+      payloadHash: "payload-hash-701",
+      problemId: "problem-1",
+      questionNo: 54,
+      userId: "user-1",
+    },
   });
 }
 
@@ -168,6 +176,7 @@ describe("writing resilience controller", () => {
     await vi.waitFor(() => expect(repository.save).toHaveBeenCalledTimes(2));
     expect(repository.save).toHaveBeenLastCalledWith(
       expect.objectContaining({ answerText: "latest" }),
+      { expected: expect.objectContaining({ answerText: "first" }) },
     );
     await vi.waitFor(() =>
       expect(controller.getState().recoveryState).toBe("possible"),
@@ -210,6 +219,38 @@ describe("writing resilience controller", () => {
     controller.dispose();
   });
 
+  it("carries the committed server revision into a queued newer save", async () => {
+    vi.useFakeTimers();
+    const firstSave = deferred<WritingDraftRow>();
+    const saveServer = vi
+      .fn()
+      .mockImplementationOnce(() => firstSave.promise)
+      .mockResolvedValueOnce({
+        ...serverRow("latest"),
+        last_saved_at: "2026-07-18T00:02:00.000Z",
+      });
+    const controller = createController(repositoryDouble(), saveServer);
+    await controller.loadRecovery(snapshot("baseline"));
+
+    controller.edit(snapshot("first"));
+    await vi.advanceTimersByTimeAsync(1_000);
+    controller.edit(snapshot("latest"));
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    firstSave.resolve({
+      ...serverRow("first"),
+      last_saved_at: "2026-07-18T00:01:00.000Z",
+    });
+    await vi.waitFor(() => expect(saveServer).toHaveBeenCalledTimes(2));
+
+    expect(saveServer.mock.calls[0]?.[0].last_saved_at).toBe(NOW);
+    expect(saveServer.mock.calls[1]?.[0].last_saved_at).toBe(
+      "2026-07-18T00:01:00.000Z",
+    );
+
+    controller.dispose();
+  });
+
   it("cancels debounce and flushes the latest snapshot on manual save", async () => {
     vi.useFakeTimers();
     const saveServer = vi.fn(async (draft) =>
@@ -228,6 +269,108 @@ describe("writing resilience controller", () => {
     await vi.advanceTimersByTimeAsync(1_000);
     expect(saveServer).toHaveBeenCalledOnce();
 
+    controller.dispose();
+  });
+
+  it("does not autosave to the server after the local recovery CAS loses", async () => {
+    vi.useFakeTimers();
+    const repository = repositoryDouble({
+      save: vi.fn(async () => Promise.reject(new Error("record_changed"))),
+    });
+    const saveServer = vi.fn(async (draft) =>
+      serverRow(draft.answer_text ?? ""),
+    );
+    const controller = createController(repository, saveServer);
+    await controller.loadRecovery(snapshot("baseline"));
+
+    controller.edit(snapshot("losing tab"));
+    await vi.waitFor(() =>
+      expect(controller.getState().recoveryState).toBe("impossible"),
+    );
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(saveServer).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
+  it.each(["manualSave", "prepareForSubmit"] as const)(
+    "does not let %s bypass a failed local recovery CAS",
+    async (operation) => {
+      const repository = repositoryDouble({
+        save: vi.fn(async () => Promise.reject(new Error("record_changed"))),
+      });
+      const saveServer = vi.fn(async (draft) =>
+        serverRow(draft.answer_text ?? ""),
+      );
+      const controller = createController(repository, saveServer);
+      await controller.loadRecovery(snapshot("baseline"));
+      controller.edit(snapshot("losing tab"), { scheduleServer: false });
+
+      await expect(controller[operation]()).rejects.toMatchObject({
+        code: "latest_server_save_failed",
+        recoveryState: "impossible",
+      });
+      expect(saveServer).not.toHaveBeenCalled();
+      controller.dispose();
+    },
+  );
+
+  it("does not let a tab replace a recovery copy changed after its explicit conflict baseline", async () => {
+    vi.useFakeTimers();
+    const first = recoveryRecord({
+      answerJson: { _v: "54.v1", text: "first tab version one" },
+      answerText: "first tab version one",
+      canonicalQuestionId: "topik-writing-54-0001",
+      draftId: "draft-1",
+      importId: "701",
+      payloadHash: "payload-hash-701",
+      problemId: "problem-1",
+      questionNo: 54,
+      userId: "user-1",
+    });
+    const newer = {
+      ...first,
+      answerJson: { _v: "54.v1", text: "first tab version two" },
+      answerText: "first tab version two",
+      savedAt: "2026-07-18T00:00:01.000Z",
+    } as ClientRecoveryRecordV1;
+    let stored = first;
+    const loadGate =
+      deferred<Awaited<ReturnType<WritingRecoveryRepository["load"]>>>();
+    const repository: WritingRecoveryRepository = {
+      clearIfUnchanged: vi.fn(async () => false),
+      load: vi.fn(() => loadGate.promise),
+      save: vi.fn(async (input, options) => {
+        if (JSON.stringify(options?.expected) !== JSON.stringify(stored)) {
+          throw new Error("record_changed");
+        }
+        stored = recoveryRecord(input);
+        return stored;
+      }),
+    };
+    const saveServer = vi.fn(async (draft) =>
+      serverRow(draft.answer_text ?? ""),
+    );
+    const controller = createController(repository, saveServer);
+    const load = controller.loadRecovery(snapshot("server baseline"));
+    controller.edit(snapshot("second tab current"));
+    loadGate.resolve({ record: first, status: "found" });
+    await load;
+    expect(controller.getState().conflict?.currentDirty).toBe(true);
+
+    stored = newer;
+    await controller.chooseRecovery("current");
+    await vi.waitFor(() =>
+      expect(controller.getState().recoveryState).toBe("impossible"),
+    );
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(stored).toBe(newer);
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ answerText: "second tab current" }),
+      { expected: first },
+    );
+    expect(saveServer).not.toHaveBeenCalled();
     controller.dispose();
   });
 
@@ -276,6 +419,7 @@ describe("writing resilience controller", () => {
     expect(repository.clearIfUnchanged).toHaveBeenCalledOnce();
     expect(repository.save).toHaveBeenLastCalledWith(
       expect.objectContaining({ answerText: "latest" }),
+      { expected: null },
     );
     expect(controller.getState().recoveryState).toBe("possible");
 
@@ -313,6 +457,9 @@ describe("writing resilience controller", () => {
     await controller.loadRecovery(current);
 
     expect(repository.load).toHaveBeenCalledWith({
+      canonicalQuestionId: "topik-writing-54-0001",
+      importId: "701",
+      payloadHash: "payload-hash-701",
       problemId: "problem-1",
       questionNo: 54,
       userId: "user-1",
@@ -327,6 +474,37 @@ describe("writing resilience controller", () => {
     expect(selected?.draft.answer_text).toBe("prior");
     expect(controller.getLatestSnapshot()?.draft.answer_text).toBe("prior");
 
+    controller.dispose();
+  });
+
+  it("does not let manual save overwrite a recovery conflict before selection", async () => {
+    const prior = recoveryRecord({
+      answerJson: { _v: "54.v1", text: "prior" },
+      answerText: "prior",
+      canonicalQuestionId: "topik-writing-54-0001",
+      draftId: "draft-prior",
+      importId: "701",
+      payloadHash: "payload-hash-701",
+      problemId: "problem-1",
+      questionNo: 54,
+      userId: "user-1",
+    });
+    const loadGate =
+      deferred<Awaited<ReturnType<WritingRecoveryRepository["load"]>>>();
+    const repository = repositoryDouble({
+      load: vi.fn(() => loadGate.promise),
+    });
+    const controller = createController(repository, vi.fn());
+    const load = controller.loadRecovery(snapshot("server current"));
+    controller.edit(snapshot("current tab edit"));
+    loadGate.resolve({ record: prior, status: "found" });
+    await load;
+    expect(controller.getState().conflict?.currentDirty).toBe(true);
+
+    await expect(controller.manualSave()).rejects.toMatchObject({
+      code: "writing_resilience_blocked",
+    });
+    expect(repository.save).not.toHaveBeenCalled();
     controller.dispose();
   });
 
@@ -348,6 +526,7 @@ describe("writing resilience controller", () => {
     await vi.waitFor(() =>
       expect(repository.save).toHaveBeenCalledWith(
         expect.objectContaining({ answerText: "typed-too-early" }),
+        { expected: null },
       ),
     );
     controller.dispose();
@@ -483,6 +662,58 @@ describe("writing resilience controller", () => {
     controller.dispose();
   });
 
+  it("does not clear a newer cross-tab conflict while an older choice is pending", async () => {
+    const current = snapshot("current");
+    const prior = recoveryRecord({
+      answerJson: { _v: "54.v1", text: "prior" },
+      answerText: "prior",
+      canonicalQuestionId: "topik-writing-54-0001",
+      draftId: "draft-prior",
+      importId: "701",
+      payloadHash: "payload-hash-701",
+      problemId: "problem-1",
+      questionNo: 54,
+      userId: "user-1",
+    });
+    const newer = recoveryRecord(
+      {
+        answerJson: { _v: "54.v1", text: "newer-other-tab" },
+        answerText: "newer-other-tab",
+        canonicalQuestionId: "topik-writing-54-0001",
+        draftId: "draft-newer",
+        importId: "701",
+        payloadHash: "payload-hash-701",
+        problemId: "problem-1",
+        questionNo: 54,
+        userId: "user-1",
+      },
+      { savedAt: "2026-07-18T00:01:00.000Z" },
+    );
+    const clearGate = deferred<boolean>();
+    const repository = repositoryDouble({
+      clearIfUnchanged: vi.fn(() => clearGate.promise),
+      load: vi
+        .fn()
+        .mockResolvedValueOnce({ record: prior, status: "found" as const })
+        .mockResolvedValueOnce({ record: newer, status: "found" as const }),
+    });
+    const controller = createController(repository, vi.fn());
+    await controller.loadRecovery(current);
+
+    const choice = controller.chooseRecovery("current");
+    await vi.waitFor(() =>
+      expect(repository.clearIfUnchanged).toHaveBeenCalledOnce(),
+    );
+    await controller.loadRecovery(current);
+    expect(controller.getState().conflict?.prior).toBe(newer);
+
+    clearGate.resolve(false);
+    await choice;
+
+    expect(controller.getState().conflict?.prior).toBe(newer);
+    controller.dispose();
+  });
+
   it("keeps a dirty current-tab choice recoverable and resumes server autosave", async () => {
     vi.useFakeTimers();
     const repository = repositoryDouble();
@@ -517,7 +748,9 @@ describe("writing resilience controller", () => {
     const selected = await controller.chooseRecovery("current");
     await vi.waitFor(() => expect(repository.save).toHaveBeenCalledOnce());
     await vi.advanceTimersByTimeAsync(1_000);
-    await vi.waitFor(() => expect(saveServer).toHaveBeenCalledWith(current.draft));
+    await vi.waitFor(() =>
+      expect(saveServer).toHaveBeenCalledWith(current.draft),
+    );
 
     expect(selected).toBe(current);
     expect(controller.getState().status).toBe("clean");
@@ -553,6 +786,35 @@ describe("writing resilience controller", () => {
     expect(restorePrior).toHaveBeenCalledWith(prior, current);
     expect(selected).toBe(restored);
     expect(controller.getState().status).toBe("dirty");
+    controller.dispose();
+  });
+
+  it("keeps a conflict open when structured recovery cannot be restored safely", async () => {
+    const current = snapshot("current");
+    const prior = recoveryRecord({
+      answerJson: { _v: "54.v1", checklist: "malformed", text: "prior" },
+      answerText: "prior",
+      canonicalQuestionId: "topik-writing-54-0001",
+      draftId: "draft-prior",
+      importId: "701",
+      payloadHash: "payload-hash-701",
+      problemId: "problem-1",
+      questionNo: 54,
+      userId: "user-1",
+    });
+    const repository = repositoryDouble({
+      load: vi.fn(async () => ({ record: prior, status: "found" as const })),
+    });
+    const controller = createController(repository, vi.fn(), {
+      restorePrior: () => undefined as never,
+    });
+    await controller.loadRecovery(current);
+
+    const selected = await controller.chooseRecovery("prior");
+
+    expect(selected).toBeUndefined();
+    expect(controller.getState().conflict?.prior).toBe(prior);
+    expect(repository.save).not.toHaveBeenCalled();
     controller.dispose();
   });
 

@@ -67,6 +67,20 @@ describe("e2e student fixture config", () => {
     ).toMatchObject({ serviceRoleKey: "sb_secret_local_alternative" });
   });
 
+  it("uses the documented legacy anon key when the publishable key is absent", () => {
+    const encode = (value: unknown) =>
+      Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+    const anonKey = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ role: "anon" })}.signature`;
+
+    expect(
+      resolveE2EStudentConfig({
+        ...baseEnv,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey,
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined,
+      }),
+    ).toMatchObject({ publishableKey: anonKey });
+  });
+
   it.each([
     ["SUPABASE_LOCAL_STACK", { SUPABASE_LOCAL_STACK: undefined }],
     ["E2E_ALLOW_DEV_DB_MUTATION", { E2E_ALLOW_DEV_DB_MUTATION: undefined }],

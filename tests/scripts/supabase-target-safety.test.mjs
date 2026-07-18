@@ -4,6 +4,7 @@ import {
   STANDARD_PLAYWRIGHT_TEST_IGNORE,
   SUPABASE_DEV_PROJECT_REF,
   SUPABASE_PROD_PROJECT_REF,
+  assertLocalPublicMutationTarget,
   assertLocalPrivilegedMutationTarget,
   assertLoopbackRuntimeTarget,
   assertPublicDevMutationTarget,
@@ -56,6 +57,16 @@ function localPrivilegedEnvironment(overrides = {}) {
     SUPABASE_ENV_LABEL: "local",
     SUPABASE_LOCAL_STACK: "1",
     SUPABASE_SERVICE_ROLE_KEY: "sb_secret_local_test",
+    ...overrides,
+  });
+}
+
+function localPublicMutationEnvironment(overrides = {}) {
+  return publicEnvironment({
+    E2E_ALLOW_DEV_DB_MUTATION: "1",
+    NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
+    SUPABASE_ENV_LABEL: "local",
+    SUPABASE_LOCAL_STACK: "1",
     ...overrides,
   });
 }
@@ -462,6 +473,32 @@ describe("local privileged mutation policy", () => {
     );
 
     for (const value of values) expect(error.message).not.toContain(value);
+  });
+});
+
+describe("local public-key mutation policy", () => {
+  it.each(["http://127.0.0.1:54321", "http://[::1]:54321"])(
+    "allows an explicitly enabled numeric loopback target: %s",
+    (url) => {
+      expect(
+        assertLocalPublicMutationTarget(
+          localPublicMutationEnvironment({ NEXT_PUBLIC_SUPABASE_URL: url }),
+        ),
+      ).toMatchObject({ kind: "local" });
+    },
+  );
+
+  it.each([
+    ["DNS localhost", { NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321" }],
+    ["missing local-stack flag", { SUPABASE_LOCAL_STACK: undefined }],
+    ["missing mutation opt-in", { E2E_ALLOW_DEV_DB_MUTATION: undefined }],
+    ["hosted target", { NEXT_PUBLIC_SUPABASE_URL: DEV_URL }],
+  ])("rejects %s", (_case, overrides) => {
+    expect(() =>
+      assertLocalPublicMutationTarget(
+        localPublicMutationEnvironment(overrides),
+      ),
+    ).toThrow(/local public mutation is not approved/i);
   });
 });
 

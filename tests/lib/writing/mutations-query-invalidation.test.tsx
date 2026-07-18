@@ -17,6 +17,7 @@ import type {
   SubmissionIntentPersistence,
 } from "../../../src/lib/writing/client-recovery";
 import { draftQueryKey } from "../../../src/lib/writing/queries";
+import { WRITING_SUBMISSION_RETRY_MESSAGE } from "../../../src/lib/writing/submit-errors";
 import type {
   WritingDraftInsert,
   WritingDraftRow,
@@ -271,9 +272,7 @@ describe("useSubmitWriting intent lifecycle", () => {
       if (!(error instanceof Error)) {
         throw new Error("Expected the submission preflight to fail.");
       }
-      expect(error.message).toBe(
-        "제출을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-      );
+      expect(error.message).toBe(WRITING_SUBMISSION_RETRY_MESSAGE);
       expect(error.message).not.toContain("private");
       expect(action).not.toHaveBeenCalled();
     },
@@ -314,7 +313,7 @@ describe("useSubmitWriting intent lifecycle", () => {
     });
 
     await expect(result.current.mutateAsync(input)).rejects.toThrow(
-      "제출을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      WRITING_SUBMISSION_RETRY_MESSAGE,
     );
     await expect(result.current.mutateAsync(input)).resolves.toEqual({
       submissionId: "submission-1",

@@ -37,7 +37,7 @@ export type UseWritingResilienceOptions = {
   restorePrior: (
     record: ClientRecoveryRecordV1,
     current: WritingResilienceSnapshot,
-  ) => WritingResilienceSnapshot;
+  ) => WritingResilienceSnapshot | undefined;
   saveServer: (
     draft: WritingResilienceSnapshot["draft"],
   ) => Promise<WritingDraftRow>;
@@ -96,11 +96,21 @@ export function useWritingResilience({
     const questionNo = initialSnapshot.draft.question_no;
     if (!isQuestionNo(questionNo)) throw new WritingResilienceBlockedError();
     return {
+      canonicalQuestionId: initialSnapshot.draft.canonical_question_id ?? null,
+      importId:
+        initialSnapshot.draft.canonical_import_id === null ||
+        initialSnapshot.draft.canonical_import_id === undefined
+          ? null
+          : String(initialSnapshot.draft.canonical_import_id),
+      payloadHash: initialSnapshot.draft.canonical_payload_hash ?? null,
       problemId: initialSnapshot.draft.problem_id,
       questionNo,
       userId: initialSnapshot.draft.user_id,
     };
   }, [
+    initialSnapshot.draft.canonical_import_id,
+    initialSnapshot.draft.canonical_payload_hash,
+    initialSnapshot.draft.canonical_question_id,
     initialSnapshot.draft.problem_id,
     initialSnapshot.draft.question_no,
     initialSnapshot.draft.user_id,

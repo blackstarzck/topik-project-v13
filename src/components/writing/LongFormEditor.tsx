@@ -212,7 +212,7 @@ export function LongFormEditor({
       serverSaveKindRef.current = "auto";
     },
     restorePrior: (record, current) => {
-      if (!isLongFormDraftJson(record.answerJson)) return current;
+      if (!isLongFormDraftJson(record.answerJson)) return undefined;
       if (questionNo === 53 && record.answerJson._v === "53.v1") {
         const restoredState = readInitial53({
           answer_json: record.answerJson,
@@ -244,7 +244,7 @@ export function LongFormEditor({
           draftId: record.draftId,
         };
       }
-      return current;
+      return undefined;
     },
     saveServer: (nextDraft) => upsert.mutateAsync(nextDraft),
     serverAutosaveEnabled: autosaveEnabled,

@@ -18,6 +18,7 @@ type Call =
       table: string;
       draftId: string;
       payload: WritingDraftInsert;
+      expectedLastSavedAt?: string | null;
     };
 
 const INPUT: WritingDraftInsert = {
@@ -85,19 +86,37 @@ function makeClient(opts: {
         }),
       }),
       update: (payload: WritingDraftInsert) => ({
-        eq: (_idCol: string, draftId: string) => ({
-          neq: () => ({
-            select: () => ({
-              maybeSingle: () => {
-                calls.push({ type: "update", table, draftId, payload });
-                return Promise.resolve({
-                  data: opts.updateData ?? makeRow(payload, draftId),
-                  error: opts.updateError ?? null,
-                });
-              },
+        eq: (_idCol: string, draftId: string) => {
+          const result = (expectedLastSavedAt?: string | null) => ({
+            neq: () => ({
+              select: () => ({
+                maybeSingle: () => {
+                  calls.push({
+                    type: "update",
+                    table,
+                    draftId,
+                    payload,
+                    ...(expectedLastSavedAt !== undefined
+                      ? { expectedLastSavedAt }
+                      : {}),
+                  });
+                  return Promise.resolve({
+                    data:
+                      "updateData" in opts
+                        ? opts.updateData
+                        : makeRow(payload, draftId),
+                    error: opts.updateError ?? null,
+                  });
+                },
+              }),
             }),
-          }),
-        }),
+          });
+          return {
+            ...result(),
+            eq: (_savedAtCol: string, value: string) => result(value),
+            is: (_savedAtCol: string, value: null) => result(value),
+          };
+        },
       }),
       insert: (payload: WritingDraftInsert) => ({
         select: () => ({
@@ -154,7 +173,39 @@ describe("upsertDraft", () => {
       type: "update",
       draftId: "draft-active",
       payload: INPUT,
+      expectedLastSavedAt: INPUT.last_saved_at,
     });
+  });
+
+  it("conditions an existing draft update on the server save time the editor actually loaded", async () => {
+    const client = makeClient({ lookupIds: ["draft-active"] });
+
+    await upsertDraft(
+      { ...INPUT, answer_text: "later tab input" },
+      () => client as never,
+      () => "2026-07-18T03:04:05.000Z",
+    );
+
+    expect(client.calls[1]).toMatchObject({
+      type: "update",
+      expectedLastSavedAt: "2026-06-08T00:00:00.000Z",
+      payload: {
+        answer_text: "later tab input",
+        last_saved_at: "2026-07-18T03:04:05.000Z",
+      },
+    });
+  });
+
+  it("fails closed instead of inserting or overwriting when the loaded server revision changed", async () => {
+    const client = makeClient({
+      lookupIds: ["draft-active"],
+      updateData: null,
+    });
+
+    await expect(upsertDraft(INPUT, () => client as never)).rejects.toThrow(
+      "writing_draft_revision_conflict",
+    );
+    expect(client.calls.map((call) => call.type)).toEqual(["lookup", "update"]);
   });
 
   it("inserts a new draft when no active draft exists", async () => {

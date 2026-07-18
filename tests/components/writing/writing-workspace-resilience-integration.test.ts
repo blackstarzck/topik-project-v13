@@ -84,6 +84,15 @@ describe("question-specific immutable snapshots", () => {
     },
   );
 
+  it.each(COMPONENTS)(
+    "%s keeps a malformed structured recovery conflict open",
+    (fileName) => {
+      const source = readComponent(fileName);
+
+      expect(source).toContain("return undefined;");
+    },
+  );
+
   it("keeps both legacy long-form question shapes immutable", () => {
     const source = readComponent("LongFormEditor.tsx");
 

@@ -1,5 +1,8 @@
 import { createClient, type User } from "@supabase/supabase-js";
-import { assertLocalPrivilegedMutationTarget } from "../../../scripts/lib/supabase-target-safety.mjs";
+import {
+  assertLocalPrivilegedMutationTarget,
+  resolvePublicSupabaseKey,
+} from "../../../scripts/lib/supabase-target-safety.mjs";
 
 export type E2EStudentConfig = {
   email: string;
@@ -116,10 +119,7 @@ export function resolveE2EStudentConfig(
   return {
     email: readRequiredEnv(env, "E2E_STUDENT_EMAIL"),
     password: readPassword(env),
-    publishableKey: readRequiredEnv(
-      env,
-      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-    ),
+    publishableKey: resolvePublicSupabaseKey(env),
     serviceRoleKey,
     supabaseUrl: readRequiredEnv(env, "NEXT_PUBLIC_SUPABASE_URL"),
   };
