@@ -5,11 +5,21 @@ import {
   WRITING_SUBMISSION_AMBIGUOUS_MESSAGE,
   WRITING_SUBMISSION_BLOCKED_MESSAGE,
   WRITING_SUBMISSION_DRAFT_REQUIRED_MESSAGE,
+  WRITING_SUBMISSION_RETRY_MESSAGE,
   classifySubmitWritingError,
   toSubmitWritingErrorMessage,
 } from "../../../src/lib/writing/submit-errors";
 
 describe("writing submit errors", () => {
+  it("maps unknown provider and database details to a broad retry message", () => {
+    const result = toSubmitWritingErrorMessage(
+      "permission denied SQL token=secret student@example.com",
+    );
+
+    expect(result).toBe(WRITING_SUBMISSION_RETRY_MESSAGE);
+    expect(result).not.toMatch(/permission|SQL|secret|example\.com/i);
+  });
+
   it("normalizes the DB guard error into a learner-facing unavailable message", () => {
     expect(toSubmitWritingErrorMessage("problem_not_submittable")).toBe(
       WRITING_PROBLEM_NOT_SUBMITTABLE_MESSAGE,

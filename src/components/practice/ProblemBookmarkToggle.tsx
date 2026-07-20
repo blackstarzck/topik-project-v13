@@ -57,14 +57,8 @@ export function ProblemBookmarkToggle({
             setSavedOverride({ problemId, value: false });
             message.success(t("removeProblemSuccess"));
           },
-          onError: (error: unknown) => {
-            const description =
-              error instanceof Error ? error.message : undefined;
-            message.error(
-              description
-                ? `${t("removeProblemFailed")} ${description}`
-                : t("removeProblemFailed"),
-            );
+          onError: () => {
+            message.error(t("removeProblemFailed"));
           },
         },
       );
@@ -88,13 +82,7 @@ export function ProblemBookmarkToggle({
             message.info(t("savedProblem"));
             return;
           }
-          const description =
-            error instanceof Error ? error.message : undefined;
-          message.error(
-            description
-              ? `${t("saveProblemFailed")} ${description}`
-              : t("saveProblemFailed"),
-          );
+          message.error(t("saveProblemFailed"));
         },
       },
     );

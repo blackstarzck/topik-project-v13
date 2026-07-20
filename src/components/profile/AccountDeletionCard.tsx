@@ -8,21 +8,16 @@ import { useEffect, useRef, useState } from "react";
 import { AppCard } from "@/components/shared/AppCard";
 import { AppModal } from "@/components/shared/AppModal";
 import { APP_ROUTES } from "@/lib/routes";
+import { clearClientRecoveryForAccountDeletion } from "@/lib/writing/client-recovery-cleanup";
 
 const { Text, Title } = Typography;
 
 /**
- * G-01 계정 설정 · 회원 탈퇴(danger-zone).
- *
- * 흐름: 카드의 "회원 탈퇴" 버튼 → 확인 모달(type-to-confirm) → 모달 안의 form 이
- * `/auth/account-delete` 로 POST(full-page submit, ProfileLogoutForm 과 동일 철학).
- * route handler 가 request_account_deletion RPC + global signOut 후
- * `/login?reason=withdrawn` 으로 redirect 한다.
- *
- * 실패 시 route 가 `?delete=error` 로 되돌려 보내며, 여기서 한 번 toast 를 띄우고
- * 쿼리를 정리한다.
+ * 서버가 계정 삭제를 확인한 뒤 브라우저의 복구 데이터까지 지워져야 끝난다.
+ * 서버 처리 뒤 로컬 정리만 실패하면 서버 요청은 반복하지 않고 로컬 정리만
+ * 이 화면에서 다시 시도한다.
  */
-export function AccountDeletionCard() {
+export function AccountDeletionCard({ userId }: { userId: string }) {
   const t = useTranslations("settings.account");
   const { message } = App.useApp();
   const router = useRouter();
@@ -31,12 +26,13 @@ export function AccountDeletionCard() {
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [serverDeletionConfirmed, setServerDeletionConfirmed] = useState(false);
   const errorShownRef = useRef(false);
 
   const keyword = t("dangerZone.confirmKeyword");
   const canSubmit = confirmText.trim() === keyword;
 
-  // route handler 가 RPC 실패 시 ?delete=error 로 되돌린 경우 1회 안내.
+  // 과거 full-page 요청 실패 redirect도 넓은 범주의 안내로 처리한다.
   useEffect(() => {
     if (searchParams.get("delete") !== "error" || errorShownRef.current) return;
     errorShownRef.current = true;
@@ -45,8 +41,44 @@ export function AccountDeletionCard() {
   }, [searchParams, message, router, t]);
 
   function closeModal() {
+    if (submitting || serverDeletionConfirmed) return;
     setOpen(false);
     setConfirmText("");
+  }
+
+  async function submitDeletion(form: HTMLFormElement) {
+    setSubmitting(true);
+    try {
+      if (!serverDeletionConfirmed) {
+        const response = await fetch(APP_ROUTES.authAccountDelete, {
+          body: new FormData(form),
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+          method: "POST",
+        });
+        const payload = (await response.json()) as unknown;
+        if (
+          !response.ok ||
+          typeof payload !== "object" ||
+          payload === null ||
+          Array.isArray(payload) ||
+          (payload as { ok?: unknown }).ok !== true
+        ) {
+          throw new Error("account_deletion_not_confirmed");
+        }
+        setServerDeletionConfirmed(true);
+      }
+
+      const cleanupSucceeded =
+        await clearClientRecoveryForAccountDeletion(userId);
+      if (!cleanupSucceeded) {
+        throw new Error("account_deletion_cleanup_failed");
+      }
+      router.replace("/login?reason=withdrawn");
+    } catch {
+      setSubmitting(false);
+      message.error(t("dangerZone.errorMessage"));
+    }
   }
 
   return (
@@ -80,22 +112,30 @@ export function AccountDeletionCard() {
         onCancel={closeModal}
         footer={null}
         destroyOnHidden
+        closable={!submitting && !serverDeletionConfirmed}
+        keyboard={!submitting && !serverDeletionConfirmed}
+        mask={{ closable: !submitting && !serverDeletionConfirmed }}
       >
         <form
           method="post"
           action={APP_ROUTES.authAccountDelete}
           onSubmit={(event) => {
-            // type-to-confirm 우회 차단: 버튼 disabled 만으로는 Enter 키 제출을
-            // 막지 못한다. 서버는 키워드를 재검증하지 않으므로 여기서 막아야 한다.
-            if (!canSubmit) {
+            // Enter 제출도 확인 문구 검사를 우회하지 못하게 한다.
+            if (!canSubmit && !serverDeletionConfirmed) {
               event.preventDefault();
               return;
             }
-            setSubmitting(true);
+            event.preventDefault();
+            if (submitting) return;
+            void submitDeletion(event.currentTarget);
           }}
           className="flex flex-col gap-4"
         >
-          <Text>{t("dangerZone.modal.body")}</Text>
+          <Text>
+            {serverDeletionConfirmed
+              ? t("dangerZone.modal.cleanupRetryBody")
+              : t("dangerZone.modal.body")}
+          </Text>
           <label className="flex flex-col gap-2">
             <Text type="secondary">
               {t("dangerZone.modal.confirmInstruction", { keyword })}
@@ -107,6 +147,7 @@ export function AccountDeletionCard() {
                 keyword,
               })}
               autoComplete="off"
+              disabled={submitting || serverDeletionConfirmed}
               data-testid="account-delete-confirm-input"
             />
           </label>
@@ -122,11 +163,13 @@ export function AccountDeletionCard() {
               danger
               type="primary"
               htmlType="submit"
-              disabled={!canSubmit}
+              disabled={!serverDeletionConfirmed && !canSubmit}
               loading={submitting}
               data-testid="account-delete-confirm-submit"
             >
-              {t("dangerZone.modal.confirmCta")}
+              {serverDeletionConfirmed
+                ? t("dangerZone.modal.retryCta")
+                : t("dangerZone.modal.confirmCta")}
             </Button>
           </div>
         </form>

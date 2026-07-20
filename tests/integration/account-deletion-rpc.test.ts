@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { assertLocalPublicMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 /**
  * Integration test for the 회원 탈퇴 soft-delete RPC + protect-columns trigger
@@ -11,10 +12,14 @@ import { describe, expect, it } from "vitest";
  *
  *     supabase start
  *     supabase db reset
- *     SUPABASE_LOCAL_STACK=1 pnpm test tests/integration/account-deletion-rpc.test.ts
+ *     SUPABASE_LOCAL_STACK=1 E2E_ALLOW_DEV_DB_MUTATION=1 pnpm test tests/integration/account-deletion-rpc.test.ts
  */
 
 const ENABLED = process.env.SUPABASE_LOCAL_STACK === "1";
+
+if (ENABLED) {
+  assertLocalPublicMutationTarget(process.env);
+}
 
 describe.skipIf(!ENABLED)("account deletion RPC integration", () => {
   it("soft-deletes the caller, is idempotent, and blocks self-recovery", async () => {

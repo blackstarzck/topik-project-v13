@@ -3,18 +3,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { assertLocalPrivilegedMutationTarget } from "./lib/supabase-target-safety.mjs";
 
 const BLANK_KEYS = ["blank_1", "blank_2"];
-const NON_PROD_LABELS = new Set([
-  "local",
-  "dev",
-  "development",
-  "staging",
-  "preview",
-  "test",
-  "qa",
-  "customer-demo",
-]);
 
 loadEnvFile(".env.local");
 loadEnvFile(".env");
@@ -28,7 +19,6 @@ const limit = limitArg ? Number(limitArg.split("=")[1]) : 200;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-const envLabel = (process.env.SUPABASE_ENV_LABEL ?? "local").toLowerCase();
 
 if (!supabaseUrl || !serviceKey) {
   throw new Error(
@@ -40,11 +30,7 @@ if (!Number.isInteger(limit) || limit <= 0) {
   throw new Error("--limit must be a positive integer.");
 }
 
-if (apply && !NON_PROD_LABELS.has(envLabel)) {
-  throw new Error(
-    `Refusing to apply backfill in SUPABASE_ENV_LABEL=${envLabel}. Set a non-production label or review the script before production use.`,
-  );
-}
+assertLocalPrivilegedMutationTarget(process.env);
 
 const supabase = createClient(supabaseUrl, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -57,7 +43,7 @@ const { data: reports, error: reportsError } = await supabase
   .order("generated_at", { ascending: false })
   .limit(limit);
 
-if (reportsError) throw new Error(reportsError.message);
+if (reportsError) throw new Error("comparison_backfill_failed: reports_read");
 
 const submissionIds = unique(
   (reports ?? []).flatMap((report) => [
@@ -77,8 +63,10 @@ const [submissionsResult, feedbackResult] = await Promise.all([
     .in("submission_id", submissionIds),
 ]);
 
-if (submissionsResult.error) throw new Error(submissionsResult.error.message);
-if (feedbackResult.error) throw new Error(feedbackResult.error.message);
+if (submissionsResult.error)
+  throw new Error("comparison_backfill_failed: submissions_read");
+if (feedbackResult.error)
+  throw new Error("comparison_backfill_failed: feedback_read");
 
 const submissionsById = new Map(
   (submissionsResult.data ?? []).map((submission) => [submission.id, submission]),
@@ -154,7 +142,7 @@ if (apply) {
         ai_model: "comparison-local-v2",
       })
       .eq("id", candidate.id);
-    if (error) throw new Error(`update ${candidate.id}: ${error.message}`);
+    if (error) throw new Error("comparison_backfill_failed: report_update");
     updated += 1;
   }
 }
@@ -167,8 +155,7 @@ console.log(
       candidates: candidates.length,
       updated,
       skipped: skipped.length,
-      candidatePreview: candidates.slice(0, 10),
-      skippedPreview: skipped.slice(0, 10),
+      skippedReasons: countReasons(skipped),
     },
     null,
     2,
@@ -265,6 +252,14 @@ function formatPoint(value) {
 
 function unique(values) {
   return [...new Set(values)];
+}
+
+function countReasons(values) {
+  const counts = new Map();
+  for (const value of values) {
+    counts.set(value.reason, (counts.get(value.reason) ?? 0) + 1);
+  }
+  return Object.fromEntries(counts);
 }
 
 function loadEnvFile(fileName) {

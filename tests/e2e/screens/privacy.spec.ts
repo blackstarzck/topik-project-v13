@@ -16,7 +16,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-test("X-14 privacy page exposes placeholder policy scope and related links", async ({
+test("X-14 privacy page shows only an official document or a broad unavailable state", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -24,32 +24,37 @@ test("X-14 privacy page exposes placeholder policy scope and related links", asy
   await page.goto("/privacy", { waitUntil: "networkidle" });
 
   await expect(page).toHaveURL(/\/privacy/);
-  await expect(page.getByTestId("privacy-card")).toBeVisible();
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  const viewport = page.viewportSize();
-  const cardBox = await page.getByTestId("privacy-card").boundingBox();
-  expect(cardBox).not.toBeNull();
-  if (viewport && viewport.width >= 1000) {
-    expect(cardBox!.width).toBeGreaterThanOrEqual(958);
-    expect(cardBox!.width).toBeLessThanOrEqual(962);
-  }
-
-  // The page renders the admin-published document when a published privacy row
-  // exists, otherwise the i18n placeholder. Both are valid public-page states.
-  const placeholder = page.getByTestId("privacy-intro");
   const documentBody = page.getByTestId("privacy-document-body");
-  await expect(placeholder.or(documentBody)).toBeVisible();
+  const unavailable = page.getByTestId("unavailable-state");
+  await expect(documentBody.or(unavailable)).toBeVisible();
 
-  if (await placeholder.isVisible()) {
-    await expect(page.getByTestId("privacy-summary")).toBeVisible();
-    await expect(page.getByTestId("privacy-update")).toBeVisible();
-    await expect(page.getByTestId("privacy-related-links")).toBeVisible();
-    await expect(page.locator('a[href="/terms"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/sign-up"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/"]').first()).toBeVisible();
+  // Temporary policy copy must never be presented as the official document.
+  await expect(page.getByTestId("privacy-intro")).toHaveCount(0);
+  await expect(page.getByTestId("privacy-summary")).toHaveCount(0);
+
+  if (await unavailable.isVisible()) {
+    await expect(
+      unavailable.getByText(
+        /필수 정보를 불러오지 못했습니다|could not load the required information/i,
+      ),
+    ).toBeVisible();
+    await expect(unavailable.locator('a[href="/privacy"]')).toHaveCount(1);
+    await expect(unavailable.locator('a[href="/"]')).toHaveCount(1);
+    await expect(unavailable).not.toContainText(
+      /postgres|supabase|token|stack|validation_failed/i,
+    );
   } else {
-    await expect(documentBody).toBeVisible();
+    await expect(page.getByTestId("privacy-card")).toBeVisible();
+    const viewport = page.viewportSize();
+    const cardBox = await page.getByTestId("privacy-card").boundingBox();
+    expect(cardBox).not.toBeNull();
+    if (viewport && viewport.width >= 1000) {
+      expect(cardBox!.width).toBeGreaterThanOrEqual(958);
+      expect(cardBox!.width).toBeLessThanOrEqual(962);
+    }
+
     const text = await documentBody.innerText();
     expect(text).not.toContain("<div>");
     expect(text).not.toContain("<br>");

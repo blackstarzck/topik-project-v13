@@ -1,4 +1,5 @@
 import { describe, it } from "vitest";
+import { assertLocalPublicMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 /**
  * Integration test for the `on_auth_user_created` trigger added in
@@ -12,10 +13,14 @@ import { describe, it } from "vitest";
  *
  *     supabase start
  *     supabase db reset
- *     SUPABASE_LOCAL_STACK=1 pnpm test tests/integration/profile-trigger.test.ts
+ *     SUPABASE_LOCAL_STACK=1 E2E_ALLOW_DEV_DB_MUTATION=1 pnpm test tests/integration/profile-trigger.test.ts
  */
 
 const ENABLED = process.env.SUPABASE_LOCAL_STACK === "1";
+
+if (ENABLED) {
+  assertLocalPublicMutationTarget(process.env);
+}
 
 describe.skipIf(!ENABLED)("profile trigger integration", () => {
   it("creates a profiles row when auth.users gets a new row", async () => {

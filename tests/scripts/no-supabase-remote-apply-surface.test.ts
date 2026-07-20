@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
@@ -17,6 +17,16 @@ const forbiddenPatterns = [
   /\bsupabase\s+db\s+push\b/i,
   /\bsupabase\s+db\s+query\b/i,
 ];
+
+function listExecutableSources(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return listExecutableSources(path);
+    return entry.isFile() && /\.(?:mjs|mts|ts|tsx)$/u.test(entry.name)
+      ? [path]
+      : [];
+  });
+}
 
 describe("v13 Supabase remote-apply boundary", () => {
   it("does not expose remote Supabase management tokens or apply commands in active files", () => {
@@ -39,7 +49,33 @@ describe("v13 Supabase remote-apply boundary", () => {
     expect(integrationTest).toContain(
       'process.env.SUPABASE_LOCAL_STACK === "1"',
     );
-    expect(integrationTest).toContain("isLoopbackUrl(SUPABASE_URL)");
+    expect(integrationTest).toContain(
+      "assertLocalPrivilegedMutationTarget(process.env)",
+    );
+  });
+
+  it("does not keep executable Supabase Management SQL paths in the client repository", () => {
+    const currentTest = join(
+      root,
+      "tests",
+      "scripts",
+      "no-supabase-remote-apply-surface.test.ts",
+    );
+    const violations = [join(root, "scripts"), join(root, "tests")]
+      .flatMap(listExecutableSources)
+      .filter((path) => path !== currentTest)
+      .flatMap((path) => {
+        const source = readFileSync(path, "utf8");
+        const reasons = [
+          source.includes("/database/query") ? "management-query" : null,
+          source.includes("session_replication_role")
+            ? "replication-role-bypass"
+            : null,
+        ].filter(Boolean);
+        return reasons.map((reason) => `${relative(root, path)}: ${reason}`);
+      });
+
+    expect(violations).toEqual([]);
   });
 
   it("does not carry institution exposure schema ownership in v13 migrations", () => {

@@ -1554,6 +1554,9 @@ export interface Database {
           requires_consent: boolean;
           status: "draft" | "published" | "archived";
           effective_at: string | null;
+          source_policy_id: string | null;
+          source_policy_history_id: string | null;
+          source_synced_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1569,6 +1572,9 @@ export interface Database {
           requires_consent?: boolean;
           status?: "draft" | "published" | "archived";
           effective_at?: string | null;
+          source_policy_id?: string | null;
+          source_policy_history_id?: string | null;
+          source_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1584,6 +1590,9 @@ export interface Database {
           requires_consent?: boolean;
           status?: "draft" | "published" | "archived";
           effective_at?: string | null;
+          source_policy_id?: string | null;
+          source_policy_history_id?: string | null;
+          source_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1692,6 +1701,7 @@ export interface Database {
           p_phone_country_code: string | null;
           p_phone_number: string | null;
           p_accept_required_consents: boolean;
+          p_consent_documents: Json;
           p_ui_locale?: "ko" | "en" | "vi";
           p_ui_locale_source?: "auto" | "manual";
         };

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { assertLocalPrivilegedMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 function loadEnvLocal() {
   try {
@@ -37,25 +38,18 @@ const EMAIL = process.env.E2E_STUDENT_EMAIL;
 const PASSWORD =
   process.env.E2E_STUDENT_PASSWORD ?? process.env.SUPABASE_TEST_PASSWORD;
 
-function isLoopbackUrl(value: string | undefined) {
-  if (!value) return false;
-  try {
-    return new Set(["localhost", "127.0.0.1", "::1", "[::1]"]).has(
-      new URL(value).hostname.toLowerCase(),
-    );
-  } catch {
-    return false;
-  }
-}
-
 const canRun = Boolean(
   process.env.SUPABASE_LOCAL_STACK === "1" &&
-    isLoopbackUrl(SUPABASE_URL) &&
-    PUBLISHABLE_KEY &&
-    SERVICE_KEY &&
-    EMAIL &&
-    PASSWORD,
+  SUPABASE_URL &&
+  PUBLISHABLE_KEY &&
+  SERVICE_KEY &&
+  EMAIL &&
+  PASSWORD,
 );
+
+if (canRun) {
+  assertLocalPrivilegedMutationTarget(process.env);
+}
 
 type ClaimResponse = {
   allowed: boolean;
@@ -192,11 +186,14 @@ describe.skipIf(!canRun)("PDF export quota RPC integration", () => {
     expect(first.allowed).toBe(true);
     expect(first.usageIds).toHaveLength(1);
 
-    const userReleaseAttempt = await userClient!.rpc("release_pdf_export_quota", {
-      p_user_id: userId,
-      p_usage_ids: first.usageIds,
-      p_reason: "forbidden_user_release",
-    });
+    const userReleaseAttempt = await userClient!.rpc(
+      "release_pdf_export_quota",
+      {
+        p_user_id: userId,
+        p_usage_ids: first.usageIds,
+        p_reason: "forbidden_user_release",
+      },
+    );
     expect(userReleaseAttempt.error).toBeTruthy();
 
     const released = await service!.rpc("release_pdf_export_quota", {
@@ -230,9 +227,7 @@ describe.skipIf(!canRun)("PDF export quota RPC integration", () => {
   it("serializes concurrent claims so only three are allowed", async () => {
     await seedReset();
 
-    const results = await Promise.all(
-      Array.from({ length: 4 }, () => claim()),
-    );
+    const results = await Promise.all(Array.from({ length: 4 }, () => claim()));
 
     expect(results.filter((result) => result.allowed)).toHaveLength(3);
     expect(results.filter((result) => !result.allowed)).toHaveLength(1);

@@ -5,6 +5,7 @@ import { cleanup, screen } from "@testing-library/react";
 import { AppError } from "../../../src/components/shared/AppError";
 import { AppNotFound } from "../../../src/components/shared/AppNotFound";
 import { AppLoading } from "../../../src/components/shared/AppLoading";
+import { UnavailableState } from "../../../src/components/shared/UnavailableState";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 // These assertions match the verbatim ko strings staged under the `shared.*`
@@ -16,16 +17,32 @@ afterEach(() => {
 });
 
 describe("AppError i18n chrome", () => {
-  it("renders the shared.error title and the error message as subtitle", () => {
-    renderWithIntl(<AppError error={new Error("boom-detail")} />);
+  it("renders a broad message without exposing the internal error", () => {
+    renderWithIntl(
+      <AppError
+        error={
+          new Error("permission denied SQL token=secret student@example.com")
+        }
+      />,
+    );
     expect(screen.getByText("문제가 발생했어요")).toBeTruthy();
-    // error.message takes precedence over the catalog subtitle fallback.
-    expect(screen.getByText("boom-detail")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.queryByText(/permission denied|secret|example\.com/i),
+    ).toBeNull();
   });
 
-  it("falls back to the catalog subtitle and shows the retry CTA when reset is given", () => {
+  it("shows the broad message and retry CTA when reset is given", () => {
     renderWithIntl(<AppError reset={() => undefined} />);
-    expect(screen.getByText("다시 시도해 주세요.")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
+      ),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
   });
   it("centers the error content in the visible viewport", () => {
@@ -39,6 +56,41 @@ describe("AppError i18n chrome", () => {
         "justify-center",
       ]),
     );
+  });
+});
+
+describe("UnavailableState", () => {
+  it.each([
+    [
+      "general",
+      "서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
+    ],
+    [
+      "required-information",
+      "필수 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    ],
+    ["resource", "자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."],
+  ] as const)("renders the %s broad message", (variant, message) => {
+    renderWithIntl(<UnavailableState variant={variant} />);
+
+    expect(screen.getByText(message)).toBeTruthy();
+  });
+
+  it("renders only caller-supplied recovery actions", () => {
+    renderWithIntl(
+      <UnavailableState
+        variant="resource"
+        actions={[
+          { key: "retry", label: "다시 시도", onClick: () => undefined },
+          { key: "back", label: "뒤로", href: "/dashboard" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "다시 시도" })).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "뒤로" }).getAttribute("href"),
+    ).toBe("/dashboard");
   });
 });
 

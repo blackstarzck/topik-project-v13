@@ -16,6 +16,11 @@ export const requiredOwnerPaths = [
   "DESIGN.md",
   "TESTING.md",
   "docs/prd.md",
+  "docs/operations/README.md",
+  "docs/operations/client-resilience-policy.md",
+  "docs/operations/cross-repo-recovery-boundary.md",
+  "docs/operations/environment-and-agent-safety.md",
+  "docs/operations/topik-ai-operations-handoff.md",
   "docs/swagger-api/",
   "docs/supabase/README.md",
   "docs/supabase/database-api-contract.md",
@@ -27,6 +32,7 @@ export const requiredOwnerPaths = [
 
 const docsAllowlist = new Map([
   ["prd.md", "file"],
+  ["operations", "directory"],
   ["swagger-api", "directory"],
   ["supabase", "directory"],
   ["qa", "directory"],
@@ -36,12 +42,20 @@ const qaAllowlist = new Map([
   ["plan", "directory"],
   ["reports", "directory"],
 ]);
+const operationsAllowlist = new Map([
+  ["README.md", "file"],
+  ["client-resilience-policy.md", "file"],
+  ["cross-repo-recovery-boundary.md", "file"],
+  ["environment-and-agent-safety.md", "file"],
+  ["topik-ai-operations-handoff.md", "file"],
+]);
 const activeDirectoryRoots = [
   ".github",
   "config",
   "src",
   "scripts",
   "tests",
+  "docs/operations",
   "docs/supabase",
   ".codex/skills",
   ".claude/skills",
@@ -222,6 +236,58 @@ function inspectQaRoot(rootDir, errors) {
   for (const required of qaAllowlist.keys()) {
     if (!seen.has(required)) {
       errors.push(`Missing required QA entry: docs/qa/${required}`);
+    }
+  }
+}
+
+function inspectOperationsRoot(rootDir, errors) {
+  const operationsRoot = path.join(rootDir, "docs", "operations");
+  if (!existsSync(operationsRoot)) {
+    errors.push("Missing required operations directory: docs/operations");
+    return;
+  }
+
+  const operationsStatus = lstatSync(operationsRoot);
+  if (
+    !operationsStatus.isDirectory() ||
+    isLinkOrReparse(operationsRoot, operationsStatus)
+  ) {
+    errors.push(
+      "docs/operations must be a regular directory, not a symbolic or reparse path.",
+    );
+    return;
+  }
+
+  const seen = new Set();
+  for (const entry of readdirSync(operationsRoot, { withFileTypes: true })) {
+    seen.add(entry.name);
+    const expectedType = operationsAllowlist.get(entry.name);
+    const target = path.join(operationsRoot, entry.name);
+    if (!expectedType) {
+      errors.push(
+        `Unknown docs/operations root entry: docs/operations/${entry.name}`,
+      );
+      continue;
+    }
+    const status = lstatSync(target);
+    if (isLinkOrReparse(target, status)) {
+      errors.push(
+        `docs/operations/${entry.name} must not be symbolic or reparse path.`,
+      );
+      continue;
+    }
+    if (!status.isFile()) {
+      errors.push(
+        `docs/operations/${entry.name} has the wrong filesystem type.`,
+      );
+    }
+  }
+
+  for (const required of operationsAllowlist.keys()) {
+    if (!seen.has(required)) {
+      errors.push(
+        `Missing required operations entry: docs/operations/${required}`,
+      );
     }
   }
 }
@@ -437,6 +503,7 @@ function isSensitiveRuntimePath(relative) {
   return (
     normalized === ".env.local" ||
     normalized === ".claude/settings.local.json" ||
+    normalized === ".scratch/student-state.json" ||
     normalized.startsWith("tests/e2e/auth-state/")
   );
 }
@@ -444,13 +511,13 @@ function isSensitiveRuntimePath(relative) {
 function gitActiveFiles(rootDir, errors, inventory) {
   const files = [];
   for (const relative of inventory.candidates) {
+    if (inventory.deleted.has(relative)) continue;
     if (isSensitiveRuntimePath(relative)) {
       errors.push(
         `Sensitive runtime path must not appear in Git inventory: ${relative}`,
       );
       continue;
     }
-    if (inventory.deleted.has(relative)) continue;
     if (!isActiveRelativePath(relative)) continue;
     const target = path.join(rootDir, relative);
     let status;
@@ -489,6 +556,7 @@ export function evaluateProjectStructure({ rootDir = process.cwd() } = {}) {
   if (!existsSync(rootDir))
     return { errors: [`Project root does not exist: ${rootDir}`] };
   inspectDocsTopLevel(rootDir, errors);
+  inspectOperationsRoot(rootDir, errors);
   inspectQaRoot(rootDir, errors);
   for (const owner of requiredOwnerPaths)
     inspectRequiredOwner(rootDir, owner, errors);

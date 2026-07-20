@@ -22,9 +22,17 @@ import {
   prepareWorktreeEnvironment,
   selectMainCheckout,
 } from "../../scripts/prepare-worktree-env.mjs";
+import {
+  SUPABASE_DEV_PROJECT_REF,
+  SUPABASE_PROD_PROJECT_REF,
+} from "../../scripts/lib/supabase-target-safety.mjs";
 
 const secretSentinel = "TOP_SECRET_SENTINEL_MUST_NOT_LEAK";
 const highPrivilegeSentinel = "HIGH_PRIVILEGE_SECRET_MUST_NOT_COPY";
+const publicKeyValue = "sb_publishable_test_sentinel";
+const devUrl = `https://${SUPABASE_DEV_PROJECT_REF}.supabase.co`;
+const prodUrl = `https://${SUPABASE_PROD_PROJECT_REF}.supabase.co`;
+const localUrl = "http://127.0.0.1:54321";
 const tempDirs = [];
 
 function tempRoot(prefix = "talkpik-env-") {
@@ -35,14 +43,34 @@ function tempRoot(prefix = "talkpik-env-") {
 
 function appEnv(overrides = {}) {
   const values = {
-    NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: secretSentinel,
+    NEXT_PUBLIC_SUPABASE_URL: devUrl,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKeyValue,
     ...overrides,
   };
 
   return `${Object.entries(values)
+    .filter(([, value]) => value !== undefined)
     .map(([key, value]) => `${key}=${value}`)
     .join("\n")}\n`;
+}
+
+function legacyJwt(role) {
+  const encode = (value) =>
+    Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+  return `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ role })}.signature`;
+}
+
+function e2eEnv(overrides = {}) {
+  return appEnv({
+    E2E_ALLOW_DEV_DB_MUTATION: "1",
+    E2E_STUDENT_EMAIL: "student@example.test",
+    E2E_STUDENT_PASSWORD: "password",
+    NEXT_PUBLIC_SUPABASE_URL: localUrl,
+    SUPABASE_ENV_LABEL: "local",
+    SUPABASE_LOCAL_STACK: "1",
+    SUPABASE_SERVICE_ROLE_KEY: "service-role",
+    ...overrides,
+  });
 }
 
 function fixture({ sourceContent = appEnv(), destinationContent } = {}) {
@@ -210,9 +238,86 @@ describe("dotenv parsing and git ignore result handling", () => {
 });
 
 describe("prepareWorktreeEnvironment", () => {
+  it("accepts a legacy anon JWT when the publishable-key variable is absent", async () => {
+    const anonKey = legacyJwt("anon");
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: appEnv({
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey,
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined,
+      }),
+    });
+
+    await expect(
+      prepareWorktreeEnvironment({ currentRoot, profile: "app", dependencies }),
+    ).resolves.toMatchObject({ action: "copied", profile: "app" });
+    const copied = parseEnvironment(
+      readFileSync(path.join(currentRoot, ".env.local"), "utf8"),
+    );
+    expect(copied.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")).toBe(anonKey);
+    expect(copied.has("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")).toBe(false);
+  });
+
+  it.each([
+    [
+      "secret prefix in publishable slot",
+      {
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+          "sb_secret_publishable_slot_sentinel",
+      },
+    ],
+    [
+      "service-role JWT in legacy slot",
+      {
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: legacyJwt("service_role"),
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined,
+      },
+    ],
+    [
+      "malformed legacy JWT",
+      {
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "malformed.jwt.sentinel",
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined,
+      },
+    ],
+    [
+      "unknown publishable value",
+      { NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "unknown_key_sentinel" },
+    ],
+    [
+      "secret in the secondary public slot",
+      { NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_secret_secondary_slot_sentinel" },
+    ],
+  ])(
+    "rejects %s without echoing the public value",
+    async (_case, overrides) => {
+      const rejectedValue =
+        overrides.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+        overrides.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const { currentRoot, dependencies } = fixture({
+        sourceContent: appEnv(overrides),
+      });
+
+      let error;
+      try {
+        await prepareWorktreeEnvironment({
+          currentRoot,
+          profile: "app",
+          dependencies,
+        });
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(String(error)).toMatch(/public supabase key is not approved/i);
+      expect(String(error)).not.toContain(rejectedValue);
+    },
+  );
+
   it("copies only app-profile keys and omits unrelated or privileged values", async () => {
     const input = appEnv({
       NEXT_PUBLIC_SITE_URL: "https://app.example.test",
+      SUPABASE_ACCESS_TOKEN: highPrivilegeSentinel,
+      SUPABASE_SECRET_KEY: highPrivilegeSentinel,
       SUPABASE_SERVICE_ROLE_KEY: highPrivilegeSentinel,
       SMTP_PASS: highPrivilegeSentinel,
       NOTIFICATION_WORKER_SECRET: highPrivilegeSentinel,
@@ -228,7 +333,9 @@ describe("prepareWorktreeEnvironment", () => {
 
     const destination = path.join(currentRoot, ".env.local");
     expect(result).toMatchObject({ action: "copied", profile: "app" });
-    expect([...parseEnvironment(readFileSync(destination, "utf8")).keys()]).toEqual([
+    expect([
+      ...parseEnvironment(readFileSync(destination, "utf8")).keys(),
+    ]).toEqual([
       "NEXT_PUBLIC_SUPABASE_URL",
       "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
       "NEXT_PUBLIC_SITE_URL",
@@ -241,9 +348,7 @@ describe("prepareWorktreeEnvironment", () => {
 
   it("copies test credentials for e2e but omits SMTP and worker secrets", async () => {
     const { currentRoot, dependencies } = fixture({
-      sourceContent: appEnv({
-        SUPABASE_SERVICE_ROLE_KEY: "service-role",
-        E2E_STUDENT_EMAIL: "student@example.com",
+      sourceContent: e2eEnv({
         E2E_STUDENT_PASSWORD: '"password # preserved"',
         SMTP_PASS: highPrivilegeSentinel,
         NOTIFICATION_WORKER_SECRET: highPrivilegeSentinel,
@@ -260,10 +365,32 @@ describe("prepareWorktreeEnvironment", () => {
       readFileSync(path.join(currentRoot, ".env.local"), "utf8"),
     );
     expect(copied.get("SUPABASE_SERVICE_ROLE_KEY")).toBe("service-role");
-    expect(copied.get("E2E_STUDENT_EMAIL")).toBe("student@example.com");
+    expect(copied.get("E2E_STUDENT_EMAIL")).toBe("student@example.test");
     expect(copied.get("E2E_STUDENT_PASSWORD")).toBe("password # preserved");
+    expect(copied.get("E2E_ALLOW_DEV_DB_MUTATION")).toBe("1");
+    expect(copied.get("SUPABASE_LOCAL_STACK")).toBe("1");
     expect(copied.has("SMTP_PASS")).toBe(false);
     expect(copied.has("NOTIFICATION_WORKER_SECRET")).toBe(false);
+  });
+
+  it("accepts and copies a local Supabase secret key as the e2e privileged-key alternative", async () => {
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: e2eEnv({
+        SUPABASE_SECRET_KEY: "sb_secret_local_alternative",
+        SUPABASE_SERVICE_ROLE_KEY: undefined,
+      }),
+    });
+
+    await expect(
+      prepareWorktreeEnvironment({ currentRoot, profile: "e2e", dependencies }),
+    ).resolves.toMatchObject({ action: "copied", profile: "e2e" });
+    const copied = parseEnvironment(
+      readFileSync(path.join(currentRoot, ".env.local"), "utf8"),
+    );
+    expect(copied.get("SUPABASE_SECRET_KEY")).toBe(
+      "sb_secret_local_alternative",
+    );
+    expect(copied.has("SUPABASE_SERVICE_ROLE_KEY")).toBe(false);
   });
 
   it("validates an existing destination without overwriting or merging it", async () => {
@@ -282,6 +409,54 @@ describe("prepareWorktreeEnvironment", () => {
     );
   });
 
+  it("rejects a hosted app destination that already contains a privileged credential", async () => {
+    const destinationContent = appEnv({
+      SUPABASE_SERVICE_ROLE_KEY: highPrivilegeSentinel,
+    });
+    const { currentRoot, dependencies } = fixture({ destinationContent });
+
+    await expect(
+      prepareWorktreeEnvironment({ currentRoot, profile: "app", dependencies }),
+    ).rejects.toThrow(/app environment forbids privileged credentials/i);
+    expect(readFileSync(path.join(currentRoot, ".env.local"), "utf8")).toBe(
+      destinationContent,
+    );
+  });
+
+  it.each([
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_SECRET_KEY",
+    "SUPABASE_ACCESS_TOKEN",
+  ])(
+    "rejects a local app destination that already contains %s without echoing its value",
+    async (key) => {
+      const destinationContent = appEnv({
+        NEXT_PUBLIC_SUPABASE_URL: localUrl,
+        [key]: highPrivilegeSentinel,
+      });
+      const { currentRoot, dependencies } = fixture({ destinationContent });
+
+      let error;
+      try {
+        await prepareWorktreeEnvironment({
+          currentRoot,
+          profile: "app",
+          dependencies,
+        });
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(String(error)).toMatch(
+        /app environment forbids privileged credentials/i,
+      );
+      expect(String(error)).not.toContain(highPrivilegeSentinel);
+      expect(readFileSync(path.join(currentRoot, ".env.local"), "utf8")).toBe(
+        destinationContent,
+      );
+    },
+  );
+
   it("fails when the main checkout source is missing", async () => {
     const { currentRoot, dependencies } = fixture({ sourceContent: null });
 
@@ -298,19 +473,16 @@ describe("prepareWorktreeEnvironment", () => {
     ],
     [
       "e2e",
-      appEnv({
+      e2eEnv({
         SUPABASE_SERVICE_ROLE_KEY: "",
-        E2E_STUDENT_EMAIL: "student@example.com",
-        E2E_STUDENT_PASSWORD: "password",
+        SUPABASE_SECRET_KEY: "",
       }),
-      "SUPABASE_SERVICE_ROLE_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY",
     ],
     [
       "e2e",
-      appEnv({
-        SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      e2eEnv({
         E2E_STUDENT_EMAIL: "",
-        E2E_STUDENT_PASSWORD: "password",
       }),
       "E2E_STUDENT_EMAIL",
     ],
@@ -329,9 +501,8 @@ describe("prepareWorktreeEnvironment", () => {
     "accepts %s as the e2e password alternative",
     async (passwordKey) => {
       const { currentRoot, dependencies } = fixture({
-        sourceContent: appEnv({
-          SUPABASE_SERVICE_ROLE_KEY: "service-role",
-          E2E_STUDENT_EMAIL: "student@example.com",
+        sourceContent: e2eEnv({
+          E2E_STUDENT_PASSWORD: undefined,
           [passwordKey]: "password",
         }),
       });
@@ -348,9 +519,8 @@ describe("prepareWorktreeEnvironment", () => {
 
   it("requires at least one supported e2e password key", async () => {
     const { currentRoot, dependencies } = fixture({
-      sourceContent: appEnv({
-        SUPABASE_SERVICE_ROLE_KEY: "service-role",
-        E2E_STUDENT_EMAIL: "student@example.com",
+      sourceContent: e2eEnv({
+        E2E_STUDENT_PASSWORD: undefined,
       }),
     });
 
@@ -370,9 +540,47 @@ describe("prepareWorktreeEnvironment", () => {
   });
 
   it.each([
-    ["not-a-url", /NEXT_PUBLIC_SUPABASE_URL.*valid/i],
-    ["http://example.supabase.co", /NEXT_PUBLIC_SUPABASE_URL.*HTTPS/i],
-    ["ftp://example.supabase.co", /NEXT_PUBLIC_SUPABASE_URL.*HTTPS/i],
+    ["SUPABASE_LOCAL_STACK", { SUPABASE_LOCAL_STACK: undefined }],
+    ["E2E_ALLOW_DEV_DB_MUTATION", { E2E_ALLOW_DEV_DB_MUTATION: undefined }],
+  ])("rejects e2e preparation without %s", async (_key, overrides) => {
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: e2eEnv(overrides),
+    });
+
+    await expect(
+      prepareWorktreeEnvironment({ currentRoot, profile: "e2e", dependencies }),
+    ).rejects.toThrow(/local privileged mutation is not approved/i);
+  });
+
+  it.each([
+    ["development", devUrl, "dev"],
+    ["preview", devUrl, "preview"],
+    ["production", prodUrl, "prod"],
+  ])(
+    "rejects hosted %s e2e environment preparation",
+    async (_name, url, label) => {
+      const { currentRoot, dependencies } = fixture({
+        sourceContent: e2eEnv({
+          NEXT_PUBLIC_SUPABASE_URL: url,
+          SUPABASE_ENV_LABEL: label,
+        }),
+      });
+
+      await expect(
+        prepareWorktreeEnvironment({
+          currentRoot,
+          profile: "e2e",
+          dependencies,
+        }),
+      ).rejects.toThrow(/local privileged mutation is not approved/i);
+    },
+  );
+
+  it.each([
+    ["not-a-url", /supabase target is not approved/i],
+    ["http://example.supabase.co", /supabase target is not approved/i],
+    ["ftp://example.supabase.co", /supabase target is not approved/i],
+    ["https://unknown.supabase.co", /supabase target is not approved/i],
   ])(
     "rejects an unsafe nonlocal Supabase URL without exposing it: %s",
     async (url, errorPattern) => {
@@ -397,25 +605,36 @@ describe("prepareWorktreeEnvironment", () => {
   );
 
   it.each([
-    "https://example.supabase.co",
+    devUrl,
     "http://localhost:54321",
     "http://127.0.0.1:54321",
-  ])(
-    "accepts classified HTTPS remote or HTTP loopback URL: %s",
-    async (url) => {
-      const { currentRoot, dependencies } = fixture({
-        sourceContent: appEnv({ NEXT_PUBLIC_SUPABASE_URL: url }),
-      });
+  ])("accepts an approved remote or loopback app URL: %s", async (url) => {
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: appEnv({ NEXT_PUBLIC_SUPABASE_URL: url }),
+    });
 
-      await expect(
-        prepareWorktreeEnvironment({
-          currentRoot,
-          profile: "app",
-          dependencies,
-        }),
-      ).resolves.toMatchObject({ action: "copied" });
-    },
-  );
+    await expect(
+      prepareWorktreeEnvironment({
+        currentRoot,
+        profile: "app",
+        dependencies,
+      }),
+    ).resolves.toMatchObject({ action: "copied" });
+  });
+
+  it("rejects the production Supabase target for a local app worktree", async () => {
+    const { currentRoot, dependencies } = fixture({
+      sourceContent: appEnv({ NEXT_PUBLIC_SUPABASE_URL: prodUrl }),
+    });
+
+    await expect(
+      prepareWorktreeEnvironment({
+        currentRoot,
+        profile: "app",
+        dependencies,
+      }),
+    ).rejects.toThrow(/app environment.*production/i);
+  });
 
   it.each([
     "http://localhost:54321",
@@ -454,7 +673,7 @@ describe("prepareWorktreeEnvironment", () => {
     }
 
     expect(String(error)).not.toContain(secretSentinel);
-    expect(String(error)).toContain("NEXT_PUBLIC_SUPABASE_URL");
+    expect(String(error)).toMatch(/supabase target is not approved/i);
   });
 
   it("refuses source and destination symbolic links", async () => {

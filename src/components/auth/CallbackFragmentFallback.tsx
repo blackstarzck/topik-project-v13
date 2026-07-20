@@ -60,7 +60,9 @@ export function CallbackFragmentFallback({ next }: { next: string }) {
         });
         if (cancelled) return;
         if (error) {
-          console.error("[auth/callback/fragment] setSession error", error);
+          console.error("auth_callback_fragment_failed", {
+            stage: "set_session",
+          });
           setStatus("redirecting");
           router.replace(
             `/auth/error?reason=${encodeURIComponent(mapSupabaseErrorCode(error.code))}`,

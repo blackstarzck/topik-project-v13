@@ -1,11 +1,12 @@
 "use client";
 
-import { Alert, Button, Empty, Spin, Tag, Typography } from "antd";
+import { Button, Empty, Spin, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryProblemView } from "@/lib/library/types";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
@@ -30,6 +31,7 @@ export function LibrarySavedProblemsTab({
   onResetSearch,
 }: Props) {
   const t = useTranslations("library.saved");
+  const errorT = useTranslations("shared.error");
   const tCount = useTranslations("library.submissions");
   const query = useLibraryItems("problems");
   const [page, setPage] = useState(1);
@@ -55,12 +57,16 @@ export function LibrarySavedProblemsTab({
   }
   if (query.error) {
     return (
-      <Alert
-        type="error"
-        title={t("loadError")}
-        description={
-          query.error instanceof Error ? query.error.message : undefined
-        }
+      <UnavailableState
+        variant="resource"
+        actions={[
+          {
+            key: "retry",
+            label: errorT("retry"),
+            onClick: () => void query.refetch(),
+            primary: true,
+          },
+        ]}
       />
     );
   }

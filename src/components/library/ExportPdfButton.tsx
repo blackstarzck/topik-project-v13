@@ -67,7 +67,7 @@ export type ExportPdfDeps = {
  *   - calls `deps.trigger({ sourceType, sourceId })` exactly once on click;
  *   - mode='file' (서버 실파일 다운로드) → notifySuccess(downloadedMessage);
  *   - mode='print' (브라우저 인쇄 폴백) → notifyWarning(printFallbackMessage);
- *   - on reject: notifyError(error.message ?? errorMessage).
+ *   - on reject: notifyError(errorMessage) without exposing raw details.
  *
  * The button NEVER logs a study_events row itself — the export pipeline
  * (server route / triggerPdfExport) already inserts one, and double-logging

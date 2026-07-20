@@ -70,6 +70,12 @@ describe("AuthConsentPanel", () => {
     expect(screen.getByText("Terms of Service")).toBeTruthy();
     expect(screen.getByText("Short consent summary")).toBeTruthy();
     expect(screen.getByText("Full consent body")).toBeTruthy();
+    expect(
+      document.querySelector('input[name="consent_document"]'),
+    ).toHaveProperty(
+      "value",
+      JSON.stringify({ id: "terms-1", version: "2026-06" }),
+    );
     expect(screen.getByLabelText(/성별/)).toBeTruthy();
     expect(screen.getByLabelText(/전화번호/)).toBeTruthy();
     expect(screen.getByRole("button")).toBeTruthy();

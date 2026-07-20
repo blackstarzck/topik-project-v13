@@ -19,6 +19,7 @@ TALKPIK AI는 TOPIK 학습자가 목표를 세우고, 추천 문제와 쓰기 51
 | 현재 route와 구현 동작 | `src/app/`, `src/lib/routes.ts`, tests |
 | UI와 theme | [`DESIGN.md`](./DESIGN.md), `src/theme/`, `src/styles/global.css` |
 | 테스트와 완료 조건 | [`TESTING.md`](./TESTING.md) |
+| 클라이언트 운영·복원력·환경 안전 계약 | [`docs/operations/README.md`](./docs/operations/README.md) |
 | DB migration과 적용 순서 | [`supabase/migrations/INDEX.md`](./supabase/migrations/INDEX.md) |
 | 사람이 읽는 Supabase 계약 | [`docs/supabase/README.md`](./docs/supabase/README.md) |
 | 외부 백엔드 OpenAPI 참고 | [`docs/swagger-api/README.md`](./docs/swagger-api/README.md) |

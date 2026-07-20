@@ -71,8 +71,21 @@ function isSameOriginPost(request: NextRequest): boolean {
 }
 
 function redirectToDeleteError(request: NextRequest) {
+  if (request.headers.get("accept")?.includes("application/json")) {
+    return NextResponse.json({ ok: false }, { status: 503 });
+  }
   return NextResponse.redirect(
     redirectUrl(request, "/settings/account?delete=error"),
+    { status: 303 },
+  );
+}
+
+function accountDeletionSucceeded(request: NextRequest) {
+  if (request.headers.get("accept")?.includes("application/json")) {
+    return NextResponse.json({ ok: true });
+  }
+  return NextResponse.redirect(
+    redirectUrl(request, "/login?reason=withdrawn"),
     { status: 303 },
   );
 }
@@ -89,6 +102,17 @@ function errorStatus(error: unknown): number | undefined {
   return undefined;
 }
 
+function logAccountDeletionFailure(
+  stage:
+    | "external_configuration"
+    | "external_profile"
+    | "local_account"
+    | "session"
+    | "session_cleanup",
+) {
+  console.error("account_delete_failed", { stage });
+}
+
 export async function POST(request: NextRequest) {
   if (!isSameOriginPost(request)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -99,6 +123,9 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    if (request.headers.get("accept")?.includes("application/json")) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
     return NextResponse.redirect(redirectUrl(request, "/login"), {
       status: 303,
     });
@@ -109,22 +136,20 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getSession();
   const accessToken = session?.access_token;
   if (!accessToken) {
-    console.error("[auth/account-delete] missing session access token");
+    logAccountDeletionFailure("session");
     return redirectToDeleteError(request);
   }
 
   let baseUrl: string | null = null;
   try {
     baseUrl = getTalkpikApiBaseUrl();
-  } catch (error) {
-    console.error("[auth/account-delete] external api base URL error", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
+  } catch {
+    logAccountDeletionFailure("external_configuration");
     return redirectToDeleteError(request);
   }
 
   if (!baseUrl) {
-    console.error("[auth/account-delete] external api base URL missing");
+    logAccountDeletionFailure("external_configuration");
     return redirectToDeleteError(request);
   }
 
@@ -133,20 +158,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const status = errorStatus(error);
     if (status !== 404) {
-      console.error("[auth/account-delete] external account deletion error", {
-        message: error instanceof Error ? error.message : "unknown",
-        status,
-      });
+      logAccountDeletionFailure("external_profile");
       return redirectToDeleteError(request);
     }
   }
 
   const { error: rpcError } = await supabase.rpc("request_account_deletion");
   if (rpcError) {
-    console.error("[auth/account-delete] rpc error", {
-      code: rpcError.code,
-      message: rpcError.message,
-    });
+    logAccountDeletionFailure("local_account");
     return redirectToDeleteError(request);
   }
 
@@ -154,17 +173,10 @@ export async function POST(request: NextRequest) {
     scope: "global",
   });
   if (signOutError) {
-    console.error("[auth/account-delete] signOut error", {
-      code: signOutError.code,
-      message: signOutError.message,
-      status: signOutError.status,
-    });
+    logAccountDeletionFailure("session_cleanup");
   }
 
-  return NextResponse.redirect(
-    redirectUrl(request, "/login?reason=withdrawn"),
-    { status: 303 },
-  );
+  return accountDeletionSucceeded(request);
 }
 
 export async function GET() {

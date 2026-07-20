@@ -35,6 +35,14 @@
 
 정확한 RPC 이름, argument, return shape와 권한은 해당 migration 및 호출 source/tests를 확인한다.
 
+### 가입 완료와 정확한 약관 스냅샷
+
+- `20260718120000_auth_gate_exact_consent_snapshots.sql` 이후 가입 완료 RPC는 화면에 표시한 동의 문서의 `{id, version}` 배열을 `p_consent_documents jsonb`로 반드시 받는다.
+- RPC는 같은 transaction에서 공식·published·required 문서 집합을 고정하고 locale 완전 집합 또는 `ko` fallback을 결정한다. 최신 효력 시각이 같은 문서가 있거나 terms/privacy 완전 집합이 아니면 profile과 동의 기록을 모두 남기지 않는다.
+- 현재 아직 동의하지 않은 문서 집합을 ID 순서로 한 번 캡처한 뒤 전달된 배열과 정확히 같을 때만 그 캡처를 `user_consents`에 기록한다. 화면 표시 뒤 새 버전이 published되면 이전 배열은 `auth_completion_stale: consent_documents`로 실패한다.
+- 앱이 사용하는 공개 signature는 8-argument 또는 locale seed를 포함한 10-argument overload이며, 둘 다 boolean 다음에 `p_consent_documents jsonb`를 둔다. 이전 4/7/9-argument boolean-only signature는 `PUBLIC`, `anon`, `authenticated` 실행 권한을 모두 회수한다.
+- 이 migration 파일과 파생 TypeScript 타입이 v13 정본이지만, dev·production 적용과 role별 catalog evidence는 topik-ai 운영 절차가 소유한다. v13 작업면에서는 원격 apply를 실행하지 않는다.
+
 ## Dashboard/growth KPI source
 
 - 제출 횟수는 `writing_submissions.submitted_at`을 기준으로 계산한다.

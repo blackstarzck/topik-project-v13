@@ -29,6 +29,7 @@
 - 비유를 쓰면 짧게 쓰고 곧바로 실제 의미를 설명한다.
 - 객관적 사실, 실행 결과, 가정, 미확인 항목을 구분한다. 모르면 모른다고 말한다.
 - 고정 보고 템플릿, 신호등 상태표, 불필요한 장문 형식을 강제하지 않는다.
+- 모든 작업 완료 보고에는 남은 작업을 반드시 명시한다. 남은 작업이 있으면 이유·owner·안전한 다음 행동을 구분하고, 없으면 `남은 작업 없음`이라고 명시한다. 미실행·차단·외부 owner 이관·Git 미반영을 완료로 숨기지 않는다.
 - 모든 최종 답변 직전에 현재 Git 상태를 읽기 전용 명령으로 확인한다. worktree의 `clean`·`dirty` 여부, 연결 branch와 upstream, 로컬에서 확인 가능한 앞섬·뒤처짐·갈라짐, 충돌 또는 진행 중인 Git 작업 유무를 확인한다. 원격 최신 상태를 그 답변에서 확인하지 않았다면 최신이라고 추정하지 않고 `원격 최신 여부 미확인`이라고 적는다.
 - 모든 최종 답변 끝에는 `워크트리 상태`, `Pull 준비 상태`, `Commit → Push 준비 상태`를 쉬운 말과 근거로 표시한다. `Pull 준비 상태`는 미커밋 변경, upstream 유무, 충돌과 진행 중인 Git 작업뿐 아니라 로컬 branch의 앞섬·뒤처짐·갈라짐과 원격 최신 상태 확인 여부를 모두 반영한다. worktree가 `clean`이더라도 동기화 상태나 원격 최신 여부가 확인되지 않으면 단순히 `가능`으로 보고하지 않는다. `Commit → Push 준비 상태`는 변경 존재 여부, 검증 완료 여부, branch·upstream·충돌 상태를 반영하며, 기술적으로 가능해도 사용자 승인 전에는 실행하지 않는다고 구분한다.
 - 위 상태 표시 다음의 마지막 줄에는 현재 worktree의 절대 경로와 연결된 branch를 `현재 워크트리: <절대 경로> | 연결 브랜치: <branch>` 형식으로 적는다. branch가 없는 detached HEAD 상태라면 `연결 브랜치: 없음 (detached HEAD)`으로 적는다.
@@ -64,8 +65,9 @@
 - 이 저장소는 user-facing app이다. admin 화면을 새로 만들거나 확장하지 않는다. 필요한 admin 운영 계약은 별도 소유 앱과의 경계로만 기록한다.
 - 실제 LLM 첨삭·문제 생성, billing provider, 외부 알림 전송, 정식 법무 확정 기능은 `docs/prd.md`에서 scope가 열리기 전까지 완료 기능으로 만들지 않는다.
 - framework-level dependency 추가·교체는 사용자 승인과 관련 owner 갱신이 필요하다.
-- secret, token, private key, service-role key를 browser-visible 변수, terminal output, 로그, 문서, commit에 노출하지 않는다.
+- 에이전트가 secret, token, private key, service-role key 값을 직접 읽거나 출력·로그·문서화·브라우저 전달하지 않는다. 승인된 env 준비 도구와 로컬 E2E 프로세스가 값을 노출하지 않은 채 local loopback target에만 사용하는 것은 허용하지만, remote target에는 privileged key를 전달하거나 사용하지 않는다.
 - v13 작업면에서 원격 Supabase schema/data apply를 실행하지 않는다. DB 변경이 필요하면 migration과 계약을 로컬에서 검증하고 별도 운영 절차로 넘긴다.
+- 클라이언트 운영·복구·환경 안전의 상세 경계는 [`docs/operations/README.md`](./docs/operations/README.md)를 따른다.
 - UI는 Ant Design 또는 기존 wrapper를 우선하고 `DESIGN.md`의 theme·Tailwind 경계를 따른다. user-facing 변경에는 관련 loading, empty, success, error, disabled 상태와 desktop/mobile을 포함한다.
 
 ## 검증과 완료 기준

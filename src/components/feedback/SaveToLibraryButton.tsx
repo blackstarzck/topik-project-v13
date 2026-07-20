@@ -64,7 +64,7 @@ export function SaveToLibraryButton({
             notification.info({ title: t("saved") });
             return;
           }
-          const err = e as { code?: string; message?: string };
+          const err = e as { code?: string };
           if (err.code && RLS_DENIED.has(err.code)) {
             notification.error({
               title: t("deniedTitle"),
@@ -74,7 +74,7 @@ export function SaveToLibraryButton({
           }
           notification.error({
             title: t("failedTitle"),
-            description: err.message ?? t("failedDescription"),
+            description: t("failedDescription"),
           });
         },
       },

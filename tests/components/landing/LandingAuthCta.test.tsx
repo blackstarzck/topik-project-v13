@@ -175,12 +175,20 @@ describe("landing auth CTA", () => {
     expect(dashboardLink.getAttribute("href")).toBe("/dashboard");
   });
 
-  it("routes landing recovery users back into post-auth setup", () => {
+  it("offers a retry without restarting setup for landing recovery users", () => {
     renderWithIntl(<Hero authStatus="authenticated-recovery" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "설정 계속하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
-    expect(pushMock).toHaveBeenCalledWith("/auth/post-auth?intent=login");
+    expect(pushMock).toHaveBeenCalledWith("/");
+  });
+
+  it("does not send a profile-unavailable user into sign-up completion", () => {
+    renderWithIntl(<Hero authStatus="profile-unavailable" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    expect(pushMock).toHaveBeenCalledWith("/");
   });
 
   it("keeps anonymous Portfolio CTAs on sign-up and login", () => {
@@ -380,7 +388,8 @@ describe("landing auth CTA", () => {
       "/onboarding/learning-goal",
     ],
     ["ready", "대시보드로 이동", "/dashboard"],
-    ["authenticated-recovery", "설정 계속하기", "/auth/post-auth?intent=login"],
+    ["authenticated-recovery", "다시 시도", "/"],
+    ["profile-unavailable", "다시 시도", "/"],
   ] as const)(
     "uses the %s primary CTA throughout the authenticated Portfolio landing",
     (authStatus, label, href) => {

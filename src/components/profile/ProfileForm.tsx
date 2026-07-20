@@ -20,6 +20,10 @@ import {
 import { PHONE_NUMBER_DIGITS_PATTERN } from "@/lib/auth/profile-completion";
 import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import {
+  createClientOperationalEvent,
+  emitClientOperationalEvent,
+} from "@/lib/operations/client-operational-event";
+import {
   AvatarError,
   avatarPublicUrl,
   removeAvatar,
@@ -31,6 +35,16 @@ import {
 const { Paragraph, Text } = Typography;
 
 const PROFILE_NAME_MIN_LENGTH = 2;
+
+function recordProfileSaveFailure() {
+  const created = createClientOperationalEvent({
+    code: "operation_failed",
+    feature: "profile_settings",
+    operation: "save",
+    result: "failure",
+  });
+  if (created.ok) void emitClientOperationalEvent(created.event);
+}
 
 type NicknameAvailability =
   | "idle"
@@ -428,9 +442,8 @@ export function ProfileForm({
         message.error(t("nicknameTaken"));
         return;
       }
-      // err.message 는 데이터 계층(useUpdateProfile, src/lib/settings)에서 온
-      // 서비스 메시지이므로 그대로 노출하고, 없으면 기본 저장 실패 문구로 대체.
-      message.error(err instanceof Error ? err.message : t("saveError"));
+      recordProfileSaveFailure();
+      message.error(t("saveError"));
     }
   }
 

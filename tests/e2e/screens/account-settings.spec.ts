@@ -9,6 +9,10 @@ import {
   type Route,
 } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { assertLocalPrivilegedMutationTarget } from "../../../scripts/lib/supabase-target-safety.mjs";
+
+const RECOVERY_DATABASE = "talkpik-client-recovery";
+const RECOVERY_STORE = "writing-drafts";
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,13 +33,24 @@ const NON_PROD_ENV_LABELS = new Set([
   "test",
   "testing",
 ]);
+const canRunLocalRecoveryBoundary = (() => {
+  try {
+    assertLocalPrivilegedMutationTarget(process.env);
+    return true;
+  } catch {
+    return false;
+  }
+})();
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   page.on("console", (msg) => {
     const text = msg.text();
-    if (msg.type() === "error" && !text.startsWith("Failed to load resource:")) {
+    if (
+      msg.type() === "error" &&
+      !text.startsWith("Failed to load resource:")
+    ) {
       errors.push(`console: ${text}`);
     }
   });
@@ -61,9 +76,7 @@ async function fulfillRecover(route: Route) {
 function readRecoverRedirectTo(request: Request): string | null {
   const urlValue = new URL(request.url()).searchParams.get("redirect_to");
   if (urlValue) return urlValue;
-  let payload:
-    | { redirect_to?: unknown; redirectTo?: unknown }
-    | undefined;
+  let payload: { redirect_to?: unknown; redirectTo?: unknown } | undefined;
   try {
     payload = request.postDataJSON() as
       | { redirect_to?: unknown; redirectTo?: unknown }
@@ -84,6 +97,76 @@ function serviceClient() {
   });
 }
 
+async function getStudentUserId() {
+  assertLocalPrivilegedMutationTarget(process.env);
+  const { data, error } = await serviceClient().auth.admin.listUsers({
+    page: 1,
+    perPage: 1_000,
+  });
+  if (error) throw new Error("Local account recovery user lookup failed.");
+  const user = data.users.find((candidate) => candidate.email === EMAIL);
+  if (!user) throw new Error("Local account recovery user is missing.");
+  return user.id;
+}
+
+async function putFutureRecoveryRecord(page: Page, userId: string) {
+  await page.evaluate(
+    async ({ databaseName, storeName, userId }) =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open(databaseName, 1);
+        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains(storeName)) {
+            request.result.createObjectStore(storeName, { keyPath: "key" });
+          }
+        };
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction(storeName, "readwrite");
+          transaction.objectStore(storeName).put({
+            key: `${userId}:future-format`,
+            schemaVersion: 2,
+            userId,
+          });
+          transaction.onerror = () => reject(transaction.error);
+          transaction.oncomplete = () => {
+            database.close();
+            resolve();
+          };
+        };
+      }),
+    { databaseName: RECOVERY_DATABASE, storeName: RECOVERY_STORE, userId },
+  );
+}
+
+async function countUserRecoveryRecords(page: Page, userId: string) {
+  return page.evaluate(
+    async ({ databaseName, storeName, userId }) =>
+      new Promise<number>((resolve, reject) => {
+        const request = indexedDB.open(databaseName, 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction(storeName, "readonly");
+          const getAll = transaction.objectStore(storeName).getAll();
+          getAll.onerror = () => reject(getAll.error);
+          getAll.onsuccess = () => {
+            database.close();
+            resolve(
+              getAll.result.filter(
+                (record) =>
+                  typeof record === "object" &&
+                  record !== null &&
+                  (record as { userId?: unknown }).userId === userId,
+              ).length,
+            );
+          };
+        };
+      }),
+    { databaseName: RECOVERY_DATABASE, storeName: RECOVERY_STORE, userId },
+  );
+}
+
 function publicClient() {
   if (!SUPABASE_URL || !PUBLISHABLE_KEY) {
     throw new Error("Missing Supabase public credentials for account e2e");
@@ -94,6 +177,7 @@ function publicClient() {
 }
 
 async function createInvitedUser(marker: string) {
+  assertLocalPrivilegedMutationTarget(process.env);
   if (!PASSWORD) {
     throw new Error("Missing e2e password for account invite flow");
   }
@@ -130,6 +214,17 @@ async function waitForProfile(userId: string) {
     .toBe("active");
 }
 
+async function dismissPhoneReminder(userId: string) {
+  assertLocalPrivilegedMutationTarget(process.env);
+  const { error } = await serviceClient()
+    .from("profiles")
+    .update({ phone_number_prompt_dismissed_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) {
+    throw new Error("Local account invite phone reminder setup failed.");
+  }
+}
+
 async function waitForPasswordSignInReady(email: string) {
   if (!PASSWORD) {
     throw new Error("Missing e2e password for account invite flow");
@@ -157,27 +252,31 @@ async function insertInstitutionInviteNotification(params: {
   notificationId: string;
   userId: string;
 }) {
-  const { error } = await serviceClient().from("user_notifications").insert({
-    id: params.notificationId,
-    user_id: params.userId,
-    template_key: "institution_invite",
-    category: "notice",
-    title: "기관 초대가 도착했어요",
-    body: "초대를 확인하고 이 계정을 기관에 연결할지 선택하세요.",
-    link_url: `/auth/institution-invite?aff=${params.affiliationCode}&next=/settings/account`,
-    payload: {
-      affiliation_code: params.affiliationCode,
-      kind: "institution_invite",
-    },
-    read_at: null,
-    created_at: new Date(Date.now() + 30_000).toISOString(),
-  });
+  assertLocalPrivilegedMutationTarget(process.env);
+  const { error } = await serviceClient()
+    .from("user_notifications")
+    .insert({
+      id: params.notificationId,
+      user_id: params.userId,
+      template_key: "institution_invite",
+      category: "notice",
+      title: "기관 초대가 도착했어요",
+      body: "초대를 확인하고 이 계정을 기관에 연결할지 선택하세요.",
+      link_url: `/auth/institution-invite?aff=${params.affiliationCode}&next=/settings/account`,
+      payload: {
+        affiliation_code: params.affiliationCode,
+        kind: "institution_invite",
+      },
+      read_at: null,
+      created_at: new Date(Date.now() + 30_000).toISOString(),
+    });
   if (error) throw error;
 }
 
 async function cleanupInviteFixture(userId: string | null) {
   if (!userId || !SERVICE_KEY || !SUPABASE_URL) return;
   if (!NON_PROD_ENV_LABELS.has(ENV_LABEL)) return;
+  assertLocalPrivilegedMutationTarget(process.env);
   await serviceClient().auth.admin.deleteUser(userId);
 }
 
@@ -190,12 +289,26 @@ async function loginTempUser(page: Page, email: string) {
   const emailInput = page.locator('input[autocomplete="email"]');
   const passwordInput = page.locator('input[autocomplete="current-password"]');
 
-  await emailInput.fill(email);
-  await passwordInput.fill(PASSWORD);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await emailInput.fill(email);
+    await passwordInput.fill(PASSWORD);
+    if (
+      (await emailInput.inputValue()) === email &&
+      (await passwordInput.inputValue()) === PASSWORD
+    ) {
+      break;
+    }
+    await page.waitForTimeout(150);
+  }
+  await expect(emailInput).toHaveValue(email);
+  await expect(passwordInput).toHaveValue(PASSWORD);
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL(/\/(dashboard|auth\/consent|onboarding\/learning-goal)/, {
-    timeout: 30_000,
-  });
+  await page.waitForURL(
+    /\/(dashboard|auth\/consent|onboarding\/learning-goal)/,
+    {
+      timeout: 30_000,
+    },
+  );
 
   for (let i = 0; i < 6; i += 1) {
     const pathname = new URL(page.url()).pathname;
@@ -271,7 +384,9 @@ test("account settings keeps login methods, account status, and logout", async (
     await expect(page).not.toHaveURL(/\/login/);
     await expect(page).toHaveURL(/\/settings\/account/);
 
-    await expect(page.getByRole("heading", { name: "계정 설정" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "계정 설정" }),
+    ).toBeVisible();
     // 재설계: 섹션 타이틀("로그인 방법"/"계정 상태")은 제거되고 카드·행만 남는다.
     const loginMethodsRegion = page.getByRole("region", {
       name: "로그인 방법",
@@ -327,9 +442,9 @@ test("account settings keeps login methods, account status, and logout", async (
       "/password-reset/confirm",
     );
     await expect(
-      page.locator(".ant-message-notice").getByText(
-        "비밀번호 변경 링크를 보냈어요.",
-      ),
+      page
+        .locator(".ant-message-notice")
+        .getByText("비밀번호 변경 링크를 보냈어요."),
     ).toBeVisible();
     await expect(passwordResetButton).toHaveText(/링크 보내기 \(\d+\)/);
     await expect(
@@ -391,6 +506,39 @@ test("account settings exposes a guarded 회원 탈퇴 danger zone (no submit)",
   expect(errors).toEqual([]);
 });
 
+test("server-confirmed account deletion clears future local recovery records", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
+    "account recovery cleanup runs on desktop and mobile",
+  );
+  test.skip(
+    !canRunLocalRecoveryBoundary,
+    "account recovery cleanup requires the guarded loopback stack",
+  );
+  const userId = await getStudentUserId();
+  await page.goto("/settings/account", { waitUntil: "networkidle" });
+  await putFutureRecoveryRecord(page, userId);
+  await expect.poll(() => countUserRecoveryRecords(page, userId)).toBe(1);
+  let deletionRequests = 0;
+  await page.route("**/auth/account-delete", (route) => {
+    deletionRequests += 1;
+    return route.fulfill({
+      body: JSON.stringify({ ok: true }),
+      contentType: "application/json",
+      status: 200,
+    });
+  });
+
+  await page.getByTestId("account-delete-open").click();
+  await page.getByTestId("account-delete-confirm-input").fill("삭제");
+  await page.getByTestId("account-delete-confirm-submit").click();
+
+  await expect.poll(() => deletionRequests).toBe(1);
+  await expect.poll(() => countUserRecoveryRecords(page, userId)).toBe(0);
+});
+
 test("institution invite notification connects the account and appears in account settings", async ({
   browser,
 }, testInfo) => {
@@ -406,6 +554,10 @@ test("institution invite notification connects the account and appears in accoun
     !NON_PROD_ENV_LABELS.has(ENV_LABEL),
     "Institution invite notification e2e must not create production data.",
   );
+  test.skip(
+    !canRunLocalRecoveryBoundary,
+    "Institution invite notification fixtures require the guarded local Supabase stack.",
+  );
   test.setTimeout(120_000);
 
   const marker = randomUUID().slice(0, 8);
@@ -417,6 +569,7 @@ test("institution invite notification connects the account and appears in accoun
     const user = await createInvitedUser(marker);
     userId = user.userId;
     await waitForProfile(userId);
+    await dismissPhoneReminder(userId);
     await waitForPasswordSignInReady(user.email);
     await insertInstitutionInviteNotification({
       affiliationCode,
@@ -436,7 +589,9 @@ test("institution invite notification connects the account and appears in accoun
         .click();
 
       await expect(page).toHaveURL(/\/auth\/institution-invite/);
-      await expect(page.getByText("기관 초대가 도착했어요").first()).toBeVisible();
+      await expect(
+        page.getByText("기관 초대가 도착했어요").first(),
+      ).toBeVisible();
       await expect(page.getByText(affiliationCode)).toBeVisible();
 
       await page.getByRole("checkbox", { name: "동의하시겠습니까?" }).check();
@@ -446,7 +601,9 @@ test("institution invite notification connects the account and appears in accoun
 
       await expect(page).toHaveURL(/\/settings\/account/);
       await expect(page.getByText("기관 소속")).toBeVisible();
-      await expect(page.getByText(`기관 코드 ${affiliationCode}`)).toBeVisible();
+      await expect(
+        page.getByText(`기관 코드 ${affiliationCode}`),
+      ).toBeVisible();
       expect(errors).toEqual([]);
     });
   } finally {

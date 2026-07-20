@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Alert,
-  App,
-  Button,
-  Empty,
-  Skeleton,
-  Typography,
-} from "antd";
+import { Alert, App, Button, Empty, Skeleton, Typography } from "antd";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -94,13 +87,11 @@ export function DashboardAlertsCard({ userId, loadFailed = false }: Props) {
       );
       try {
         await markNotificationRead(item.id);
-      } catch (err) {
+      } catch {
         setNotifications((prev) =>
           prev.map((n) => (n.id === item.id ? { ...n, read_at: null } : n)),
         );
-        message.error(
-          err instanceof Error ? err.message : t("loadFailedMessage"),
-        );
+        message.error(t("loadFailedMessage"));
       }
     }
     const action = resolveNotificationAction(item);
