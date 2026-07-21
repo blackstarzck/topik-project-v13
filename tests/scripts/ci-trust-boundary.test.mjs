@@ -50,6 +50,13 @@ function disablesCheckoutCredentialPersistence({ lines, propertyIndent }) {
 }
 
 describe("CI trusted UI contract boundary", () => {
+  it("covers pull requests, merge queues, and main pushes", () => {
+    expect(workflow).toMatch(/\n\s*pull_request:\s*\n/u);
+    expect(workflow).toMatch(/\n\s*merge_group:\s*\n/u);
+    expect(workflow).toMatch(/\n\s*push:\s*\n\s*branches:\s*\[main\]/u);
+    expect(workflow).not.toMatch(/collab/u);
+  });
+
   it("does not persist checkout credentials before candidate code runs", () => {
     const checkoutSteps = checkoutStepBlocks(workflow);
 
@@ -73,10 +80,13 @@ describe("CI trusted UI contract boundary", () => {
 
   it("runs the trusted check before enabling the candidate package manager", () => {
     const trustedCheck = workflow.indexOf("Check UI contract diff baseline");
+    const artifactCheck = workflow.indexOf("Check artifact hygiene diff baseline (trusted)");
     const corepack = workflow.indexOf("Enable corepack (pnpm)");
     const install = workflow.indexOf("Install dependencies");
 
     expect(trustedCheck).toBeGreaterThan(0);
+    expect(artifactCheck).toBeGreaterThan(trustedCheck);
+    expect(corepack).toBeGreaterThan(artifactCheck);
     expect(corepack).toBeGreaterThan(trustedCheck);
     expect(install).toBeGreaterThan(corepack);
   });
@@ -88,6 +98,38 @@ describe("CI trusted UI contract boundary", () => {
     expect(workflow).toContain('git ls-tree');
     expect(workflow).toContain('100644');
     expect(workflow).not.toContain('trusted_root=".ui-contract-trusted-runner"');
+    expect(workflow).toContain('mktemp -d "${RUNNER_TEMP}/artifact-hygiene.XXXXXXXX"');
+    expect(workflow).toContain('git show "${ARTIFACT_HYGIENE_BASE_SHA}:${repo_path}"');
+    expect(workflow).toContain('node "${trusted_root}/scripts/run-trusted-artifact-hygiene.mjs"');
+    expect(workflow).toContain('"scripts/lib/artifact-manifest-v2.mjs"');
+    expect(workflow).toContain("--allow-bootstrap");
+  });
+
+  it("pins the trusted artifact baseline for every supported event", () => {
+    expect(workflow).toContain("github.event.pull_request.base.sha");
+    expect(workflow).toContain("github.event.merge_group.base_sha");
+    expect(workflow).toContain("github.event.before");
+    expect(workflow).toContain("ARTIFACT_BASE_EVENT_UNSUPPORTED");
+  });
+
+  it("limits bootstrap to an untouched origin/main base and runs both lifecycle generations", () => {
+    expect(workflow).toContain(
+      'if [[ "${GITHUB_EVENT_NAME}" != "pull_request" ]]',
+    );
+    expect(workflow).toContain(
+      'origin_main_sha="$(git rev-parse --verify origin/main^{commit})"',
+    );
+    expect(workflow).toContain("ARTIFACT_BOOTSTRAP_PARTIAL_BASE");
+    expect(workflow).toContain("vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA");
+    expect(workflow).toContain("github.event.pull_request.head.sha");
+    expect(workflow).toContain("ARTIFACT_BOOTSTRAP_EXTERNAL_APPROVAL_REQUIRED");
+    expect(workflow).toContain(
+      '[[ "${workspace_head_sha}" != "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" ]]',
+    );
+    expect(workflow.match(/run: pnpm check:worktree-lifecycle/gu)).toHaveLength(
+      2,
+    );
+    expect(workflow.match(/run: pnpm check:task-lifecycle/gu)).toHaveLength(2);
   });
 
   it("uses only a base-owned minimal npm runtime before candidate install", () => {
@@ -108,6 +150,11 @@ describe("CI trusted UI contract boundary", () => {
       "/scripts/lib/task-lifecycle-schema.mjs",
       "/scripts/lib/worktree-lifecycle.mjs",
       "/scripts/report-worktree-lifecycle.mjs",
+      "/scripts/run-trusted-artifact-hygiene.mjs",
+      "/scripts/lib/artifact-hygiene.mjs",
+      "/scripts/lib/ai-task-lifecycle-v2.mjs",
+      "/scripts/lib/ai-task-cleanup.mjs",
+      "/scripts/ai-task.mjs",
     ]) {
       expect(codeowners).toContain(`${ownedPath} @blackstarzck`);
     }
