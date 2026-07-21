@@ -31,6 +31,7 @@ const retiredFixtures = JSON.parse(readFileSync(retiredFixturePath, "utf8"));
 const operationsReadme = "docs/operations/README.md";
 const operationsPolicyPaths = [
   operationsReadme,
+  "docs/operations/ai-development-pipeline.md",
   "docs/operations/client-resilience-policy.md",
   "docs/operations/cross-repo-recovery-boundary.md",
   "docs/operations/environment-and-agent-safety.md",
@@ -927,6 +928,9 @@ describe("package interface", () => {
     );
     expect(packageJson.scripts["check:project-structure"]).toBe(
       "node scripts/check-project-structure.mjs",
+    );
+    expect(packageJson.scripts["check:task-lifecycle"]).toBe(
+      "vitest run tests/scripts/ai-task-lifecycle-v2.test.mjs tests/scripts/ai-task-cleanup.test.mjs --maxWorkers=1",
     );
     expect(packageJson.scripts["test:supabase:local"]).toContain(
       "tests/integration/pdf-export-quota-rpc.test.ts",

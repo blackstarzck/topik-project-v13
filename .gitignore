@@ -60,6 +60,7 @@ analysis/
 
 # Dependencies and build outputs
 node_modules/
+.worktrees/
 dist/
 build/
 .next/

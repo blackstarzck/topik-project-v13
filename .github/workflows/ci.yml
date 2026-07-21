@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+    types: [checks_requested]
   push:
     branches: [main]
 
@@ -28,7 +30,7 @@ jobs:
 
       - name: Check UI contract diff baseline (trusted)
         env:
-          UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+          UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
         shell: bash
         run: |
           set -euo pipefail
@@ -77,6 +79,110 @@ jobs:
             echo "BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF"
           fi
 
+      - name: Check artifact hygiene diff baseline (trusted)
+        env:
+          ARTIFACT_HYGIENE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: ${{ vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}
+          ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}
+          ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA: ${{ github.sha }}
+          ARTIFACT_HYGIENE_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF: ${{ github.event.merge_group.base_ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          case "${GITHUB_EVENT_NAME}" in
+            pull_request)
+              [[ "${ARTIFACT_HYGIENE_PR_BASE_REF}" == "main" ]] || {
+                echo "ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN" >&2; exit 2;
+              }
+              ;;
+            merge_group)
+              [[ "${ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF}" == "refs/heads/main" ]] || {
+                echo "ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN" >&2; exit 2;
+              }
+              ;;
+            push) ;;
+            *) echo "ARTIFACT_BASE_EVENT_UNSUPPORTED" >&2; exit 2 ;;
+          esac
+          if ! [[ "${ARTIFACT_HYGIENE_BASE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ARTIFACT_BASE_SHA_INVALID" >&2
+            exit 2
+          fi
+          git cat-file -e "${ARTIFACT_HYGIENE_BASE_SHA}^{commit}"
+
+          trusted_paths=(
+            "scripts/run-trusted-artifact-hygiene.mjs"
+            "scripts/check-artifact-hygiene.mjs"
+            "scripts/lib/artifact-hygiene.mjs"
+            "scripts/lib/artifact-manifest-v2.mjs"
+            "config/artifact-hygiene-policy.json"
+          )
+          if git cat-file -e "${ARTIFACT_HYGIENE_BASE_SHA}:scripts/run-trusted-artifact-hygiene.mjs" 2>/dev/null; then
+            trusted_root="$(mktemp -d "${RUNNER_TEMP}/artifact-hygiene.XXXXXXXX")"
+            trap 'rm -rf "${trusted_root}"' EXIT
+            trusted_real="$(realpath "${trusted_root}")"
+            runner_temp_real="$(realpath "${RUNNER_TEMP}")"
+            workspace_real="$(realpath "${GITHUB_WORKSPACE}")"
+            case "${trusted_real}/" in
+              "${runner_temp_real}/"*) ;;
+              *) echo "ARTIFACT_TRUSTED_ROOT_OUTSIDE_RUNNER_TEMP" >&2; exit 2 ;;
+            esac
+            case "${trusted_real}/" in
+              "${workspace_real}/"*) echo "ARTIFACT_TRUSTED_ROOT_INSIDE_WORKSPACE" >&2; exit 2 ;;
+            esac
+
+            materialize_artifact_base_file() {
+              local repo_path="$1"
+              local destination="${trusted_root}/${repo_path}"
+              local mode
+              mode="$(git ls-tree "${ARTIFACT_HYGIENE_BASE_SHA}" -- "${repo_path}" | awk '{print $1}')"
+              case "${mode}" in
+                100644|100755) ;;
+                *) echo "ARTIFACT_TRUSTED_BASE_FILE_MODE_INVALID:${repo_path}" >&2; exit 2 ;;
+              esac
+              mkdir -p "$(dirname "${destination}")"
+              git show "${ARTIFACT_HYGIENE_BASE_SHA}:${repo_path}" > "${destination}"
+              test -f "${destination}" && test ! -L "${destination}"
+            }
+
+            for repo_path in "${trusted_paths[@]}"; do
+              materialize_artifact_base_file "${repo_path}"
+            done
+            env -u NODE_OPTIONS -u NODE_PATH node "${trusted_root}/scripts/run-trusted-artifact-hygiene.mjs" \
+              --workspace "${GITHUB_WORKSPACE}" \
+              --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}"
+          else
+            # 최초 설치 PR과 그 merge-group/main push만 허용한다.
+            if ! git merge-base --is-ancestor "${ARTIFACT_HYGIENE_BASE_SHA}" HEAD; then
+              echo "ARTIFACT_BOOTSTRAP_BASE_NOT_CONTAINED" >&2
+              exit 2
+            fi
+            for repo_path in "${trusted_paths[@]}"; do
+              if git cat-file -e "${ARTIFACT_HYGIENE_BASE_SHA}:${repo_path}" 2>/dev/null; then
+                echo "ARTIFACT_BOOTSTRAP_PARTIAL_BASE" >&2
+                exit 2
+              fi
+            done
+            if [[ -z "${ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA:-}" ]] || \
+               [[ "${ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA}" != "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" ]]; then
+              echo "ARTIFACT_BOOTSTRAP_EXTERNAL_APPROVAL_REQUIRED" >&2
+              exit 2
+            fi
+            workspace_head_sha="$(git rev-parse --verify HEAD^{commit})"
+            if [[ "${workspace_head_sha}" != "${ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA}" ]]; then
+              echo "ARTIFACT_BOOTSTRAP_WORKSPACE_HEAD_MISMATCH" >&2
+              exit 2
+            fi
+            env -u NODE_OPTIONS -u NODE_PATH \
+              ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA="${ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA}" \
+              node scripts/run-trusted-artifact-hygiene.mjs \
+              --workspace "${GITHUB_WORKSPACE}" \
+              --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}" \
+              --candidate-head-sha "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" \
+              --allow-bootstrap
+          fi
+
       - name: Enable corepack (pnpm)
         run: corepack enable
 
@@ -94,7 +200,7 @@ jobs:
 
       - name: Check bootstrap UI contract diff baseline
         env:
-          UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+          UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
         shell: bash
         run: |
           set -euo pipefail
@@ -104,6 +210,9 @@ jobs:
 
       - name: Check report-only worktree lifecycle
         run: pnpm check:worktree-lifecycle
+
+      - name: Check task lifecycle v2 and cleanup contract
+        run: pnpm check:task-lifecycle
 
       - name: Typecheck
         run: pnpm typecheck
@@ -140,3 +249,6 @@ jobs:
 
       - name: Check report-only worktree lifecycle
         run: pnpm check:worktree-lifecycle
+
+      - name: Check task lifecycle v2 and cleanup contract
+        run: pnpm check:task-lifecycle

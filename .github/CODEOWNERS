@@ -3,6 +3,7 @@
 /.github/workflows/ci.yml @blackstarzck
 /AGENTS.md @blackstarzck
 /docs/prd.md @blackstarzck
+/docs/operations/ai-development-pipeline.md @blackstarzck
 /docs/supabase/ @blackstarzck
 /scripts/check-project-structure.mjs @blackstarzck
 /.codex/skills/ @blackstarzck
@@ -18,5 +19,15 @@
 /scripts/lib/task-lifecycle-schema.mjs @blackstarzck
 /scripts/lib/worktree-lifecycle.mjs @blackstarzck
 /scripts/report-worktree-lifecycle.mjs @blackstarzck
+/scripts/run-trusted-artifact-hygiene.mjs @blackstarzck
+/scripts/check-artifact-hygiene.mjs @blackstarzck
+/scripts/lib/artifact-hygiene.mjs @blackstarzck
+/scripts/lib/ai-task-lifecycle-v2.mjs @blackstarzck
+/scripts/lib/ai-task-cleanup.mjs @blackstarzck
+/scripts/ai-task.mjs @blackstarzck
+/scripts/check-github-owner-auth.mjs @blackstarzck
+/scripts/lib/github-owner-auth.mjs @blackstarzck
+/package.json @blackstarzck
+/config/artifact-hygiene-policy.json @blackstarzck
 /config/ui-contract-*.json @blackstarzck
 /config/ui-contract-runtime/ @blackstarzck

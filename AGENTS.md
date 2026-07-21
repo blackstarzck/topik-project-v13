@@ -54,7 +54,7 @@
 
 1. **기준 확인**: 이 문서와 `README.md`를 읽고 요청에 필요한 최소 owner, source, tests만 확인한다.
 2. **영향도와 계획**: 제품·코드·데이터·UI·테스트·문서 영향을 나누고, 목적·범위·TODO·검증 방법을 정한다.
-3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
+3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 공용 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finalize`, `task:cleanup` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 lifecycle workflow owner다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
 4. **구현과 TDD**: 실패하는 관련 테스트를 먼저 만들거나 확인하고, 프로젝트 구조를 유지한 최소 변경으로 통과시킨다.
 5. **비판적 리뷰**: critic 관점에서 요구사항 누락, 회귀, 권한·secret·RLS, 실패 복구와 불필요한 확장을 확인한다. 가능하면 독립 에이전트 리뷰를 사용한다.
 6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
@@ -66,10 +66,11 @@
 
 - 수정 전 CWD, branch/detached 상태, tracked/untracked 변경, remote와 worktree 소유권을 확인한다.
 - 공유 기준 checkout에서 다른 task를 위해 `switch`, `checkout`, `reset`, `rebase`, `merge`하지 않는다.
-- Codex branch는 `codex/<slug>`, Claude가 만든 branch는 `claude/<slug>`를 기본값으로 쓴다.
+- 도구와 무관하게 branch는 `feat|fix|refactor|test|docs|chore|ci/<kebab-slug>` 형식만 쓴다. Codex와 Claude는 도구별 branch를 새로 만들지 않고 같은 task branch·worktree·v2 registry를 인수인계한다.
 - worktree는 포트, dev server, 로컬 DB, `.env.local`, test data를 격리하지 않는다. 병렬 runtime은 고유 loopback port와 분리된 test data를 사용한다.
 - 다른 사용자의 변경을 되돌리지 않는다. dirty·untracked·ignored-sensitive 파일이나 미게시 commit이 있으면 소유자를 확인하기 전 삭제하지 않는다.
 - 완료된 branch/worktree도 publish·merge·소유권·runtime 종료를 확인하기 전 삭제하지 않는다. 강제 정리는 하지 않는다.
+- 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only이며, 사용자가 승인한 동일 fingerprint를 `task:cleanup`이 재검증한 경우에만 비강제 정리를 수행한다.
 
 `origin/main`은 PR과 필수 검사를 거쳐 반영한다. 저장소 소유자 `blackstarzck`가 만든 PR은 필수 검사 통과와 검토 의견 처리가 끝난 뒤 소유자 예외 권한으로 병합할 수 있다. 다른 개발자가 만든 PR은 같은 조건에 더해 `blackstarzck`의 승인을 받아야 한다. 승인만을 위한 보조 계정이나 자동 승인 계정은 사용하지 않으며, 필수 검사와 검토 의견 처리는 소유자도 우회하지 않는다. 실제 협업자가 늘어나면 중요 파일 담당자를 팀으로 전환하고 소유자 예외 권한을 다시 검토한다.
 

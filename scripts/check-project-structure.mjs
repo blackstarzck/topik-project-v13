@@ -17,6 +17,7 @@ export const requiredOwnerPaths = [
   "TESTING.md",
   "docs/prd.md",
   "docs/operations/README.md",
+  "docs/operations/ai-development-pipeline.md",
   "docs/operations/client-resilience-policy.md",
   "docs/operations/cross-repo-recovery-boundary.md",
   "docs/operations/environment-and-agent-safety.md",
@@ -44,6 +45,7 @@ const qaAllowlist = new Map([
 ]);
 const operationsAllowlist = new Map([
   ["README.md", "file"],
+  ["ai-development-pipeline.md", "file"],
   ["client-resilience-policy.md", "file"],
   ["cross-repo-recovery-boundary.md", "file"],
   ["environment-and-agent-safety.md", "file"],

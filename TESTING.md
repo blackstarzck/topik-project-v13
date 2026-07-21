@@ -12,6 +12,10 @@ pnpm lint
 pnpm typecheck
 pnpm build
 pnpm format           # Prettier check
+pnpm check:project-structure
+pnpm check:artifact-hygiene
+pnpm check:worktree-lifecycle   # 기존 v1 report-only 계약
+pnpm check:task-lifecycle       # v2 task + cleanup 계약
 ```
 
 작은 변경은 관련 test 파일이나 `-g` filter부터 실행한다. auth, middleware, app shell, route guard, global theme처럼 여러 route에 영향을 주거나 범위를 좁히기 어려우면 전체 관련 suite를 실행한다.
@@ -28,6 +32,8 @@ MCP 확인에는 고유 loopback port, isolated browser session, desktop/mobile 
 하나의 development server를 대상으로 하는 Playwright 검증은 `workers: 1`로 순차 실행한다. 병렬 검증은 각 worker의 loopback port, runtime, test data가 모두 분리된 경우에만 허용한다. development server의 최초 compile은 read-only GET과 응답 상태로 명시적으로 준비할 수 있지만, hydration이나 interaction 준비 상태를 임의의 `waitForTimeout` 또는 retry로 대신하지 않는다. 전환 결과, 선택 상태, 표시된 panel처럼 사용자가 관찰할 수 있는 조건을 기다린다.
 
 `.codex/work/` 아래의 임시 spec·config·결과는 진단 자료일 뿐 최종 합격 증거가 아니다. merge-ready 증거는 repository의 `playwright.config.ts`와 `tests/e2e/`에 포함된 test로 재현되어야 한다.
+
+최종 승인된 screenshot 같은 저장 증거는 `docs/qa/reports/<date>-<slug>/`에 두고 `artifact-manifest.json`에 경로·목적·SHA-256을 등록한다. 그 밖의 중간 산출물은 `.codex/work/<slug>/`에서만 관리한다. 자세한 기준은 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다.
 
 ## Supabase local integration
 
@@ -56,6 +62,7 @@ pnpm test:supabase:local
 | 변경 | 최소 검증 |
 | --- | --- |
 | 문서·checker | 해당 contract test, dead-reference 검사, `git diff --check` |
+| task lifecycle·CI·산출물 정책 | `check:project-structure`, `check:artifact-hygiene`, v1·v2 lifecycle contract, CI trust boundary test |
 | 순수 TypeScript 로직 | 관련 Vitest, lint, typecheck |
 | route·auth·middleware | 관련 unit/integration, scoped 또는 전체 e2e, build |
 | UI | 관련 test, lint, typecheck, Playwright CLI + MCP 직접 확인 |
