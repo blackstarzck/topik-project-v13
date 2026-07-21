@@ -84,6 +84,11 @@ afterEach(() => {
 });
 
 describe("project structure allowlist", () => {
+  it("uses .claude/CLAUDE.md as the only required Claude entrypoint", () => {
+    expect(requiredOwnerPaths).toContain(".claude/CLAUDE.md");
+    expect(requiredOwnerPaths).not.toContain("CLAUDE.md");
+  });
+
   it("registers every approved operations policy as a required owner", () => {
     expect(requiredOwnerPaths).toEqual(
       expect.arrayContaining(operationsPolicyPaths),

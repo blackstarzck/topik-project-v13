@@ -8,10 +8,13 @@ const readProjectFile = (relativePath) =>
 describe("agent workflow runtime contract", () => {
   it("makes AGENTS.md the common Codex and Claude workflow owner", () => {
     const agents = readProjectFile("AGENTS.md");
-    const claude = readProjectFile("CLAUDE.md");
+    const claude = readProjectFile(".claude/CLAUDE.md");
+    const gitignore = readProjectFile(".gitignore");
 
     expect(agents).toContain("Codex와 Claude를 포함한 모든 AI 에이전트");
-    expect(claude).toContain("AGENTS.md");
+    expect(claude).toContain("@../AGENTS.md");
+    expect(gitignore).toContain("!.claude/CLAUDE.md");
+    expect(() => readProjectFile("CLAUDE.md")).toThrow();
     expect(agents).toContain("한 task = 한 의미 있는 slug = 한 branch = 한 worktree");
   });
 

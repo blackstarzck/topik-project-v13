@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 export const requiredOwnerPaths = [
   "AGENTS.md",
   "README.md",
-  "CLAUDE.md",
+  ".claude/CLAUDE.md",
   "DESIGN.md",
   "TESTING.md",
   "docs/prd.md",
