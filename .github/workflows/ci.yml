@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   merge_group:
     types: [checks_requested]
   push:
@@ -11,12 +11,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify:
     name: typecheck / test / lint / build
+    if: >-
+      github.event_name != 'push' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
 
     steps:
+      - name: Record service start
+        shell: bash
+        run: echo "CI_SERVICE_STARTED_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
@@ -208,12 +219,6 @@ jobs:
             pnpm check:ui-contract
           fi
 
-      - name: Check report-only worktree lifecycle
-        run: pnpm check:worktree-lifecycle
-
-      - name: Check task lifecycle v2 and cleanup contract
-        run: pnpm check:task-lifecycle
-
       - name: Typecheck
         run: pnpm typecheck
 
@@ -226,11 +231,38 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Summarize CI timing
+        if: always()
+        shell: bash
+        run: |
+          ended_epoch="$(date +%s)"
+          started_epoch="${CI_SERVICE_STARTED_EPOCH:-}"
+          service_time_line="- service_time_seconds: unavailable"
+          if [[ "$started_epoch" =~ ^[1-9][0-9]{0,14}$ ]] &&
+             (( started_epoch <= ended_epoch )); then
+            elapsed_seconds="$((ended_epoch - started_epoch))"
+            service_time_line="- service_time_seconds: ${elapsed_seconds}"
+          fi
+          {
+            echo "### CI timing"
+            echo "$service_time_line"
+            echo "- queue_time_seconds: unavailable (inspect the GitHub run API)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   lifecycle-windows:
     name: report-only worktree lifecycle / windows
+    if: >-
+      github.event_name != 'push' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: windows-latest
 
     steps:
+      - name: Record service start
+        shell: pwsh
+        run: |
+          $startedEpoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+          "CI_SERVICE_STARTED_EPOCH=$startedEpoch" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
@@ -252,3 +284,50 @@ jobs:
 
       - name: Check task lifecycle v2 and cleanup contract
         run: pnpm check:task-lifecycle
+
+      - name: Summarize CI timing
+        if: always()
+        shell: pwsh
+        run: |
+          $endedEpoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+          [long]$startedEpoch = 0
+          $serviceTimeLine = "- service_time_seconds: unavailable"
+          if (
+            [long]::TryParse($env:CI_SERVICE_STARTED_EPOCH, [ref]$startedEpoch) -and
+            $startedEpoch -gt 0 -and
+            $startedEpoch -le $endedEpoch
+          ) {
+            $elapsedSeconds = $endedEpoch - $startedEpoch
+            $serviceTimeLine = "- service_time_seconds: $elapsedSeconds"
+          }
+          @(
+            "### CI timing"
+            $serviceTimeLine
+            "- queue_time_seconds: unavailable (inspect the GitHub run API)"
+          ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+  main-integrity:
+    name: main branch integrity (nonrequired)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Check project structure
+        run: node scripts/check-project-structure.mjs
+
+      - name: Check agent skill policy
+        run: node scripts/check-agent-skill-policy.mjs
+
+      - name: Check tracked agent skill proxies
+        run: node scripts/sync-agent-skills.mjs --check
