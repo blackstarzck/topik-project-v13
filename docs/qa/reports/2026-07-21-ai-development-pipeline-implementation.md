@@ -17,7 +17,7 @@ Codex와 Claude가 같은 작업을 안전하게 이어받고, 작업마다 bran
 | 비교 항목 | 구현 전 | 구현 후 |
 | --- | --- | --- |
 | 작업 시작 기준 | 각 도구와 세션이 수동 판단 | `origin`을 fetch한 뒤 고정한 `origin/main` SHA에서만 시작 |
-| branch 이름 | `codex/…`, `claude/…` 등 도구 이름 혼용 | `feat|fix|refactor|test|docs|chore|ci/<slug>` 공용 규칙 |
+| branch 이름 | `codex/…`, `claude/…` 등 도구 이름 혼용 | `feat\|fix\|refactor\|test\|docs\|chore\|ci/<slug>` 공용 규칙 |
 | worktree 위치 | 형제 폴더와 도구별 폴더 혼재 | `.worktrees/<type>-<slug>` 한 곳 |
 | Codex↔Claude 인수인계 | 대화와 메모에 의존 | 같은 v2 task record와 상태 fingerprint로 인수인계 |
 | 동시 작업 | 두 AI가 같은 폴더를 동시에 수정할 수 있음 | 현재 실행자 한 명만 허용하고 handoff 중에는 수정 차단 |
@@ -107,6 +107,11 @@ flowchart LR
 | 최종 리뷰 수정 후: 전체 `pnpm test` | 302개 파일·2,893개 테스트 성공, writing 통합 테스트 1건 timeout | 20:10:40.986→20:20:48.406 | 607.420초 |
 | 최종 리뷰 수정 후: writing 실패 항목 단독 재실행 | 1/1 성공, 10개 제외 | 20:20:59 | 8.754초 |
 | 최종 리뷰 수정 후: CI trust 계약 | 9/9 성공 | 20:20:59 | 2.208초 |
+| GitHub run `29825858145` 최초 Linux | 실패: run 시작 뒤 승인 변수를 갱신해 이전 SHA가 주입됨 | 11:22:40Z→11:22:55Z | 15초 |
+| GitHub run `29825858145` 재실행 Linux | artifact bootstrap·typecheck·test·lint·build 모두 성공 | 11:27:08Z→11:31:18Z | 4분 10초 |
+| GitHub run `29825858145` Windows | lifecycle·cleanup 계약 성공 | 11:22:41Z→11:26:39Z | 3분 58초 |
+| ready 전환 뒤 GitHub run `29826472885` Linux | 전체 필수 검사 재확인 성공 | 11:32:00Z 이후 | 5분 28초 |
+| ready 전환 뒤 GitHub run `29826472885` Windows | lifecycle·cleanup 계약 재확인 성공 | 11:32:00Z 이후 | 4분 8초 |
 
 UI 제품 동작이나 화면 스타일은 변경하지 않았으므로 Playwright CLI와 직접 브라우저 확인은 적용 대상이 아니다.
 
@@ -122,10 +127,10 @@ UI 제품 동작이나 화면 스타일은 변경하지 않았으므로 Playwrig
 | 저장소 전체 Prettier | 기존 제품·테스트 파일 52개 형식 불일치 | 미완료·이번 범위 밖 | 이번 변경 파일은 통과. 기존 52개는 별도 formatting PR 권고 |
 | 실행 시각 계측 | 초기 일부 명령은 start/end timestamp를 별도 보존하지 않고 wall time만 기록 | 부분 보완 | 재게시 전 핵심 검증은 ISO 시각과 wall time을 함께 기록. 다음 작업부터 공통 계측 wrapper 또는 CI artifact로 전 구간 자동 보존 권고 |
 | `next build` 부수 변경 | 빌드가 자동 생성 파일 `next-env.d.ts`의 개발용 참조를 빌드용 참조로 바꿈 | 해결 | 구현 변경이 아니므로 원래 내용으로 복원하고 Git 반영 대상에서 제외 |
-| 최종 리뷰 뒤 전체 test | writing route 통합 테스트 1건이 전체 병렬 실행에서 40초 제한 초과 | 단독 재현 통과·CI 확인 대기 | 동일 항목은 단독 실행에서 6.56초에 통과. 파이프라인 변경과 직접 관련 없는 부하성 timeout으로 판단하되, GitHub required test 결과를 최종 근거로 사용 |
-| GitHub CI 재시도 2 Linux | workflow가 GitHub의 합성 merge `HEAD`를 승인된 PR 후보 raw SHA와 직접 비교 | 로컬 해결·CI 확인 대기 | 후보가 `HEAD`에 포함되고 trusted 파일 5개가 동일한 일반 blob인지 검사하도록 수정. 새 commit push·재실행 전까지 CI 해결로 확정하지 않음 |
-| GitHub CI 재시도 2 Windows | 테스트는 8.3 짧은 경로를 기대했지만 Git은 긴 정규 경로를 반환 | 로컬 해결·CI 확인 대기 | 양쪽 경로를 실제 경로로 정규화해 비교하도록 수정. 새 commit push·재실행 전까지 CI 해결로 확정하지 않음 |
-| bootstrap trusted check | 이전 PR head의 정확한 승인 SHA가 저장소 변수에 설정됨 | 새 head 승인 대기 | 새 commit 뒤에는 변수를 새 PR 후보 head SHA로 다시 승인·설정해야 함 |
+| 최종 리뷰 뒤 전체 test | writing route 통합 테스트 1건이 전체 병렬 실행에서 40초 제한 초과 | 해결·실제 CI 통과 | 동일 항목은 단독 실행에서 6.56초에 통과했고 GitHub required test도 두 번 통과. 파이프라인 변경과 직접 관련 없는 부하성 timeout으로 확인 |
+| GitHub CI 재시도 2 Linux | workflow가 GitHub의 합성 merge `HEAD`를 승인된 PR 후보 raw SHA와 직접 비교 | 해결·실제 CI 통과 | 후보가 `HEAD`에 포함되고 trusted 파일 5개가 동일한 일반 blob인지 검사하도록 수정. run `29825858145` 재실행과 `29826472885`에서 통과 |
+| GitHub CI 재시도 2 Windows | 테스트는 8.3 짧은 경로를 기대했지만 Git은 긴 정규 경로를 반환 | 해결·실제 CI 통과 | 양쪽 경로를 실제 경로로 정규화해 비교하도록 수정. 두 후속 Windows job에서 통과 |
+| bootstrap 승인 변수 갱신 시점 | 첫 push가 CI를 시작한 뒤 변수를 바꿔 최초 run에 이전 SHA가 주입됨 | 해결 | 동일 run 재실행에서 통과. 후속 commit은 새 head를 로컬에서 만든 뒤 승인 변수를 먼저 설정하고 push해야 함 |
 | bootstrap 정리 | 이번 branch와 worktree 제거 | 사용자 승인 대기 | publish·merge·runtime·소유권 확인 뒤 새 finalize/cleanup 절차 사용 |
 
 ### Git·GitHub 외부 상태 snapshot
