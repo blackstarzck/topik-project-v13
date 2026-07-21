@@ -83,13 +83,26 @@ jobs:
         env:
           ARTIFACT_HYGIENE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
           ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: ${{ vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}
-          ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}
+          ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA: ${{ github.sha }}
+          ARTIFACT_HYGIENE_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF: ${{ github.event.merge_group.base_ref }}
         shell: bash
         run: |
           set -euo pipefail
           umask 077
           case "${GITHUB_EVENT_NAME}" in
-            pull_request|merge_group|push) ;;
+            pull_request)
+              [[ "${ARTIFACT_HYGIENE_PR_BASE_REF}" == "main" ]] || {
+                echo "ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN" >&2; exit 2;
+              }
+              ;;
+            merge_group)
+              [[ "${ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF}" == "refs/heads/main" ]] || {
+                echo "ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN" >&2; exit 2;
+              }
+              ;;
+            push) ;;
             *) echo "ARTIFACT_BASE_EVENT_UNSUPPORTED" >&2; exit 2 ;;
           esac
           if ! [[ "${ARTIFACT_HYGIENE_BASE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
@@ -140,14 +153,9 @@ jobs:
               --workspace "${GITHUB_WORKSPACE}" \
               --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}"
           else
-            # 최초 도입만 허용: PR, origin/main과 같은 base, base에 trusted file이 하나도 없음.
-            if [[ "${GITHUB_EVENT_NAME}" != "pull_request" ]]; then
-              echo "ARTIFACT_TRUSTED_BASE_RUNNER_MISSING" >&2
-              exit 2
-            fi
-            origin_main_sha="$(git rev-parse --verify origin/main^{commit})"
-            if [[ "${origin_main_sha}" != "${ARTIFACT_HYGIENE_BASE_SHA}" ]]; then
-              echo "ARTIFACT_BOOTSTRAP_BASE_NOT_ORIGIN_MAIN" >&2
+            # 최초 설치 PR과 그 merge-group/main push만 허용한다.
+            if ! git merge-base --is-ancestor "${ARTIFACT_HYGIENE_BASE_SHA}" HEAD; then
+              echo "ARTIFACT_BOOTSTRAP_BASE_NOT_CONTAINED" >&2
               exit 2
             fi
             for repo_path in "${trusted_paths[@]}"; do
@@ -156,11 +164,14 @@ jobs:
                 exit 2
               fi
             done
-            workspace_head_sha="$(git rev-parse --verify HEAD^{commit})"
             if [[ -z "${ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA:-}" ]] || \
-               [[ "${ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA}" != "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" ]] || \
-               [[ "${workspace_head_sha}" != "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" ]]; then
+               [[ "${ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA}" != "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" ]]; then
               echo "ARTIFACT_BOOTSTRAP_EXTERNAL_APPROVAL_REQUIRED" >&2
+              exit 2
+            fi
+            workspace_head_sha="$(git rev-parse --verify HEAD^{commit})"
+            if [[ "${workspace_head_sha}" != "${ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA}" ]]; then
+              echo "ARTIFACT_BOOTSTRAP_WORKSPACE_HEAD_MISMATCH" >&2
               exit 2
             fi
             env -u NODE_OPTIONS -u NODE_PATH \
@@ -168,6 +179,7 @@ jobs:
               node scripts/run-trusted-artifact-hygiene.mjs \
               --workspace "${GITHUB_WORKSPACE}" \
               --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}" \
+              --candidate-head-sha "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" \
               --allow-bootstrap
           fi
 

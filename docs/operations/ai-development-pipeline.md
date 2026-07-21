@@ -38,8 +38,11 @@ flowchart LR
   D --> E{"실행자 변경?"}
   E -- 예 --> F["handoff → resume"]
   F --> D
-  E -- 아니요 --> G["PR·필수 검사"]
-  G --> H["runtime 종료·등록"]
+  E -- 아니요 --> N{"owner-auth 성공?"}
+  N -- 예 --> O["소유자 PR → 필수 CI·review 의견 처리 → merge"]
+  N -- 아니요 --> P["협업자 PR → 필수 CI·review 의견 처리 → blackstarzck 승인 → merge"]
+  O --> H["runtime 종료·등록"]
+  P --> H
   H --> I["finalize 보고"]
   I --> J{"fingerprint 승인?"}
   J -- 아니요 --> K["보존"]
@@ -87,6 +90,18 @@ pnpm task:runtime -- --repo <task-worktree> --branch feat/example-task
 ```
 
 runtime을 사용하지 않았어도 두 번째 예처럼 빈 상태를 명시적으로 등록한다. 포트·PID·lock은 task별 최대 32개다. lock 경로는 해당 worktree의 `.codex/work/<slug>/` 안의 절대 경로만 허용한다. worktree 자체가 포트나 프로세스를 격리하지 않으므로 병렬 runtime은 서로 다른 loopback port와 test data를 사용한다.
+
+### GitHub 소유자 인증 사전 확인
+
+외부 GitHub에 publish·approval·merge 작업을 하기 직전에 다음 명령으로 현재 계정이 저장소 소유자인지 확인한다. 이 저장소의 소유자는 `blackstarzck`이다.
+
+```bash
+pnpm task:owner-auth -- --repo <repo-or-worktree> --owner blackstarzck
+```
+
+명령은 `origin` URL에서 실제 소유자를 확인하고 입력한 소유자와 일치할 때만 `gh auth switch`를 시도한 뒤, `gh api user`로 현재 로그인을 다시 검증한다. token을 직접 읽거나 출력하지 않으며, 각 Git·GitHub 하위 명령은 30초가 지나면 실패한다.
+
+성공 결과의 `manualApprovalRequired: false`는 이미 소유자 계정임을 사람이 한 번 더 확인하는 중복 절차만 생략한다는 뜻이다. 필수 CI 통과와 review 의견 처리는 그대로 의무다. 인증을 바꿀 수 없거나 소유자가 일치하지 않으면 fail-closed로 소유자 예외 경로를 닫는다. 이때 협업자는 PR을 연 뒤 필수 CI와 review 의견을 모두 처리하고, 그 다음 `blackstarzck`의 승인을 받아야 merge할 수 있다. 어떤 경로도 CI나 review를 우회할 수 없다.
 
 ### 종료 보고와 정리
 
@@ -153,7 +168,11 @@ pnpm check:artifact-hygiene
 
 report는 위반을 보여주고, check는 위반이 있으면 실패한다. CI는 후보 branch 안의 검사기를 신뢰하지 않는다. 이벤트가 제공한 정확한 base SHA에서 trusted runner, checker, policy, library와 공용 manifest validator 다섯 파일을 `RUNNER_TEMP`의 workspace 밖으로 `git show`로 복원해 실행한다. 최초 도입처럼 base에 trusted 파일 다섯 개가 모두 없을 때만 PR base가 `origin/main`과 같고 partial base가 아닌 경우에 current runner의 `--allow-bootstrap` 경로를 허용한다.
 
-최초 bootstrap CI는 외부 저장소 변수의 승인 SHA가 현재 PR head SHA와 정확히 같기 전까지 실패한다. trusted surface가 `origin/main`에 설치된 뒤 runner·checker·policy·library·공용 validator 변경은 일반 PR에서 차단하며, 별도의 소유자 승인과 2단계 반영 절차로만 갱신한다.
+최초 bootstrap CI의 외부 저장소 변수는 승인된 PR 후보 head SHA에 정확히 고정한다. GitHub는 PR 검사를 위해 후보 head와 base를 합친 임시 commit을 만들 수 있는데, 이를 합성 merge commit이라 한다. checkout의 `HEAD`가 이 합성 commit이면 후보 head와 raw SHA가 다른 것이 정상이므로 둘의 직접 일치는 의도적으로 요구하지 않는다. 대신 runner는 승인된 후보 commit이 `HEAD`에 포함되고, trusted runner·checker·policy·library·공용 validator 다섯 파일이 후보와 `HEAD`에서 모두 동일한 일반 blob일 때만 허용한다. 후보가 새 commit으로 바뀌면 이전 승인 SHA는 자동으로 효력을 잃는다. trusted surface가 `origin/main`에 설치된 뒤 다섯 파일 변경은 일반 PR에서 차단하며, 별도의 소유자 승인과 2단계 반영 절차로만 갱신한다.
+
+같은 검증은 최초 설치 PR의 `merge_group`과 merge 직후 `main push`에도 한 번 적용한다. 이때 event base에는 trusted 파일이 하나도 없어야 하고 base와 승인 후보가 현재 GitHub event `HEAD`의 조상이어야 하며, 승인 후보 이후 trusted 다섯 파일의 mode와 blob이 바뀌지 않아야 한다. merge 뒤 다음 push부터는 base에 설치된 trusted runner를 사용하므로 이 one-time 경로는 닫힌다.
+
+bootstrap target은 `origin/main`으로 고정한다. `pull_request.base.ref`는 정확히 `main`, `merge_group.base_ref`는 정확히 `refs/heads/main`이어야 하며, push workflow도 `branches: [main]`만 받는다. 다른 target은 승인 SHA가 같아도 실패한다.
 
 ## CI와 병렬 PR
 
@@ -166,17 +185,27 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 다음을 
 5. typecheck, 전체 test, lint, build
 6. Windows에서 v1과 v2·cleanup lifecycle contract
 
-PR이 병렬로 진행되면 각 PR과 merge queue가 최신 base SHA에서 다시 통과해야 한다. GitHub required check와 head branch 자동 삭제 설정은 저장소 코드 검증과 별개의 외부 변경이다. 사용자 승인 전에는 적용하지 않는다. production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI target, merge, cleanup 대상이 아니다.
+PR이 병렬로 진행되면 각 PR과 merge queue가 최신 base SHA에서 다시 통과해야 한다. `origin/main`에는 다음 GitHub 보호 규칙이 활성화돼 있다.
+
+| GitHub 설정 | 현재 운영 상태 |
+| --- | --- |
+| `Protect main - required PR and CI` (`18859824`) | strict 모드로 활성화. 필수 check는 정확히 `typecheck / test / lint / build`, `report-only worktree lifecycle / windows` 두 개이며 review thread 해결도 필수다. |
+| `Protect main - Code Owner review` (`18859832`) | 활성화. code owner 승인 1개가 필요하고 `blackstarzck`는 `always` 예외 actor다. 소유자 예외는 필수 CI와 review thread 처리가 끝난 뒤에만 사용한다. |
+| merge 뒤 branch 자동 삭제 | `delete_branch_on_merge: false`로 비활성화돼 있으며, 저장소 설정 중 이 항목만 별도 적용 대기다. |
+
+production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI target, merge, cleanup 대상이 아니다.
 
 ## 실패 복구와 Git 승인 경계
 
 | 상황 | 안전한 대응 |
 | --- | --- |
 | fetch·GitHub PR 조회 실패 | 최신 상태를 추정하지 않고 보존한다. 네트워크·인증 복구 후 finalize를 다시 실행한다. |
+| 소유자 인증 불가·불일치 | 소유자 예외 경로로 진행하지 않는다. 협업자가 PR을 연 뒤 필수 CI·review 의견을 처리하고, 마지막에 `blackstarzck` 승인을 받아 merge한다. |
+| 새 commit 뒤 bootstrap 승인 SHA가 오래됨 | 이전 SHA로 재실행하지 않는다. 새 PR 후보 head를 검토한 뒤 외부 저장소 변수를 그 정확한 SHA로 다시 승인·설정한다. |
 | handoff fingerprint 변경 | 이전 snapshot을 쓰지 않는다. 변경 소유자를 확인하고 원 실행자가 새 handoff를 만든다. |
 | runtime active | server·watcher를 정상 종료하고 빈 runtime 상태를 다시 등록한다. |
 | approval 만료 | cleanup을 재시도하지 말고 finalize의 새 fingerprint를 다시 보고·승인받는다. |
 | cleanup 부분 실패 | journal과 실제 Git 목록을 읽고, 같은 승인값으로만 재개한다. 강제 정리하지 않는다. |
 | stale operation lock 의심 | process·task·lock 소유권을 먼저 확인한다. 불명확하면 보존하고 owner에게 이관한다. |
 
-stage, commit, push, PR 생성, merge, required check 설정, head branch 자동 삭제, bootstrap worktree 제거는 각각 사용자 요청 또는 결과 보고 후 승인된 범위에서만 수행한다. `origin/main`은 PR과 필수 검사를 거치며, `collab`은 사용자가 정확히 배포 의도까지 명시하고 별도 확인하기 전에는 건드리지 않는다.
+stage, commit, push, PR 생성, merge, 활성 ruleset 변경, head branch 자동 삭제, bootstrap worktree 제거는 각각 사용자 요청 또는 결과 보고 후 승인된 범위에서만 수행한다. `origin/main`은 PR과 활성 필수 검사를 거치며, `collab`은 사용자가 정확히 배포 의도까지 명시하고 별도 확인하기 전에는 건드리지 않는다.

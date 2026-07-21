@@ -4,6 +4,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   unlinkSync,
@@ -209,8 +210,8 @@ describe("task:start", () => {
     });
 
     expect(result.baseSha).toBe(expectedSha);
-    expect(result.worktreePath).toBe(
-      path.join(base, ".worktrees", "feat-sample-task"),
+    expect(realpathSync.native(result.worktreePath)).toBe(
+      realpathSync.native(path.join(base, ".worktrees", "feat-sample-task")),
     );
     expect(git(result.worktreePath, ["rev-parse", "HEAD"])).toBe(expectedSha);
     expect(git(result.worktreePath, ["branch", "--show-current"])).toBe(

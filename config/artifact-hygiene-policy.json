@@ -54,10 +54,12 @@
     "config/artifact-hygiene-policy.json",
     "scripts/ai-task.mjs",
     "scripts/check-artifact-hygiene.mjs",
+    "scripts/check-github-owner-auth.mjs",
     "scripts/lib/ai-task-cleanup.mjs",
     "scripts/lib/ai-task-lifecycle-v2.mjs",
     "scripts/lib/artifact-manifest-v2.mjs",
     "scripts/lib/artifact-hygiene.mjs",
+    "scripts/lib/github-owner-auth.mjs",
     "scripts/run-trusted-artifact-hygiene.mjs"
   ]
 }

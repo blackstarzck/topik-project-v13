@@ -112,20 +112,45 @@ describe("CI trusted UI contract boundary", () => {
     expect(workflow).toContain("ARTIFACT_BASE_EVENT_UNSUPPORTED");
   });
 
-  it("limits bootstrap to an untouched origin/main base and runs both lifecycle generations", () => {
+  it("gates bootstrap for PR, merge group, and the one-time main push", () => {
+    expect(workflow).toContain("pull_request)");
+    expect(workflow).toContain("merge_group)");
+    expect(workflow).toContain("push) ;;");
     expect(workflow).toContain(
-      'if [[ "${GITHUB_EVENT_NAME}" != "pull_request" ]]',
+      "github.event.pull_request.head.sha || vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA",
     );
-    expect(workflow).toContain(
-      'origin_main_sha="$(git rev-parse --verify origin/main^{commit})"',
-    );
+    expect(workflow).toContain("ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA: ${{ github.sha }}");
+    expect(workflow).toContain('git merge-base --is-ancestor "${ARTIFACT_HYGIENE_BASE_SHA}" HEAD');
     expect(workflow).toContain("ARTIFACT_BOOTSTRAP_PARTIAL_BASE");
     expect(workflow).toContain("vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA");
-    expect(workflow).toContain("github.event.pull_request.head.sha");
     expect(workflow).toContain("ARTIFACT_BOOTSTRAP_EXTERNAL_APPROVAL_REQUIRED");
-    expect(workflow).toContain(
-      '[[ "${workspace_head_sha}" != "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}" ]]',
+    const candidateBinding =
+      "ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}";
+    const candidateArgument =
+      '--candidate-head-sha "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}"';
+    const candidateBindingIndex = workflow.indexOf(candidateBinding);
+    const candidateArgumentIndex = workflow.indexOf(
+      candidateArgument,
+      candidateBindingIndex,
     );
+    expect(candidateBindingIndex).toBeGreaterThan(-1);
+    expect(candidateArgumentIndex).toBeGreaterThan(candidateBindingIndex);
+    expect(workflow).toContain("workspace_head_sha");
+    expect(workflow).toContain("ARTIFACT_BOOTSTRAP_WORKSPACE_HEAD_MISMATCH");
+    expect(workflow).toContain(
+      "ARTIFACT_HYGIENE_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}",
+    );
+    expect(workflow).toContain(
+      "ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF: ${{ github.event.merge_group.base_ref }}",
+    );
+    expect(workflow).toContain(
+      '[[ "${ARTIFACT_HYGIENE_PR_BASE_REF}" == "main" ]]',
+    );
+    expect(workflow).toContain(
+      '[[ "${ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF}" == "refs/heads/main" ]]',
+    );
+    expect(workflow).toContain("ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN");
+    expect(workflow).toContain("branches: [main]");
     expect(workflow.match(/run: pnpm check:worktree-lifecycle/gu)).toHaveLength(
       2,
     );
@@ -155,6 +180,9 @@ describe("CI trusted UI contract boundary", () => {
       "/scripts/lib/ai-task-lifecycle-v2.mjs",
       "/scripts/lib/ai-task-cleanup.mjs",
       "/scripts/ai-task.mjs",
+      "/scripts/check-github-owner-auth.mjs",
+      "/scripts/lib/github-owner-auth.mjs",
+      "/package.json",
     ]) {
       expect(codeowners).toContain(`${ownedPath} @blackstarzck`);
     }

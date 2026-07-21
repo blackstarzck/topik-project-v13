@@ -33,6 +33,7 @@
     "task:runtime": "node scripts/ai-task.mjs runtime",
     "task:finalize": "node scripts/ai-task.mjs finalize",
     "task:cleanup": "node scripts/ai-task.mjs cleanup",
+    "task:owner-auth": "node scripts/check-github-owner-auth.mjs",
     "check:admin-boundary": "node scripts/check-admin-boundary.mjs",
     "check:notification-owner-read": "node scripts/check-notification-owner-read.mjs",
     "check:notification-transition-route": "node scripts/check-notification-transition-route.mjs",

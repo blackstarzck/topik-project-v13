@@ -25,6 +25,9 @@
 /scripts/lib/ai-task-lifecycle-v2.mjs @blackstarzck
 /scripts/lib/ai-task-cleanup.mjs @blackstarzck
 /scripts/ai-task.mjs @blackstarzck
+/scripts/check-github-owner-auth.mjs @blackstarzck
+/scripts/lib/github-owner-auth.mjs @blackstarzck
+/package.json @blackstarzck
 /config/artifact-hygiene-policy.json @blackstarzck
 /config/ui-contract-*.json @blackstarzck
 /config/ui-contract-runtime/ @blackstarzck

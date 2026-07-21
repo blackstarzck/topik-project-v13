@@ -16,6 +16,7 @@ import { evaluateArtifactHygiene } from "../../scripts/lib/artifact-hygiene.mjs"
 import { TRUSTED_ARTIFACT_PATHS } from "../../scripts/run-trusted-artifact-hygiene.mjs";
 
 const temporaryRoots = [];
+const fixtureArtifactLibraryMarker = "FIXTURE_ARTIFACT_LIBRARY_EXECUTED";
 
 function git(rootDir, ...args) {
   const result = spawnSync("git", args, {
@@ -74,6 +75,83 @@ function createRepository({ policy = defaultPolicy() } = {}) {
   git(rootDir, "commit", "-m", "baseline");
   git(rootDir, "update-ref", "refs/remotes/origin/main", "HEAD");
   return rootDir;
+}
+
+function createBootstrapRepository({
+  omittedTrustedPaths = [],
+  invalidTrustedPath,
+  trustedPathContents = {},
+} = {}) {
+  const rootDir = mkdtempSync(path.join(tmpdir(), "artifact-bootstrap-"));
+  temporaryRoots.push(rootDir);
+  git(rootDir, "init", "--initial-branch=main");
+  git(rootDir, "config", "user.email", "test@example.com");
+  git(rootDir, "config", "user.name", "Test User");
+  write(rootDir, ".gitignore", ".codex/work/\n");
+  write(rootDir, "package.json", "{}\n");
+  git(rootDir, "add", ".");
+  git(rootDir, "commit", "-m", "baseline without trusted files");
+  git(rootDir, "update-ref", "refs/remotes/origin/main", "HEAD");
+  const baseSha = git(rootDir, "rev-parse", "HEAD");
+
+  git(rootDir, "switch", "-c", "candidate");
+  for (const relativePath of TRUSTED_ARTIFACT_PATHS) {
+    if (!omittedTrustedPaths.includes(relativePath)) {
+      write(
+        rootDir,
+        relativePath,
+        trustedPathContents[relativePath] ?? readFileSync(relativePath),
+      );
+    }
+  }
+  write(rootDir, "src/change.ts", "export const change = true;\n");
+  git(rootDir, "add", ".");
+  if (invalidTrustedPath) {
+    const blob = git(rootDir, "hash-object", invalidTrustedPath);
+    git(
+      rootDir,
+      "update-index",
+      "--add",
+      "--cacheinfo",
+      "120000",
+      blob,
+      invalidTrustedPath,
+    );
+  }
+  git(rootDir, "commit", "-m", "candidate with trusted surface");
+  const candidateHead = git(rootDir, "rev-parse", "HEAD");
+  return { baseSha, candidateHead, rootDir };
+}
+
+function runBootstrap({ approvedHead, baseSha, candidateHead, rootDir }) {
+  return spawnSync(
+    process.execPath,
+    [
+      path.join(rootDir, "scripts", "run-trusted-artifact-hygiene.mjs"),
+      "--workspace",
+      rootDir,
+      "--base-sha",
+      baseSha,
+      "--candidate-head-sha",
+      candidateHead,
+      "--allow-bootstrap",
+    ],
+    {
+      cwd: rootDir,
+      encoding: "utf8",
+      windowsHide: true,
+      env: {
+        ...process.env,
+        ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: approvedHead ?? "",
+      },
+    },
+  );
+}
+
+function checkoutSyntheticMerge(rootDir, baseSha, candidateHead) {
+  git(rootDir, "switch", "-c", "synthetic-merge", baseSha);
+  git(rootDir, "merge", "--no-ff", candidateHead, "-m", "synthetic PR merge");
+  return git(rootDir, "rev-parse", "HEAD");
 }
 
 function commitBaseline(rootDir, relativePath, content = "legacy\n") {
@@ -476,52 +554,188 @@ describe("artifact hygiene path safety", () => {
 });
 
 describe("artifact hygiene package contract", () => {
-  it("requires an external approved workspace HEAD for bootstrap", () => {
-    const rootDir = mkdtempSync(path.join(tmpdir(), "artifact-bootstrap-"));
-    temporaryRoots.push(rootDir);
-    git(rootDir, "init", "--initial-branch=main");
-    git(rootDir, "config", "user.email", "test@example.com");
-    git(rootDir, "config", "user.name", "Test User");
-    write(rootDir, ".gitignore", ".codex/work/\n");
-    write(rootDir, "package.json", "{}\n");
-    git(rootDir, "add", ".");
-    git(rootDir, "commit", "-m", "baseline without trusted files");
-    git(rootDir, "update-ref", "refs/remotes/origin/main", "HEAD");
-    const baseSha = git(rootDir, "rev-parse", "origin/main");
-    write(
-      rootDir,
-      "config/artifact-hygiene-policy.json",
-      `${JSON.stringify(defaultPolicy())}\n`,
+  it("accepts an approved candidate inside a synthetic merge checkout", () => {
+    const fixture = createBootstrapRepository({
+      trustedPathContents: {
+        "scripts/lib/artifact-hygiene.mjs": `export function evaluateArtifactHygiene() {
+  process.stdout.write("${fixtureArtifactLibraryMarker}\\n");
+  return { ok: true, violations: [] };
+}
+`,
+      },
+    });
+    const syntheticHead = checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
     );
-    write(rootDir, "src/change.ts", "export const change = true;\n");
-    git(rootDir, "add", "config/artifact-hygiene-policy.json", "src/change.ts");
-    git(rootDir, "commit", "-m", "candidate head");
-    const candidateHead = git(rootDir, "rev-parse", "HEAD");
-    const runner = path.resolve("scripts/run-trusted-artifact-hygiene.mjs");
-    const run = (approvedHead) =>
-      spawnSync(
-        process.execPath,
-        [runner, "--base-sha", baseSha, "--workspace", rootDir, "--allow-bootstrap"],
-        {
-          cwd: rootDir,
-          encoding: "utf8",
-          windowsHide: true,
-          env: {
-            ...process.env,
-            ...(approvedHead
-              ? { ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: approvedHead }
-              : { ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: "" }),
-          },
-        },
-      );
+    expect(syntheticHead).not.toBe(fixture.candidateHead);
 
-    const denied = run(undefined);
-    expect(denied.status).toBe(2);
-    expect(denied.stderr).toContain(
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain(fixtureArtifactLibraryMarker);
+  });
+
+  it("accepts the approved candidate on the one-time post-merge main push", () => {
+    const fixture = createBootstrapRepository();
+    const mainHead = checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
+    );
+    git(fixture.rootDir, "update-ref", "refs/remotes/origin/main", mainHead);
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(0);
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["mismatched", "f".repeat(40)],
+  ])("rejects %s external candidate approval", (_label, approvedHead) => {
+    const fixture = createBootstrapRepository();
+    checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
+    );
+
+    const result = runBootstrap({ ...fixture, approvedHead });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
       "ARTIFACT_BOOTSTRAP_EXTERNAL_APPROVAL_REQUIRED",
     );
-    const allowed = run(candidateHead);
-    expect(allowed.status).toBe(0);
+    expect(result.stderr).not.toContain(fixture.candidateHead);
+  });
+
+  it("rejects a candidate that is not contained in workspace HEAD", () => {
+    const fixture = createBootstrapRepository();
+    git(fixture.rootDir, "switch", "-c", "alternate", fixture.baseSha);
+    git(
+      fixture.rootDir,
+      "checkout",
+      fixture.candidateHead,
+      "--",
+      ...TRUSTED_ARTIFACT_PATHS,
+    );
+    write(fixture.rootDir, "src/alternate.ts", "export const alternate = true;\n");
+    git(fixture.rootDir, "add", ".");
+    git(fixture.rootDir, "commit", "-m", "alternate head");
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_BOOTSTRAP_CANDIDATE_NOT_CONTAINED",
+    );
+    expect(result.stderr).not.toContain(fixture.candidateHead);
+  });
+
+  it("rejects a trusted file changed after the approved candidate", () => {
+    const fixture = createBootstrapRepository();
+    checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
+    );
+    write(
+      fixture.rootDir,
+      "config/artifact-hygiene-policy.json",
+      `${JSON.stringify(defaultPolicy({ rootAllowlist: ["tampered"] }))}\n`,
+    );
+    git(fixture.rootDir, "add", "config/artifact-hygiene-policy.json");
+    git(fixture.rootDir, "commit", "-m", "change trusted file after candidate");
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_BOOTSTRAP_TRUSTED_SURFACE_MISMATCH",
+    );
+    expect(result.stderr).not.toContain(fixture.candidateHead);
+  });
+
+  it("rejects an unresolved approved candidate commit", () => {
+    const fixture = createBootstrapRepository();
+    const unresolvedCandidate = "e".repeat(40);
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: unresolvedCandidate,
+      candidateHead: unresolvedCandidate,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("ARTIFACT_BOOTSTRAP_CANDIDATE_INVALID");
+    expect(result.stderr).not.toContain(unresolvedCandidate);
+  });
+
+  it("rejects a candidate with a missing trusted file", () => {
+    const fixture = createBootstrapRepository({
+      omittedTrustedPaths: ["scripts/check-artifact-hygiene.mjs"],
+    });
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_BOOTSTRAP_CANDIDATE_SURFACE_INVALID",
+    );
+  });
+
+  it("rejects a candidate with a symbolic-link trusted file", () => {
+    const fixture = createBootstrapRepository({
+      invalidTrustedPath: "scripts/check-artifact-hygiene.mjs",
+    });
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_BOOTSTRAP_CANDIDATE_SURFACE_INVALID",
+    );
+  });
+
+  it("continues to accept a direct approved candidate checkout", () => {
+    const fixture = createBootstrapRepository();
+
+    const result = runBootstrap({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(0);
+  });
+
+  it("passes the approved candidate and independently pins the workspace HEAD", () => {
+    const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
+
+    expect(workflow).toContain(
+      '--candidate-head-sha "${ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA}"',
+    );
+    expect(workflow).toContain("workspace_head_sha=");
+    expect(workflow).toContain("ARTIFACT_BOOTSTRAP_WORKSPACE_HEAD_MISMATCH");
   });
 
   it("runs base-materialized code so workspace policy tampering cannot bypass it", () => {
