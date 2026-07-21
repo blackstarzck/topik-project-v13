@@ -41,6 +41,9 @@
 .claude/*
 !.claude/CLAUDE.md
 !.claude/settings.json
+!.claude/output-styles/
+.claude/output-styles/*
+!.claude/output-styles/readable.md
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/*/

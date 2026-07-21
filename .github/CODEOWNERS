@@ -7,7 +7,7 @@
 /scripts/check-project-structure.mjs @blackstarzck
 /.codex/skills/ @blackstarzck
 /.claude/skills/ @blackstarzck
-/CLAUDE.md @blackstarzck
+/.claude/CLAUDE.md @blackstarzck
 /scripts/check-agent-skill-policy.mjs @blackstarzck
 /scripts/sync-agent-skills.mjs @blackstarzck
 /scripts/check-ui-contract.mjs @blackstarzck

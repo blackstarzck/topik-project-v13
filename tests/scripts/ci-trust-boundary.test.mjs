@@ -102,7 +102,7 @@ describe("CI trusted UI contract boundary", () => {
   it("requires owner review for every workflow enforcement surface", () => {
     for (const ownedPath of [
       "/.claude/skills/",
-      "/CLAUDE.md",
+      "/.claude/CLAUDE.md",
       "/scripts/sync-agent-skills.mjs",
       "/scripts/lib/task-lifecycle-registry.mjs",
       "/scripts/lib/task-lifecycle-schema.mjs",
