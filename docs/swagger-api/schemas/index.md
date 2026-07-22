@@ -1,6 +1,6 @@
 # Schema Index
 
-Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Source snapshot: generated from the former TALKPIK external API documentation on 2026-07-07. The original service and documentation routes are no longer available.
 Last synced: 2026-07-07
 
 | Group | Schemas |

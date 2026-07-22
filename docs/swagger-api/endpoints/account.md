@@ -1,6 +1,6 @@
 # Account API
 
-Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Source snapshot: generated from the former TALKPIK external API documentation on 2026-07-07. The original service and documentation routes are no longer available.
 Last synced: 2026-07-07
 
 Scope: User account self-service
@@ -27,7 +27,7 @@ Auth: BearerAuth
 
 ### Description
 
-Soft-delete the authenticated user's own external backend profile. The live OpenAPI says the endpoint marks the caller's profile deleted, anonymizes email/display name/password hash, and blacklists the current access token. Identity comes from the Bearer token; no password confirmation or request body is required.
+Soft-delete the authenticated user's own external backend profile. The captured OpenAPI says the endpoint marks the caller's profile deleted, anonymizes email/display name/password hash, and blacklists the current access token. Identity comes from the Bearer token; no password confirmation or request body is required.
 
 ### Responses
 

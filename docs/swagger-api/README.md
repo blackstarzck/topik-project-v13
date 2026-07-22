@@ -1,9 +1,10 @@
 # Swagger API Reference
 
-This directory is the v13 integration reference for the TALKPIK external API.
+This directory preserves a generated v13 reference for a former TALKPIK external API.
 
-- Swagger UI: [https://api.dotoretopik.com/docs](https://api.dotoretopik.com/docs)
-- OpenAPI JSON: [https://api.dotoretopik.com/openapi.json](https://api.dotoretopik.com/openapi.json)
+> **Historical snapshot — 2026-07-07.** This directory preserves a generated copy of a former TALKPIK external API contract. The former service, Swagger UI, and OpenAPI JSON routes no longer exist, and no current API base URL is documented here. Do not use this snapshot as a live integration contract.
+
+- Source status: original service and documentation routes are no longer available
 - Last synced: 2026-07-07
 - OpenAPI: `3.1.0`
 - API title/version: `TalkPik AI Service` / `0.1.0`
@@ -53,7 +54,7 @@ Admin endpoint groups are reference-only for this user-facing app. Do not treat 
 
 ## v13 Writing Submit Contract
 
-The live contract changed from earlier local notes: `task_id` is no longer part of `WritingSubmitRequest`. The endpoint accepts the external TOPIK task enum and optional rich question id.
+In the captured contract, `task_id` is no longer part of `WritingSubmitRequest`. The endpoint accepts the external TOPIK task enum and optional rich question id.
 
 ```json
 {
@@ -69,9 +70,9 @@ Rules:
 - Required fields: `task_type`, `text`.
 - `task_type` must be one of `Q51`, `Q52`, `Q53`, or `Q54`.
 - `question_id` is optional and should be an external rich question id returned by `GET /api/writing/tasks`, such as `topik-writing-54-0001`; omit it or send `null` for ad-hoc scoring.
-- `user_id`, `lang`, and `passage_context` remain optional in the live component schema.
-- Do not send the old `task_id` field or zero-padded `051`/`052`/`053`/`054` task type values to the current API.
+- `user_id`, `lang`, and `passage_context` are optional in the captured component schema.
+- The captured schema does not accept the old `task_id` field or zero-padded `051`/`052`/`053`/`054` task type values.
 
 ## Evaluation Feedback Contract
 
-The live OpenAPI now registers both evaluation lookup paths. After `POST /api/writing/submit` returns `submission_id`, poll `GET /api/evaluation/{submission_id}` until `status` is `graded`, then fetch `GET /api/evaluation/{submission_id}/feedback` for full feedback details.
+The 2026-07-07 OpenAPI snapshot registers both evaluation lookup paths. In that captured flow, after `POST /api/writing/submit` returns `submission_id`, poll `GET /api/evaluation/{submission_id}` until `status` is `graded`, then fetch `GET /api/evaluation/{submission_id}/feedback` for full feedback details.
