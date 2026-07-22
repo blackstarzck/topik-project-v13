@@ -87,8 +87,11 @@ flowchart LR
 | #56 | 245초 | 401초 | 둘 다 성공 |
 | #57 | 331초 | 407초 | 둘 다 성공, `CI required` 3초 |
 | #58 | 분류 12초 + 전체 307초 | 357초 | `full`, 변경 5개, `CI required` 2초 |
+| #59 첫 ready 실행 | 분류 12초 + 신뢰 경계 16초 | 건너뜀 | `docs-only`, 변경 1개, `CI required` 4초 |
 
 #58 merge 뒤 [main push run `29895823994`](https://github.com/blackstarzck/topik-project-v13/actions/runs/29895823994)은 분류 14초, 경량 무결성 14초, `CI required` 2초에 성공했다. app 전체 검증과 Windows lifecycle은 설계대로 건너뛰었다.
+
+최종 보고서 PR #59의 첫 ready [run `29896797997`](https://github.com/blackstarzck/topik-project-v13/actions/runs/29896797997)은 `run_app=false`, `run_pipeline_contracts=false`, `run_windows_lifecycle=false`를 실제로 출력했다. 문서 한 파일 변경에서 dependency 설치·app 전체 suite·Windows를 생략하고 base 소유 신뢰 경계 검사만 16초에 통과해 조건부 CI의 목적을 live로 확인했다.
 
 ### 성능 보완과 PR #58 최종 로컬 검증
 
@@ -200,7 +203,7 @@ PR #58은 runtime 미사용 상태를 빈 manifest로 등록한 뒤 finalize가 
 
 ## 남은 위험과 권고 순서
 
-1. 이 최종 보고서 PR의 docs-only CI를 실제로 관찰하고 병합한다.
+1. 이 실측값을 추가한 최종 보고서 commit의 docs-only CI를 다시 통과시키고 병합한다.
 2. 보고서 task와 완료된 task별로 빈 runtime 등록, 최신 PR·`origin/main` 포함과 원격 branch 부재를 `task:finalize`로 다시 확인한다.
 3. 사용자가 해당 시점의 정확한 fingerprint를 개별 승인한 task만 비강제 cleanup한다. 승인하지 않은 task는 그대로 둔다.
 4. dirty worktree 3개와 미병합 local 8개·origin 4개는 소유자, 게시·PR, runtime을 별도 조사한다.
