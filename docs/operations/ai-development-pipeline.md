@@ -211,13 +211,55 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 다음을 
 5. typecheck, 전체 test, lint, build
 6. Windows에서 v1과 v2·cleanup lifecycle contract
 
-PR이 병렬로 진행되면 각 PR과 merge queue가 최신 base SHA에서 다시 통과해야 한다. `origin/main`에는 다음 GitHub 보호 규칙이 활성화돼 있다.
+세 실행 경로의 결과는 후보 코드를 checkout하거나 package를 설치하지 않는 `CI required` 작업 하나로 모은다. 이 작업은 항상 실행되며 선행 작업이 실패·취소되거나 예상과 다르게 건너뛰어지면 실패한다.
+
+| 실행 이벤트 | Linux 전체 검증 | Windows lifecycle | main 무결성 | `CI required` 결과 |
+| --- | --- | --- | --- | --- |
+| draft PR | 건너뜀 | 건너뜀 | 건너뜀 | 성공 |
+| ready PR | 성공 | 성공 | 건너뜀 | 성공 |
+| merge queue | 성공 | 성공 | 건너뜀 | 성공 |
+| `main` push | 건너뜀 | 건너뜀 | 성공 | 성공 |
+
+표에 없는 이벤트, PR draft 상태 누락, 선행 작업 결과 누락, 실패, 취소, 예상 밖 건너뜀은 모두 fail-closed 처리한다. 이 고정된 검사 이름 덕분에 이벤트마다 서로 다른 작업을 GitHub 보호 규칙에 직접 연결하지 않는다.
+
+현재 ruleset에는 merge queue를 켜는 `merge_queue` rule이 없어 live `merge_group` 이벤트를 만들 수 없다. 따라서 현재 전환 gate는 다음처럼 나눈다.
+
+| 이벤트 | 현재 전환 전 검증 | merge queue 활성화 뒤 검증 |
+| --- | --- | --- |
+| draft PR | 실제 GitHub Actions 실행 관찰 | 동일 |
+| ready PR | 실제 GitHub Actions 실행 관찰 | 동일 |
+| `main` push | 실제 GitHub Actions 실행 관찰 | 동일 |
+| `merge_group` | `ci-trust-boundary` shell contract test | 실제 merge queue 실행 관찰을 필수로 추가 |
+
+merge queue를 별도 승인으로 활성화하기 전에는 shell contract 통과를 live 검증으로 표현하지 않는다. 활성화할 때는 live `merge_group` 성공을 ruleset 변경과 rollback의 사전 관찰 조건에 추가한다.
+
+PR이 병렬로 진행되면 각 PR과 merge queue가 최신 base SHA에서 다시 통과해야 한다. `origin/main`에는 다음 GitHub 보호 규칙이 활성화돼 있다. workflow 반영과 ruleset 변경은 서로 다른 변경 단계다.
 
 | GitHub 설정 | 현재 운영 상태 |
 | --- | --- |
-| `Protect main - required PR and CI` (`18859824`) | strict 모드로 활성화. 필수 check는 정확히 `typecheck / test / lint / build`, `report-only worktree lifecycle / windows` 두 개이며 review thread 해결도 필수다. |
+| `Protect main - required PR and CI` (`18859824`) | strict 모드로 활성화. ruleset 전환 전 필수 check는 `typecheck / test / lint / build`, `report-only worktree lifecycle / windows` 두 개다. 전환 뒤에는 정확히 `CI required` 하나만 필수로 둔다. review thread 해결은 계속 필수다. |
 | `Protect main - Code Owner review` (`18859832`) | 활성화. code owner 승인 1개가 필요하고 `blackstarzck`는 `always` 예외 actor다. 소유자 예외는 필수 CI와 review thread 처리가 끝난 뒤에만 사용한다. |
+| merge queue | 현재 `merge_queue` rule이 없어 비활성. 이 pipeline 변경에서 함께 활성화하지 않는다. |
 | merge 뒤 branch 자동 삭제 | `delete_branch_on_merge: true`로 활성화돼 있다. |
+
+ruleset은 다음 순서로만 전환한다.
+
+1. `CI required` workflow를 먼저 `main`에 반영한다. ruleset은 아직 기존 필수 check 두 개를 그대로 사용한다.
+2. draft PR, ready PR, `main` push의 live 결과와 `merge_group` shell contract가 위 표대로 모두 성공하는지 확인한다. merge queue가 나중에 활성화돼 있으면 live `merge_group`도 반드시 확인한다. 하나라도 누락·실패하면 전환하지 않고 기존 검사 아래에서 workflow 수정 PR을 처리한다.
+3. 전환 직전 ruleset 전체 payload를 다시 조회한다. 기존 `required_status_checks` 배열은 순서와 각 객체의 모든 값을 그대로 보존하고, 예상한 다른 보호 설정도 같은지 확인한다. 조회 응답을 update endpoint가 받는 필드만 값 손실 없이 정규화한 정확한 payload를 `.codex/work/<slug>/ruleset-rollback.json`에 rollback snapshot으로 보관한다. 읽기 전용 응답 metadata와 인증 정보는 snapshot에 넣지 않는다.
+4. 전환 직전 성공한 `CI required` check run을 다시 조회해 check 이름과 `app.id`를 확인한다. 현재 관찰값은 GitHub Actions app ID `15368`이지만 고정 추정하지 않는다. 값이 없거나 `15368`과 다르면 fail-closed하고 `PUT`을 실행하지 않는다.
+5. snapshot과 같되 필수 check 목록만 기존 배열에서 정확히 `[{"context":"CI required","integration_id":15368}]`로 바꾼 payload를 준비한다. 같은 ruleset endpoint에 한 번의 `PUT`을 보내 원자적으로 교체하며, 새 검사를 추가한 뒤 별도 요청에서 기존 검사를 제거하는 2단계 전환은 사용하지 않는다.
+6. 즉시 ruleset을 다시 조회해 필수 check 객체의 `context`와 `integration_id`가 각각 정확히 `CI required`, `15368`이고 나머지 설정은 snapshot과 같은지 확인한다. 최신 `main` 기준 ready PR에서도 새 필수 검사가 실제로 병합을 보호하는지 확인한다.
+
+전환 뒤 `CI required`가 누락·실패하거나 ruleset 조회 결과가 예상과 다르면 다음 순서로 원자적으로 rollback한다.
+
+1. 같은 ruleset endpoint에 rollback snapshot 전체를 한 번의 `PUT`으로 보낸다. 이 요청 하나에서 기존 필수 check 두 개를 다시 추가하고 `CI required`를 제거한다.
+2. ruleset을 다시 조회해 기존 `required_status_checks` 배열의 순서·객체 값과 다른 보호 설정이 snapshot과 정확히 같은지 확인한다.
+3. 복구된 기존 검사 아래에서 workflow 수정 PR을 검증하고 병합한다.
+4. draft PR, ready PR, `main` push의 live 결과와 `merge_group` shell contract를 모두 다시 확인한다. merge queue가 활성화돼 있으면 live `merge_group`도 다시 관찰한다.
+5. 모든 결과가 정상일 때 최신 ruleset payload를 새 snapshot으로 잡고 전환 절차를 처음부터 다시 시작한다.
+
+이 전환과 rollback은 필수 검사 공백이나 세 검사가 동시에 장기간 필수가 되는 중간 상태를 만들지 않는다. snapshot이 없거나 현재 payload가 사전 확인값과 다르면 `PUT`을 실행하지 않는다. workflow PR 자체는 GitHub ruleset을 수정하지 않으며, 외부 설정 변경은 사용자 승인과 실제 검사 관찰 뒤 별도로 수행한다.
 
 production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI target, merge, cleanup 대상이 아니다.
 

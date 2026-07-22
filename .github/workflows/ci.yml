@@ -331,3 +331,67 @@ jobs:
 
       - name: Check tracked agent skill proxies
         run: node scripts/sync-agent-skills.mjs --check
+
+  required:
+    name: CI required
+    if: ${{ always() }}
+    needs: [verify, lifecycle-windows, main-integrity]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Require expected CI results
+        env:
+          CI_EVENT_NAME: ${{ github.event_name }}
+          CI_PULL_REQUEST_DRAFT: ${{ github.event.pull_request.draft }}
+          CI_VERIFY_RESULT: ${{ needs.verify.result }}
+          CI_LIFECYCLE_WINDOWS_RESULT: ${{ needs.lifecycle-windows.result }}
+          CI_MAIN_INTEGRITY_RESULT: ${{ needs.main-integrity.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          require_result() {
+            local job_name="$1"
+            local actual="$2"
+            local expected="$3"
+            if [[ "${actual}" != "${expected}" ]]; then
+              echo "CI_REQUIRED_RESULT_MISMATCH:${job_name}:expected=${expected}:actual=${actual:-missing}" >&2
+              exit 1
+            fi
+          }
+
+          case "${CI_EVENT_NAME}" in
+            pull_request)
+              case "${CI_PULL_REQUEST_DRAFT}" in
+                true)
+                  require_result "verify" "${CI_VERIFY_RESULT}" "skipped"
+                  require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "skipped"
+                  require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
+                  ;;
+                false)
+                  require_result "verify" "${CI_VERIFY_RESULT}" "success"
+                  require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "success"
+                  require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
+                  ;;
+                *)
+                  echo "CI_REQUIRED_DRAFT_STATE_UNSUPPORTED:${CI_PULL_REQUEST_DRAFT:-missing}" >&2
+                  exit 1
+                  ;;
+              esac
+              ;;
+            merge_group)
+              require_result "verify" "${CI_VERIFY_RESULT}" "success"
+              require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "success"
+              require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
+              ;;
+            push)
+              require_result "verify" "${CI_VERIFY_RESULT}" "skipped"
+              require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "skipped"
+              require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "success"
+              ;;
+            *)
+              echo "CI_REQUIRED_EVENT_UNSUPPORTED:${CI_EVENT_NAME:-missing}" >&2
+              exit 1
+              ;;
+          esac
