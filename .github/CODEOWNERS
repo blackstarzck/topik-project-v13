@@ -1,4 +1,5 @@
 # Workflow policy and enforcement surfaces require repository-owner review.
+/.github/ @blackstarzck
 /.github/CODEOWNERS @blackstarzck
 /.github/workflows/ci.yml @blackstarzck
 /AGENTS.md @blackstarzck
@@ -6,6 +7,8 @@
 /docs/operations/ai-development-pipeline.md @blackstarzck
 /docs/supabase/ @blackstarzck
 /scripts/check-project-structure.mjs @blackstarzck
+/scripts/ @blackstarzck
+/.gitignore @blackstarzck
 /.codex/skills/ @blackstarzck
 /.claude/skills/ @blackstarzck
 /.claude/CLAUDE.md @blackstarzck
@@ -28,6 +31,14 @@
 /scripts/check-github-owner-auth.mjs @blackstarzck
 /scripts/lib/github-owner-auth.mjs @blackstarzck
 /package.json @blackstarzck
+/pnpm-lock.yaml @blackstarzck
+/vitest.config.ts @blackstarzck
+/config/ @blackstarzck
+/tests/scripts/ @blackstarzck
+/tests/scripts/ci-trust-boundary.test.mjs @blackstarzck
+/tests/scripts/ai-task-*.test.mjs @blackstarzck
+/tests/scripts/*worktree-lifecycle.test.mjs @blackstarzck
+/tests/scripts/artifact-hygiene.test.mjs @blackstarzck
 /config/artifact-hygiene-policy.json @blackstarzck
 /config/ui-contract-*.json @blackstarzck
 /config/ui-contract-runtime/ @blackstarzck

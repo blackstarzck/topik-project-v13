@@ -69,3 +69,11 @@ pnpm test:supabase:local
 | migration·RLS·RPC | SQL review, local reset/integration, migration index·`docs/supabase/` 일치 검사 |
 
 실패 시에는 실패 명령, 핵심 오류, 재현 조건과 남은 위험을 기록한다.
+
+## CI 변경 범위 분류
+
+CI는 workflow의 `paths` filter나 PR files API 대신 전체 Git diff를 NUL 구분 형식으로 읽는다. PR은 3-dot, merge queue와 `main` push는 2-dot 범위를 사용한다. 문서만 바뀐 ready PR도 base 소유 UI·artifact 검사와 project structure·agent skill 검사를 실행하지만 dependency 설치, app typecheck/test/lint/build와 Windows lifecycle은 생략한다. task pipeline·lifecycle 변경은 관련 contract와 Windows 검증을 실행하고, app·lock·config·workflow·혼합 변경은 전체 검증을 실행한다.
+
+삭제·rename·copy·type-change, symlink·gitlink, 알 수 없는 mode/status/path, 유효하지 않거나 찾을 수 없는 SHA, 실패하거나 빈 diff는 모두 전체 검증(`full-fallback`)으로 되돌린다. ASCII control·비ASCII 문자, Windows 금지 문자·device 이름, 빈·`.`·`..` segment, 점·공백으로 끝나는 segment나 HEAD tree 안의 파일·directory ASCII 대소문자 충돌처럼 Windows checkout 안전을 증명할 수 없는 경로도 해당한다. 이 분류에서 `main` push의 `full`은 감사용 결과이며 app 전체 suite 재실행을 뜻하지 않는다. push는 PR에서 완료한 검증을 중복하지 않고 dependency 없는 경량 무결성 검사만 수행한다. 정확한 분류표와 단일 필수 검사 집계 계약은 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다.
+
+후보 PR은 classifier와 집계 workflow를 함께 수정할 수 있으므로 이 둘만으로 독립적인 신뢰 경계가 되지 않는다. `.github/`, `scripts/`, package·lock·config와 pipeline contract test에 대한 `CODEOWNERS` 검토, 기존 필수 검사, base 소유 trusted 검사까지 함께 통과해야 한다.
