@@ -1,4 +1,6 @@
 import path from "node:path";
+import { createHash } from "node:crypto";
+import { validateOwnerAuthResultV1 } from "./ai-task-lifecycle-v2.mjs";
 
 const GITHUB_HOST = "github.com";
 const OWNER_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/u;
@@ -86,7 +88,33 @@ function runCommand(commandRunner, request, failureCode) {
   return normalizeOutput(result.stdout).trim();
 }
 
-export async function runGitHubOwnerAuth({ commandRunner, owner, repoPath }) {
+function buildResult({ status, host, owner, currentLogin, switchAttempted, publishApprovalUsed, checkedAt }) {
+  const result = {
+    schemaVersion: 1,
+    recordType: "OwnerAuthResultV1",
+    status,
+    host,
+    owner,
+    currentLogin,
+    switchAttempted,
+    publishApprovalUsed,
+    manualApprovalRequired: status === "SWITCH_REQUIRED",
+    checkedAt,
+    fingerprint: "",
+  };
+  const payload = Object.fromEntries(Object.entries(result).filter(([key]) => key !== "fingerprint"));
+  result.fingerprint = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+  if (validateOwnerAuthResultV1(result).length > 0) throw ownerAuthError("OWNER_AUTH_RESULT_INVALID");
+  return result;
+}
+
+export async function runGitHubOwnerAuth({
+  commandRunner,
+  owner,
+  repoPath,
+  publishApproved = false,
+  now = new Date().toISOString(),
+}) {
   assertOwner(owner);
   if (typeof repoPath !== "string" || repoPath.trim() === "") {
     throw ownerAuthError("REPOSITORY_PATH_REQUIRED");
@@ -110,6 +138,43 @@ export async function runGitHubOwnerAuth({ commandRunner, owner, repoPath }) {
     throw ownerAuthError("ORIGIN_OWNER_MISMATCH");
   }
 
+  let currentLogin = null;
+  try {
+    currentLogin = runCommand(
+      commandRunner,
+      {
+        command: "gh",
+        args: ["api", "user", "--hostname", origin.host, "--jq", ".login"],
+        cwd: resolvedRepoPath,
+      },
+      "OWNER_AUTH_VERIFY_FAILED",
+    );
+  } catch (error) {
+    if (publishApproved !== true || error?.code !== "OWNER_AUTH_VERIFY_FAILED") throw error;
+  }
+  if (currentLogin !== null && currentLogin.toLowerCase() === owner.toLowerCase()) {
+    return buildResult({
+      status: "OWNER_AUTHENTICATED",
+      host: origin.host,
+      owner,
+      currentLogin,
+      switchAttempted: false,
+      publishApprovalUsed: false,
+      checkedAt: now,
+    });
+  }
+  if (currentLogin !== null && publishApproved !== true) {
+    return buildResult({
+      status: "SWITCH_REQUIRED",
+      host: origin.host,
+      owner,
+      currentLogin,
+      switchAttempted: false,
+      publishApprovalUsed: false,
+      checkedAt: now,
+    });
+  }
+
   runCommand(
     commandRunner,
     {
@@ -126,30 +191,22 @@ export async function runGitHubOwnerAuth({ commandRunner, owner, repoPath }) {
     },
     "OWNER_AUTH_SWITCH_FAILED",
   );
-  const authenticatedLogin = runCommand(
-    commandRunner,
-    {
-      command: "gh",
-      args: [
-        "api",
-        "user",
-        "--hostname",
-        origin.host,
-        "--jq",
-        ".login",
-      ],
-      cwd: resolvedRepoPath,
-    },
-    "OWNER_AUTH_VERIFY_FAILED",
-  );
+  const authenticatedLogin = runCommand(commandRunner, {
+    command: "gh",
+    args: ["api", "user", "--hostname", origin.host, "--jq", ".login"],
+    cwd: resolvedRepoPath,
+  }, "OWNER_AUTH_VERIFY_FAILED");
   if (authenticatedLogin.toLowerCase() !== owner.toLowerCase()) {
     throw ownerAuthError("AUTHENTICATED_LOGIN_MISMATCH");
   }
 
-  return {
+  return buildResult({
     status: "OWNER_AUTHENTICATED",
     host: origin.host,
     owner,
-    manualApprovalRequired: false,
-  };
+    currentLogin: authenticatedLogin,
+    switchAttempted: true,
+    publishApprovalUsed: true,
+    checkedAt: now,
+  });
 }

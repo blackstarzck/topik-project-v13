@@ -7,6 +7,7 @@ const repositoryPath = path.resolve("fixture-repository");
 const expectedOwner = "blackstarzck";
 const originUrl = "https://github.com/blackstarzck/talkpik-ai.git";
 const expectedCommandTimeoutMs = 30_000;
+const checkedAt = "2026-07-22T00:00:00.000Z";
 
 function commandResult({
   status = 0,
@@ -125,29 +126,25 @@ describe("repository-owner authentication preflight", () => {
         commandRunner,
         owner: expectedOwner,
         repoPath: repositoryPath,
+        now: checkedAt,
       }),
-    ).resolves.toEqual({
+    ).resolves.toMatchObject({
+      schemaVersion: 1,
+      recordType: "OwnerAuthResultV1",
       status: "OWNER_AUTHENTICATED",
       host: "github.com",
       owner: expectedOwner,
+      currentLogin: expectedOwner,
+      switchAttempted: false,
+      publishApprovalUsed: false,
       manualApprovalRequired: false,
+      checkedAt,
+      fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
     expect(requests).toEqual([
       {
         command: "git",
         args: ["remote", "get-url", "origin"],
-        options: { cwd: repositoryPath, timeout: expectedCommandTimeoutMs },
-      },
-      {
-        command: "gh",
-        args: [
-          "auth",
-          "switch",
-          "--hostname",
-          "github.com",
-          "--user",
-          expectedOwner,
-        ],
         options: { cwd: repositoryPath, timeout: expectedCommandTimeoutMs },
       },
       {
@@ -231,6 +228,7 @@ describe("repository-owner authentication preflight", () => {
     const authHeaderSentinel = "authorization: Bearer RAW_CREDENTIAL";
     const commands = scriptedRunner([
       gitOriginStep(),
+      loginStep("collaborator"),
       switchStep(
         commandResult({
           status: 1,
@@ -243,7 +241,7 @@ describe("repository-owner authentication preflight", () => {
     let stderr = "";
 
     const exitCode = await runGitHubOwnerAuthCli({
-      argv: ["--repo", repositoryPath, "--owner", expectedOwner],
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--publish-approved", "--now", checkedAt],
       commandRunner: commands.runner,
       writeStderr: (value) => {
         stderr += value;
@@ -265,6 +263,7 @@ describe("repository-owner authentication preflight", () => {
     const { runGitHubOwnerAuth } = await loadLibrary();
     const commands = scriptedRunner([
       gitOriginStep(),
+      loginStep("collaborator"),
       switchStep(),
       loginStep("collaborator"),
     ]);
@@ -274,6 +273,8 @@ describe("repository-owner authentication preflight", () => {
         commandRunner: commands.runner,
         owner: expectedOwner,
         repoPath: repositoryPath,
+        publishApproved: true,
+        now: checkedAt,
       }),
     ).rejects.toMatchObject({ code: "AUTHENTICATED_LOGIN_MISMATCH" });
     commands.assertComplete();
@@ -285,7 +286,6 @@ describe("repository-owner authentication preflight", () => {
     const authHeaderSentinel = "authorization: Bearer VERIFY_CREDENTIAL";
     const commands = scriptedRunner([
       gitOriginStep(),
-      switchStep(),
       loginStep(expectedOwner, {
         status: null,
         error: Object.assign(new Error("timed out"), { code: "ETIMEDOUT" }),
@@ -298,7 +298,7 @@ describe("repository-owner authentication preflight", () => {
     let stderr = "";
 
     const exitCode = await runGitHubOwnerAuthCli({
-      argv: ["--repo", repositoryPath, "--owner", expectedOwner],
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--now", checkedAt],
       commandRunner: commands.runner,
       writeStderr: (value) => {
         stderr += value;
@@ -316,18 +316,100 @@ describe("repository-owner authentication preflight", () => {
     commands.assertComplete();
   });
 
+  it("switches with explicit publish approval when the first login verification fails", async () => {
+    const { runGitHubOwnerAuthCli } = await loadCli();
+    const verifySecret = "ghp_INITIAL_VERIFY_SECRET_MUST_NOT_LEAK";
+    const commands = scriptedRunner([
+      gitOriginStep(),
+      loginStep(expectedOwner, {
+        status: 1,
+        stdout: verifySecret,
+        stderr: "authorization: Bearer INITIAL_VERIFY_CREDENTIAL",
+      }),
+      switchStep(),
+      loginStep(expectedOwner),
+    ]);
+    let stdout = "";
+    let stderr = "";
+
+    const exitCode = await runGitHubOwnerAuthCli({
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--publish-approved", "--now", checkedAt],
+      commandRunner: commands.runner,
+      writeStderr: (value) => { stderr += value; },
+      writeStdout: (value) => { stdout += value; },
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr).toBe("");
+    expect(JSON.parse(stdout)).toMatchObject({
+      status: "OWNER_AUTHENTICATED",
+      currentLogin: expectedOwner,
+      switchAttempted: true,
+      publishApprovalUsed: true,
+    });
+    expect(`${stdout}${stderr}`).not.toContain(verifySecret);
+    commands.assertComplete();
+  });
+
+  it("fails closed without switching when the first login verification fails without approval", async () => {
+    const { runGitHubOwnerAuthCli } = await loadCli();
+    const commands = scriptedRunner([
+      gitOriginStep(),
+      loginStep(expectedOwner, { status: 1, stderr: "ghp_UNAPPROVED_SECRET" }),
+    ]);
+    let stdout = "";
+    let stderr = "";
+
+    const exitCode = await runGitHubOwnerAuthCli({
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--now", checkedAt],
+      commandRunner: commands.runner,
+      writeStderr: (value) => { stderr += value; },
+      writeStdout: (value) => { stdout += value; },
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stdout).toBe("");
+    expect(JSON.parse(stderr)).toEqual({ code: "OWNER_AUTH_VERIFY_FAILED" });
+    expect(commands.calls.some(({ args }) => args[0] === "auth")).toBe(false);
+    commands.assertComplete();
+  });
+
+  it("reports a safe switch failure after an approved recovery from failed login verification", async () => {
+    const { runGitHubOwnerAuthCli } = await loadCli();
+    const switchSecret = "github_pat_SWITCH_SECRET_MUST_NOT_LEAK";
+    const commands = scriptedRunner([
+      gitOriginStep(),
+      loginStep(expectedOwner, { status: 1 }),
+      switchStep(commandResult({ status: 1, stdout: switchSecret, stderr: "Bearer SWITCH_CREDENTIAL" })),
+    ]);
+    let stdout = "";
+    let stderr = "";
+
+    const exitCode = await runGitHubOwnerAuthCli({
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--publish-approved", "--now", checkedAt],
+      commandRunner: commands.runner,
+      writeStderr: (value) => { stderr += value; },
+      writeStdout: (value) => { stdout += value; },
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stdout).toBe("");
+    expect(JSON.parse(stderr)).toEqual({ code: "OWNER_AUTH_SWITCH_FAILED" });
+    expect(`${stdout}${stderr}`).not.toContain(switchSecret);
+    commands.assertComplete();
+  });
+
   it("accepts a case-insensitive verified login and emits only safe success fields", async () => {
     const { runGitHubOwnerAuthCli } = await loadCli();
     const commands = scriptedRunner([
       gitOriginStep(),
-      switchStep(),
       loginStep("BlackStarzck"),
     ]);
     let stdout = "";
     let stderr = "";
 
     const exitCode = await runGitHubOwnerAuthCli({
-      argv: ["--repo", repositoryPath, "--owner", expectedOwner],
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--now", checkedAt],
       commandRunner: commands.runner,
       writeStderr: (value) => {
         stderr += value;
@@ -339,12 +421,67 @@ describe("repository-owner authentication preflight", () => {
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
-    expect(JSON.parse(stdout)).toEqual({
+    expect(JSON.parse(stdout)).toMatchObject({
+      schemaVersion: 1,
+      recordType: "OwnerAuthResultV1",
       status: "OWNER_AUTHENTICATED",
       host: "github.com",
       owner: expectedOwner,
+      currentLogin: "BlackStarzck",
+      switchAttempted: false,
+      publishApprovalUsed: false,
       manualApprovalRequired: false,
+      checkedAt,
+      fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
     });
+    commands.assertComplete();
+  });
+
+  it("reports SWITCH_REQUIRED without changing global auth when publish approval is absent", async () => {
+    const { runGitHubOwnerAuthCli } = await loadCli();
+    const commands = scriptedRunner([gitOriginStep(), loginStep("collaborator")]);
+    let stdout = "";
+    let stderr = "";
+
+    const exitCode = await runGitHubOwnerAuthCli({
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--now", checkedAt],
+      commandRunner: commands.runner,
+      writeStderr: (value) => { stderr += value; },
+      writeStdout: (value) => { stdout += value; },
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr).toBe("");
+    expect(JSON.parse(stdout)).toMatchObject({
+      recordType: "OwnerAuthResultV1",
+      status: "SWITCH_REQUIRED",
+      currentLogin: "collaborator",
+      switchAttempted: false,
+      publishApprovalUsed: false,
+      manualApprovalRequired: true,
+    });
+    expect(commands.calls.some(({ args }) => args[0] === "auth")).toBe(false);
+    commands.assertComplete();
+  });
+
+  it("rejects a non-login response without echoing it", async () => {
+    const { runGitHubOwnerAuthCli } = await loadCli();
+    const sentinel = "ghp_SECRET_MUST_NOT_BECOME_A_LOGIN";
+    const commands = scriptedRunner([gitOriginStep(), loginStep(sentinel)]);
+    let stdout = "";
+    let stderr = "";
+
+    const exitCode = await runGitHubOwnerAuthCli({
+      argv: ["--repo", repositoryPath, "--owner", expectedOwner, "--now", checkedAt],
+      commandRunner: commands.runner,
+      writeStderr: (value) => { stderr += value; },
+      writeStdout: (value) => { stdout += value; },
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stdout).toBe("");
+    expect(JSON.parse(stderr)).toEqual({ code: "OWNER_AUTH_RESULT_INVALID" });
+    expect(`${stdout}${stderr}`).not.toContain(sentinel);
     commands.assertComplete();
   });
 });

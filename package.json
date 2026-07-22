@@ -30,6 +30,7 @@
     "task:status": "node scripts/ai-task.mjs status",
     "task:handoff": "node scripts/ai-task.mjs handoff",
     "task:resume": "node scripts/ai-task.mjs resume",
+    "task:finish": "node scripts/ai-task.mjs finish",
     "task:runtime": "node scripts/ai-task.mjs runtime",
     "task:finalize": "node scripts/ai-task.mjs finalize",
     "task:cleanup": "node scripts/ai-task.mjs cleanup",
