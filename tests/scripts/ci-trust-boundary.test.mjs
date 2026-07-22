@@ -536,6 +536,19 @@ describe("CI trusted UI contract boundary", () => {
         },
       },
       {
+        name: "pipeline metrics entrypoint",
+        baseFiles: { "scripts/ai-task.mjs": "before\n" },
+        mutate: ({ write }) =>
+          write("scripts/ai-task.mjs", "after\n"),
+        expected: {
+          run_app: "false",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "pipeline",
+        },
+      },
+      {
         name: "application",
         baseFiles: { "src/app/page.tsx": "before\n" },
         mutate: ({ write }) => write("src/app/page.tsx", "after\n"),
@@ -929,6 +942,8 @@ describe("CI trusted UI contract boundary", () => {
 
     expect(verifyJob).toContain("Check pipeline lifecycle contracts");
     expect(verifyJob).toContain("needs.classify-changes.outputs.run_pipeline_contracts");
+    expect(verifyJob).toContain("tests/scripts/ai-task-metrics.test.mjs");
+    expect(verifyJob).toContain("tests/scripts/ai-task-measure-cli.test.mjs");
     expect(windowsJob).toContain("needs: [classify-changes]");
     expect(windowsJob).toContain(
       "needs.classify-changes.outputs.run_windows_lifecycle == 'true'",

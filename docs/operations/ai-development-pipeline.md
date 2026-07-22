@@ -34,9 +34,9 @@ feat|fix|refactor|test|docs|chore|ci/<kebab-slug>
 flowchart LR
   A["origin fetch"] --> B["SHA 고정"]
   B --> C["task:start"]
-  C --> D["구현·검증"]
+  C --> D["구현·측정된 검증"]
   D --> E{"실행자 변경?"}
-  E -- 예 --> F["handoff → resume"]
+  E -- 예 --> F["handoff offer → accept"]
   F --> D
   E -- 아니요 --> N{"owner-auth 성공?"}
   N -- 예 --> O["소유자 PR → 필수 CI·review 의견 처리 → merge"]
@@ -111,6 +111,34 @@ pnpm task:owner-auth -- --repo <task-worktree> --branch feat/example-task --owne
 
 token·인증 명령의 stdout·stderr는 결과에 포함하지 않으며 각 하위 명령은 30초가 지나면 실패한다. 성공 결과의 `manualApprovalRequired: false`는 계정 확인의 중복 절차만 생략한다는 뜻이다. 필수 CI와 review 의견 처리는 그대로 의무이며 어떤 인증 경로도 이를 우회할 수 없다.
 
+### 파이프라인 소요 시간 측정
+
+`task:start`, `task:status`, 인수인계, runtime, finish, finalize, cleanup과 `--branch`를 지정한 owner-auth는 별도 입력 없이 자동으로 시간을 기록한다. 10초 이상 걸릴 것으로 예상되는 setup·test·typecheck·lint·build·review·CI·publish 명령은 다음처럼 `task:measure`로 실행한다.
+
+```bash
+pnpm task:measure -- --repo <task-worktree> --branch feat/example-task --actor codex --phase test --scope focused --budget small-check -- pnpm vitest run tests/example.test.ts
+pnpm task:measure -- --repo <task-worktree> --branch feat/example-task --actor codex --phase ci --scope full --budget full-ci -- pnpm test
+pnpm task:metrics -- --repo <기준-checkout-or-worktree> --branch feat/example-task
+```
+
+`--` 뒤 명령은 shell 없이 해당 worktree에서 실행한다. 명령 원문·인자·환경 변수·stdout·stderr는 저장하지 않으며 원래 종료 코드를 그대로 반환한다. 잘못된 task·실행자·worktree는 자식 명령 실행 전에 차단한다. 소유권 확인 뒤 측정 저장소만 쓸 수 없는 경우에는 `TASK_METRIC_RECORDING_WARNING`을 출력하되 원래 명령을 실행하고 그 결과를 바꾸지 않는다. 예산 초과도 `TASK_METRIC_BUDGET_EXCEEDED` 경고와 보고서 집계만 만들며 test·CI·Git 안전 조건을 우회하거나 새 실패 조건이 되지 않는다.
+
+| budget profile | 경고 기준 | 주 용도 |
+| --- | ---: | --- |
+| `lifecycle-fast` | 30초 | 자동 lifecycle 명령 |
+| `setup` | 180초 | dependency·환경 준비 |
+| `small-check` | 120초 | 영향 범위 검사 |
+| `docs-ci` | 60초 | 문서 전용 CI |
+| `full-ci` | 600초 | 전체 test·CI |
+| `review` | 300초 | 독립 review 대기 |
+| `publish` | 120초 | 인증·push·PR 게시 |
+
+`task:metrics`는 저장소를 바꾸지 않는 report-only 명령이다. `commandTotalMs`는 각 명령 시간을 단순 합산하고, `measuredWallMs`는 서로 겹친 구간을 한 번만 센 실제 측정 구간이며, 그 차이를 `overlapMs`로 보여준다. 작업 사이의 사람 대기 시간이나 측정하지 않은 세션 공백은 포함하지 않는다. phase별 시도·실패·미완료·예산 초과도 함께 집계한다. 이 보고서 자체는 다시 측정하지 않는다.
+
+측정 record는 Git common directory의 `talkpik-task-lifecycle/v2/metrics/<task-id>/<span-id>.json`에 `TaskMetricSpanV1`로 저장한다. 허용 필드가 닫혀 있고 fingerprint, task·branch, phase·scope, 시작·종료 시각, duration, 상태·exit code, PID, budget만 포함한다. actor는 저장하지 않고 실행 시 task registry와만 대조한다. symlink·junction·reparse·경로 탈출·fingerprint 변조·중복 span과 동시 완료 경쟁은 거부한다. 측정 파일은 task 상태, cleanup 승인 fingerprint와 삭제 후보, CI 성공 기준의 일부가 아니다.
+
+GitHub Actions의 각 runner는 로컬 task registry를 공유하지 않으므로 job summary의 `service_time_seconds`를 별도로 남긴다. queue 시간은 runner 안에서 정확히 알 수 없어 GitHub run API에서 확인하며 추정값을 만들지 않는다.
+
 ### 종료 보고와 정리
 
 ```bash
@@ -158,11 +186,12 @@ GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 �
 ├── start-recoveries/<task-id>.json
 ├── finish-reports/<task-id>.json
 ├── owner-auth/<task-id>.json
+├── metrics/<task-id>/<span-id>.json
 ├── runtimes/<task-id>.json
 └── cleanups/<task-id>.json
 ```
 
-기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. 새 공개 sidecar는 `HandoffContextV1`, `StartRecoveryV1`, `FinishReportV1`, `OwnerAuthResultV1`로 분리한다. 모든 record는 허용 필드만 받고 크기·문자열·배열·시간·경로·fingerprint를 검증하며 원자적으로 교체한다. 같은 task의 새 finish·owner-auth sidecar 시간은 task와 직전 sidecar보다 과거일 수 없다. unknown field, secret·token·원문 thread ID와 유사한 key, prototype 오염, symlink·경로 탈출은 거부한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
+기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. 새 공개 sidecar는 `HandoffContextV1`, `StartRecoveryV1`, `FinishReportV1`, `OwnerAuthResultV1`, `TaskMetricSpanV1`로 분리한다. 모든 record는 허용 필드만 받고 크기·문자열·배열·시간·경로·fingerprint를 검증하며 원자적으로 교체한다. 같은 task의 새 finish·owner-auth sidecar 시간은 task와 직전 sidecar보다 과거일 수 없다. unknown field, secret·token·원문 thread ID와 유사한 key, prototype 오염, symlink·경로 탈출은 거부한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
 
 ```mermaid
 stateDiagram-v2

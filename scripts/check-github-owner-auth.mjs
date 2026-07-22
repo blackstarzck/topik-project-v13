@@ -3,7 +3,11 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { runGitHubOwnerAuth } from "./lib/github-owner-auth.mjs";
-import { writeOwnerAuthResultSidecar } from "./lib/ai-task-lifecycle-v2.mjs";
+import { readTaskStatus, writeOwnerAuthResultSidecar } from "./lib/ai-task-lifecycle-v2.mjs";
+import {
+  finishLifecycleTaskMetricSpan,
+  startLifecycleTaskMetricSpan,
+} from "./ai-task.mjs";
 
 function cliError(code) {
   const error = new Error(code);
@@ -57,14 +61,46 @@ function safeErrorCode(error) {
     : "OWNER_AUTH_PREFLIGHT_FAILED";
 }
 
+function isMetricContextError(error) {
+  return new Set([
+    "TASK_METRIC_ACTOR_MISMATCH",
+    "TASK_METRIC_TASK_NOT_ACTIVE",
+    "TASK_METRIC_TASK_NOT_FOUND",
+    "TASK_METRIC_WORKTREE_REQUIRED",
+  ]).has(error?.code ?? error?.message);
+}
+
 export async function runGitHubOwnerAuthCli({
   argv,
   commandRunner = executeCommand,
   writeStderr = (value) => process.stderr.write(value),
   writeStdout = (value) => process.stdout.write(value),
 }) {
+  let options = null;
+  let metricSpan = null;
   try {
-    const options = parseArguments(argv);
+    options = parseArguments(argv);
+    if (options.branch !== null) {
+      let status = null;
+      try {
+        status = readTaskStatus({ repoPath: options.repoPath, branch: options.branch });
+      } catch {
+        status = null;
+      }
+      try {
+        if (!status?.task) throw cliError("TASK_METRIC_TASK_NOT_FOUND");
+        metricSpan = startLifecycleTaskMetricSpan({
+          repoPath: options.repoPath,
+          branch: options.branch,
+          actor: status.task.activeActor ?? status.task.handoffFromActor,
+          operation: "owner-auth",
+        });
+      } catch (error) {
+        if (!isMetricContextError(error)) {
+          writeStderr(`${JSON.stringify({ code: "TASK_METRIC_RECORDING_WARNING" })}\n`);
+        }
+      }
+    }
     const result = await runGitHubOwnerAuth({
       commandRunner,
       owner: options.owner,
@@ -79,9 +115,39 @@ export async function runGitHubOwnerAuthCli({
         result,
       });
     }
+    if (metricSpan !== null) {
+      try {
+        const metricResult = finishLifecycleTaskMetricSpan({
+          repoPath: options.repoPath,
+          branch: options.branch,
+          spanId: metricSpan.spanId,
+          exitCode: 0,
+        });
+        if (metricResult.exceeded) {
+          writeStderr(`${JSON.stringify({ code: "TASK_METRIC_BUDGET_EXCEEDED" })}\n`);
+        }
+      } catch {
+        writeStderr(`${JSON.stringify({ code: "TASK_METRIC_RECORDING_WARNING" })}\n`);
+      }
+    }
     writeStdout(`${JSON.stringify(result)}\n`);
     return 0;
   } catch (error) {
+    if (metricSpan !== null) {
+      try {
+        const metricResult = finishLifecycleTaskMetricSpan({
+          repoPath: options.repoPath,
+          branch: options.branch,
+          spanId: metricSpan.spanId,
+          exitCode: 1,
+        });
+        if (metricResult.exceeded) {
+          writeStderr(`${JSON.stringify({ code: "TASK_METRIC_BUDGET_EXCEEDED" })}\n`);
+        }
+      } catch {
+        writeStderr(`${JSON.stringify({ code: "TASK_METRIC_RECORDING_WARNING" })}\n`);
+      }
+    }
     writeStderr(`${JSON.stringify({ code: safeErrorCode(error) })}\n`);
     return 1;
   }
