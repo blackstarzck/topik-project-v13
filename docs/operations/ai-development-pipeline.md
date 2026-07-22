@@ -202,7 +202,19 @@ bootstrap target은 `origin/main`으로 고정한다. `pull_request.base.ref`는
 
 ## CI와 병렬 PR
 
-CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 다음을 검사한다.
+CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 먼저 전체 Git diff를 분류한다. workflow 수준의 `paths`·`paths-ignore`와 GitHub PR files API는 사용하지 않는다. checkout은 전체 이력을 받고, PR은 base와 head의 merge base를 기준으로 한 3-dot diff, `merge_group`과 push는 base/before와 head 사이의 2-dot diff를 `git diff --name-status -z --no-renames --no-ext-diff --no-textconv --ignore-submodules=none`으로 읽는다.
+
+분류기는 `run_app`, `run_pipeline_contracts`, `run_windows_lifecycle`, `changed_count`, `classification`을 출력한다. SHA·commit·merge base·diff·NUL record를 확인할 수 없거나 변경이 비어 있으면 전체 검증으로 되돌린다. 삭제, rename이 `--no-renames`로 풀린 삭제+추가, copy/type-change, symlink·gitlink, 예상 밖 file mode·status와 분류표에 없는 경로도 같은 방식으로 처리한다. 경로에 ASCII control·비ASCII 문자, Windows 금지 문자(`< > : " \\ | ? *`), 빈·`.`·`..` segment, 끝의 점·공백, 대소문자를 무시한 Windows device 이름(`CON`, `PRN`, `AUX`, `NUL`, `COM1`~`COM9`, `LPT1`~`LPT9`, `COM¹`~`COM³`, `LPT¹`~`LPT³`, 확장자 포함)이 있어 Windows checkout 안전을 증명할 수 없을 때도 전체 검증과 Windows lifecycle을 실행한다. Unicode 대소문자 충돌을 Linux Bash만으로 완전하게 증명하지 않고 비ASCII 경로를 보수적으로 처리한다. 또한 HEAD tree의 파일과 directory entry 경로를 NUL-safe로 한 번 읽고 ASCII 대소문자를 접은 전체 경로 identity가 중복되는지 확인한다. `docs/Guide.md`와 `docs/guide.md`, `docs/Foo.md` 파일과 `docs/foo.md/bar.md` directory처럼 Windows에서 충돌하는 경로가 있거나 tree 목록을 읽지 못하면 파일 내용은 열지 않고 `full-fallback` 처리한다.
+
+| 변경 분류 | Linux에서 실행하는 검증 | Windows lifecycle |
+| --- | --- | --- |
+| 문서만 변경 | base 소유 UI·artifact 검사, project structure, agent skill 정책 | 건너뜀 |
+| pipeline·lifecycle만 변경 | 위 신뢰 경계 검사 + 관련 lifecycle contract | 실행 |
+| app·lock·config·workflow·혼합·불명확 | 위 신뢰 경계 검사 + typecheck, 전체 test, lint, build | 실행 |
+
+문서만 바뀌어도 Linux `verify` 작업 자체는 실행하고 신뢰 경계 검사를 통과해야 한다. dependency 설치와 app 검증만 생략한다. pipeline-only 변경은 dependency를 설치한 뒤 관련 contract를 집중 실행한다. app 전체 검증의 `pnpm test`가 lifecycle contract도 포함하므로 같은 Linux contract를 별도로 중복 실행하지 않는다.
+
+CI가 검사하는 계약은 다음과 같다.
 
 1. trusted base 기반 UI·artifact diff 계약
 2. project structure와 agent skill 정책
@@ -211,16 +223,18 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 다음을 
 5. typecheck, 전체 test, lint, build
 6. Windows에서 v1과 v2·cleanup lifecycle contract
 
-세 실행 경로의 결과는 후보 코드를 checkout하거나 package를 설치하지 않는 `CI required` 작업 하나로 모은다. 이 작업은 항상 실행되며 선행 작업이 실패·취소되거나 예상과 다르게 건너뛰어지면 실패한다.
+세 실행 경로의 결과는 후보 코드를 checkout하거나 package를 설치하지 않는 `CI required` 작업 하나로 모은다. 이 작업은 항상 실행되며 분류 작업과 선행 작업이 실패·취소되거나, 분류 output이 누락·변조되거나, 예상과 다르게 건너뛰어지면 실패한다.
 
-| 실행 이벤트 | Linux 전체 검증 | Windows lifecycle | main 무결성 | `CI required` 결과 |
+| 실행 이벤트·분류 | Linux 검증 | Windows lifecycle | main 무결성 | `CI required` 결과 |
 | --- | --- | --- | --- | --- |
-| draft PR | 건너뜀 | 건너뜀 | 건너뜀 | 성공 |
-| ready PR | 성공 | 성공 | 건너뜀 | 성공 |
-| merge queue | 성공 | 성공 | 건너뜀 | 성공 |
-| `main` push | 건너뜀 | 건너뜀 | 성공 | 성공 |
+| draft PR | 분류와 함께 건너뜀 | 건너뜀 | 건너뜀 | 성공 |
+| ready PR·merge queue, 문서만 | 신뢰 경계 검사 성공 | 건너뜀 | 건너뜀 | 성공 |
+| ready PR·merge queue, pipeline 또는 전체 | 집중 또는 전체 검증 성공 | 성공 | 건너뜀 | 성공 |
+| `main` push | 분류 성공 뒤 건너뜀 | 건너뜀 | 경량 검사 성공 | 성공 |
 
-표에 없는 이벤트, PR draft 상태 누락, 선행 작업 결과 누락, 실패, 취소, 예상 밖 건너뜀은 모두 fail-closed 처리한다. 이 고정된 검사 이름 덕분에 이벤트마다 서로 다른 작업을 GitHub 보호 규칙에 직접 연결하지 않는다.
+`main` push의 `full`·`full-fallback` 분류는 감사와 fail-safe 집계용이다. PR 또는 merge queue에서 이미 전체 검증한 내용을 merge 직후 다시 실행하지 않고, push에서는 dependency 없는 경량 무결성만 실행한다. 표에 없는 이벤트, PR draft 상태 누락, 분류 결과·output 누락, 비정상 boolean 조합, 선행 작업 실패·취소·예상 밖 건너뜀은 모두 fail-closed 처리한다. 이 고정된 검사 이름 덕분에 이벤트마다 서로 다른 작업을 GitHub 보호 규칙에 직접 연결하지 않는다.
+
+분류기와 `CI required` 집계기는 후보 workflow 안에 있으므로 후보가 두 코드를 함께 바꾸는 상황을 기술적으로 완전히 분리하지 못한다. 이를 독립적인 보안 경계라고 표현하지 않는다. `.github/`, `scripts/`, package·lock·config와 pipeline contract test는 `CODEOWNERS`에서 `blackstarzck` 소유로 묶고, workflow 변경 PR은 기존 필수 검사 아래에서 diff와 contract test를 소유자가 검토한 뒤 반영한다. base 소유 UI·artifact 검사는 이 절차와 별도로 후보 코드보다 먼저 계속 실행한다.
 
 현재 ruleset에는 merge queue를 켜는 `merge_queue` rule이 없어 live `merge_group` 이벤트를 만들 수 없다. 따라서 현재 전환 gate는 다음처럼 나눈다.
 

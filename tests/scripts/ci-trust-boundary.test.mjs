@@ -1,5 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -87,7 +94,7 @@ function jobStepRunScript(jobId, stepName) {
   return scriptLines.join("\n");
 }
 
-function runBashScript(source, environment = {}) {
+function runBashScript(source, environment = {}, options = {}) {
   const shellQuote = (value) => `'${String(value).replaceAll("'", `'\\''`)}'`;
   const exports = Object.entries(environment).map(([name, value]) => {
     if (!/^[A-Z][A-Z0-9_]*$/u.test(name)) throw new Error(`invalid env name: ${name}`);
@@ -98,7 +105,240 @@ function runBashScript(source, environment = {}) {
   );
   return spawnSync("bash", ["-c", `printf %s ${encoded} | base64 -d | bash`], {
     encoding: "utf8",
+    cwd: options.cwd,
   });
+}
+
+function runGit(repository, args) {
+  return runGitInput(repository, args);
+}
+
+function runGitInput(repository, args, input) {
+  const result = spawnSync("git", args, {
+    cwd: repository,
+    encoding: "utf8",
+    input,
+  });
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
+  }
+  return result.stdout.trim();
+}
+
+function createObjectDiffRepository(relativePath) {
+  const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-object-diff-"));
+  runGit(repository, ["init", "--initial-branch=main"]);
+  runGit(repository, ["config", "user.name", "CI test"]);
+  runGit(repository, ["config", "user.email", "ci-test@example.invalid"]);
+  runGit(repository, ["config", "core.protectNTFS", "false"]);
+  runGit(repository, ["config", "core.ignoreCase", "false"]);
+
+  const emptyTree = runGitInput(repository, ["mktree", "-z"], "");
+  const baseSha = runGit(repository, ["commit-tree", emptyTree, "-m", "base"]);
+  let objectId = runGitInput(repository, ["hash-object", "-w", "--stdin"], "payload\n");
+  let objectType = "blob";
+  let objectMode = "100644";
+  const segments = relativePath.split("/");
+  for (let index = segments.length - 1; index >= 0; index -= 1) {
+    const treeEntry = `${objectMode} ${objectType} ${objectId}\t${segments[index]}\0`;
+    objectId = runGitInput(repository, ["mktree", "-z"], treeEntry);
+    objectType = "tree";
+    objectMode = "040000";
+  }
+  const headSha = runGit(repository, [
+    "commit-tree",
+    objectId,
+    "-p",
+    baseSha,
+    "-m",
+    "head",
+  ]);
+  return { baseSha, headSha, repository };
+}
+
+function createCaseCollisionRepository() {
+  const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-case-diff-"));
+  runGit(repository, ["init", "--initial-branch=main"]);
+  runGit(repository, ["config", "user.name", "CI test"]);
+  runGit(repository, ["config", "user.email", "ci-test@example.invalid"]);
+  runGit(repository, ["config", "core.protectNTFS", "false"]);
+  runGit(repository, ["config", "core.ignoreCase", "false"]);
+
+  const existingBlob = runGitInput(
+    repository,
+    ["hash-object", "-w", "--stdin"],
+    "existing\n",
+  );
+  const addedBlob = runGitInput(
+    repository,
+    ["hash-object", "-w", "--stdin"],
+    "added\n",
+  );
+  const baseDocsTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    `100644 blob ${existingBlob}\tGuide.md\0`,
+  );
+  const headDocsTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    [
+      `100644 blob ${existingBlob}\tGuide.md\0`,
+      `100644 blob ${addedBlob}\tguide.md\0`,
+    ].join(""),
+  );
+  const baseTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    `040000 tree ${baseDocsTree}\tdocs\0`,
+  );
+  const headTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    `040000 tree ${headDocsTree}\tdocs\0`,
+  );
+  const baseSha = runGit(repository, ["commit-tree", baseTree, "-m", "base"]);
+  const headSha = runGit(repository, [
+    "commit-tree",
+    headTree,
+    "-p",
+    baseSha,
+    "-m",
+    "head",
+  ]);
+  return { baseSha, headSha, repository };
+}
+
+function createFileDirectoryCaseCollisionRepository() {
+  const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-tree-case-"));
+  runGit(repository, ["init", "--initial-branch=main"]);
+  runGit(repository, ["config", "user.name", "CI test"]);
+  runGit(repository, ["config", "user.email", "ci-test@example.invalid"]);
+  runGit(repository, ["config", "core.ignoreCase", "false"]);
+
+  const emptyTree = runGitInput(repository, ["mktree", "-z"], "");
+  const baseSha = runGit(repository, ["commit-tree", emptyTree, "-m", "base"]);
+  const fileBlob = runGitInput(
+    repository,
+    ["hash-object", "-w", "--stdin"],
+    "file\n",
+  );
+  const nestedBlob = runGitInput(
+    repository,
+    ["hash-object", "-w", "--stdin"],
+    "nested\n",
+  );
+  const nestedTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    `100644 blob ${nestedBlob}\tbar.md\0`,
+  );
+  const docsTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    [
+      `100644 blob ${fileBlob}\tFoo.md\0`,
+      `040000 tree ${nestedTree}\tfoo.md\0`,
+    ].join(""),
+  );
+  const headTree = runGitInput(
+    repository,
+    ["mktree", "-z"],
+    `040000 tree ${docsTree}\tdocs\0`,
+  );
+  const headSha = runGit(repository, [
+    "commit-tree",
+    headTree,
+    "-p",
+    baseSha,
+    "-m",
+    "head",
+  ]);
+  return { baseSha, headSha, repository };
+}
+
+function writeRepositoryFile(repository, relativePath, contents) {
+  const absolutePath = path.join(repository, relativePath);
+  mkdirSync(path.dirname(absolutePath), { recursive: true });
+  writeFileSync(absolutePath, contents, "utf8");
+}
+
+function createDiffRepository(baseFiles, headMutation) {
+  const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-classifier-"));
+  const indexOverrides = [];
+  runGit(repository, ["init", "--initial-branch=main"]);
+  runGit(repository, ["config", "user.name", "CI test"]);
+  runGit(repository, ["config", "user.email", "ci-test@example.invalid"]);
+  for (const [relativePath, contents] of Object.entries(baseFiles)) {
+    writeRepositoryFile(repository, relativePath, contents);
+  }
+  runGit(repository, ["add", "--all"]);
+  runGit(repository, ["commit", "-m", "base"]);
+  const baseSha = runGit(repository, ["rev-parse", "HEAD"]);
+
+  headMutation({
+    remove(relativePath) {
+      rmSync(path.join(repository, relativePath));
+    },
+    rename(from, to) {
+      mkdirSync(path.dirname(path.join(repository, to)), { recursive: true });
+      runGit(repository, ["mv", from, to]);
+    },
+    write(relativePath, contents) {
+      writeRepositoryFile(repository, relativePath, contents);
+    },
+    symlink(relativePath, target) {
+      writeRepositoryFile(repository, relativePath, target);
+      indexOverrides.push({ mode: "120000", relativePath, sourcePath: relativePath });
+    },
+    gitlink(relativePath) {
+      indexOverrides.push({ mode: "160000", objectId: baseSha, relativePath });
+    },
+  });
+  runGit(repository, ["add", "--all"]);
+  for (const override of indexOverrides) {
+    const { mode, relativePath, sourcePath } = override;
+    const objectId =
+      override.objectId ??
+      runGit(repository, ["hash-object", "-w", "--", sourcePath]);
+    runGit(repository, [
+      "update-index",
+      "--add",
+      "--cacheinfo",
+      `${mode},${objectId},${relativePath}`,
+    ]);
+  }
+  runGit(repository, ["commit", "-m", "head"]);
+  const headSha = runGit(repository, ["rev-parse", "HEAD"]);
+  return { baseSha, headSha, repository };
+}
+
+function cleanupDiffRepository(repository) {
+  if (process.platform === "win32") {
+    spawnSync("attrib", ["-H", path.join(repository, ".git")], {
+      encoding: "utf8",
+      windowsHide: true,
+    });
+  }
+  rmSync(repository, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 50,
+  });
+}
+
+function parseGithubOutput(contents) {
+  return Object.fromEntries(
+    contents
+      .trim()
+      .split(/\r?\n/u)
+      .filter(Boolean)
+      .map((line) => {
+        const separator = line.indexOf("=");
+        return [line.slice(0, separator), line.slice(separator + 1)];
+      }),
+  );
 }
 
 function bashTimingHarness(startSetup, script) {
@@ -178,7 +418,7 @@ describe("CI trusted UI contract boundary", () => {
   it("does not persist checkout credentials before candidate code runs", () => {
     const checkoutSteps = checkoutStepBlocks(workflow);
 
-    expect(checkoutSteps).toHaveLength(3);
+    expect(checkoutSteps).toHaveLength(4);
     for (const checkoutStep of checkoutSteps) {
       expect(disablesCheckoutCredentialPersistence(checkoutStep)).toBe(true);
     }
@@ -191,7 +431,7 @@ describe("CI trusted UI contract boundary", () => {
 
     const checkoutSteps = checkoutStepBlocks(tamperedWorkflow);
 
-    expect(checkoutSteps).toHaveLength(3);
+    expect(checkoutSteps).toHaveLength(4);
     expect(checkoutSteps.some(disablesCheckoutCredentialPersistence)).toBe(true);
     expect(checkoutSteps.every(disablesCheckoutCredentialPersistence)).toBe(false);
   });
@@ -240,10 +480,466 @@ describe("CI trusted UI contract boundary", () => {
     );
   });
 
+  it("classifies the complete Git diff without workflow path filters or pull-request APIs", () => {
+    const classifierJob = jobBlock("classify-changes");
+    const onBlock = topLevelBlock(workflow, "on");
+
+    expect(onBlock).not.toMatch(/paths(?:-ignore)?:/u);
+    expect(workflow).not.toMatch(/pulls\/.*\/files|gh\s+api|github-script/u);
+    expect(classifierJob).toContain("fetch-depth: 0");
+    expect(classifierJob).toContain("persist-credentials: false");
+    expect(classifierJob).toContain("run_app:");
+    expect(classifierJob).toContain("run_pipeline_contracts:");
+    expect(classifierJob).toContain("run_windows_lifecycle:");
+    expect(classifierJob).toContain("changed_count:");
+    expect(classifierJob).toContain("classification:");
+
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    expect(script).toContain("git diff --name-status -z --no-renames");
+    expect(script).toContain("--no-ext-diff --no-textconv");
+    expect(script).toContain("--ignore-submodules=none");
+    expect(script).toContain("git ls-tree -r -t -z --name-only");
+    expect(script).toContain('"${CI_DIFF_BASE_SHA}...${CI_DIFF_HEAD_SHA}"');
+    expect(script).toContain('"${CI_DIFF_BASE_SHA}..${CI_DIFF_HEAD_SHA}"');
+    expect(script).toContain("[[:cntrl:]]");
+    expect(script).toContain(
+      "CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]|COM¹|COM²|COM³|LPT¹|LPT²|LPT³",
+    );
+    expect(script).toContain("pull_request)");
+    expect(script).toContain("merge_group|push)");
+  });
+
+  const classificationScenarios = [
+      {
+        name: "documentation only",
+        baseFiles: { "docs/guide.md": "before\n" },
+        mutate: ({ write }) => write("docs/guide.md", "after\n"),
+        expected: {
+          run_app: "false",
+          run_pipeline_contracts: "false",
+          run_windows_lifecycle: "false",
+          changed_count: "1",
+          classification: "docs-only",
+        },
+      },
+      {
+        name: "pipeline lifecycle",
+        baseFiles: { "scripts/lib/ai-task-cleanup.mjs": "before\n" },
+        mutate: ({ write }) =>
+          write("scripts/lib/ai-task-cleanup.mjs", "after\n"),
+        expected: {
+          run_app: "false",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "pipeline",
+        },
+      },
+      {
+        name: "application",
+        baseFiles: { "src/app/page.tsx": "before\n" },
+        mutate: ({ write }) => write("src/app/page.tsx", "after\n"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full",
+        },
+      },
+      {
+        name: "lock file",
+        baseFiles: { "pnpm-lock.yaml": "before\n" },
+        mutate: ({ write }) => write("pnpm-lock.yaml", "after\n"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full",
+        },
+      },
+      {
+        name: "deletion",
+        baseFiles: { "docs/obsolete.md": "before\n" },
+        mutate: ({ remove }) => remove("docs/obsolete.md"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full-fallback",
+        },
+      },
+      {
+        name: "rename",
+        baseFiles: { "docs/old.md": "before\n" },
+        mutate: ({ rename }) => rename("docs/old.md", "docs/new.md"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "2",
+          classification: "full-fallback",
+        },
+      },
+      {
+        name: "copy",
+        baseFiles: { "docs/original.md": "same contents\n" },
+        mutate: ({ write }) => write("docs/copied.md", "same contents\n"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full-fallback",
+        },
+      },
+      {
+        name: "unknown root file",
+        baseFiles: { "unclassified.txt": "before\n" },
+        mutate: ({ write }) => write("unclassified.txt", "after\n"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full-fallback",
+        },
+      },
+      {
+        name: "documentation symlink",
+        baseFiles: { "docs/reference.md": "before\n" },
+        mutate: ({ symlink }) => symlink("docs/reference.md", "../outside.md"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full-fallback",
+        },
+      },
+      {
+        name: "gitlink",
+        baseFiles: { "README.md": "before\n" },
+        mutate: ({ gitlink }) => gitlink("docs/submodule.md"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full-fallback",
+        },
+      },
+      {
+        name: "leading dash path",
+        baseFiles: { "docs/safe.md": "before\n" },
+        mutate: ({ write }) => write("-unsafe.md", "after\n"),
+        expected: {
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "full-fallback",
+        },
+      },
+    ];
+
+  it.each(classificationScenarios)("maps $name diff fail-closed", (scenario) => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    expect(script).not.toBe("");
+    const { baseSha, headSha, repository } = createDiffRepository(
+      scenario.baseFiles,
+      scenario.mutate,
+    );
+    try {
+      const outputPath = path.join(repository, "github-output.txt");
+      const result = runBashScript(
+        script,
+        {
+          CI_DIFF_EVENT_NAME: "pull_request",
+          CI_DIFF_BASE_SHA: baseSha,
+          CI_DIFF_HEAD_SHA: headSha,
+          GITHUB_OUTPUT: "github-output.txt",
+          RUNNER_TEMP: ".",
+        },
+        { cwd: repository },
+      );
+
+      expect(result.status, `${scenario.name}: ${result.stderr}`).toBe(0);
+      expect(parseGithubOutput(readFileSync(outputPath, "utf8"))).toEqual(
+        scenario.expected,
+      );
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+  });
+
+  it("falls back to full validation when the diff cannot be established", () => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-fallback-"));
+    const outputPath = path.join(repository, "github-output.txt");
+    runGit(repository, ["init", "--initial-branch=main"]);
+
+    try {
+      const result = runBashScript(
+        script,
+        {
+          CI_DIFF_EVENT_NAME: "pull_request",
+          CI_DIFF_BASE_SHA: "not-a-commit",
+          CI_DIFF_HEAD_SHA: "also-not-a-commit",
+          GITHUB_OUTPUT: "github-output.txt",
+          RUNNER_TEMP: ".",
+        },
+        { cwd: repository },
+      );
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(parseGithubOutput(readFileSync(outputPath, "utf8"))).toEqual({
+        run_app: "true",
+        run_pipeline_contracts: "true",
+        run_windows_lifecycle: "true",
+        changed_count: "0",
+        classification: "full-fallback",
+      });
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+  });
+
+  it("falls back for zero and valid-looking missing commit ids", () => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-sha-fallback-"));
+    runGit(repository, ["init", "--initial-branch=main"]);
+    try {
+      for (const [index, revision] of ["0".repeat(40), "f".repeat(40)].entries()) {
+        const outputName = `github-output-${index}.txt`;
+        const result = runBashScript(
+          script,
+          {
+            CI_DIFF_EVENT_NAME: "push",
+            CI_DIFF_BASE_SHA: revision,
+            CI_DIFF_HEAD_SHA: revision,
+            GITHUB_OUTPUT: outputName,
+            RUNNER_TEMP: ".",
+          },
+          { cwd: repository },
+        );
+
+        expect(result.status, result.stderr).toBe(0);
+        expect(
+          parseGithubOutput(readFileSync(path.join(repository, outputName), "utf8")),
+        ).toMatchObject({
+          run_app: "true",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          classification: "full-fallback",
+        });
+      }
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+  });
+
+  const windowsUnsafePathScenarios = [
+    { name: "reserved device", relativePath: "docs/CON.md" },
+    { name: "forbidden punctuation", relativePath: "docs/foo?.md" },
+    { name: "superscript device suffix", relativePath: "docs/COM¹.md" },
+    { name: "non-ASCII", relativePath: "docs/한글.md" },
+    { name: "escape control", relativePath: "docs/escape\u001b.md" },
+    { name: "bell control", relativePath: "docs/bell\u0007.md" },
+  ];
+
+  it.each(windowsUnsafePathScenarios)(
+    "falls back for Windows-unsafe path: $name",
+    ({ relativePath }) => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    const { baseSha, headSha, repository } = createObjectDiffRepository(relativePath);
+    try {
+      const result = runBashScript(
+        script,
+        {
+          CI_DIFF_EVENT_NAME: "pull_request",
+          CI_DIFF_BASE_SHA: baseSha,
+          CI_DIFF_HEAD_SHA: headSha,
+          GITHUB_OUTPUT: "github-output.txt",
+          RUNNER_TEMP: ".",
+        },
+        { cwd: repository },
+      );
+      expect(result.status, `${JSON.stringify(relativePath)}: ${result.stderr}`).toBe(0);
+      expect(
+        parseGithubOutput(
+          readFileSync(path.join(repository, "github-output.txt"), "utf8"),
+        ),
+      ).toEqual({
+        run_app: "true",
+        run_pipeline_contracts: "true",
+        run_windows_lifecycle: "true",
+        changed_count: "1",
+        classification: "full-fallback",
+      });
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+    },
+  );
+
+  it("falls back when HEAD contains ASCII case-insensitive path collisions", () => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    const { baseSha, headSha, repository } = createCaseCollisionRepository();
+    try {
+      const result = runBashScript(
+        script,
+        {
+          CI_DIFF_EVENT_NAME: "pull_request",
+          CI_DIFF_BASE_SHA: baseSha,
+          CI_DIFF_HEAD_SHA: headSha,
+          GITHUB_OUTPUT: "github-output.txt",
+          RUNNER_TEMP: ".",
+        },
+        { cwd: repository },
+      );
+      expect(result.status, result.stderr).toBe(0);
+      expect(
+        parseGithubOutput(
+          readFileSync(path.join(repository, "github-output.txt"), "utf8"),
+        ),
+      ).toEqual({
+        run_app: "true",
+        run_pipeline_contracts: "true",
+        run_windows_lifecycle: "true",
+        changed_count: "1",
+        classification: "full-fallback",
+      });
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+  });
+
+  it("falls back for file-directory case collisions in the HEAD tree", () => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    const { baseSha, headSha, repository } =
+      createFileDirectoryCaseCollisionRepository();
+    try {
+      const result = runBashScript(
+        script,
+        {
+          CI_DIFF_EVENT_NAME: "pull_request",
+          CI_DIFF_BASE_SHA: baseSha,
+          CI_DIFF_HEAD_SHA: headSha,
+          GITHUB_OUTPUT: "github-output.txt",
+          RUNNER_TEMP: ".",
+        },
+        { cwd: repository },
+      );
+      expect(result.status, result.stderr).toBe(0);
+      expect(
+        parseGithubOutput(
+          readFileSync(path.join(repository, "github-output.txt"), "utf8"),
+        ),
+      ).toEqual({
+        run_app: "true",
+        run_pipeline_contracts: "true",
+        run_windows_lifecycle: "true",
+        changed_count: "2",
+        classification: "full-fallback",
+      });
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+  });
+
+  it("uses three-dot PR semantics and two-dot push semantics on diverged history", () => {
+    const script = jobStepRunScript("classify-changes", "Classify changed paths");
+    const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-ci-range-"));
+    runGit(repository, ["init", "--initial-branch=main"]);
+    runGit(repository, ["config", "user.name", "CI test"]);
+    runGit(repository, ["config", "user.email", "ci-test@example.invalid"]);
+    writeRepositoryFile(repository, "README.md", "base\n");
+    runGit(repository, ["add", "--all"]);
+    runGit(repository, ["commit", "-m", "base"]);
+    runGit(repository, ["switch", "-c", "feature"]);
+    writeRepositoryFile(repository, "docs/feature.md", "feature\n");
+    runGit(repository, ["add", "--all"]);
+    runGit(repository, ["commit", "-m", "feature"]);
+    const headSha = runGit(repository, ["rev-parse", "HEAD"]);
+    runGit(repository, ["switch", "main"]);
+    writeRepositoryFile(repository, "src/base-only.ts", "export {};\n");
+    runGit(repository, ["add", "--all"]);
+    runGit(repository, ["commit", "-m", "advanced base"]);
+    const baseSha = runGit(repository, ["rev-parse", "HEAD"]);
+
+    try {
+      for (const [eventName, expectedClassification] of [
+        ["pull_request", "docs-only"],
+        ["push", "full-fallback"],
+        ["merge_group", "full-fallback"],
+      ]) {
+        const outputName = `${eventName}-output.txt`;
+        const result = runBashScript(
+          script,
+          {
+            CI_DIFF_EVENT_NAME: eventName,
+            CI_DIFF_BASE_SHA: baseSha,
+            CI_DIFF_HEAD_SHA: headSha,
+            GITHUB_OUTPUT: outputName,
+            RUNNER_TEMP: ".",
+          },
+          { cwd: repository },
+        );
+        expect(result.status, `${eventName}: ${result.stderr}`).toBe(0);
+        expect(
+          parseGithubOutput(readFileSync(path.join(repository, outputName), "utf8")),
+        ).toMatchObject({ classification: expectedClassification });
+      }
+    } finally {
+      cleanupDiffRepository(repository);
+    }
+  });
+
+  it("always runs trust checks but skips dependency and app work for docs-only diffs", () => {
+    const verifyJob = jobBlock("verify");
+
+    expect(verifyJob).toContain("needs: [classify-changes]");
+    expect(verifyJob).toContain("Check UI contract diff baseline (trusted)");
+    expect(verifyJob).toContain("Check artifact hygiene diff baseline (trusted)");
+    expect(verifyJob).toContain("node scripts/check-project-structure.mjs");
+    expect(verifyJob).toContain("node scripts/check-agent-skill-policy.mjs");
+    expect(verifyJob).toContain("node scripts/sync-agent-skills.mjs --check");
+    for (const stepName of [
+      "Enable corepack (pnpm)",
+      "Install dependencies",
+      "Typecheck",
+      "Test",
+      "Lint",
+      "Build",
+    ]) {
+      const stepStart = verifyJob.indexOf(`- name: ${stepName}`);
+      expect(stepStart, stepName).toBeGreaterThan(-1);
+      expect(verifyJob.slice(stepStart, stepStart + 300)).toContain(
+        "needs.classify-changes.outputs.run_app == 'true'",
+      );
+    }
+  });
+
+  it("runs focused pipeline contracts and Windows only when classification requests them", () => {
+    const verifyJob = jobBlock("verify");
+    const windowsJob = jobBlock("lifecycle-windows");
+
+    expect(verifyJob).toContain("Check pipeline lifecycle contracts");
+    expect(verifyJob).toContain("needs.classify-changes.outputs.run_pipeline_contracts");
+    expect(windowsJob).toContain("needs: [classify-changes]");
+    expect(windowsJob).toContain(
+      "needs.classify-changes.outputs.run_windows_lifecycle == 'true'",
+    );
+  });
+
   it("uses a dependency-free nonrequired integrity job for main pushes", () => {
     const integrityJob = jobBlock("main-integrity");
 
-    expect(integrityJob).toContain("if: github.event_name == 'push'");
+    expect(integrityJob).toContain("github.event_name == 'push'");
+    expect(integrityJob).toContain("needs: [classify-changes]");
     expect(integrityJob).toContain("name: main branch integrity (nonrequired)");
     expect(integrityJob).toContain("node scripts/check-project-structure.mjs");
     expect(integrityJob).toContain("node scripts/check-agent-skill-policy.mjs");
@@ -254,17 +950,23 @@ describe("CI trusted UI contract boundary", () => {
     expect(integrityJob).not.toContain("pnpm build");
   });
 
-  it("aggregates the three event-specific jobs into one stable required check", () => {
+  it("aggregates the classifier and event-specific jobs into one stable required check", () => {
     const requiredJob = jobBlock("required");
 
     expect(requiredJob).toContain("name: CI required");
     expect(requiredJob).toContain("if: ${{ always() }}");
     expect(requiredJob).toContain(
-      "needs: [verify, lifecycle-windows, main-integrity]",
+      "needs: [classify-changes, verify, lifecycle-windows, main-integrity]",
     );
     expect(requiredJob).toContain("runs-on: ubuntu-latest");
     expect(requiredJob).toContain("timeout-minutes: 2");
     expect(requiredJob).toContain("CI_EVENT_NAME: ${{ github.event_name }}");
+    expect(requiredJob).toContain(
+      "CI_CLASSIFIER_RESULT: ${{ needs.classify-changes.result }}",
+    );
+    expect(requiredJob).toContain(
+      "CI_CHANGED_COUNT: ${{ needs.classify-changes.outputs.changed_count }}",
+    );
     expect(requiredJob).toContain(
       "CI_PULL_REQUEST_DRAFT: ${{ github.event.pull_request.draft }}",
     );
@@ -289,6 +991,12 @@ describe("CI trusted UI contract boundary", () => {
     const runRequired = ({
       eventName,
       draft = "",
+      classifier = draft === "true" ? "skipped" : "success",
+      runApp = draft === "true" ? "" : "true",
+      runPipeline = draft === "true" ? "" : "true",
+      runWindows = draft === "true" ? "" : "true",
+      changedCount = draft === "true" ? "" : "1",
+      classification = draft === "true" ? "" : "full",
       verify,
       windows,
       integrity,
@@ -296,6 +1004,12 @@ describe("CI trusted UI contract boundary", () => {
       runBashScript(script, {
         CI_EVENT_NAME: eventName,
         CI_PULL_REQUEST_DRAFT: draft,
+        CI_CLASSIFIER_RESULT: classifier,
+        CI_RUN_APP: runApp,
+        CI_RUN_PIPELINE_CONTRACTS: runPipeline,
+        CI_RUN_WINDOWS_LIFECYCLE: runWindows,
+        CI_CHANGED_COUNT: changedCount,
+        CI_CLASSIFICATION: classification,
         CI_VERIFY_RESULT: verify,
         CI_LIFECYCLE_WINDOWS_RESULT: windows,
         CI_MAIN_INTEGRITY_RESULT: integrity,
@@ -306,6 +1020,17 @@ describe("CI trusted UI contract boundary", () => {
         eventName: "pull_request",
         draft: "true",
         verify: "skipped",
+        windows: "skipped",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        runApp: "false",
+        runPipeline: "false",
+        runWindows: "false",
+        classification: "docs-only",
+        verify: "success",
         windows: "skipped",
         integrity: "skipped",
       },
@@ -324,6 +1049,10 @@ describe("CI trusted UI contract boundary", () => {
       },
       {
         eventName: "push",
+        runApp: "false",
+        runPipeline: "false",
+        runWindows: "false",
+        classification: "docs-only",
         verify: "skipped",
         windows: "skipped",
         integrity: "success",
@@ -348,6 +1077,27 @@ describe("CI trusted UI contract boundary", () => {
         draft: "false",
         verify: "failure",
         windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        runApp: "false",
+        runPipeline: "false",
+        runWindows: "false",
+        classification: "docs-only",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "merge_group",
+        runApp: "false",
+        runPipeline: "true",
+        runWindows: "true",
+        classification: "pipeline",
+        verify: "success",
+        windows: "skipped",
         integrity: "skipped",
       },
       {
@@ -385,8 +1135,12 @@ describe("CI trusted UI contract boundary", () => {
       },
       {
         eventName: "merge_group",
+        runApp: "false",
+        runPipeline: "false",
+        runWindows: "false",
+        classification: "docs-only",
         verify: "skipped",
-        windows: "success",
+        windows: "skipped",
         integrity: "skipped",
       },
       {
@@ -394,6 +1148,45 @@ describe("CI trusted UI contract boundary", () => {
         verify: "skipped",
         windows: "skipped",
         integrity: "",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        classifier: "success",
+        runApp: "",
+        runPipeline: "true",
+        runWindows: "true",
+        classification: "pipeline",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        classifier: "failure",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        changedCount: "",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        runApp: "false",
+        runPipeline: "false",
+        runWindows: "false",
+        classification: "full",
+        verify: "success",
+        windows: "skipped",
+        integrity: "skipped",
       },
     ]) {
       const result = runRequired(scenario);
@@ -585,6 +1378,8 @@ describe("CI trusted UI contract boundary", () => {
 
   it("requires owner review for every workflow enforcement surface", () => {
     for (const ownedPath of [
+      "/.github/",
+      "/.gitignore",
       "/.claude/skills/",
       "/.claude/CLAUDE.md",
       "/scripts/sync-agent-skills.mjs",
@@ -599,7 +1394,16 @@ describe("CI trusted UI contract boundary", () => {
       "/scripts/ai-task.mjs",
       "/scripts/check-github-owner-auth.mjs",
       "/scripts/lib/github-owner-auth.mjs",
+      "/scripts/",
       "/package.json",
+      "/pnpm-lock.yaml",
+      "/vitest.config.ts",
+      "/config/",
+      "/tests/scripts/",
+      "/tests/scripts/ci-trust-boundary.test.mjs",
+      "/tests/scripts/ai-task-*.test.mjs",
+      "/tests/scripts/*worktree-lifecycle.test.mjs",
+      "/tests/scripts/artifact-hygiene.test.mjs",
     ]) {
       expect(codeowners).toContain(`${ownedPath} @blackstarzck`);
     }

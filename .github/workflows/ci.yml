@@ -16,9 +16,314 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  classify-changes:
+    name: classify CI scope
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      run_app: ${{ steps.classify.outputs.run_app }}
+      run_pipeline_contracts: ${{ steps.classify.outputs.run_pipeline_contracts }}
+      run_windows_lifecycle: ${{ steps.classify.outputs.run_windows_lifecycle }}
+      changed_count: ${{ steps.classify.outputs.changed_count }}
+      classification: ${{ steps.classify.outputs.classification }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Classify changed paths
+        id: classify
+        env:
+          CI_DIFF_EVENT_NAME: ${{ github.event_name }}
+          CI_DIFF_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          CI_DIFF_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          export LC_ALL=C
+
+          run_app=true
+          run_pipeline_contracts=true
+          run_windows_lifecycle=true
+          changed_count=0
+          classification=full-fallback
+
+          emit_outputs() {
+            {
+              echo "run_app=${run_app}"
+              echo "run_pipeline_contracts=${run_pipeline_contracts}"
+              echo "run_windows_lifecycle=${run_windows_lifecycle}"
+              echo "changed_count=${changed_count}"
+              echo "classification=${classification}"
+            } >> "${GITHUB_OUTPUT}"
+          }
+
+          valid_commit() {
+            local revision="$1"
+            [[ "${revision}" =~ ^[0-9a-f]{40}$ ]] &&
+              git cat-file -e "${revision}^{commit}" 2>/dev/null
+          }
+
+          tree_mode() {
+            local revision="$1"
+            local repo_path="$2"
+            local mode=""
+            IFS= read -r -d '' mode < <(
+              git ls-tree -z --format='%(objectmode)' "${revision}" -- "${repo_path}"
+            ) || true
+            printf '%s' "${mode}"
+          }
+
+          tree_object_id() {
+            local revision="$1"
+            local repo_path="$2"
+            local object_id=""
+            IFS= read -r -d '' object_id < <(
+              git ls-tree -z --format='%(objectname)' "${revision}" -- "${repo_path}"
+            ) || true
+            printf '%s' "${object_id}"
+          }
+
+          windows_safe_path() {
+            local repo_path="$1"
+            local segment=""
+            local device_base=""
+            local device_upper=""
+            local -a segments=()
+
+            [[ -n "${repo_path}" && "${repo_path}" != -* ]] || return 1
+            [[ "${repo_path}" =~ ^[[:print:]]+$ ]] || return 1
+            [[ "${repo_path}" != *[[:cntrl:]]* ]] || return 1
+            case "${repo_path}" in
+              *'<'*|*'>'*|*':'*|*'"'*|*'\'*|*'|'*|*'?'*|*'*'*) return 1 ;;
+            esac
+
+            IFS='/' read -r -a segments <<< "${repo_path}"
+            [[ "${#segments[@]}" -gt 0 ]] || return 1
+            for segment in "${segments[@]}"; do
+              [[ -n "${segment}" && "${segment}" != "." && "${segment}" != ".." ]] ||
+                return 1
+              [[ "${segment}" != *. && "${segment}" != *' ' ]] || return 1
+              device_base="${segment%%.*}"
+              while [[ "${device_base}" == *. || "${device_base}" == *' ' ]]; do
+                device_base="${device_base%?}"
+              done
+              device_upper="${device_base^^}"
+              case "${device_upper}" in
+                CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]|COM¹|COM²|COM³|LPT¹|LPT²|LPT³)
+                  return 1
+                  ;;
+              esac
+            done
+            return 0
+          }
+
+          ascii_casefold_hex_key() {
+            local input="$1"
+            local output=""
+            local character=""
+            local byte_value=0
+            local byte_hex=""
+            local index=0
+            for ((index = 0; index < ${#input}; index += 1)); do
+              character="${input:index:1}"
+              case "${character}" in
+                [A-Z]) character="${character,,}" ;;
+              esac
+              printf -v byte_value '%d' "'${character}"
+              printf -v byte_hex '%02x' "${byte_value}"
+              output+="${byte_hex}"
+            done
+            ASCII_CASEFOLD_HEX_KEY="${output}"
+          }
+
+          if ! valid_commit "${CI_DIFF_BASE_SHA}" ||
+             ! valid_commit "${CI_DIFF_HEAD_SHA}"; then
+            echo "CI_CLASSIFIER_INVALID_COMMIT" >&2
+            emit_outputs
+            exit 0
+          fi
+
+          case "${CI_DIFF_EVENT_NAME}" in
+            pull_request)
+              diff_range="${CI_DIFF_BASE_SHA}...${CI_DIFF_HEAD_SHA}"
+              diff_base_tree="$(git merge-base "${CI_DIFF_BASE_SHA}" "${CI_DIFF_HEAD_SHA}" 2>/dev/null || true)"
+              if ! valid_commit "${diff_base_tree}"; then
+                echo "CI_CLASSIFIER_MERGE_BASE_INVALID" >&2
+                emit_outputs
+                exit 0
+              fi
+              ;;
+            merge_group|push)
+              diff_range="${CI_DIFF_BASE_SHA}..${CI_DIFF_HEAD_SHA}"
+              diff_base_tree="${CI_DIFF_BASE_SHA}"
+              ;;
+            *)
+              echo "CI_CLASSIFIER_EVENT_UNSUPPORTED:${CI_DIFF_EVENT_NAME:-missing}" >&2
+              emit_outputs
+              exit 0
+              ;;
+          esac
+
+          diff_file="$(mktemp "${RUNNER_TEMP}/ci-path-diff.XXXXXXXX")"
+          head_tree_file="$(mktemp "${RUNNER_TEMP}/ci-head-tree.XXXXXXXX")"
+          trap 'rm -f "${diff_file}" "${head_tree_file}"' EXIT
+          if ! git diff --name-status -z --no-renames --no-ext-diff --no-textconv \
+            --ignore-submodules=none "${diff_range}" -- > "${diff_file}"; then
+            echo "CI_CLASSIFIER_DIFF_FAILED" >&2
+            emit_outputs
+            exit 0
+          fi
+
+          head_tree_fallback=false
+          if ! git ls-tree -r -t -z --name-only "${CI_DIFF_HEAD_SHA}" > "${head_tree_file}"; then
+            echo "CI_CLASSIFIER_HEAD_TREE_FAILED" >&2
+            head_tree_fallback=true
+          fi
+          declare -A windows_path_keys=()
+          while IFS= read -r -d '' tree_path; do
+            if ! windows_safe_path "${tree_path}"; then
+              head_tree_fallback=true
+              continue
+            fi
+            ASCII_CASEFOLD_HEX_KEY=""
+            ascii_casefold_hex_key "${tree_path}"
+            windows_path_key="${ASCII_CASEFOLD_HEX_KEY}"
+            if [[ -z "${windows_path_key}" ]] ||
+               [[ -n "${windows_path_keys[$windows_path_key]+present}" ]]; then
+              head_tree_fallback=true
+              continue
+            fi
+            windows_path_keys["${windows_path_key}"]=1
+          done < "${head_tree_file}"
+
+          saw_docs=false
+          saw_pipeline=false
+          saw_full=false
+          fallback="${head_tree_fallback}"
+          declare -A base_object_ids=()
+          while IFS= read -r -d '' object_id; do
+            base_object_ids["${object_id}"]=1
+          done < <(git ls-tree -r -z --format='%(objectname)' "${diff_base_tree}")
+
+          while IFS= read -r -d '' status; do
+            repo_path=""
+            if ! IFS= read -r -d '' repo_path; then
+              fallback=true
+              break
+            fi
+            changed_count=$((changed_count + 1))
+
+            if ! windows_safe_path "${repo_path}"; then
+              fallback=true
+              continue
+            fi
+
+            case "${status}" in
+              A|M) ;;
+              *) fallback=true; continue ;;
+            esac
+
+            base_mode="$(tree_mode "${diff_base_tree}" "${repo_path}")"
+            head_mode="$(tree_mode "${CI_DIFF_HEAD_SHA}" "${repo_path}")"
+            case "${status}" in
+              A)
+                if [[ -n "${base_mode}" ]] ||
+                   [[ "${head_mode}" != "100644" && "${head_mode}" != "100755" ]]; then
+                  fallback=true
+                  continue
+                fi
+                head_object_id="$(tree_object_id "${CI_DIFF_HEAD_SHA}" "${repo_path}")"
+                if [[ -z "${head_object_id}" ]] ||
+                   [[ -n "${base_object_ids[$head_object_id]+present}" ]]; then
+                  fallback=true
+                  continue
+                fi
+                ;;
+              M)
+                if [[ "${base_mode}" != "${head_mode}" ]] ||
+                   [[ "${head_mode}" != "100644" && "${head_mode}" != "100755" ]]; then
+                  fallback=true
+                  continue
+                fi
+                ;;
+            esac
+
+            case "${repo_path}" in
+              AGENTS.md|docs/operations/ai-development-pipeline.md|\
+              .codex/skills/*|.claude/*|\
+              scripts/ai-task.mjs|scripts/check-github-owner-auth.mjs|\
+              scripts/report-worktree-lifecycle.mjs|\
+              scripts/check-artifact-hygiene.mjs|\
+              scripts/report-artifact-hygiene.mjs|\
+              scripts/run-trusted-artifact-hygiene.mjs|\
+              scripts/lib/ai-task-*.mjs|scripts/lib/task-lifecycle-*.mjs|\
+              scripts/lib/worktree-lifecycle.mjs|scripts/lib/github-owner-auth.mjs|\
+              scripts/lib/artifact-*.mjs|\
+              tests/scripts/ai-task-*.test.mjs|\
+              tests/scripts/*worktree-lifecycle.test.mjs|\
+              tests/scripts/*artifact*.test.mjs|\
+              tests/scripts/github-owner-auth.test.mjs|\
+              tests/scripts/ci-trust-boundary.test.mjs)
+                saw_pipeline=true
+                ;;
+              README.md|DESIGN.md|TESTING.md|docs/*.md)
+                saw_docs=true
+                ;;
+              .github/*|.gitignore|package.json|pnpm-lock.yaml|\
+              config/*|src/*|tests/*|public/*|supabase/*|\
+              tsconfig*.json|vitest.config.*|next.config.*|\
+              eslint.config.*|playwright.config.*|postcss.config.*)
+                saw_full=true
+                ;;
+              *)
+                fallback=true
+                ;;
+            esac
+          done < "${diff_file}"
+
+          if [[ "${changed_count}" == "0" ]]; then
+            fallback=true
+          fi
+
+          if [[ "${fallback}" == "true" ]]; then
+            run_app=true
+            run_pipeline_contracts=true
+            run_windows_lifecycle=true
+            classification=full-fallback
+          elif [[ "${saw_full}" == "true" ]]; then
+            run_app=true
+            run_pipeline_contracts=true
+            run_windows_lifecycle=true
+            classification=full
+          elif [[ "${saw_pipeline}" == "true" ]]; then
+            run_app=false
+            run_pipeline_contracts=true
+            run_windows_lifecycle=true
+            classification=pipeline
+          elif [[ "${saw_docs}" == "true" ]]; then
+            run_app=false
+            run_pipeline_contracts=false
+            run_windows_lifecycle=false
+            classification=docs-only
+          else
+            run_app=true
+            run_pipeline_contracts=true
+            run_windows_lifecycle=true
+            classification=full-fallback
+          fi
+          emit_outputs
+
   verify:
     name: typecheck / test / lint / build
+    needs: [classify-changes]
     if: >-
+      needs.classify-changes.result == 'success' &&
       github.event_name != 'push' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
@@ -195,40 +500,69 @@ jobs:
           fi
 
       - name: Enable corepack (pnpm)
+        if: >-
+          needs.classify-changes.outputs.run_app == 'true' ||
+          needs.classify-changes.outputs.run_pipeline_contracts == 'true'
         run: corepack enable
 
       - name: Install dependencies
+        if: >-
+          needs.classify-changes.outputs.run_app == 'true' ||
+          needs.classify-changes.outputs.run_pipeline_contracts == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Check project structure
-        run: pnpm check:project-structure
+        run: node scripts/check-project-structure.mjs
 
       - name: Check agent skill policy
-        run: pnpm check:agent-skill-policy
+        run: node scripts/check-agent-skill-policy.mjs
 
       - name: Check tracked agent skill proxies
-        run: pnpm check:agent-skills
+        run: node scripts/sync-agent-skills.mjs --check
 
       - name: Check bootstrap UI contract diff baseline
+        if: >-
+          needs.classify-changes.outputs.run_app == 'true' ||
+          needs.classify-changes.outputs.run_pipeline_contracts == 'true'
         env:
           UI_CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
         shell: bash
         run: |
           set -euo pipefail
           if ! git cat-file -e "${UI_CONTRACT_BASE_REF}:scripts/run-trusted-ui-contract.mjs" 2>/dev/null; then
-            pnpm check:ui-contract
-          fi
+             pnpm check:ui-contract
+           fi
+
+      - name: Check pipeline lifecycle contracts
+        if: >-
+          needs.classify-changes.outputs.run_pipeline_contracts == 'true' &&
+          needs.classify-changes.outputs.run_app != 'true'
+        run: >-
+          pnpm vitest run
+          tests/scripts/ci-trust-boundary.test.mjs
+          tests/scripts/worktree-lifecycle.test.mjs
+          tests/scripts/report-worktree-lifecycle.test.mjs
+          tests/scripts/ai-task-lifecycle-v2.test.mjs
+          tests/scripts/ai-task-practical-flow.test.mjs
+          tests/scripts/ai-task-cleanup.test.mjs
+          tests/scripts/artifact-hygiene.test.mjs
+          tests/scripts/github-owner-auth.test.mjs
+          --maxWorkers=1
 
       - name: Typecheck
+        if: needs.classify-changes.outputs.run_app == 'true'
         run: pnpm typecheck
 
       - name: Test
+        if: needs.classify-changes.outputs.run_app == 'true'
         run: pnpm test
 
       - name: Lint
+        if: needs.classify-changes.outputs.run_app == 'true'
         run: pnpm lint
 
       - name: Build
+        if: needs.classify-changes.outputs.run_app == 'true'
         run: pnpm build
 
       - name: Summarize CI timing
@@ -251,7 +585,10 @@ jobs:
 
   lifecycle-windows:
     name: report-only worktree lifecycle / windows
+    needs: [classify-changes]
     if: >-
+      needs.classify-changes.result == 'success' &&
+      needs.classify-changes.outputs.run_windows_lifecycle == 'true' &&
       github.event_name != 'push' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: windows-latest
@@ -308,7 +645,10 @@ jobs:
 
   main-integrity:
     name: main branch integrity (nonrequired)
-    if: github.event_name == 'push'
+    needs: [classify-changes]
+    if: >-
+      github.event_name == 'push' &&
+      needs.classify-changes.result == 'success'
     runs-on: ubuntu-latest
 
     steps:
@@ -335,7 +675,7 @@ jobs:
   required:
     name: CI required
     if: ${{ always() }}
-    needs: [verify, lifecycle-windows, main-integrity]
+    needs: [classify-changes, verify, lifecycle-windows, main-integrity]
     runs-on: ubuntu-latest
     timeout-minutes: 2
 
@@ -344,6 +684,12 @@ jobs:
         env:
           CI_EVENT_NAME: ${{ github.event_name }}
           CI_PULL_REQUEST_DRAFT: ${{ github.event.pull_request.draft }}
+          CI_CLASSIFIER_RESULT: ${{ needs.classify-changes.result }}
+          CI_RUN_APP: ${{ needs.classify-changes.outputs.run_app }}
+          CI_RUN_PIPELINE_CONTRACTS: ${{ needs.classify-changes.outputs.run_pipeline_contracts }}
+          CI_RUN_WINDOWS_LIFECYCLE: ${{ needs.classify-changes.outputs.run_windows_lifecycle }}
+          CI_CHANGED_COUNT: ${{ needs.classify-changes.outputs.changed_count }}
+          CI_CLASSIFICATION: ${{ needs.classify-changes.outputs.classification }}
           CI_VERIFY_RESULT: ${{ needs.verify.result }}
           CI_LIFECYCLE_WINDOWS_RESULT: ${{ needs.lifecycle-windows.result }}
           CI_MAIN_INTEGRITY_RESULT: ${{ needs.main-integrity.result }}
@@ -361,18 +707,90 @@ jobs:
             fi
           }
 
+          require_boolean() {
+            local output_name="$1"
+            local actual="$2"
+            case "${actual}" in
+              true|false) ;;
+              *)
+                echo "CI_REQUIRED_BOOLEAN_INVALID:${output_name}:${actual:-missing}" >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          require_classifier_outputs() {
+            require_result "classify-changes" "${CI_CLASSIFIER_RESULT}" "success"
+            require_boolean "run_app" "${CI_RUN_APP}"
+            require_boolean "run_pipeline_contracts" "${CI_RUN_PIPELINE_CONTRACTS}"
+            require_boolean "run_windows_lifecycle" "${CI_RUN_WINDOWS_LIFECYCLE}"
+            if ! [[ "${CI_CHANGED_COUNT}" =~ ^(0|[1-9][0-9]*)$ ]]; then
+              echo "CI_REQUIRED_CHANGED_COUNT_INVALID:${CI_CHANGED_COUNT:-missing}" >&2
+              exit 1
+            fi
+            case "${CI_CLASSIFICATION}" in
+              docs-only)
+                [[ "${CI_CHANGED_COUNT}" != "0" ]] || {
+                  echo "CI_REQUIRED_CHANGED_COUNT_EMPTY:docs-only" >&2; exit 1;
+                }
+                [[ "${CI_RUN_APP}:${CI_RUN_PIPELINE_CONTRACTS}:${CI_RUN_WINDOWS_LIFECYCLE}" == \
+                  "false:false:false" ]] || {
+                  echo "CI_REQUIRED_CLASSIFICATION_OUTPUT_MISMATCH:docs-only" >&2; exit 1;
+                }
+                ;;
+              pipeline)
+                [[ "${CI_CHANGED_COUNT}" != "0" ]] || {
+                  echo "CI_REQUIRED_CHANGED_COUNT_EMPTY:pipeline" >&2; exit 1;
+                }
+                [[ "${CI_RUN_APP}:${CI_RUN_PIPELINE_CONTRACTS}:${CI_RUN_WINDOWS_LIFECYCLE}" == \
+                  "false:true:true" ]] || {
+                  echo "CI_REQUIRED_CLASSIFICATION_OUTPUT_MISMATCH:pipeline" >&2; exit 1;
+                }
+                ;;
+              full)
+                [[ "${CI_CHANGED_COUNT}" != "0" ]] || {
+                  echo "CI_REQUIRED_CHANGED_COUNT_EMPTY:full" >&2; exit 1;
+                }
+                [[ "${CI_RUN_APP}:${CI_RUN_PIPELINE_CONTRACTS}:${CI_RUN_WINDOWS_LIFECYCLE}" == \
+                  "true:true:true" ]] || {
+                  echo "CI_REQUIRED_CLASSIFICATION_OUTPUT_MISMATCH:${CI_CLASSIFICATION}" >&2; exit 1;
+                }
+                ;;
+              full-fallback)
+                [[ "${CI_RUN_APP}:${CI_RUN_PIPELINE_CONTRACTS}:${CI_RUN_WINDOWS_LIFECYCLE}" == \
+                  "true:true:true" ]] || {
+                  echo "CI_REQUIRED_CLASSIFICATION_OUTPUT_MISMATCH:${CI_CLASSIFICATION}" >&2; exit 1;
+                }
+                ;;
+              *)
+                echo "CI_REQUIRED_CLASSIFICATION_INVALID:${CI_CLASSIFICATION:-missing}" >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          require_scoped_jobs() {
+            require_result "verify" "${CI_VERIFY_RESULT}" "success"
+            if [[ "${CI_RUN_WINDOWS_LIFECYCLE}" == "true" ]]; then
+              require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "success"
+            else
+              require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "skipped"
+            fi
+            require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
+          }
+
           case "${CI_EVENT_NAME}" in
             pull_request)
               case "${CI_PULL_REQUEST_DRAFT}" in
                 true)
+                  require_result "classify-changes" "${CI_CLASSIFIER_RESULT}" "skipped"
                   require_result "verify" "${CI_VERIFY_RESULT}" "skipped"
                   require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "skipped"
                   require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
                   ;;
                 false)
-                  require_result "verify" "${CI_VERIFY_RESULT}" "success"
-                  require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "success"
-                  require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
+                  require_classifier_outputs
+                  require_scoped_jobs
                   ;;
                 *)
                   echo "CI_REQUIRED_DRAFT_STATE_UNSUPPORTED:${CI_PULL_REQUEST_DRAFT:-missing}" >&2
@@ -381,11 +799,11 @@ jobs:
               esac
               ;;
             merge_group)
-              require_result "verify" "${CI_VERIFY_RESULT}" "success"
-              require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "success"
-              require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "skipped"
+              require_classifier_outputs
+              require_scoped_jobs
               ;;
             push)
+              require_classifier_outputs
               require_result "verify" "${CI_VERIFY_RESULT}" "skipped"
               require_result "lifecycle-windows" "${CI_LIFECYCLE_WINDOWS_RESULT}" "skipped"
               require_result "main-integrity" "${CI_MAIN_INTEGRITY_RESULT}" "success"
