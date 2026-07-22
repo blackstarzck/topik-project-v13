@@ -97,6 +97,8 @@ const CLEANUP_KEYS = new Set([
   "headSha",
   "inventoryDigest",
   "disposableCandidates",
+  "candidateProgress",
+  "currentClaim",
   "updatedAt",
   "cleanedAt",
   "taskRevision",
@@ -519,7 +521,7 @@ export function validateCleanupManifest(record) {
   requireField(validTimestamp(record.createdAt), errors, "INVALID_TIMESTAMP", "createdAt");
   if (record.reportOnly === true) {
     requireField(record.status === undefined, errors, "REPORT_STATUS_FORBIDDEN", "status");
-    for (const field of ["completedSteps", "branch", "worktreePath", "headSha", "inventoryDigest", "disposableCandidates", "updatedAt", "cleanedAt", "taskRevision", "taskState", "runtimeDigest", "prNumber", "prState", "prBaseRefName", "prHeadRefName", "mergeCommitOid", "mergedAt", "originMainSha", "remoteState"]) {
+    for (const field of ["completedSteps", "branch", "worktreePath", "headSha", "inventoryDigest", "disposableCandidates", "candidateProgress", "currentClaim", "updatedAt", "cleanedAt", "taskRevision", "taskState", "runtimeDigest", "prNumber", "prState", "prBaseRefName", "prHeadRefName", "mergeCommitOid", "mergedAt", "originMainSha", "remoteState"]) {
       requireField(record[field] === undefined, errors, "REPORT_FIELD_FORBIDDEN", field);
     }
   } else {
@@ -545,6 +547,45 @@ export function validateCleanupManifest(record) {
       "INVALID_DISPOSABLE_CANDIDATES",
       "disposableCandidates",
     );
+    if (Object.hasOwn(record, "candidateProgress")) {
+      const approvedPaths = Array.isArray(record.disposableCandidates)
+        ? record.disposableCandidates.map((candidate) => candidate?.path)
+        : [];
+      const validCandidateProgress = Array.isArray(record.candidateProgress) &&
+        record.candidateProgress.length <= approvedPaths.length &&
+        record.candidateProgress.every((candidatePath, index) =>
+          validAbsolutePath(candidatePath) && candidatePath === approvedPaths[index]) &&
+        new Set(record.candidateProgress).size === record.candidateProgress.length;
+      requireField(validCandidateProgress, errors, "INVALID_CANDIDATE_PROGRESS", "candidateProgress");
+      if (validSteps && record.completedSteps.includes("TASK_ARTIFACTS_REMOVED")) {
+        requireField(
+          validCandidateProgress && record.candidateProgress.length === approvedPaths.length,
+          errors,
+          "INCOMPLETE_CANDIDATE_PROGRESS",
+          "candidateProgress",
+        );
+      }
+    }
+    if (Object.hasOwn(record, "currentClaim")) {
+      const claim = record.currentClaim;
+      const progressLength = Array.isArray(record.candidateProgress) ? record.candidateProgress.length : -1;
+      const expectedCandidate = Array.isArray(record.disposableCandidates)
+        ? record.disposableCandidates[progressLength]
+        : undefined;
+      const validClaim = isPlainObject(claim) &&
+        Object.keys(claim).length === 3 &&
+        Object.keys(claim).every((key) => ["source", "quarantine", "digest"].includes(key)) &&
+        validAbsolutePath(claim.source) && validAbsolutePath(claim.quarantine) &&
+        claim.source !== claim.quarantine && FINGERPRINT_PATTERN.test(claim.digest ?? "") &&
+        expectedCandidate?.path === claim.source && expectedCandidate?.digest === claim.digest;
+      requireField(validClaim, errors, "INVALID_CURRENT_CLAIM", "currentClaim");
+      requireField(
+        validSteps && !record.completedSteps.includes("TASK_ARTIFACTS_REMOVED") && record.status === "CLEANING",
+        errors,
+        "CURRENT_CLAIM_NOT_ALLOWED",
+        "currentClaim",
+      );
+    }
     requireField(validTimestamp(record.updatedAt), errors, "INVALID_TIMESTAMP", "updatedAt");
     requireField(Number.isInteger(record.taskRevision) && record.taskRevision >= 1, errors, "INVALID_REVISION", "taskRevision");
     requireField(record.taskState === "ACTIVE", errors, "INVALID_STATE", "taskState");
@@ -562,6 +603,16 @@ export function validateCleanupManifest(record) {
     if (record.status === "CLEANED") {
       requireField(validSteps && record.completedSteps.length === CLEANUP_STEPS.length, errors, "INCOMPLETE_CLEANED_STEPS", "completedSteps");
       requireField(validTimestamp(record.cleanedAt), errors, "INVALID_TIMESTAMP", "cleanedAt");
+      if (Object.hasOwn(record, "candidateProgress")) {
+        requireField(
+          Array.isArray(record.candidateProgress) &&
+            Array.isArray(record.disposableCandidates) &&
+            record.candidateProgress.length === record.disposableCandidates.length,
+          errors,
+          "INCOMPLETE_CANDIDATE_PROGRESS",
+          "candidateProgress",
+        );
+      }
     } else {
       requireField(record.cleanedAt === null, errors, "CLEANED_AT_FORBIDDEN", "cleanedAt");
     }

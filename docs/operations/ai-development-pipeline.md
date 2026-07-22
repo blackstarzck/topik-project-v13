@@ -121,22 +121,30 @@ pnpm task:cleanup -- --repo <기준-checkout-or-worktree> --branch feat/example-
 
 `task:finish`는 구현을 끝낼 때 빠르게 실행하는 로컬 report-only 명령이다. 현재 실행자와 worktree branch·HEAD, 일반 Git status, upstream과 로컬 ahead/behind만 읽고 `FinishReportV1`을 저장한다. `node_modules`, `.next` 같은 ignored dependency tree를 열거하거나 해시하지 않으며 fetch, push, PR 조회·생성·merge, Git 수정, 파일 삭제를 하지 않는다. dirty 상태면 검증·커밋 준비를, clean이지만 미게시 상태면 게시 승인을 안내한다. 원격만 앞서면 fast-forward 한 명령을, 양쪽이 갈라졌으면 기록을 먼저 비교하고 사람이 merge·rebase 방식을 결정하는 한 명령을 제공한다. 정확한 `origin/<task-branch>`가 ahead 0·behind 0일 때만 게시 완료로 판단한다. 공백이 있는 Windows 경로도 복사 실행할 수 있도록 경로 인자를 안전하게 quote한다.
 
-`task:finalize`는 삭제하지 않는 report-only 명령이다. `origin` fetch, task·worktree 소유권, clean 상태, HEAD와 branch·PR 일치, 게시하지 않은 commit, `main` 대상의 최신 merged PR, `origin/main` 포함 여부, remote task branch 부재, runtime 포트·PID·lock, operation lock, 정리 후보 경로를 확인한다. 확인할 수 없으면 준비 완료로 추정하지 않는다.
+`task:finalize`는 삭제하지 않는 report-only 명령이다. `origin` fetch, task·worktree 소유권, clean 상태, HEAD와 branch·PR 일치, 게시하지 않은 commit, `main` 대상의 최신 merged PR, `origin/main` 포함 여부, remote task branch 부재, runtime 포트·PID·lock, operation lock, 정리 후보 경로를 확인한다. 확인할 수 없으면 준비 완료로 추정하지 않는다. 네트워크를 쓰는 `git fetch`, `git ls-remote`, `gh pr view`에만 각각 30초의 hard timeout을 적용하며, 시간 초과는 해당 원격 증거를 확인하지 못한 blocker로 처리한다. 로컬 Git 명령에는 이 timeout을 적용하지 않는다.
 
-두 명령의 목적은 다르다. `finish`는 일상적인 작업 마감 안내를 빠르게 만들고, 기존 `finalize`는 실제 삭제 승인값을 만들기 위한 깊은 정리 사전 검사다. 이 PR은 기존 `finalize`·`cleanup` 구현 의미를 바꾸지 않는다. 중립 기준 checkout에서 실행하는 전경 정리와 crash recovery 강화는 후속 cleanup 변경에서 다룬다.
+두 명령의 목적은 다르다. `finish`는 일상적인 작업 마감 안내를 빠르게 만들고, `finalize`는 실제 삭제 승인값을 만들기 위한 깊은 정리 사전 검사다. `finalize`와 `cleanup`은 주요 단계별 실제 소요 시간을 `timings`로 함께 출력한다. 이 시간은 진단 정보일 뿐 승인 fingerprint나 registry schema에는 포함하지 않는다.
 
-`ready: true`이면 후보 목록과 fingerprint를 사용자에게 보고한다. 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. cleanup은 상태를 다시 확인하므로 파일, commit, PR, runtime, 정리 후보가 달라지면 `APPROVAL_INVALIDATED`로 멈춘다.
+`ready: true`이면 후보 목록과 fingerprint를 사용자에게 보고한다. 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. GitHub가 초 단위로 주는 `mergedAt` 값은 동일한 UTC 시각의 밀리초 포함 형식으로 정규화해 기록하지만, 내부 registry가 받는 시간은 계속 밀리초까지 정확한 ISO 형식만 허용한다.
+
+승인 fingerprint는 disposable root의 내용 전체가 아니라 정확한 root 경로·종류·device·inode·생성 시각 identity를 묶는다. 따라서 `node_modules`, `.next`, task 임시 로그 안의 내용 변화만으로 승인이 만료되지는 않는다. 반대로 root가 삭제 후 다시 생성되거나 symlink·junction으로 바뀌거나 identity를 안전하게 얻지 못하면 `APPROVAL_INVALIDATED` 또는 경로 안전 오류로 멈춘다. `tsconfig.tsbuildinfo`는 정확한 파일 하나만 disposable 후보로 허용한다. ignored 탐색은 directory 단위로 접고, `.codex/work/<slug>` 이외의 다른 task 폴더나 임의 ignored root가 있으면 보존한다.
 
 정리 순서는 다음과 같다.
 
-1. task 소유 임시 산출물과 disposable build 결과 제거
-2. `git worktree remove` 비강제 실행
-3. worktree가 목록에서 사라졌는지 재검증
-4. `git branch -d` 비강제 실행
-5. remote branch가 이미 삭제됐는지 확인
-6. `CleanupManifest`에 `CLEANED` tombstone 기록
+1. 각 task 소유 임시 산출물과 disposable build root의 identity를 확인하고 고유 quarantine claim을 journal에 기록
+2. 원래 경로의 객체를 같은 파일시스템의 claim 경로로 원자 이동한 뒤 이동된 객체의 identity를 다시 확인하고 제거
+3. 각 후보의 부재를 확인한 직후 claim 해제와 `candidateProgress`를 하나의 원자적 journal 갱신으로 기록
+4. `git worktree remove` 비강제 실행
+5. worktree가 목록에서 사라졌는지 재검증
+6. `git branch -d` 비강제 실행
+7. remote branch가 이미 삭제됐는지 확인
+8. `CleanupManifest`에 `CLEANED` tombstone 기록
+
+후보 정리 뒤 task 전용 quarantine claim 디렉터리가 비어 있으면 재개 과정과 worktree 제거 직전에 함께 제거한다. 다른 파일이나 다른 주체의 claim이 하나라도 있으면 그 디렉터리는 보존한다.
 
 `--force`, `git branch -D`, 탐색기 선삭제, remote branch 강제 삭제는 제공하지 않는다. dirty·detached·locked·prunable·소유권 불명 worktree, active runtime, 열린 PR, 미병합 PR, 보호 branch, 게시되지 않은 commit은 그대로 보존한다.
+
+Node의 비강제 재귀 삭제는 disposable root 내부의 symlink·junction 자체만 제거하고 외부 target을 따라가지 않는 조건을 Windows와 Unix 테스트로 고정한다. root 자체가 link인 경우에는 삭제하지 않는다. 다만 Unix의 bind mount나 별도 mount point는 일반 디렉터리와 같은 metadata로 보일 수 있어 완전히 식별할 수 없다. 이런 mount를 disposable root 내부에 두지 않는 것이 운영 조건이며, 의심되면 cleanup을 실행하지 않고 사람이 mount 상태를 먼저 확인한다.
 
 GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 아니므로 현재 자동 정리 조건을 충족하지 않는다. 이 경우 `PR_HEAD_NOT_IN_ORIGIN_MAIN`으로 보존하며, squash 대응 계약을 별도로 승인·구현하기 전에는 수동 삭제로 우회하지 않는다.
 
@@ -167,9 +175,9 @@ stateDiagram-v2
   CLEANING --> CLEANING: 부분 실패 journal 재개
 ```
 
-`task:finalize`는 상태를 바꾸지 않는다. cleanup 중 일부 단계 이후 실패하면 `CLEANING` journal과 완료 단계가 남는다. 동일 fingerprint로 재실행할 때만 완료된 단계를 검증하며 이어간다.
+`task:finalize`는 상태를 바꾸지 않는다. cleanup 중 일부 단계 이후 실패하면 `CLEANING` journal, 후보별 `candidateProgress`, 완료 단계가 남는다. 이 필드는 기존 manifest와 호환되는 선택 필드지만 새 cleanup은 항상 기록한다. 값은 승인된 후보의 순서와 정확히 같은 prefix여야 하며 중복·미승인 후보를 허용하지 않는다. 이동 중인 후보는 선택 필드 `currentClaim`에 원래 경로, 고유 quarantine 경로와 승인 digest를 기록한다. 이를 통해 claim 기록 전후, 원자 이동 후, quarantine 삭제 후 중단을 같은 승인으로 재개한다. 원래 경로와 quarantine이 동시에 존재하거나 quarantine identity가 달라졌거나 새 미승인·ignored root가 생기면 두 객체를 모두 보존하고 중단한다.
 
-operation lock이 남아 있으면 다른 lifecycle 명령은 `TASK_OPERATION_IN_PROGRESS`로 실패한다. stale lock으로 의심해도 자동 삭제하지 않는다. 실행 중인 lifecycle process가 없고 정확한 task·lock 소유권이 확인된 뒤, 사용자 승인 하에 해당 lock 하나만 복구 대상으로 다룬다. 원인을 확인하지 못하면 task를 보존한다.
+operation lock이 남아 있으면 다른 lifecycle 명령은 `TASK_OPERATION_IN_PROGRESS`로 실패한다. cleanup lock만 task ID, operation, PID, nonce, 승인 fingerprint, 생성 시각을 담은 닫힌 JSON record로 쓴다. 유효한 `CLEANING` journal의 task·branch·worktree·revision·state와 단계별 native Git 소유권이 현재 operation과 정확히 같고 record의 PID가 실행 중이 아닐 때만 stale cleanup lock 회수를 시도한다. 회수 대상은 고유 claim 경로로 먼저 원자 이동하고 이동된 identity와 내용을 재검증한 뒤에만 삭제한다. 그 사이 원래 경로에 새 lock이 생기거나 claim이 바뀌면 새 lock과 claim을 모두 보존한다. 정상 operation lock 해제도 같은 claim 절차를 쓴다. 회수 뒤에도 Git·PR·runtime·후보 identity 전체를 다시 확인한다. live PID, 기존 token 형식, malformed·unknown field, 다른 operation·task·승인, journal 없는 lock은 자동 제거하지 않는다.
 
 ## 산출물 정책
 
