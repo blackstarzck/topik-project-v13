@@ -4,6 +4,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const docsRoot = path.join(process.cwd(), "docs", "swagger-api");
+const removedRoutePatterns = [
+  /(?:https?:\/\/|\/\/)?api\.dotoretopik\.com\/?(?=$|[\s"'<>`)])/i,
+  /(?:https?:\/\/|\/\/)?api\.dotoretopik\.com\/docs(?:\b|[/?#])/i,
+  /(?:https?:\/\/|\/\/)?api\.dotoretopik\.com\/openapi\.json(?:\b|[?#])/i,
+];
 
 function collectReferenceFiles(directory) {
   return readdirSync(directory)
@@ -26,9 +31,10 @@ describe("swagger API historical snapshot contract", () => {
 
   it("does not publish the removed TALKPIK API routes", () => {
     const offenders = files
-      .filter((file) =>
-        readFileSync(file, "utf8").includes("https://api.dotoretopik.com"),
-      )
+      .filter((file) => {
+        const content = readFileSync(file, "utf8");
+        return removedRoutePatterns.some((pattern) => pattern.test(content));
+      })
       .map(relativePath);
 
     expect(offenders).toEqual([]);
