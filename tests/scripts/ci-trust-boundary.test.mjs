@@ -87,8 +87,15 @@ function jobStepRunScript(jobId, stepName) {
   return scriptLines.join("\n");
 }
 
-function runBashScript(source) {
-  const encoded = Buffer.from(source, "utf8").toString("base64");
+function runBashScript(source, environment = {}) {
+  const shellQuote = (value) => `'${String(value).replaceAll("'", `'\\''`)}'`;
+  const exports = Object.entries(environment).map(([name, value]) => {
+    if (!/^[A-Z][A-Z0-9_]*$/u.test(name)) throw new Error(`invalid env name: ${name}`);
+    return `export ${name}=${shellQuote(value)}`;
+  });
+  const encoded = Buffer.from([...exports, source].join("\n"), "utf8").toString(
+    "base64",
+  );
   return spawnSync("bash", ["-c", `printf %s ${encoded} | base64 -d | bash`], {
     encoding: "utf8",
   });
@@ -245,6 +252,153 @@ describe("CI trusted UI contract boundary", () => {
     expect(integrityJob).not.toContain("pnpm install");
     expect(integrityJob).not.toContain("pnpm test");
     expect(integrityJob).not.toContain("pnpm build");
+  });
+
+  it("aggregates the three event-specific jobs into one stable required check", () => {
+    const requiredJob = jobBlock("required");
+
+    expect(requiredJob).toContain("name: CI required");
+    expect(requiredJob).toContain("if: ${{ always() }}");
+    expect(requiredJob).toContain(
+      "needs: [verify, lifecycle-windows, main-integrity]",
+    );
+    expect(requiredJob).toContain("runs-on: ubuntu-latest");
+    expect(requiredJob).toContain("timeout-minutes: 2");
+    expect(requiredJob).toContain("CI_EVENT_NAME: ${{ github.event_name }}");
+    expect(requiredJob).toContain(
+      "CI_PULL_REQUEST_DRAFT: ${{ github.event.pull_request.draft }}",
+    );
+    expect(requiredJob).toContain("CI_VERIFY_RESULT: ${{ needs.verify.result }}");
+    expect(requiredJob).toContain(
+      "CI_LIFECYCLE_WINDOWS_RESULT: ${{ needs.lifecycle-windows.result }}",
+    );
+    expect(requiredJob).toContain(
+      "CI_MAIN_INTEGRITY_RESULT: ${{ needs.main-integrity.result }}",
+    );
+    expect(requiredJob).not.toContain("actions/checkout");
+    expect(requiredJob).not.toContain("actions/setup-node");
+    expect(requiredJob).not.toContain("corepack");
+    expect(requiredJob).not.toContain("pnpm");
+    expect(requiredJob).not.toContain("continue-on-error");
+  });
+
+  it("accepts only the expected predecessor results for each supported event", () => {
+    const script = jobStepRunScript("required", "Require expected CI results");
+    expect(script).not.toBe("");
+
+    const runRequired = ({
+      eventName,
+      draft = "",
+      verify,
+      windows,
+      integrity,
+    }) =>
+      runBashScript(script, {
+        CI_EVENT_NAME: eventName,
+        CI_PULL_REQUEST_DRAFT: draft,
+        CI_VERIFY_RESULT: verify,
+        CI_LIFECYCLE_WINDOWS_RESULT: windows,
+        CI_MAIN_INTEGRITY_RESULT: integrity,
+      });
+
+    for (const scenario of [
+      {
+        eventName: "pull_request",
+        draft: "true",
+        verify: "skipped",
+        windows: "skipped",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "false",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "merge_group",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "push",
+        verify: "skipped",
+        windows: "skipped",
+        integrity: "success",
+      },
+    ]) {
+      const result = runRequired(scenario);
+      expect(result.status, `${JSON.stringify(scenario)}\n${result.stderr}`).toBe(0);
+    }
+
+    for (const scenario of [
+      // Draft PRs must not run any predecessor.
+      {
+        eventName: "pull_request",
+        draft: "true",
+        verify: "success",
+        windows: "skipped",
+        integrity: "skipped",
+      },
+      // Ready PRs and merge groups require both full suites.
+      {
+        eventName: "pull_request",
+        draft: "false",
+        verify: "failure",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "merge_group",
+        verify: "success",
+        windows: "cancelled",
+        integrity: "skipped",
+      },
+      // Main pushes require the lightweight integrity job only.
+      {
+        eventName: "push",
+        verify: "skipped",
+        windows: "success",
+        integrity: "success",
+      },
+      {
+        eventName: "push",
+        verify: "skipped",
+        windows: "skipped",
+        integrity: "failure",
+      },
+      // Unknown events, unknown draft state, missing values, and unexpected skips fail closed.
+      {
+        eventName: "workflow_dispatch",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "pull_request",
+        draft: "",
+        verify: "success",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "merge_group",
+        verify: "skipped",
+        windows: "success",
+        integrity: "skipped",
+      },
+      {
+        eventName: "push",
+        verify: "skipped",
+        windows: "skipped",
+        integrity: "",
+      },
+    ]) {
+      const result = runRequired(scenario);
+      expect(result.status, JSON.stringify(scenario)).not.toBe(0);
+    }
   });
 
   it("records observed service time without inventing queue time", () => {
