@@ -6,7 +6,7 @@
 | owner | TALKPIK AI 저장소 작업 lifecycle |
 | 적용 대상 | 사람, Codex, Claude가 수행하는 모든 개발 task |
 | 정본 | 이 문서와 실행 가능한 `package.json` 명령·contract test |
-| 마지막 검토 | 2026-07-21 |
+| 마지막 검토 | 2026-07-22 |
 
 이 문서는 AI 개발 작업의 시작, 인수인계, 검증, 종료와 정리를 한 흐름으로 정의한다. `AGENTS.md`는 공통 행동 계약이고, 이 문서는 branch·worktree·registry·산출물·정리의 세부 workflow owner다.
 
@@ -73,14 +73,21 @@ pnpm task:status -- --repo <기준-checkout-or-worktree> --branch feat/example-t
 
 fetch 실패, stale base, dirty 기준 checkout, 이름 중복, 기존 native worktree 소유권 충돌은 fail-closed다. 공유 `main`에서는 `pull`, `merge`, `rebase`, `switch`, `checkout`, `reset`을 실행하지 않는다.
 
+worktree가 만들어진 직후 프로세스가 중단되면 `StartRecoveryV1` 기록이 남는다. 같은 실행자가 같은 branch·경로·기준 SHA로 `task:start`을 다시 실행했을 때만 복구를 시도한다. 실행 복구와 `task:status`는 같은 read-only 진단기로 missing·dirty·detached·wrong branch·wrong HEAD·native ownership·remote branch 충돌을 확인한다. 원격 branch 부재 확인은 최대 5초로 제한하며 시간 안에 증명하지 못하면 `REMOTE_EVIDENCE_UNAVAILABLE`로 불확실성을 명시한다. 모든 조건을 확인한 뒤에만 기존 worktree를 TaskRecord에 연결하며, 하나라도 불명확하면 파일이나 branch를 삭제하지 않는다.
+
+`task:status`는 기존 원본 record와 함께 사람이 읽는 `summary`, 전체 `blockers`, 실행할 명령 하나만 담은 `nextAction`을 출력한다. 출력하는 PowerShell 명령의 경로는 공백과 작은따옴표가 있어도 그대로 복사해 실행할 수 있게 인용한다. 작업 시작이 중단되어 아직 `TaskRecordV2`가 없는 경우에도 복구 안내를 읽을 수 있다.
+
 ### Codex ↔ Claude 인수인계
 
 ```bash
-pnpm task:handoff -- --repo <task-worktree> --branch feat/example-task --actor codex --to claude
-pnpm task:resume -- --repo <task-worktree> --branch feat/example-task --actor claude
+pnpm task:handoff -- --action offer --repo <task-worktree> --branch feat/example-task --actor codex --to claude --context <task-worktree>/.codex/work/example-task/handoff.json
+pnpm task:handoff -- --action accept --repo <task-worktree> --branch feat/example-task --actor claude
+pnpm task:handoff -- --action refresh --repo <task-worktree> --branch feat/example-task --actor codex --context <task-worktree>/.codex/work/example-task/handoff.json
 ```
 
-`handoff`는 worktree를 새로 만들지 않는다. 현재 HEAD와 worktree 상태 fingerprint를 `HandoffSnapshot`으로 기록하고 상태를 `HANDOFF_PENDING`으로 바꾼다. 이때 active actor는 비워 동시 수정을 막는다. 지정된 다음 실행자만 `resume`할 수 있고, snapshot 이후 상태가 바뀌면 resume는 실패한다.
+`offer`는 현재 실행자만 사용할 수 있으며 `objective`, `completed`, `decisions`, `remaining`, `verification`, `blockers`, `nextAction`만 담은 JSON 문서가 필요하다. 입력 파일은 해당 task의 `.codex/work/<slug>/` 아래 일반 파일이어야 한다. lexical·canonical 경로가 모두 그 안에 있어야 하고 symlink·junction·reparse 조상을 통과할 수 없다. 모든 작업 맥락 문자열은 GitHub·OpenAI·AWS credential, private key, Bearer token, 명시적으로 표시된 thread·session·conversation ID와 `/threads/<ID>` 값을 거부한다. 일반 UUID, 짧은 `token` 단어와 라벨 없는 hash는 허용한다. 명령은 worktree를 새로 만들지 않고 현재 HEAD·파일 상태를 `HandoffSnapshot`에, 작업 맥락을 별도 `HandoffContextV1`에 fingerprint와 함께 저장한다. 상태가 `HANDOFF_PENDING`인 동안에는 두 실행자의 동시 수정을 막는다.
+
+지정된 다음 실행자만 `accept`할 수 있다. 새 공개 `accept`는 context sidecar가 누락되면 실패하며 snapshot이나 context가 바뀌면 수락하지 않는다. `HANDOFF_PENDING`인데 context가 없으면 `task:status`는 `accept`를 안내하지 않는다. 대신 인수인계를 보낸 실행자가 `.codex/work/<slug>/handoff-context.json`을 준비해 `refresh`하도록 하나의 다음 명령만 안내한다. 인수인계를 보낸 실행자가 그 뒤 작업 폴더를 수정한 경우에도 `refresh`로 같은 대상에게 새 snapshot과 context를 만들고 revision을 올린다. `task:resume`은 기존 library·호출 호환을 위해 context가 없는 과거 snapshot도 읽는 명시적 호환 명령이며 사용 중단 안내를 stderr에 출력한다. 기본 상태 안내와 새 자동화는 반드시 `task:handoff --action accept`를 사용한다.
 
 ### runtime 등록
 
@@ -97,20 +104,26 @@ runtime을 사용하지 않았어도 두 번째 예처럼 빈 상태를 명시�
 
 ```bash
 pnpm task:owner-auth -- --repo <repo-or-worktree> --owner blackstarzck
+pnpm task:owner-auth -- --repo <task-worktree> --branch feat/example-task --owner blackstarzck --publish-approved
 ```
 
-명령은 `origin` URL에서 실제 소유자를 확인하고 입력한 소유자와 일치할 때만 `gh auth switch`를 시도한 뒤, `gh api user`로 현재 로그인을 다시 검증한다. token을 직접 읽거나 출력하지 않으며, 각 Git·GitHub 하위 명령은 30초가 지나면 실패한다.
+명령은 먼저 `origin` URL에서 실제 소유자를 확인한 뒤 `gh api user`로 현재 로그인을 읽는다. 이미 `blackstarzck`이면 전역 계정을 바꾸지 않고 성공한다. 다른 계정이면 기본 호출은 `SWITCH_REQUIRED`와 `manualApprovalRequired: true`만 안전한 JSON으로 반환하며 `gh auth switch`를 실행하지 않는다. 첫 로그인 확인 자체가 실패하면 승인 없는 호출은 즉시 실패한다. 사용자가 원격 게시를 승인한 작업에서만 `--publish-approved`를 붙일 수 있고, 이 경우 첫 확인 실패도 저장된 소유자 계정으로 전환한 뒤 `gh api user`를 한 번만 다시 검증한다. 전환이나 재검증이 실패하면 중단한다. `--branch`를 함께 주면 성공 결과를 해당 task의 `OwnerAuthResultV1` sidecar로 남긴다.
 
-성공 결과의 `manualApprovalRequired: false`는 이미 소유자 계정임을 사람이 한 번 더 확인하는 중복 절차만 생략한다는 뜻이다. 필수 CI 통과와 review 의견 처리는 그대로 의무다. 인증을 바꿀 수 없거나 소유자가 일치하지 않으면 fail-closed로 소유자 예외 경로를 닫는다. 이때 협업자는 PR을 연 뒤 필수 CI와 review 의견을 모두 처리하고, 그 다음 `blackstarzck`의 승인을 받아야 merge할 수 있다. 어떤 경로도 CI나 review를 우회할 수 없다.
+token·인증 명령의 stdout·stderr는 결과에 포함하지 않으며 각 하위 명령은 30초가 지나면 실패한다. 성공 결과의 `manualApprovalRequired: false`는 계정 확인의 중복 절차만 생략한다는 뜻이다. 필수 CI와 review 의견 처리는 그대로 의무이며 어떤 인증 경로도 이를 우회할 수 없다.
 
 ### 종료 보고와 정리
 
 ```bash
+pnpm task:finish -- --repo <task-worktree> --branch feat/example-task --actor codex
 pnpm task:finalize -- --repo <기준-checkout-or-worktree> --branch feat/example-task
 pnpm task:cleanup -- --repo <기준-checkout-or-worktree> --branch feat/example-task --approval <fingerprint>
 ```
 
+`task:finish`는 구현을 끝낼 때 빠르게 실행하는 로컬 report-only 명령이다. 현재 실행자와 worktree branch·HEAD, 일반 Git status, upstream과 로컬 ahead/behind만 읽고 `FinishReportV1`을 저장한다. `node_modules`, `.next` 같은 ignored dependency tree를 열거하거나 해시하지 않으며 fetch, push, PR 조회·생성·merge, Git 수정, 파일 삭제를 하지 않는다. dirty 상태면 검증·커밋 준비를, clean이지만 미게시 상태면 게시 승인을 안내한다. 원격만 앞서면 fast-forward 한 명령을, 양쪽이 갈라졌으면 기록을 먼저 비교하고 사람이 merge·rebase 방식을 결정하는 한 명령을 제공한다. 정확한 `origin/<task-branch>`가 ahead 0·behind 0일 때만 게시 완료로 판단한다. 공백이 있는 Windows 경로도 복사 실행할 수 있도록 경로 인자를 안전하게 quote한다.
+
 `task:finalize`는 삭제하지 않는 report-only 명령이다. `origin` fetch, task·worktree 소유권, clean 상태, HEAD와 branch·PR 일치, 게시하지 않은 commit, `main` 대상의 최신 merged PR, `origin/main` 포함 여부, remote task branch 부재, runtime 포트·PID·lock, operation lock, 정리 후보 경로를 확인한다. 확인할 수 없으면 준비 완료로 추정하지 않는다.
+
+두 명령의 목적은 다르다. `finish`는 일상적인 작업 마감 안내를 빠르게 만들고, 기존 `finalize`는 실제 삭제 승인값을 만들기 위한 깊은 정리 사전 검사다. 이 PR은 기존 `finalize`·`cleanup` 구현 의미를 바꾸지 않는다. 중립 기준 checkout에서 실행하는 전경 정리와 crash recovery 강화는 후속 cleanup 변경에서 다룬다.
 
 `ready: true`이면 후보 목록과 fingerprint를 사용자에게 보고한다. 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. cleanup은 상태를 다시 확인하므로 파일, commit, PR, runtime, 정리 후보가 달라지면 `APPROVAL_INVALIDATED`로 멈춘다.
 
@@ -133,17 +146,22 @@ GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 �
 <git-common-dir>/talkpik-task-lifecycle/v2/
 ├── tasks/<task-id>.json
 ├── handoffs/<snapshot-id>.json
+├── handoff-contexts/<snapshot-id>.json
+├── start-recoveries/<task-id>.json
+├── finish-reports/<task-id>.json
+├── owner-auth/<task-id>.json
 ├── runtimes/<task-id>.json
 └── cleanups/<task-id>.json
 ```
 
-공개 record는 `TaskRecordV2`, `HandoffSnapshot`, `ArtifactManifest`, `RuntimeManifest`, `CleanupManifest`로 구분한다. record는 허용 필드만 받으며 경로·크기·시간·fingerprint를 검증하고 원자적으로 교체한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
+기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. 새 공개 sidecar는 `HandoffContextV1`, `StartRecoveryV1`, `FinishReportV1`, `OwnerAuthResultV1`로 분리한다. 모든 record는 허용 필드만 받고 크기·문자열·배열·시간·경로·fingerprint를 검증하며 원자적으로 교체한다. 같은 task의 새 finish·owner-auth sidecar 시간은 task와 직전 sidecar보다 과거일 수 없다. unknown field, secret·token·원문 thread ID와 유사한 key, prototype 오염, symlink·경로 탈출은 거부한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
 
 ```mermaid
 stateDiagram-v2
   [*] --> ACTIVE: task:start
-  ACTIVE --> HANDOFF_PENDING: task:handoff
-  HANDOFF_PENDING --> ACTIVE: task:resume
+  ACTIVE --> HANDOFF_PENDING: handoff offer
+  HANDOFF_PENDING --> HANDOFF_PENDING: handoff refresh
+  HANDOFF_PENDING --> ACTIVE: handoff accept
   ACTIVE --> CLEANING: 승인된 task:cleanup
   CLEANING --> CLEANED: 모든 단계 재검증
   CLEANING --> CLEANING: 부분 실패 journal 재개
@@ -191,7 +209,7 @@ PR이 병렬로 진행되면 각 PR과 merge queue가 최신 base SHA에서 다�
 | --- | --- |
 | `Protect main - required PR and CI` (`18859824`) | strict 모드로 활성화. 필수 check는 정확히 `typecheck / test / lint / build`, `report-only worktree lifecycle / windows` 두 개이며 review thread 해결도 필수다. |
 | `Protect main - Code Owner review` (`18859832`) | 활성화. code owner 승인 1개가 필요하고 `blackstarzck`는 `always` 예외 actor다. 소유자 예외는 필수 CI와 review thread 처리가 끝난 뒤에만 사용한다. |
-| merge 뒤 branch 자동 삭제 | `delete_branch_on_merge: false`로 비활성화돼 있으며, 저장소 설정 중 이 항목만 별도 적용 대기다. |
+| merge 뒤 branch 자동 삭제 | `delete_branch_on_merge: true`로 활성화돼 있다. |
 
 production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI target, merge, cleanup 대상이 아니다.
 
@@ -202,7 +220,8 @@ production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI t
 | fetch·GitHub PR 조회 실패 | 최신 상태를 추정하지 않고 보존한다. 네트워크·인증 복구 후 finalize를 다시 실행한다. |
 | 소유자 인증 불가·불일치 | 소유자 예외 경로로 진행하지 않는다. 협업자가 PR을 연 뒤 필수 CI·review 의견을 처리하고, 마지막에 `blackstarzck` 승인을 받아 merge한다. |
 | 새 commit 뒤 bootstrap 승인 SHA가 오래됨 | 이전 SHA로 재실행하지 않는다. 새 PR 후보 head를 검토한 뒤 외부 저장소 변수를 그 정확한 SHA로 다시 승인·설정한다. |
-| handoff fingerprint 변경 | 이전 snapshot을 쓰지 않는다. 변경 소유자를 확인하고 원 실행자가 새 handoff를 만든다. |
+| handoff fingerprint 변경 | 이전 snapshot을 쓰지 않는다. 변경 소유자를 확인하고 원 실행자가 `--action refresh`로 같은 대상에게 새 인수인계를 만든다. |
+| 시작 직후 프로세스 중단 | branch나 worktree를 지우지 않는다. `task:status`의 소유권·상태 안내를 확인하고 같은 실행자가 같은 `task:start`을 재실행한다. |
 | runtime active | server·watcher를 정상 종료하고 빈 runtime 상태를 다시 등록한다. |
 | approval 만료 | cleanup을 재시도하지 말고 finalize의 새 fingerprint를 다시 보고·승인받는다. |
 | cleanup 부분 실패 | journal과 실제 Git 목록을 읽고, 같은 승인값으로만 재개한다. 강제 정리하지 않는다. |

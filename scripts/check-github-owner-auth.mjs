@@ -3,6 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { runGitHubOwnerAuth } from "./lib/github-owner-auth.mjs";
+import { writeOwnerAuthResultSidecar } from "./lib/ai-task-lifecycle-v2.mjs";
 
 function cliError(code) {
   const error = new Error(code);
@@ -11,16 +12,25 @@ function cliError(code) {
 }
 
 function parseArguments(argv) {
-  const options = { owner: null, repoPath: null };
+  const options = { owner: null, repoPath: null, branch: null, publishApproved: false, now: null };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--") continue;
-    if (argument === "--repo") {
+    if (argument === "--publish-approved") {
+      if (options.publishApproved) throw cliError("DUPLICATE_ARGUMENT");
+      options.publishApproved = true;
+    } else if (argument === "--repo") {
       if (options.repoPath !== null) throw cliError("DUPLICATE_ARGUMENT");
       options.repoPath = argv[++index] ?? null;
     } else if (argument === "--owner") {
       if (options.owner !== null) throw cliError("DUPLICATE_ARGUMENT");
       options.owner = argv[++index] ?? null;
+    } else if (argument === "--branch") {
+      if (options.branch !== null) throw cliError("DUPLICATE_ARGUMENT");
+      options.branch = argv[++index] ?? null;
+    } else if (argument === "--now") {
+      if (options.now !== null) throw cliError("DUPLICATE_ARGUMENT");
+      options.now = argv[++index] ?? null;
     } else {
       throw cliError("UNKNOWN_ARGUMENT");
     }
@@ -59,7 +69,16 @@ export async function runGitHubOwnerAuthCli({
       commandRunner,
       owner: options.owner,
       repoPath: options.repoPath,
+      publishApproved: options.publishApproved,
+      ...(options.now === null ? {} : { now: options.now }),
     });
+    if (options.branch !== null) {
+      writeOwnerAuthResultSidecar({
+        repoPath: options.repoPath,
+        branch: options.branch,
+        result,
+      });
+    }
     writeStdout(`${JSON.stringify(result)}\n`);
     return 0;
   } catch (error) {

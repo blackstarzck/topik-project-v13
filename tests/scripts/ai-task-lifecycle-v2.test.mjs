@@ -10,7 +10,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -50,8 +50,8 @@ function git(cwd, args, options = {}) {
   }).trim();
 }
 
-function makeRepository() {
-  const root = tempRoot();
+function makeRepository(prefix) {
+  const root = tempRoot(prefix);
   const remote = path.join(root, "remote.git");
   const seed = path.join(root, "seed");
   const base = path.join(root, "base");
@@ -68,6 +68,21 @@ function makeRepository() {
   git(base, ["config", "user.email", "test@example.com"]);
   git(base, ["config", "user.name", "Lifecycle Test"]);
   return { root, remote, seed, base };
+}
+
+function makeInterruptedTask(branch) {
+  const repository = makeRepository();
+  let worktreePath = null;
+  const service = createTaskLifecycleService({
+    afterWorktreeCreated({ worktreePath: createdPath }) {
+      worktreePath = createdPath;
+      writeFileSync(path.join(createdPath, "interrupted-change.txt"), "preserve\n");
+      throw new Error("simulated abrupt process failure");
+    },
+  });
+  expect(() => service.startTask({ repoPath: repository.base, branch, actor: "codex", now: NOW }))
+    .toThrowError("START_FAILED_TASK_PRESERVED");
+  return { ...repository, branch, worktreePath, dirtyFile: path.join(worktreePath, "interrupted-change.txt") };
 }
 
 function taskRecord(overrides = {}) {
@@ -94,6 +109,36 @@ function taskRecord(overrides = {}) {
   };
 }
 
+function handoffContextInput(overrides = {}) {
+  return {
+    objective: "Claude가 남은 lifecycle 구현을 이어간다.",
+    completed: ["실패 테스트 작성"],
+    decisions: ["TaskRecordV2는 변경하지 않는다."],
+    remaining: ["구현과 검증"],
+    verification: ["관련 Vitest"],
+    blockers: [],
+    nextAction: "관련 테스트를 실행한다.",
+    ...overrides,
+  };
+}
+
+function handoffContextRecord(overrides = {}) {
+  return {
+    schemaVersion: 1,
+    recordType: "HandoffContextV1",
+    taskId: "feat-sample-task",
+    branch: "feat/sample-task",
+    snapshotId: "feat-sample-task-handoff-2",
+    revision: 2,
+    fromActor: "codex",
+    toActor: "claude",
+    ...handoffContextInput(),
+    fingerprint: FINGERPRINT,
+    createdAt: NOW,
+    ...overrides,
+  };
+}
+
 afterEach(() => {
   for (const root of tempRoots.splice(0)) {
     rmSync(root, { recursive: true, force: true });
@@ -101,6 +146,186 @@ afterEach(() => {
 });
 
 describe("AI task lifecycle v2 schema", () => {
+  it("publishes closed validators for practical-flow sidecars", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+
+    for (const name of [
+      "validateHandoffContextV1",
+      "validateStartRecoveryV1",
+      "validateFinishReportV1",
+      "validateOwnerAuthResultV1",
+    ]) {
+      expect(lifecycle[name], `${name} must be public`).toBeTypeOf("function");
+    }
+  });
+
+  it("rejects unknown, secret-like, thread-like, oversized, and prototype-like sidecar input", async () => {
+    const { validateHandoffContextV1 } = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    expect(validateHandoffContextV1).toBeTypeOf("function");
+    const valid = {
+      schemaVersion: 1,
+      recordType: "HandoffContextV1",
+      taskId: "feat-sample-task",
+      branch: "feat/sample-task",
+      snapshotId: "feat-sample-task-handoff-2",
+      revision: 2,
+      fromActor: "codex",
+      toActor: "claude",
+      objective: "검색 기능을 이어서 구현한다.",
+      completed: ["테스트 작성"],
+      decisions: ["기존 API 유지"],
+      remaining: ["구현"],
+      verification: ["관련 테스트"],
+      blockers: [],
+      nextAction: "실패 테스트를 통과시킨다.",
+      fingerprint: FINGERPRINT,
+      createdAt: NOW,
+    };
+    expect(validateHandoffContextV1(valid)).toEqual([]);
+    expect(validateHandoffContextV1({ ...valid, token: "never" })).toContainEqual(
+      expect.objectContaining({ code: "UNKNOWN_FIELD" }),
+    );
+    expect(validateHandoffContextV1({ ...valid, threadId: "raw" })).toContainEqual(
+      expect.objectContaining({ code: "UNKNOWN_FIELD" }),
+    );
+    expect(validateHandoffContextV1({ ...valid, objective: "x".repeat(20_000) })).not.toEqual([]);
+    const polluted = Object.create({ injected: true });
+    Object.assign(polluted, valid);
+    expect(validateHandoffContextV1(polluted)).toContainEqual(
+      expect.objectContaining({ code: "INVALID_OBJECT" }),
+    );
+  });
+
+  it("rejects high-confidence secret and thread identifiers from every handoff context string", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    const sensitiveValues = [
+      `ghp_${"a".repeat(36)}`,
+      `github_pat_${"b".repeat(40)}`,
+      `sk-${"c".repeat(32)}`,
+      `sk-proj-${"d".repeat(32)}`,
+      `AKIA${"E".repeat(16)}`,
+      "-----BEGIN PRIVATE KEY-----",
+      "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.fake-signature-1234",
+      "thread id: 550e8400-e29b-41d4-a716-446655440000",
+      "session-id=6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+      "conversation id: 6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+      "/threads/6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+    ];
+    const secret = sensitiveValues[0];
+    const fieldOverrides = [
+      { objective: secret },
+      { completed: [secret] },
+      { decisions: [secret] },
+      { remaining: [secret] },
+      { verification: [secret] },
+      { blockers: [secret] },
+      { nextAction: secret },
+    ];
+
+    for (const value of sensitiveValues) {
+      const errors = lifecycle.validateHandoffContextV1(handoffContextRecord({ objective: value }));
+      expect(errors).toContainEqual(expect.objectContaining({ code: "SECRET_OR_THREAD_VALUE" }));
+      expect(JSON.stringify(errors)).not.toContain(value);
+    }
+    for (const overrides of fieldOverrides) {
+      expect(lifecycle.validateHandoffContextV1(handoffContextRecord(overrides))).toContainEqual(
+        expect.objectContaining({ code: "SECRET_OR_THREAD_VALUE" }),
+      );
+    }
+
+    const { base } = makeRepository();
+    const started = startTask({ repoPath: base, branch: "fix/context-secret-values", actor: "codex", now: NOW });
+    for (const value of sensitiveValues) {
+      let caught = null;
+      try {
+        lifecycle.offerTaskHandoff({
+          repoPath: started.worktreePath,
+          branch: started.branch,
+          actor: "codex",
+          toActor: "claude",
+          context: handoffContextInput({ objective: value }),
+          now: "2026-07-21T05:01:00.000Z",
+        });
+      } catch (error) {
+        caught = error;
+      }
+      expect(caught).toMatchObject({ code: "HANDOFF_CONTEXT_INVALID" });
+      expect(caught.message).not.toContain(value);
+    }
+  });
+
+  it("allows ordinary UUIDs, short token words, and unlabelled hashes in handoff context", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    const ordinaryText = [
+      "UUID 550e8400-e29b-41d4-a716-446655440000",
+      "use the token word in ordinary prose",
+      `checksum ${"a".repeat(64)}`,
+    ].join("; ");
+
+    expect(lifecycle.validateHandoffContextV1(handoffContextRecord({ objective: ordinaryText }))).toEqual([]);
+
+    const { base } = makeRepository();
+    const started = startTask({ repoPath: base, branch: "fix/context-safe-values", actor: "codex", now: NOW });
+    expect(() => lifecycle.offerTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      toActor: "claude",
+      context: handoffContextInput({ objective: ordinaryText }),
+      now: "2026-07-21T05:01:00.000Z",
+    })).not.toThrow();
+  });
+
+  it.each([
+    "Implement Bearer authentication for the API",
+    "Document bearer authorization headers",
+    "thread id: issue",
+    "GET /threads/list endpoint",
+  ])("allows normal handoff prose without credential evidence: %s", async (objective) => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+
+    expect(lifecycle.validateHandoffContextV1(handoffContextRecord({ objective }))).toEqual([]);
+  });
+
+  it("binds sidecar identity and owner-auth state flags to their declared meaning", async () => {
+    const { validateOwnerAuthResultV1, validateStartRecoveryV1 } = await import(
+      "../../scripts/lib/ai-task-lifecycle-v2.mjs"
+    );
+    const recovery = {
+      schemaVersion: 1,
+      recordType: "StartRecoveryV1",
+      taskId: "fix-different-task",
+      branch: "fix/start-recovery",
+      baseSha: SHA,
+      actor: "codex",
+      worktreePath: "C:/repo/.worktrees/fix-start-recovery",
+      phase: "BLOCKED",
+      blocker: "확인이 필요합니다.",
+      fingerprint: FINGERPRINT,
+      createdAt: NOW,
+      updatedAt: NOW,
+    };
+    expect(validateStartRecoveryV1(recovery)).toContainEqual(
+      expect.objectContaining({ code: "TASK_ID_MISMATCH" }),
+    );
+
+    const auth = {
+      schemaVersion: 1,
+      recordType: "OwnerAuthResultV1",
+      status: "SWITCH_REQUIRED",
+      host: "github.com",
+      owner: "blackstarzck",
+      currentLogin: "collaborator",
+      switchAttempted: false,
+      publishApprovalUsed: false,
+      manualApprovalRequired: false,
+      checkedAt: NOW,
+      fingerprint: FINGERPRINT,
+    };
+    expect(validateOwnerAuthResultV1(auth)).toContainEqual(
+      expect.objectContaining({ code: "OWNER_AUTH_STATE_MISMATCH" }),
+    );
+  });
   it.each([
     "feat/add-search",
     "fix/windows-path",
@@ -198,6 +423,123 @@ describe("AI task lifecycle v2 schema", () => {
 });
 
 describe("task:start", () => {
+  it("recovers an interrupted owned start after the preserved worktree becomes clean", () => {
+    const { base } = makeRepository();
+    let preservedPath = null;
+    const service = createTaskLifecycleService({
+      afterWorktreeCreated({ worktreePath }) {
+        preservedPath = worktreePath;
+        writeFileSync(path.join(worktreePath, "process-leftover.txt"), "unfinished\n");
+        throw new Error("simulated abrupt process failure");
+      },
+    });
+    expect(() => service.startTask({
+      repoPath: base,
+      branch: "fix/start-recovery",
+      actor: "codex",
+      now: NOW,
+    })).toThrowError("START_FAILED_TASK_PRESERVED");
+
+    const blocked = readTaskStatus({ repoPath: base, branch: "fix/start-recovery" });
+    expect(blocked).toMatchObject({
+      task: null,
+      startRecovery: { recordType: "StartRecoveryV1", phase: "BLOCKED", actor: "codex" },
+      blockers: [expect.any(String)],
+      nextAction: { owner: "codex", retrySafe: true, approvalRequired: false },
+    });
+    unlinkSync(path.join(preservedPath, "process-leftover.txt"));
+
+    const recovered = startTask({
+      repoPath: base,
+      branch: "fix/start-recovery",
+      actor: "codex",
+      now: "2026-07-21T05:02:00.000Z",
+    });
+    expect(recovered).toMatchObject({ recordType: "TaskRecordV2", state: "ACTIVE", activeActor: "codex" });
+    expect(recovered.worktreePath).toBe(realpathSync.native(preservedPath));
+    expect(readTaskStatus({ repoPath: base, branch: "fix/start-recovery" }).startRecovery.phase).toBe("COMPLETED");
+  });
+
+  it("preserves interrupted starts when ownership evidence or worktree state is unsafe", () => {
+    const { base } = makeRepository();
+    const service = createTaskLifecycleService({
+      afterWorktreeCreated({ worktreePath }) {
+        writeFileSync(path.join(worktreePath, "owned-change.txt"), "keep\n");
+        throw new Error("simulated abrupt process failure");
+      },
+    });
+    expect(() => service.startTask({ repoPath: base, branch: "fix/start-owner", actor: "codex", now: NOW }))
+      .toThrowError("START_FAILED_TASK_PRESERVED");
+    expect(() => startTask({
+      repoPath: base,
+      branch: "fix/start-owner",
+      actor: "claude",
+      now: "2026-07-21T05:01:00.000Z",
+    })).toThrowError("START_RECOVERY_OWNER_MISMATCH");
+    expect(existsSync(path.join(base, ".worktrees", "fix-start-owner", "owned-change.txt"))).toBe(true);
+  });
+
+  it.each([
+    ["missing worktree", "fix/recovery-missing", ({ base, worktreePath, dirtyFile }) => {
+      unlinkSync(dirtyFile);
+      git(base, ["worktree", "remove", worktreePath]);
+    }, "START_RECOVERY_WORKTREE_MISSING"],
+    ["dirty worktree", "fix/recovery-dirty", () => {}, "START_RECOVERY_WORKTREE_DIRTY"],
+    ["detached worktree", "fix/recovery-detached", ({ worktreePath, dirtyFile }) => {
+      unlinkSync(dirtyFile);
+      git(worktreePath, ["checkout", "--detach"]);
+    }, "START_RECOVERY_WORKTREE_DETACHED"],
+    ["wrong branch", "fix/recovery-wrong-branch", ({ worktreePath, dirtyFile }) => {
+      unlinkSync(dirtyFile);
+      git(worktreePath, ["switch", "-c", "fix/recovery-other-branch"]);
+    }, "START_RECOVERY_WRONG_BRANCH"],
+    ["wrong HEAD", "fix/recovery-wrong-head", ({ worktreePath, dirtyFile }) => {
+      unlinkSync(dirtyFile);
+      writeFileSync(path.join(worktreePath, "committed-change.txt"), "changed\n");
+      git(worktreePath, ["add", "committed-change.txt"]);
+      git(worktreePath, ["commit", "-m", "advance interrupted branch"]);
+    }, "START_RECOVERY_WRONG_HEAD"],
+    ["missing native ownership", "fix/recovery-native-owner", ({ base, worktreePath, dirtyFile }) => {
+      unlinkSync(dirtyFile);
+      git(base, ["worktree", "remove", worktreePath]);
+      mkdirSync(worktreePath, { recursive: true });
+    }, "START_RECOVERY_NATIVE_OWNERSHIP_MISSING"],
+    ["remote branch conflict", "fix/recovery-remote-branch", ({ worktreePath, dirtyFile, branch }) => {
+      unlinkSync(dirtyFile);
+      git(worktreePath, ["push", "origin", branch]);
+    }, "START_RECOVERY_REMOTE_BRANCH_EXISTS"],
+    ["ambiguous remote evidence", "fix/recovery-remote-unknown", ({ base, dirtyFile, root }) => {
+      unlinkSync(dirtyFile);
+      git(base, ["remote", "set-url", "origin", path.join(root, "missing-remote.git")]);
+    }, "START_RECOVERY_REMOTE_EVIDENCE_UNAVAILABLE"],
+  ])("reports %s with a concrete recovery blocker and one next action", (_label, branch, mutate, expectedCode) => {
+    const interrupted = makeInterruptedTask(branch);
+    mutate(interrupted);
+
+    const status = readTaskStatus({ repoPath: interrupted.base, branch });
+
+    expect(status.startRecoveryEligibility.eligible).toBe(false);
+    expect(status.startRecoveryEligibility.issues).toContainEqual(
+      expect.objectContaining({ code: expectedCode, message: expect.any(String) }),
+    );
+    expect(status.blockers).toContainEqual(expect.any(String));
+    expect(status.nextAction).toEqual({
+      owner: expect.stringMatching(/^(codex|manual)$/),
+      reason: expect.any(String),
+      command: expect.any(String),
+      approvalRequired: expect.any(Boolean),
+      retrySafe: expect.any(Boolean),
+    });
+    if (expectedCode === "START_RECOVERY_REMOTE_BRANCH_EXISTS") {
+      expect(status.nextAction.command).toContain("ls-remote --heads origin");
+      expect(status.nextAction.reason).toContain("원격 branch");
+    }
+    if (expectedCode === "START_RECOVERY_REMOTE_EVIDENCE_UNAVAILABLE") {
+      expect(status.nextAction.command).toContain("task:status");
+      expect(status.nextAction.retrySafe).toBe(true);
+    }
+  });
+
   it("fetches origin and creates a branch/worktree from the pinned origin/main SHA", () => {
     const { base } = makeRepository();
     const expectedSha = git(base, ["rev-parse", "origin/main"]);
@@ -403,6 +745,199 @@ describe("task:start", () => {
 });
 
 describe("task handoff/resume", () => {
+  const handoffContext = {
+    objective: "Claude가 남은 lifecycle 구현을 이어간다.",
+    completed: ["실패 테스트 작성"],
+    decisions: ["TaskRecordV2는 변경하지 않는다."],
+    remaining: ["구현과 검증"],
+    verification: ["관련 Vitest"],
+    blockers: [],
+    nextAction: "관련 테스트를 실행한다.",
+  };
+
+  it("offers and accepts a handoff with a fingerprinted context sidecar", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    expect(lifecycle.offerTaskHandoff).toBeTypeOf("function");
+    expect(lifecycle.acceptTaskHandoff).toBeTypeOf("function");
+    const { base } = makeRepository();
+    const started = startTask({ repoPath: base, branch: "refactor/context-handoff", actor: "codex", now: NOW });
+
+    const offered = lifecycle.offerTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      toActor: "claude",
+      context: handoffContext,
+      now: "2026-07-21T05:01:00.000Z",
+    });
+    expect(offered.handoffContext).toMatchObject({
+      recordType: "HandoffContextV1",
+      objective: handoffContext.objective,
+      fromActor: "codex",
+      toActor: "claude",
+      revision: 2,
+    });
+    expect(readTaskStatus({ repoPath: started.worktreePath, branch: started.branch })).toMatchObject({
+      summary: expect.any(String),
+      blockers: [],
+      nextAction: {
+        owner: "claude",
+        command: `pnpm task:handoff -- --action accept --repo '${started.worktreePath.replaceAll("'", "''")}' --branch ${started.branch} --actor claude`,
+        approvalRequired: false,
+        retrySafe: true,
+      },
+      handoffContext: { fingerprint: offered.handoffContext.fingerprint },
+    });
+
+    const accepted = lifecycle.acceptTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "claude",
+      now: "2026-07-21T05:02:00.000Z",
+    });
+    expect(accepted).toMatchObject({ state: "ACTIVE", activeActor: "claude" });
+    expect(existsSync(started.worktreePath)).toBe(true);
+  });
+
+  it("rejects tampered context and lets the original actor refresh after worktree changes", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    expect(lifecycle.refreshTaskHandoff).toBeTypeOf("function");
+    const { base } = makeRepository();
+    const started = startTask({ repoPath: base, branch: "fix/context-refresh", actor: "codex", now: NOW });
+    const offered = lifecycle.offerTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      toActor: "claude",
+      context: handoffContext,
+      now: "2026-07-21T05:01:00.000Z",
+    });
+    const contextFile = path.join(
+      started.gitCommonDir,
+      "talkpik-task-lifecycle",
+      "v2",
+      "handoff-contexts",
+      `${offered.handoffSnapshotId}.json`,
+    );
+    const tampered = JSON.parse(readFileSync(contextFile, "utf8"));
+    tampered.objective = "변조됨";
+    writeFileSync(contextFile, `${JSON.stringify(tampered, null, 2)}\n`);
+    expect(() => lifecycle.acceptTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "claude",
+      now: "2026-07-21T05:02:00.000Z",
+    })).toThrowError("HANDOFF_CONTEXT_FINGERPRINT_MISMATCH");
+
+    writeFileSync(path.join(started.worktreePath, "continued.txt"), "continued\n");
+    const refreshed = lifecycle.refreshTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      context: { ...handoffContext, completed: ["실패 테스트 작성", "추가 변경"] },
+      now: "2026-07-21T05:03:00.000Z",
+    });
+    expect(refreshed).toMatchObject({ state: "HANDOFF_PENDING", pendingActor: "claude", revision: 3 });
+    expect(refreshed.handoffContext.revision).toBe(3);
+    expect(() => lifecycle.acceptTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "claude",
+      now: "2026-07-21T05:04:00.000Z",
+    })).not.toThrow();
+  });
+
+  it("requires the context sidecar for strict accept while keeping legacy resume compatible", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    const { base } = makeRepository();
+    const started = startTask({ repoPath: base, branch: "fix/strict-accept", actor: "codex", now: NOW });
+    const offered = lifecycle.offerTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      toActor: "claude",
+      context: handoffContext,
+      now: "2026-07-21T05:01:00.000Z",
+    });
+    const contextFile = path.join(
+      started.gitCommonDir,
+      "talkpik-task-lifecycle",
+      "v2",
+      "handoff-contexts",
+      `${offered.handoffSnapshotId}.json`,
+    );
+    unlinkSync(contextFile);
+
+    const status = readTaskStatus({ repoPath: started.worktreePath, branch: started.branch });
+    const contextInputPath = path.join(
+      started.worktreePath,
+      ".codex",
+      "work",
+      "strict-accept",
+      "handoff-context.json",
+    );
+    expect(status.handoffContext).toBeNull();
+    expect(status.blockers).toEqual([
+      expect.stringContaining("인수인계 context"),
+    ]);
+    expect(status.nextAction).toEqual({
+      owner: "codex",
+      reason: expect.stringContaining("context"),
+      command: `pnpm task:handoff -- --action refresh --repo '${started.worktreePath.replaceAll("'", "''")}' --branch ${started.branch} --actor codex --context '${contextInputPath.replaceAll("'", "''")}'`,
+      approvalRequired: false,
+      retrySafe: true,
+    });
+    expect(status.nextAction.command).not.toContain("--action accept");
+
+    expect(() => lifecycle.acceptTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "claude",
+      now: "2026-07-21T05:02:00.000Z",
+    })).toThrowError("HANDOFF_CONTEXT_NOT_FOUND");
+    const cliAccept = spawnSync(process.execPath, [
+      path.resolve("scripts/ai-task.mjs"),
+      "handoff", "--action", "accept",
+      "--repo", started.worktreePath,
+      "--branch", started.branch,
+      "--actor", "claude",
+      "--now", "2026-07-21T05:02:00.000Z",
+    ], { cwd: started.worktreePath, encoding: "utf8", windowsHide: true });
+    expect(cliAccept.status).toBe(1);
+    expect(cliAccept.stderr.trim()).toBe("HANDOFF_CONTEXT_NOT_FOUND");
+    expect(() => resumeTask({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "claude",
+      now: "2026-07-21T05:02:00.000Z",
+    })).not.toThrow();
+  });
+
+  it("PowerShell-quotes status command paths containing spaces and apostrophes", async () => {
+    const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
+    const { base } = makeRepository("talkpik status's path-");
+    const started = startTask({
+      repoPath: base,
+      branch: "fix/status-path-quoting",
+      actor: "codex",
+      now: NOW,
+    });
+    const quotedWorktree = `'${started.worktreePath.replaceAll("'", "''")}'`;
+
+    expect(readTaskStatus({ repoPath: started.worktreePath, branch: started.branch }).nextAction.command)
+      .toBe(`pnpm task:finish -- --repo ${quotedWorktree} --branch ${started.branch} --actor codex`);
+
+    lifecycle.offerTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      toActor: "claude",
+      context: handoffContext,
+      now: "2026-07-21T05:01:00.000Z",
+    });
+    expect(readTaskStatus({ repoPath: started.worktreePath, branch: started.branch }).nextAction.command)
+      .toBe(`pnpm task:handoff -- --action accept --repo ${quotedWorktree} --branch ${started.branch} --actor claude`);
+  });
   it("keeps the worktree and transfers the actor only after fingerprint revalidation", () => {
     const { base } = makeRepository();
     const started = startTask({
@@ -610,13 +1145,14 @@ describe("public package CLI", () => {
     expect(() => git(path.resolve("."), ["check-ignore", "-q", ".worktrees/task-probe"])).not.toThrow();
   });
 
-  it("exposes the four lifecycle commands through package.json", () => {
+  it("exposes the practical lifecycle commands through package.json", () => {
     const packageJson = JSON.parse(readFileSync(path.resolve("package.json"), "utf8"));
     expect(packageJson.scripts).toMatchObject({
       "task:start": "node scripts/ai-task.mjs start",
       "task:status": "node scripts/ai-task.mjs status",
       "task:handoff": "node scripts/ai-task.mjs handoff",
       "task:resume": "node scripts/ai-task.mjs resume",
+      "task:finish": "node scripts/ai-task.mjs finish",
     });
   });
 
@@ -637,11 +1173,33 @@ describe("public package CLI", () => {
       run(["status", "--repo", started.worktreePath, "--branch", "chore/cli-flow"], started.worktreePath),
     );
     expect(status.task.activeActor).toBe("codex");
+    const finish = JSON.parse(run([
+      "finish",
+      "--repo", started.worktreePath,
+      "--branch", "chore/cli-flow",
+      "--actor", "codex",
+      "--now", "2026-07-21T05:00:30.000Z",
+    ], started.worktreePath));
+    expect(finish).toMatchObject({ recordType: "FinishReportV1", dirty: false, published: false });
 
+    const contextDirectory = path.join(started.worktreePath, ".codex", "work", "cli-flow");
+    mkdirSync(contextDirectory, { recursive: true });
+    const contextFile = path.join(contextDirectory, "handoff-context.json");
+    writeFileSync(contextFile, JSON.stringify({
+      objective: "CLI 인수인계",
+      completed: [],
+      decisions: [],
+      remaining: ["검증"],
+      verification: [],
+      blockers: [],
+      nextAction: "검증을 실행한다.",
+    }));
     const pending = JSON.parse(
       run(
         [
           "handoff",
+          "--action",
+          "offer",
           "--repo",
           started.worktreePath,
           "--branch",
@@ -650,6 +1208,8 @@ describe("public package CLI", () => {
           "codex",
           "--to",
           "claude",
+          "--context",
+          contextFile,
           "--now",
           "2026-07-21T05:01:00.000Z",
         ],
@@ -657,23 +1217,67 @@ describe("public package CLI", () => {
       ),
     );
     expect(pending.state).toBe("HANDOFF_PENDING");
-    const resumed = JSON.parse(
-      run(
-        [
-          "resume",
-          "--repo",
-          started.worktreePath,
-          "--branch",
-          "chore/cli-flow",
-          "--actor",
-          "claude",
-          "--now",
-          "2026-07-21T05:02:00.000Z",
-        ],
-        started.worktreePath,
-      ),
-    );
+    const resumedProcess = spawnSync(process.execPath, [
+      script,
+      "resume",
+      "--repo", started.worktreePath,
+      "--branch", "chore/cli-flow",
+      "--actor", "claude",
+      "--now", "2026-07-21T05:02:00.000Z",
+    ], { cwd: started.worktreePath, encoding: "utf8", windowsHide: true });
+    expect(resumedProcess.status).toBe(0);
+    expect(resumedProcess.stderr).toContain("TASK_RESUME_DEPRECATED_USE_HANDOFF_ACCEPT");
+    const resumed = JSON.parse(resumedProcess.stdout);
     expect(resumed).toMatchObject({ state: "ACTIVE", activeActor: "claude" });
     expect(existsSync(started.worktreePath)).toBe(true);
+  });
+
+  it("rejects handoff context outside the task work area and through symlink or junction ancestors", () => {
+    const { root, base } = makeRepository();
+    const started = startTask({ repoPath: base, branch: "fix/context-path", actor: "codex", now: NOW });
+    const script = path.resolve("scripts/ai-task.mjs");
+    const payload = JSON.stringify({
+      objective: "경로 검증",
+      completed: [],
+      decisions: [],
+      remaining: ["수락"],
+      verification: [],
+      blockers: [],
+      nextAction: "경로를 확인한다.",
+    });
+    const runOffer = (contextFile) => spawnSync(process.execPath, [
+      script,
+      "handoff", "--action", "offer",
+      "--repo", started.worktreePath,
+      "--branch", started.branch,
+      "--actor", "codex",
+      "--to", "claude",
+      "--context", contextFile,
+      "--now", "2026-07-21T05:01:00.000Z",
+    ], { cwd: started.worktreePath, encoding: "utf8", windowsHide: true });
+
+    const misplaced = path.join(started.worktreePath, "handoff.json");
+    writeFileSync(misplaced, payload);
+    const misplacedResult = runOffer(misplaced);
+    expect(misplacedResult.status).toBe(1);
+    expect(misplacedResult.stderr.trim()).toBe("TASK_CONTEXT_LOCATION_INVALID");
+
+    unlinkSync(misplaced);
+    const workRoot = path.join(started.worktreePath, ".codex", "work");
+    mkdirSync(workRoot, { recursive: true });
+    const externalDirectory = path.join(root, "external-context");
+    mkdirSync(externalDirectory);
+    const externalFile = path.join(externalDirectory, "handoff.json");
+    writeFileSync(externalFile, payload);
+    const linkedTaskDirectory = path.join(workRoot, "context-path");
+    try {
+      symlinkSync(externalDirectory, linkedTaskDirectory, process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      if (["EPERM", "EACCES", "UNKNOWN"].includes(error?.code)) return;
+      throw error;
+    }
+    const linkedResult = runOffer(path.join(linkedTaskDirectory, "handoff.json"));
+    expect(linkedResult.status).toBe(1);
+    expect(linkedResult.stderr.trim()).toBe("TASK_CONTEXT_PATH_ESCAPE");
   });
 });

@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 
 import {
-  handoffTask,
+  acceptTaskHandoff,
+  createFinishReport,
+  offerTaskHandoff,
+  parseTaskBranch,
   readLegacyCodexHints,
   readTaskStatus,
+  refreshTaskHandoff,
   resumeTask,
   startTask,
 } from "./lib/ai-task-lifecycle-v2.mjs";
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
+import path from "node:path";
 import {
   cleanupTask,
   finalizeTask,
   registerTaskRuntime,
 } from "./lib/ai-task-cleanup.mjs";
 
-const COMMANDS = new Set(["start", "status", "handoff", "resume", "runtime", "finalize", "cleanup"]);
+const COMMANDS = new Set(["start", "status", "handoff", "resume", "runtime", "finalize", "cleanup", "finish"]);
 const VALUE_FLAGS = new Set([
   "repo",
   "branch",
@@ -27,6 +33,8 @@ const VALUE_FLAGS = new Set([
   "ports",
   "pids",
   "locks",
+  "action",
+  "context",
 ]);
 
 function cliError(code) {
@@ -74,6 +82,58 @@ function integerList(value, kind) {
   return values;
 }
 
+function pathContains(parent, child) {
+  const relative = path.relative(parent, child);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function assertNoLinkedAncestor(root, target) {
+  const relative = path.relative(path.resolve(root), path.resolve(target));
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw cliError("TASK_CONTEXT_PATH_ESCAPE");
+  let cursor = path.resolve(root);
+  for (const segment of relative.split(path.sep).filter(Boolean)) {
+    cursor = path.join(cursor, segment);
+    if (!existsSync(cursor)) throw cliError("TASK_CONTEXT_NOT_FOUND");
+    if (lstatSync(cursor).isSymbolicLink()) throw cliError("TASK_CONTEXT_PATH_ESCAPE");
+  }
+}
+
+function readHandoffContextFile(repoPath, branch, contextPath) {
+  if (typeof contextPath !== "string" || !path.isAbsolute(contextPath)) {
+    throw cliError("TASK_CONTEXT_REQUIRED");
+  }
+  const resolvedRepo = path.resolve(repoPath);
+  const resolvedContext = path.resolve(contextPath);
+  const { slug } = parseTaskBranch(branch);
+  const allowedRoot = path.resolve(resolvedRepo, ".codex", "work", slug);
+  const relative = path.relative(allowedRoot, resolvedContext);
+  if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw cliError("TASK_CONTEXT_LOCATION_INVALID");
+  }
+  assertNoLinkedAncestor(resolvedRepo, allowedRoot);
+  assertNoLinkedAncestor(allowedRoot, resolvedContext);
+  let stats;
+  try {
+    stats = lstatSync(resolvedContext);
+  } catch {
+    throw cliError("TASK_CONTEXT_NOT_FOUND");
+  }
+  if (!stats.isFile() || stats.isSymbolicLink() || stats.size > 64 * 1024) {
+    throw cliError("TASK_CONTEXT_INVALID");
+  }
+  const canonicalRepo = realpathSync.native(resolvedRepo);
+  const canonicalAllowedRoot = realpathSync.native(allowedRoot);
+  const canonicalContext = realpathSync.native(resolvedContext);
+  if (!pathContains(canonicalRepo, canonicalAllowedRoot) || !pathContains(canonicalAllowedRoot, canonicalContext)) {
+    throw cliError("TASK_CONTEXT_PATH_ESCAPE");
+  }
+  try {
+    return JSON.parse(readFileSync(resolvedContext, "utf8"));
+  } catch {
+    throw cliError("TASK_CONTEXT_INVALID");
+  }
+}
+
 async function run(argv) {
   const { command, values } = parseArguments(argv);
   const common = { repoPath: values.repo, branch: values.branch };
@@ -99,12 +159,30 @@ async function run(argv) {
     };
   }
   if (command === "handoff") {
-    return handoffTask({
-      ...common,
-      actor: required(values, "actor"),
-      toActor: required(values, "to"),
-      now,
-    });
+    const action = required(values, "action");
+    if (action === "offer") {
+      return offerTaskHandoff({
+        ...common,
+        actor: required(values, "actor"),
+        toActor: required(values, "to"),
+        context: readHandoffContextFile(values.repo, values.branch, required(values, "context")),
+        now,
+      });
+    }
+    if (action === "accept") {
+      if (values.to || values.context) throw cliError("TASK_HANDOFF_ACCEPT_ARGUMENTS_INVALID");
+      return acceptTaskHandoff({ ...common, actor: required(values, "actor"), now });
+    }
+    if (action === "refresh") {
+      if (values.to) throw cliError("TASK_HANDOFF_REFRESH_ARGUMENTS_INVALID");
+      return refreshTaskHandoff({
+        ...common,
+        actor: required(values, "actor"),
+        context: readHandoffContextFile(values.repo, values.branch, required(values, "context")),
+        now,
+      });
+    }
+    throw cliError("TASK_HANDOFF_ACTION_INVALID");
   }
   if (command === "resume") {
     return resumeTask({ ...common, actor: required(values, "actor"), now });
@@ -118,6 +196,13 @@ async function run(argv) {
       now,
     });
   }
+  if (command === "finish") {
+    return createFinishReport({
+      ...common,
+      actor: required(values, "actor"),
+      now,
+    });
+  }
   if (command === "finalize") return finalizeTask(common);
   return cleanupTask({
     ...common,
@@ -127,6 +212,9 @@ async function run(argv) {
 }
 
 try {
+  if (process.argv[2] === "resume") {
+    process.stderr.write("TASK_RESUME_DEPRECATED_USE_HANDOFF_ACCEPT\n");
+  }
   process.stdout.write(`${JSON.stringify(await run(process.argv.slice(2)), null, 2)}\n`);
 } catch (error) {
   const code =
