@@ -1,11 +1,11 @@
 # OpenAPI Reference
 
-Index generated from the live Swagger OpenAPI JSON.
+Index generated from the OpenAPI JSON captured on 2026-07-07. The original service and documentation routes are no longer available; this is not a current integration contract.
 
 | Item | Value |
 | --- | --- |
-| Swagger UI | [https://api.dotoretopik.com/docs](https://api.dotoretopik.com/docs) |
-| OpenAPI JSON | [https://api.dotoretopik.com/openapi.json](https://api.dotoretopik.com/openapi.json) |
+| Source status | Former service and documentation routes no longer exist |
+| Current base URL | Not documented in this repository |
 | Last synced | 2026-07-07 |
 | OpenAPI version | `3.1.0` |
 | API title | `TalkPik AI Service` |

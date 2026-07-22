@@ -1,6 +1,6 @@
 # Admin Reading Schemas
 
-Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Source snapshot: generated from the former TALKPIK external API documentation on 2026-07-07. The original service and documentation routes are no longer available.
 Last synced: 2026-07-07
 
 Boundary note: these schemas are for external backend admin reference only. They do not authorize new v13 user-app admin UI.
