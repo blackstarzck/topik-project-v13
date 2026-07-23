@@ -4,8 +4,8 @@
 | --- | --- |
 | 상태 | 활성 운영 정책 |
 | owner | TALKPIK AI v13 클라이언트 운영 |
-| 범위 | 사용자 안전, 임시 복구, 실행 환경·에이전트 안전, AI 개발 lifecycle, 저장소 간 복구 경계 |
-| 마지막 검토 | 2026-07-21 |
+| 범위 | 사용자 안전, 임시 복구, 실행 환경·에이전트 안전, AI 개발 lifecycle, 저장소 간 복구 경계, 시스템 리포팅 DB 이관 |
+| 마지막 검토 | 2026-07-23 |
 | 재검토 | 관련 제품·환경·복구 계약 변경 때마다, 최소 분기 1회 |
 
 이 문서는 v13의 클라이언트 운영 정책을 찾는 정식 색인이다. 세부 정책의 상태와 owner도 이 색인에서 관리한다. 제품 약속은 [`../prd.md`](../prd.md), 실행 가능한 데이터 정본은 timestamp 순으로 재생한 `supabase/migrations/*.sql`이 우선하며, 이 문서는 그 owner를 대체하지 않는다.
@@ -19,6 +19,7 @@
 | [`environment-and-agent-safety.md`](./environment-and-agent-safety.md) | 활성 | v13 클라이언트 운영 | 환경 ref 검증, 에이전트 허용·금지 행위, 출력 정제 | 환경·배포·권한 경계 변경 때 |
 | [`cross-repo-recovery-boundary.md`](./cross-repo-recovery-boundary.md) | 활성 | v13과 topik-ai의 경계 계약 | 백업·복구 owner, 약관 projection·동의 RPC·Data API 권한 이관, 복구 후 읽기 전용 확인 | 복구·약관·권한 경계 또는 운영 owner 변경 때 |
 | [`topik-ai-operations-handoff.md`](./topik-ai-operations-handoff.md) | 실행 대기 | topik-ai 운영 | credential 대응, 자동 백업·외부 보관, 약관 원자성·권한 migration, production 적용, 복원 훈련 | topik-ai issue 생성·실행·handback 때 |
+| [`system-reporting-handoff.md`](./system-reporting-handoff.md) | 실행 대기 | topik-ai DB·운영 | 시스템 리포팅 migration의 dev 검증, production 적용, 권한 검증과 v13 handback | 리포팅 DB 적용·검증·배포 때 |
 
 ## 적용 원칙
 

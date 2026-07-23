@@ -2752,6 +2752,60 @@
       "linkSignUp": "Sign up"
     }
   },
+  "systemReport": {
+    "launcherTooltip": "Get help or send feedback",
+    "launcherAria": "Get help or send feedback",
+    "title": "Need help?",
+    "helper": "Tell us what went wrong or what you would like to know.",
+    "close": "Close help request",
+    "category": {
+      "label": "Request type",
+      "bug": "Report a bug",
+      "question": "Ask a question",
+      "suggestion": "Share an idea"
+    },
+    "email": {
+      "label": "Reply email",
+      "placeholder": "name@example.com"
+    },
+    "reportTitle": {
+      "label": "Title",
+      "placeholder": "Summarize what you need help with"
+    },
+    "message": {
+      "label": "Details",
+      "placeholder": "Describe the issue or question in detail"
+    },
+    "validation": {
+      "emailRequired": "Enter your email.",
+      "emailInvalid": "Enter a valid email address.",
+      "emailTooLong": "Keep the email within {max} characters.",
+      "titleRequired": "Enter a title.",
+      "titleTooLong": "Keep the title within {max} characters.",
+      "messageRequired": "Enter the details.",
+      "messageTooLong": "Keep the details within {max} characters."
+    },
+    "diagnosticsDisclosure": "We attach the current path and a coarse browser and device environment. Reports are stored until manual deletion, with no fixed retention period.",
+    "sending": "Sending",
+    "cancel": "Cancel",
+    "send": "Send",
+    "retry": "Send again",
+    "errorTitle": "We could not send your request",
+    "errorDescription": "Please try sending it again shortly.",
+    "discard": {
+      "title": "Discard this request?",
+      "body": "Closing now will remove everything you entered.",
+      "cancel": "Keep writing",
+      "confirm": "Discard"
+    },
+    "success": {
+      "title": "Your request was sent",
+      "body": "Keep these receipt details for reference.",
+      "reference": "Reference",
+      "time": "Created",
+      "close": "Close"
+    }
+  },
   "shared": {
     "unavailable": {
       "title": "Temporarily unavailable",

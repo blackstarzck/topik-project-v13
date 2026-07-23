@@ -1890,6 +1890,29 @@ export interface Database {
         Args: Record<string, never>;
         Returns: undefined;
       };
+      submit_system_report: {
+        Args: {
+          p_idempotency_key: string;
+          p_user_id: string | null;
+          p_category: string;
+          p_email: string;
+          p_title: string;
+          p_message: string;
+          p_pathname: string;
+          p_browser: string;
+          p_os: string;
+          p_device_type: string;
+          p_viewport_width: number;
+          p_viewport_height: number;
+          p_locale: string;
+          p_app_version: string | null;
+        };
+        Returns: {
+          reference_code: string;
+          created_at: string;
+          inserted: boolean;
+        }[];
+      };
       list_user_problems: {
         Args: {
           filter?: Json;

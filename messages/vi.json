@@ -2752,6 +2752,60 @@
       "linkSignUp": "Đăng ký"
     }
   },
+  "systemReport": {
+    "launcherTooltip": "Nhận trợ giúp hoặc gửi góp ý",
+    "launcherAria": "Nhận trợ giúp hoặc gửi góp ý",
+    "title": "Bạn cần trợ giúp?",
+    "helper": "Hãy cho chúng tôi biết vấn đề hoặc điều bạn muốn hỏi.",
+    "close": "Đóng yêu cầu trợ giúp",
+    "category": {
+      "label": "Loại yêu cầu",
+      "bug": "Báo lỗi",
+      "question": "Đặt câu hỏi",
+      "suggestion": "Gửi đề xuất"
+    },
+    "email": {
+      "label": "Email nhận phản hồi",
+      "placeholder": "name@example.com"
+    },
+    "reportTitle": {
+      "label": "Tiêu đề",
+      "placeholder": "Tóm tắt nội dung bạn cần trợ giúp"
+    },
+    "message": {
+      "label": "Nội dung",
+      "placeholder": "Mô tả chi tiết vấn đề hoặc câu hỏi"
+    },
+    "validation": {
+      "emailRequired": "Vui lòng nhập email.",
+      "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ.",
+      "emailTooLong": "Email không được vượt quá {max} ký tự.",
+      "titleRequired": "Vui lòng nhập tiêu đề.",
+      "titleTooLong": "Tiêu đề không được vượt quá {max} ký tự.",
+      "messageRequired": "Vui lòng nhập nội dung.",
+      "messageTooLong": "Nội dung không được vượt quá {max} ký tự."
+    },
+    "diagnosticsDisclosure": "Chúng tôi đính kèm đường dẫn hiện tại cùng thông tin khái quát về trình duyệt và thiết bị. Báo cáo được lưu cho đến khi xóa thủ công và không có thời hạn lưu cố định.",
+    "sending": "Đang gửi",
+    "cancel": "Hủy",
+    "send": "Gửi",
+    "retry": "Gửi lại",
+    "errorTitle": "Không thể gửi yêu cầu",
+    "errorDescription": "Vui lòng thử gửi lại sau ít phút.",
+    "discard": {
+      "title": "Bỏ nội dung đã nhập?",
+      "body": "Nếu đóng bây giờ, toàn bộ nội dung bạn nhập sẽ bị xóa.",
+      "cancel": "Tiếp tục viết",
+      "confirm": "Bỏ nội dung"
+    },
+    "success": {
+      "title": "Đã gửi yêu cầu",
+      "body": "Hãy lưu thông tin tiếp nhận này để tham khảo.",
+      "reference": "Mã tiếp nhận",
+      "time": "Thời gian tiếp nhận",
+      "close": "Đóng"
+    }
+  },
   "shared": {
     "unavailable": {
       "title": "Tạm thời không khả dụng",

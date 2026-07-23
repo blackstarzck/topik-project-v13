@@ -21,6 +21,7 @@ export const requiredOwnerPaths = [
   "docs/operations/client-resilience-policy.md",
   "docs/operations/cross-repo-recovery-boundary.md",
   "docs/operations/environment-and-agent-safety.md",
+  "docs/operations/system-reporting-handoff.md",
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/swagger-api/",
   "docs/supabase/README.md",
@@ -49,6 +50,7 @@ const operationsAllowlist = new Map([
   ["client-resilience-policy.md", "file"],
   ["cross-repo-recovery-boundary.md", "file"],
   ["environment-and-agent-safety.md", "file"],
+  ["system-reporting-handoff.md", "file"],
   ["topik-ai-operations-handoff.md", "file"],
 ]);
 const activeDirectoryRoots = [

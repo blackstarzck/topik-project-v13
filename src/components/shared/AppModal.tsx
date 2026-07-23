@@ -3,6 +3,14 @@
 import { Modal } from "antd";
 import type { ModalProps } from "antd";
 
+import styles from "./AppModal.module.css";
+
+export type AppModalPlacement = "center" | "bottom-right";
+
+export type AppModalProps = ModalProps & {
+  placement?: AppModalPlacement;
+};
+
 /**
  * Shared user-facing Modal surface.
  *
@@ -18,12 +26,24 @@ import type { ModalProps } from "antd";
  * 규칙 / 확장 로드맵. "use client": Modal is interactive (portal + open state +
  * focus management).
  */
-export function AppModal({ rootClassName, ...props }: ModalProps) {
+export function AppModal({
+  placement = "center",
+  rootClassName,
+  centered,
+  ...props
+}: AppModalProps) {
+  const isCentered = placement === "center";
+
   return (
     <Modal
       {...props}
-      centered
-      rootClassName={["app-modal", "app-modal--center-origin", rootClassName]
+      centered={isCentered ? (centered ?? true) : false}
+      rootClassName={[
+        "app-modal",
+        isCentered ? "app-modal--center-origin" : "app-modal--bottom-right",
+        isCentered ? null : styles.bottomRight,
+        rootClassName,
+      ]
         .filter(Boolean)
         .join(" ")}
     />

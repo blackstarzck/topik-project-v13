@@ -28,6 +28,14 @@
 - `private.problem_identities`와 submission intent/outbox, reconciliation·evidence RPC는 browser가 직접 읽거나 조작하는 표면이 아니다. authenticated 사용자는 owner 검증을 거친 공개 RPC만 호출하고, 상태 전환·운영 대사는 service role에 한정한다.
 - snapshot CHECK가 호출하는 금지-key 판별 helper는 immutable하고 table을 읽지 않는 순수 함수다. `authenticated`와 `service_role`에 실행 권한을 주되 `anon`과 `PUBLIC`에는 주지 않는다.
 
+## 시스템 리포팅
+
+- `private.system_reports`는 Data API 노출 대상이 아니며 RLS를 enable·force한다. `PUBLIC`, `anon`, `authenticated`, `service_role`의 직접 table 권한을 모두 회수해 browser와 일반 서버 코드가 행을 직접 읽거나 쓰지 못하게 한다.
+- `submit_system_report`는 고정된 `search_path`를 사용하는 최소 범위의 `SECURITY DEFINER` 함수다. `PUBLIC`, `anon`, `authenticated`의 실행 권한을 회수하고 `service_role`에만 실행을 허용한다.
+- 사용자 앱의 server route가 same-origin·본문·필드 allowlist를 먼저 검증한 뒤 이 RPC를 호출한다. browser가 보낸 사용자 ID는 받지 않으며, server가 쿠키 session을 직접 검증해 확인된 Auth 사용자 ID만 선택적으로 전달한다.
+- browser에는 publishable key만 남고 service-role secret은 server-only다. 접수번호는 사용자 ID나 생성 시각을 포함하지 않는 무작위 코드이며, 실패 응답은 database·RPC·provider 원인을 노출하지 않는다.
+- 허용된 진단 정보는 query·hash 없는 pathname과 브라우저·OS·기기 유형의 대분류, viewport, locale, server가 정한 앱 버전뿐이다. IP·referrer·원본 User-Agent·query·hash는 수집하지 않는다.
+
 ## 계정·알림·정리
 
 - 탈퇴 요청은 사용자 접근을 막는 soft delete와 30일 복구 유예를 기본으로 한다.

@@ -49,6 +49,7 @@ export const APP_ROUTES = {
   settingsAccount: "/settings/account",
   settingsLanguage: "/settings/language",
   settingsNotifications: "/settings/notifications",
+  apiSystemReports: "/api/system-reports",
   apiExportPdf: "/api/export/pdf",
   apiNotificationsDispatchEmail: "/api/notifications/dispatch-email",
   apiNotificationsUnsubscribe: "/api/notifications/unsubscribe",
@@ -745,6 +746,15 @@ export const APP_ROUTE_SPECS: readonly AppRouteSpec[] = [
     appPath: "src/app/(workspace)/paywall/page.tsx",
     routeType: "page",
     middleware: "protected",
+  },
+  {
+    id: "api-system-reports",
+    iaCode: "API-SYSTEM-REPORTS",
+    title: "System report submission API",
+    path: APP_ROUTES.apiSystemReports,
+    appPath: "src/app/api/system-reports/route.ts",
+    routeType: "api-route",
+    middleware: "excluded",
   },
   {
     id: "api-export-pdf",

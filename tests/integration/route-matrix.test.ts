@@ -31,9 +31,22 @@ async function callMiddleware(url: string) {
   return proxy(request);
 }
 
-import { PROTECTED_ROUTE_CASES, PUBLIC_PATHS } from "../../src/lib/routes";
+import {
+  APP_ROUTES,
+  APP_ROUTE_SPECS,
+  PROTECTED_ROUTE_CASES,
+  PUBLIC_PATHS,
+} from "../../src/lib/routes";
 
 const PROTECTED_PATHS = PROTECTED_ROUTE_CASES.map((c) => c.path);
+
+it("keeps the system report API outside page middleware lists", () => {
+  expect(
+    APP_ROUTE_SPECS.find((route) => route.path === APP_ROUTES.apiSystemReports),
+  ).toEqual(expect.objectContaining({ middleware: "excluded" }));
+  expect(PUBLIC_PATHS).not.toContain(APP_ROUTES.apiSystemReports);
+  expect(PROTECTED_PATHS).not.toContain(APP_ROUTES.apiSystemReports);
+});
 
 describe("route matrix — anonymous context", () => {
   it("does not expose the old dev preview route to anonymous users", async () => {
