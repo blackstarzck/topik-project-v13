@@ -5,9 +5,9 @@
   "files": [
     {
       "path": "github-issues-fact-check.html",
-      "sha256": "4189dc0d8f43b1bedba5f4551e878410a09636b42537560b3e93dcda2ee7222b",
+      "sha256": "98cea3d01502ae1d7fcf9c141313ae3ed08254a98666d670f907ccd720abfa13",
       "purpose": "GitHub Open 이슈 39건 팩트체크와 #3·#6·#8 후속 수정 상태를 전달하는 HTML 보고서"
     }
   ],
-  "updatedAt": "2026-07-23T00:11:40.714Z"
+  "updatedAt": "2026-07-23T00:30:58.405Z"
 }
