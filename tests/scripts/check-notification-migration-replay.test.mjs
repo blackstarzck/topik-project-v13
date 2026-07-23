@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   evaluateNotificationMigrationReplay,
   formatNotificationMigrationReplayReport,
-} from "../../scripts/check-notification-migration-replay.mjs";
+} from "./check-notification-migration-replay.mjs";
 
 const UP_FILES = [
   "20260612180000_notification_dispatcher.sql",

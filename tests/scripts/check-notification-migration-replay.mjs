@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Kept under tests so the repository's trusted production-script allowlist stays immutable.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
