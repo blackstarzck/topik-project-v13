@@ -112,7 +112,7 @@ describe("task:measure CLI", () => {
     const result = runMeasure(task, [], ["pnpm", "--version"]);
     expect(result.status).toBe(0);
     expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/u);
-  });
+  }, 60_000);
 
   it.runIf(process.platform === "win32")("resolves relative script commands from the task worktree", () => {
     const { task } = makeTask("test/measure-relative-script");

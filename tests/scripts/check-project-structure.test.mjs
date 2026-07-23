@@ -930,7 +930,7 @@ describe("package interface", () => {
       "node scripts/check-project-structure.mjs",
     );
     expect(packageJson.scripts["check:task-lifecycle"]).toBe(
-      "vitest run tests/scripts/ai-task-lifecycle-v2.test.mjs tests/scripts/ai-task-cleanup.test.mjs tests/scripts/ai-task-metrics.test.mjs tests/scripts/ai-task-measure-cli.test.mjs --maxWorkers=1",
+      "vitest run tests/scripts/ai-task-lifecycle-v2.test.mjs tests/scripts/ai-task-cleanup.test.mjs tests/scripts/ai-task-autocleanup.test.mjs tests/scripts/ai-task-metrics.test.mjs tests/scripts/ai-task-measure-cli.test.mjs --maxWorkers=1",
     );
     expect(packageJson.scripts["test:supabase:local"]).toContain(
       "tests/integration/pdf-export-quota-rpc.test.ts",

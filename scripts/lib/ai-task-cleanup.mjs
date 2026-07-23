@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   existsSync,
   lstatSync,
@@ -22,11 +22,14 @@ import {
   validateCleanupManifest,
   validateTaskRecordV2,
 } from "./ai-task-lifecycle-v2.mjs";
+import { runGitHubOwnerAuth } from "./github-owner-auth.mjs";
 
 const SHA_PATTERN = /^[a-f0-9]{40}$/i;
 const FINGERPRINT_PATTERN = /^[a-f0-9]{64}$/i;
 const MAX_RECORD_BYTES = 64 * 1024;
 const NETWORK_TIMEOUT_MS = 30_000;
+const AUTO_CLEANUP_REPORT_LOCK_TIMEOUT_MS = 5_000;
+const AUTO_CLEANUP_REPORT_LOCK_STALE_MS = 10 * 60 * 1000;
 const PROTECTED_BRANCHES = new Set(["main", "master", "develop", "production", "staging"]);
 const DISPOSABLE_ROOTS = Object.freeze([
   "node_modules", ".next", "build", "dist", "out", "coverage", ".cache", ".turbo", ".vercel", ".env.local",
@@ -48,6 +51,39 @@ const CLEANUP_LOCK_KEYS = new Set([
   "taskId", "operation", "pid", "nonce", "approvalFingerprint", "createdAt",
 ]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+const AUTO_CLEANUP_REPORT_KEYS = new Set([
+  "schemaVersion", "recordType", "taskId", "branch", "trigger", "result", "blockers",
+  "startedAt", "finishedAt", "retryAt", "cleanupFingerprint", "stageTimings", "fingerprint",
+]);
+const AUTO_CLEANUP_TIMING_KEYS = new Set([
+  "preflightMs", "authMs", "remoteMs", "revalidationMs", "cleanupMs", "totalMs",
+]);
+const AUTO_CLEANUP_SWEEP_KEYS = new Set([
+  "schemaVersion", "recordType", "startedAt", "finishedAt", "durationMs", "checked",
+  "attempted", "cleaned", "preserved", "failed", "deferred", "runnerFailure", "fingerprint",
+]);
+const AUTO_CLEANUP_RUNNER_FAILURE_KEYS = new Set([
+  "taskId", "branch", "blocker", "finishedAt", "retryAt", "cleanupFingerprint",
+]);
+const AUTO_CLEANUP_RUNNER_BLOCKERS = new Set([
+  "AUTOCLEANUP_TIMEOUT", "AUTOCLEANUP_TERMINATION_FAILED",
+]);
+const SWEEP_LOCK_KEYS = new Set(["pid", "nonce", "createdAt", "holdUntil"]);
+const REMOTE_AUTOCLEANUP_BLOCKERS = new Set([
+  "ORIGIN_LOOKUP_FAILED",
+  "ORIGIN_URL_UNSUPPORTED",
+  "ORIGIN_HOST_UNSUPPORTED",
+  "ORIGIN_OWNER_MISMATCH",
+  "OWNER_AUTH_NOT_AUTHENTICATED",
+  "OWNER_AUTH_SWITCH_FAILED",
+  "OWNER_AUTH_VERIFY_FAILED",
+  "AUTHENTICATED_LOGIN_MISMATCH",
+  "GITHUB_REPOSITORY_IDENTITY_MISMATCH",
+  "REMOTE_BRANCH_EVIDENCE_UNAVAILABLE",
+  "REMOTE_BRANCH_SHA_MISMATCH",
+  "REMOTE_BRANCH_DELETE_FAILED",
+  "REMOTE_BRANCH_ABSENCE_NOT_VERIFIED",
+]);
 
 class TaskCleanupError extends Error {
   constructor(code) {
@@ -65,6 +101,131 @@ function isPlainObject(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
+}
+
+function validationError(code, field) {
+  return { code, path: field };
+}
+
+function validateClosedRecord(value, keys) {
+  if (!isPlainObject(value)) return [validationError("INVALID_OBJECT", "record")];
+  const errors = [];
+  for (const key of Object.keys(value)) {
+    if (!keys.has(key)) errors.push(validationError("UNKNOWN_FIELD", key));
+    if (/(authorization|cookie|credential|password|private.?key|secret|token|api.?key|thread.?id|session.?id)/iu.test(key)) {
+      errors.push(validationError("SECRET_FIELD", key));
+    }
+  }
+  return errors;
+}
+
+function validNonNegativeNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+export function validateAutoCleanupReportV1(record) {
+  const errors = validateClosedRecord(record, AUTO_CLEANUP_REPORT_KEYS);
+  if (!isPlainObject(record)) return errors;
+  if (record.schemaVersion !== 1) errors.push(validationError("INVALID_SCHEMA_VERSION", "schemaVersion"));
+  if (record.recordType !== "AutoCleanupReportV1") errors.push(validationError("INVALID_RECORD_TYPE", "recordType"));
+  try {
+    const parsed = parseTaskBranch(record.branch);
+    if (record.taskId !== `${parsed.type}-${parsed.slug}`) errors.push(validationError("TASK_ID_MISMATCH", "taskId"));
+  } catch {
+    errors.push(validationError("INVALID_TASK_BRANCH", "branch"));
+  }
+  if (!new Set(["DIRECT", "SWEEP"]).has(record.trigger)) errors.push(validationError("INVALID_TRIGGER", "trigger"));
+  if (!new Set(["CLEANED", "PRESERVED", "FAILED"]).has(record.result)) errors.push(validationError("INVALID_RESULT", "result"));
+  const blockersValid = Array.isArray(record.blockers) && record.blockers.length <= 64 &&
+    record.blockers.every((code) => typeof code === "string" && /^[A-Z][A-Z0-9_:.-]*$/u.test(code));
+  if (!blockersValid) {
+    errors.push(validationError("INVALID_BLOCKERS", "blockers"));
+  }
+  if (!validTimestamp(record.startedAt)) errors.push(validationError("INVALID_TIMESTAMP", "startedAt"));
+  if (!validTimestamp(record.finishedAt)) errors.push(validationError("INVALID_TIMESTAMP", "finishedAt"));
+  if (record.retryAt !== null && !validTimestamp(record.retryAt)) errors.push(validationError("INVALID_TIMESTAMP", "retryAt"));
+  if (!FINGERPRINT_PATTERN.test(record.cleanupFingerprint ?? "")) errors.push(validationError("INVALID_FINGERPRINT", "cleanupFingerprint"));
+  if (!FINGERPRINT_PATTERN.test(record.fingerprint ?? "")) errors.push(validationError("INVALID_FINGERPRINT", "fingerprint"));
+  const timingErrors = validateClosedRecord(record.stageTimings, AUTO_CLEANUP_TIMING_KEYS);
+  for (const error of timingErrors) errors.push({ ...error, path: `stageTimings.${error.path}` });
+  if (isPlainObject(record.stageTimings)) {
+    for (const key of AUTO_CLEANUP_TIMING_KEYS) {
+      if (!validNonNegativeNumber(record.stageTimings[key])) errors.push(validationError("INVALID_DURATION", `stageTimings.${key}`));
+    }
+  }
+  if (validTimestamp(record.startedAt) && validTimestamp(record.finishedAt) &&
+      Date.parse(record.finishedAt) < Date.parse(record.startedAt)) {
+    errors.push(validationError("TIMESTAMP_REGRESSION", "finishedAt"));
+  }
+  if (record.result === "CLEANED") {
+    if (blockersValid && record.blockers.length !== 0) errors.push(validationError("INVALID_BLOCKERS", "blockers"));
+    if (record.retryAt !== null) errors.push(validationError("INVALID_RETRY", "retryAt"));
+  } else if (new Set(["PRESERVED", "FAILED"]).has(record.result)) {
+    if (blockersValid && record.blockers.length === 0) errors.push(validationError("INVALID_BLOCKERS", "blockers"));
+    if (!validTimestamp(record.retryAt) || (validTimestamp(record.finishedAt) &&
+        Date.parse(record.retryAt) <= Date.parse(record.finishedAt))) {
+      errors.push(validationError("INVALID_RETRY", "retryAt"));
+    }
+  }
+  return errors;
+}
+
+export function validateAutoCleanupSweepV1(record) {
+  const errors = validateClosedRecord(record, AUTO_CLEANUP_SWEEP_KEYS);
+  if (!isPlainObject(record)) return errors;
+  if (record.schemaVersion !== 1) errors.push(validationError("INVALID_SCHEMA_VERSION", "schemaVersion"));
+  if (record.recordType !== "AutoCleanupSweepV1") errors.push(validationError("INVALID_RECORD_TYPE", "recordType"));
+  if (!validTimestamp(record.startedAt)) errors.push(validationError("INVALID_TIMESTAMP", "startedAt"));
+  if (!validTimestamp(record.finishedAt)) errors.push(validationError("INVALID_TIMESTAMP", "finishedAt"));
+  if (!validNonNegativeNumber(record.durationMs)) errors.push(validationError("INVALID_DURATION", "durationMs"));
+  for (const key of ["checked", "attempted", "cleaned", "preserved", "failed", "deferred"]) {
+    if (!Number.isInteger(record[key]) || record[key] < 0) errors.push(validationError("INVALID_COUNT", key));
+  }
+  if (Number.isInteger(record.attempted) && Number.isInteger(record.cleaned) &&
+      Number.isInteger(record.preserved) && Number.isInteger(record.failed) &&
+      record.attempted !== record.cleaned + record.preserved + record.failed) {
+    errors.push(validationError("COUNT_MISMATCH", "attempted"));
+  }
+  if (Number.isInteger(record.checked) && Number.isInteger(record.attempted) && Number.isInteger(record.deferred) &&
+      record.checked !== record.attempted + record.deferred) {
+    errors.push(validationError("COUNT_MISMATCH", "checked"));
+  }
+  if (!FINGERPRINT_PATTERN.test(record.fingerprint ?? "")) errors.push(validationError("INVALID_FINGERPRINT", "fingerprint"));
+  if (record.runnerFailure !== null) {
+    const runnerErrors = validateClosedRecord(record.runnerFailure, AUTO_CLEANUP_RUNNER_FAILURE_KEYS);
+    for (const error of runnerErrors) errors.push({ ...error, path: `runnerFailure.${error.path}` });
+    if (isPlainObject(record.runnerFailure)) {
+      try {
+        const parsed = parseTaskBranch(record.runnerFailure.branch);
+        if (record.runnerFailure.taskId !== `${parsed.type}-${parsed.slug}`) {
+          errors.push(validationError("TASK_ID_MISMATCH", "runnerFailure.taskId"));
+        }
+      } catch {
+        errors.push(validationError("INVALID_TASK_BRANCH", "runnerFailure.branch"));
+      }
+      if (!AUTO_CLEANUP_RUNNER_BLOCKERS.has(record.runnerFailure.blocker)) {
+        errors.push(validationError("INVALID_BLOCKER", "runnerFailure.blocker"));
+      }
+      if (!validTimestamp(record.runnerFailure.finishedAt)) {
+        errors.push(validationError("INVALID_TIMESTAMP", "runnerFailure.finishedAt"));
+      }
+      if (!validTimestamp(record.runnerFailure.retryAt)) {
+        errors.push(validationError("INVALID_TIMESTAMP", "runnerFailure.retryAt"));
+      }
+      if (validTimestamp(record.runnerFailure.finishedAt) && validTimestamp(record.runnerFailure.retryAt) &&
+          Date.parse(record.runnerFailure.retryAt) <= Date.parse(record.runnerFailure.finishedAt)) {
+        errors.push(validationError("INVALID_RETRY", "runnerFailure.retryAt"));
+      }
+      if (!FINGERPRINT_PATTERN.test(record.runnerFailure.cleanupFingerprint ?? "")) {
+        errors.push(validationError("INVALID_FINGERPRINT", "runnerFailure.cleanupFingerprint"));
+      }
+    }
+  }
+  if (validTimestamp(record.startedAt) && validTimestamp(record.finishedAt) && validNonNegativeNumber(record.durationMs) &&
+      Date.parse(record.finishedAt) - Date.parse(record.startedAt) !== record.durationMs) {
+    errors.push(validationError("DURATION_MISMATCH", "durationMs"));
+  }
+  return errors;
 }
 
 function validTimestamp(value) {
@@ -183,6 +344,11 @@ function registryPaths(commonDir, branch) {
     runtimeFile: path.join(v2, "runtimes", `${taskId}.json`),
     cleanups: path.join(v2, "cleanups"),
     cleanupFile: path.join(v2, "cleanups", `${taskId}.json`),
+    autoCleanup: path.join(v2, "auto-cleanup"),
+    autoCleanupFile: path.join(v2, "auto-cleanup", `${taskId}.json`),
+    autoCleanupLock: path.join(v2, "auto-cleanup", `${taskId}.lock`),
+    sweeps: path.join(v2, "sweeps"),
+    sweepLock: path.join(v2, "sweep.lock"),
   };
 }
 
@@ -404,6 +570,189 @@ function readTask(commonDir, branch) {
     fail("TASK_RECORD_INVALID");
   }
   return { paths, task };
+}
+
+export function enumerateAutoCleanupTasks({ repoPath }) {
+  const context = gitContext(repoPath);
+  const tasksDirectory = path.join(context.commonDir, "talkpik-task-lifecycle", "v2", "tasks");
+  try {
+    assertNoSymlinkPlan(context.commonDir, tasksDirectory, "REGISTRY_PATH_ESCAPE");
+    if (!existsSync(tasksDirectory)) return [];
+    const stats = lstatSync(tasksDirectory);
+    if (!stats.isDirectory() || stats.isSymbolicLink()) return [];
+  } catch {
+    return [];
+  }
+  const worktreesRoot = path.join(context.topLevel, ".worktrees");
+  const candidates = [];
+  for (const entry of readdirSync(tasksDirectory, { withFileTypes: true })) {
+    if (!entry.isFile() || entry.isSymbolicLink?.() || !/^[a-z0-9]+(?:-[a-z0-9]+)*\.json$/u.test(entry.name)) continue;
+    const taskFile = path.join(tasksDirectory, entry.name);
+    try {
+      assertNoSymlinkPlan(context.commonDir, taskFile, "REGISTRY_PATH_ESCAPE");
+      const task = readJson(taskFile, "TASK_NOT_FOUND");
+      if (validateTaskRecordV2(task).length > 0 || task.state !== "ACTIVE") continue;
+      const parsed = parseTaskBranch(task.branch);
+      const taskId = `${parsed.type}-${parsed.slug}`;
+      const expectedWorktree = path.join(worktreesRoot, taskId);
+      if (task.taskId !== taskId || entry.name !== `${taskId}.json` ||
+          !samePath(task.gitCommonDir, context.commonDir) || !samePath(task.worktreePath, expectedWorktree)) continue;
+      assertNoSymlinkPlan(context.topLevel, task.worktreePath, "WORKTREE_PATH_ESCAPE");
+      let resumable = false;
+      const cleanupFile = path.join(context.commonDir, "talkpik-task-lifecycle", "v2", "cleanups", `${taskId}.json`);
+      if (existsSync(cleanupFile)) {
+        assertNoSymlinkPlan(context.commonDir, cleanupFile, "REGISTRY_PATH_ESCAPE");
+        const journal = readJson(cleanupFile, "CLEANUP_JOURNAL_INVALID");
+        resumable = validateCleanupManifest(journal).length === 0 && journal.status === "CLEANING" &&
+          journal.taskId === task.taskId && journal.branch === task.branch &&
+          samePath(journal.worktreePath, task.worktreePath) && journal.taskRevision === task.revision &&
+          journal.taskState === task.state;
+      }
+      if (existsSync(task.worktreePath)) {
+        const worktreeStats = lstatSync(task.worktreePath);
+        if (!worktreeStats.isDirectory() || worktreeStats.isSymbolicLink()) continue;
+      } else if (!resumable) continue;
+      candidates.push({ taskId, branch: task.branch, worktreePath: canonicalPath(task.worktreePath) });
+    } catch {
+      // Invalid, legacy, escaped, or partially written records are never cleanup candidates.
+    }
+  }
+  return candidates.sort((first, second) => first.taskId.localeCompare(second.taskId));
+}
+
+export function shouldDeferAutoCleanup(previous, blockers, now) {
+  if (validateAutoCleanupReportV1(previous).length > 0 ||
+      previous.result === "CLEANED" || previous.retryAt === null || !validTimestamp(now) ||
+      Date.parse(previous.retryAt) <= Date.parse(now) || !Array.isArray(blockers)) return false;
+  const prior = [...new Set(previous.blockers)].sort();
+  const current = [...new Set(blockers)].sort();
+  return prior.length === current.length && prior.every((code, index) => code === current[index]);
+}
+
+function autoCleanupFingerprintMatches(record) {
+  if (validateAutoCleanupReportV1(record).length > 0) return false;
+  const payload = Object.fromEntries(Object.entries(record).filter(([key]) => key !== "fingerprint"));
+  return fingerprint(payload) === record.fingerprint;
+}
+
+function selectAutoCleanupReport(existing, incoming) {
+  if (existing === null) return incoming;
+  if (!autoCleanupFingerprintMatches(existing) || existing.taskId !== incoming.taskId ||
+      existing.branch !== incoming.branch) {
+    fail("AUTOCLEANUP_REPORT_INVALID");
+  }
+  if (existing.result === "CLEANED") return existing;
+  if (incoming.result === "CLEANED") return incoming;
+  return Date.parse(existing.finishedAt) >= Date.parse(incoming.finishedAt) ? existing : incoming;
+}
+
+function autoCleanupResponse(selected, incoming) {
+  if (selected === incoming || selected.trigger === incoming.trigger) return selected;
+  const response = { ...selected, trigger: incoming.trigger, fingerprint: "" };
+  response.fingerprint = fingerprint(Object.fromEntries(
+    Object.entries(response).filter(([key]) => key !== "fingerprint"),
+  ));
+  if (validateAutoCleanupReportV1(response).length > 0) fail("AUTOCLEANUP_REPORT_INVALID");
+  return response;
+}
+
+function autoCleanupLockPid(content) {
+  const match = /^(\d+):([0-9a-f-]+)\n$/iu.exec(content);
+  if (!match || !UUID_PATTERN.test(match[2])) return null;
+  const pid = Number(match[1]);
+  return Number.isInteger(pid) && pid > 0 ? pid : null;
+}
+
+function assertAutoCleanupReportParent(paths, expectedIdentity) {
+  assertNoSymlinkPlan(paths.v2, paths.autoCleanup, "REGISTRY_PATH_ESCAPE");
+  const current = lstatSync(paths.autoCleanup);
+  if (!current.isDirectory() || current.isSymbolicLink() || !sameFileIdentity(current, expectedIdentity)) {
+    fail("REGISTRY_PATH_ESCAPE");
+  }
+}
+
+function reclaimAbandonedAutoCleanupReportLock(paths, expectedParentIdentity) {
+  try {
+    assertAutoCleanupReportParent(paths, expectedParentIdentity);
+    const identity = lstatSync(paths.autoCleanupLock);
+    const content = readFileSync(paths.autoCleanupLock, "utf8");
+    const pid = autoCleanupLockPid(content);
+    if (!identity.isFile() || identity.isSymbolicLink()) return false;
+    const malformedAndStale = pid === null && Date.now() - identity.mtimeMs >= AUTO_CLEANUP_REPORT_LOCK_STALE_MS;
+    if (!malformedAndStale && (pid === null || defaultPidActive(pid))) return false;
+    const claimed = atomicallyClaimOperationLock(
+      { operationLock: paths.autoCleanupLock },
+      { identity, content },
+      "abandoned-autocleanup-report",
+    );
+    if (!claimed?.valid) return false;
+    unlinkSync(claimed.claimPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function withAutoCleanupReportLock(paths, waitForLock, operation, timeoutMs) {
+  assertNoSymlinkPlan(paths.v2, paths.autoCleanupLock, "REGISTRY_PATH_ESCAPE");
+  const expectedParentIdentity = lstatSync(paths.autoCleanup);
+  if (!expectedParentIdentity.isDirectory() || expectedParentIdentity.isSymbolicLink()) {
+    fail("REGISTRY_PATH_ESCAPE");
+  }
+  const lockPaths = { operationLock: paths.autoCleanupLock };
+  const deadline = performance.now() + timeoutMs;
+  let ownedLock;
+  while (!ownedLock) {
+    assertAutoCleanupReportParent(paths, expectedParentIdentity);
+    const content = `${process.pid}:${randomUUID()}\n`;
+    try {
+      ownedLock = createOperationLock(lockPaths, content);
+      try {
+        assertAutoCleanupReportParent(paths, expectedParentIdentity);
+      } catch (error) {
+        releaseOperationLock(lockPaths, ownedLock);
+        throw error;
+      }
+    } catch (error) {
+      if (error instanceof TaskCleanupError) throw error;
+      if (error?.code !== "EEXIST") fail("AUTOCLEANUP_REPORT_LOCK_FAILED");
+      if (reclaimAbandonedAutoCleanupReportLock(paths, expectedParentIdentity)) continue;
+      if (performance.now() >= deadline) fail("AUTOCLEANUP_REPORT_LOCKED");
+      await waitForLock(Math.min(10, Math.max(0, deadline - performance.now())));
+    }
+  }
+  return runWithOwnedLock(lockPaths, ownedLock, () => {
+    assertAutoCleanupReportParent(paths, expectedParentIdentity);
+    return operation(expectedParentIdentity);
+  }, {});
+}
+
+async function persistAutoCleanupReport(
+  paths,
+  record,
+  waitForLock,
+  lockTimeoutMs = AUTO_CLEANUP_REPORT_LOCK_TIMEOUT_MS,
+) {
+  const selected = await withAutoCleanupReportLock(paths, waitForLock, (expectedParentIdentity) => {
+    let existing = null;
+    if (existsSync(paths.autoCleanupFile)) {
+      assertNoSymlinkPlan(paths.v2, paths.autoCleanupFile, "REGISTRY_PATH_ESCAPE");
+      existing = readJson(paths.autoCleanupFile, "AUTOCLEANUP_REPORT_INVALID");
+    }
+    const selected = selectAutoCleanupReport(existing, record);
+    if (selected === record) {
+      assertAutoCleanupReportParent(paths, expectedParentIdentity);
+      atomicWriteJson(paths.autoCleanupFile, record);
+    }
+    return selected;
+  }, lockTimeoutMs);
+  return autoCleanupResponse(selected, record);
+}
+
+function autoCleanupSweepFingerprintMatches(record) {
+  if (validateAutoCleanupSweepV1(record).length > 0) return false;
+  const payload = Object.fromEntries(Object.entries(record).filter(([key]) => key !== "fingerprint"));
+  return fingerprint(payload) === record.fingerprint;
 }
 
 function validateRuntimeManifest(value, task) {
@@ -692,7 +1041,8 @@ function githubRepositoryFromOrigin(repoPath) {
   return match[1];
 }
 
-function defaultReadPrEvidence({ repoPath, branch }, commandRunner = spawnSync) {
+function defaultReadPrEvidence({ repoPath, branch, timeoutMs = NETWORK_TIMEOUT_MS }, commandRunner = spawnSync) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) fail("SWEEP_DEADLINE_REACHED");
   const repository = githubRepositoryFromOrigin(repoPath);
   const result = commandRunner(
     "gh",
@@ -711,7 +1061,7 @@ function defaultReadPrEvidence({ repoPath, branch }, commandRunner = spawnSync) 
       shell: false,
       windowsHide: true,
       maxBuffer: 1024 * 1024,
-      timeout: NETWORK_TIMEOUT_MS,
+      timeout: Math.min(NETWORK_TIMEOUT_MS, Math.max(1, Math.floor(timeoutMs))),
     },
   );
   if ((result.status ?? 1) !== 0) fail("PR_EVIDENCE_UNAVAILABLE");
@@ -762,15 +1112,71 @@ function sanitizePrEvidence(value) {
   return evidence;
 }
 
-function remoteBranchState(repoPath, branch, commandRunner = spawnSync) {
+function remoteBranchState(repoPath, branch, commandRunner = spawnSync, timeoutMs = NETWORK_TIMEOUT_MS) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) fail("SWEEP_DEADLINE_REACHED");
   const result = runGit(repoPath, ["ls-remote", "--exit-code", "--heads", "origin", `refs/heads/${branch}`], {
     allowFailure: true,
-    timeoutMs: NETWORK_TIMEOUT_MS,
+    timeoutMs: Math.min(NETWORK_TIMEOUT_MS, Math.max(1, Math.floor(timeoutMs))),
     commandRunner,
   });
   if (result.status === 0) return "present";
   if (result.status === 2) return "absent";
   return "unknown";
+}
+
+function remoteBranchOid(repoPath, branch, commandRunner = spawnSync) {
+  const result = runGit(repoPath, ["ls-remote", "--exit-code", "--heads", "origin", `refs/heads/${branch}`], {
+    allowFailure: true,
+    timeoutMs: NETWORK_TIMEOUT_MS,
+    commandRunner,
+  });
+  if (result.status === 2) return null;
+  if (result.status !== 0) fail("REMOTE_BRANCH_EVIDENCE_UNAVAILABLE");
+  const match = /^([a-f0-9]{40})\s+refs\/heads\/(.+)$/iu.exec(result.stdout);
+  if (!match || match[2] !== branch) fail("REMOTE_BRANCH_EVIDENCE_UNAVAILABLE");
+  return match[1];
+}
+
+function defaultOwnerCommandRunner(command, args, options = {}) {
+  return spawnSync(command, args, {
+    cwd: options.cwd,
+    timeout: options.timeout,
+    encoding: "utf8",
+    env: { ...process.env, GH_PROMPT_DISABLED: "1", GIT_TERMINAL_PROMPT: "0" },
+    shell: false,
+    windowsHide: true,
+    maxBuffer: 1024 * 1024,
+  });
+}
+
+async function defaultVerifyRepositoryIdentity({ repoPath, commandRunner = defaultOwnerCommandRunner }) {
+  const repository = githubRepositoryFromOrigin(repoPath);
+  const result = commandRunner(
+    "gh",
+    ["repo", "view", repository, "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
+    { cwd: repoPath, timeout: NETWORK_TIMEOUT_MS },
+  );
+  if ((result?.status ?? 1) !== 0 || String(result.stdout ?? "").trim().toLowerCase() !== repository.toLowerCase()) {
+    fail("GITHUB_REPOSITORY_IDENTITY_MISMATCH");
+  }
+  return true;
+}
+
+async function defaultDeleteRemoteBranch({ repoPath, branch, expectedSha, commandRunner = spawnSync }) {
+  if (remoteBranchOid(repoPath, branch, commandRunner) !== expectedSha) fail("REMOTE_BRANCH_SHA_MISMATCH");
+  const remoteRef = `refs/heads/${branch}`;
+  const deleted = runGit(repoPath, [
+    "push",
+    `--force-with-lease=${remoteRef}:${expectedSha}`,
+    "origin",
+    `:${remoteRef}`,
+  ], {
+    allowFailure: true,
+    timeoutMs: NETWORK_TIMEOUT_MS,
+    commandRunner,
+  });
+  if (deleted.status !== 0) fail("REMOTE_BRANCH_DELETE_FAILED");
+  if (remoteBranchState(repoPath, branch, commandRunner) !== "absent") fail("REMOTE_BRANCH_ABSENCE_NOT_VERIFIED");
 }
 
 function ownsOperationLock(paths, ownedLock) {
@@ -781,15 +1187,26 @@ function ownsOperationLock(paths, ownedLock) {
     readFileSync(paths.operationLock, "utf8") === ownedLock.content;
 }
 
-async function finalizeWithDependencies({ repoPath, branch }, dependencies, ownedLock = null) {
+function remainingNetworkBudget(deadlineAt) {
+  if (deadlineAt === null) return NETWORK_TIMEOUT_MS;
+  const remainingMs = Math.floor(deadlineAt - performance.now());
+  if (remainingMs <= 0) fail("SWEEP_DEADLINE_REACHED");
+  return Math.min(NETWORK_TIMEOUT_MS, remainingMs);
+}
+
+async function finalizeWithDependencies({ repoPath, branch, timeoutMs }, dependencies, ownedLock = null) {
+  if (timeoutMs !== undefined && (!Number.isFinite(timeoutMs) || timeoutMs <= 0)) {
+    fail("SWEEP_DEADLINE_REACHED");
+  }
   const totalStartedAt = performance.now();
+  const deadlineAt = timeoutMs === undefined ? null : totalStartedAt + timeoutMs;
   let phaseStartedAt = totalStartedAt;
   const context = gitContext(repoPath);
   const { paths, task } = readTask(context.commonDir, branch);
   const blockers = [];
   const fetchResult = runGit(context.topLevel, ["fetch", "--prune", "origin"], {
     allowFailure: true,
-    timeoutMs: NETWORK_TIMEOUT_MS,
+    timeoutMs: remainingNetworkBudget(deadlineAt),
     commandRunner: dependencies.networkCommandRunner,
   });
   const gitAndFetchMs = elapsedMs(phaseStartedAt);
@@ -883,7 +1300,11 @@ async function finalizeWithDependencies({ repoPath, branch }, dependencies, owne
   let prEvidence = null;
   try {
     prEvidence = sanitizePrEvidence(
-      await dependencies.readPrEvidence({ repoPath: context.topLevel, branch: task.branch }),
+      await dependencies.readPrEvidence({
+        repoPath: context.topLevel,
+        branch: task.branch,
+        timeoutMs: remainingNetworkBudget(deadlineAt),
+      }),
     );
     if (!prEvidence) blockers.push("PR_EVIDENCE_AMBIGUOUS");
   } catch {
@@ -910,7 +1331,12 @@ async function finalizeWithDependencies({ repoPath, branch }, dependencies, owne
   const prEvidenceMs = elapsedMs(phaseStartedAt);
   phaseStartedAt = performance.now();
 
-  const remoteState = remoteBranchState(context.topLevel, task.branch, dependencies.networkCommandRunner);
+  const remoteState = remoteBranchState(
+    context.topLevel,
+    task.branch,
+    dependencies.networkCommandRunner,
+    remainingNetworkBudget(deadlineAt),
+  );
   if (remoteState === "present") blockers.push("REMOTE_TASK_BRANCH_PRESENT");
   if (remoteState === "unknown") blockers.push("REMOTE_BRANCH_EVIDENCE_UNAVAILABLE");
 
@@ -950,6 +1376,9 @@ async function finalizeWithDependencies({ repoPath, branch }, dependencies, owne
     blockers: uniqueBlockers,
     candidates,
   };
+  const stableSnapshot = structuredClone(snapshot);
+  stableSnapshot.git.remoteState = "absent";
+  stableSnapshot.blockers = stableSnapshot.blockers.filter((code) => code !== "REMOTE_TASK_BRANCH_PRESENT");
   return {
     command: "task:finalize",
     reportOnly: true,
@@ -957,6 +1386,7 @@ async function finalizeWithDependencies({ repoPath, branch }, dependencies, owne
     blockers: uniqueBlockers,
     candidates,
     fingerprint: fingerprint(snapshot),
+    stabilityFingerprint: fingerprint(stableSnapshot),
     fetch,
     prEvidence,
     disposableInventoryDigest: inventory.digest,
@@ -999,6 +1429,16 @@ const DEFAULT_DEPENDENCIES = Object.freeze({
   afterStaleCleanupLockClaimed() {},
   afterOwnedOperationLockClaimed() {},
   networkCommandRunner: spawnSync,
+  ownerCommandRunner: defaultOwnerCommandRunner,
+  runOwnerAuth: runGitHubOwnerAuth,
+  verifyRepositoryIdentity: defaultVerifyRepositoryIdentity,
+  deleteRemoteBranch: defaultDeleteRemoteBranch,
+  afterRemoteBranchDeleted() {},
+  beforeAutoCleanupReportWrite() {},
+  waitForAutoCleanupReportLock: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  currentWorkingDirectory: process.cwd,
+  monotonicNow: performance.now.bind(performance),
+  wallNow: () => new Date().toISOString(),
 });
 
 async function assertRecoveryState({ context, paths, task, journal, dependencies, ownedLock }) {
@@ -1109,6 +1549,9 @@ export function createTaskCleanupService(options = {}) {
     "afterDisposableCandidateClaimed", "afterDisposableCandidateRemoved", "afterDisposableCandidateJournaled",
     "afterStaleCleanupLockClaimed", "afterOwnedOperationLockClaimed",
     "networkCommandRunner",
+    "ownerCommandRunner", "runOwnerAuth", "verifyRepositoryIdentity", "deleteRemoteBranch",
+    "afterRemoteBranchDeleted", "beforeAutoCleanupReportWrite", "waitForAutoCleanupReportLock",
+    "currentWorkingDirectory", "monotonicNow", "wallNow",
   ]);
   if (Object.keys(options).some((key) => !allowed.has(key))) fail("INVALID_CLEANUP_SERVICE_OPTIONS");
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...options };
@@ -1359,10 +1802,756 @@ export function createTaskCleanupService(options = {}) {
     return { ...result, timings: { ...timings, totalMs: elapsedMs(totalStartedAt) } };
   }
 
-  return Object.freeze({ finalizeTask: serviceFinalize, cleanupTask: serviceCleanup });
+  async function serviceAutoCleanup({ repoPath, branch, trigger = "DIRECT", now }) {
+    if (!new Set(["DIRECT", "SWEEP"]).has(trigger)) fail("AUTOCLEANUP_TRIGGER_INVALID");
+    if (!validTimestamp(now)) fail("INVALID_TIMESTAMP");
+    const totalStartedAt = dependencies.monotonicNow();
+    const timed = (startedAt) => Number(Math.max(0, dependencies.monotonicNow() - startedAt).toFixed(3));
+    const stageTimings = {
+      preflightMs: 0,
+      authMs: 0,
+      remoteMs: 0,
+      revalidationMs: 0,
+      cleanupMs: 0,
+      totalMs: 0,
+    };
+    const context = gitContext(repoPath);
+    const { paths, task } = readTask(context.commonDir, branch);
+    const baseCheckout = path.dirname(context.commonDir);
+    const expectedWorktree = path.join(baseCheckout, ".worktrees", task.taskId);
+    ensureRegistryDirectory(paths.v2, paths.autoCleanup);
+    assertNoSymlinkPlan(paths.v2, paths.autoCleanupFile, "REGISTRY_PATH_ESCAPE");
+    let result = "PRESERVED";
+    let blockers = [];
+    let cleanupFingerprint = fingerprint({ taskId: task.taskId, branch: task.branch, now });
+    if (!samePath(task.gitCommonDir, context.commonDir)) blockers.push("TASK_GIT_COMMON_DIR_MISMATCH");
+    if (!samePath(task.worktreePath, expectedWorktree)) {
+      blockers.push("AUTOCLEANUP_WORKTREE_NOT_CANONICAL");
+    } else {
+      try {
+        assertNoSymlinkPlan(baseCheckout, task.worktreePath, "AUTOCLEANUP_WORKTREE_NOT_CANONICAL");
+      } catch {
+        blockers.push("AUTOCLEANUP_WORKTREE_NOT_CANONICAL");
+      }
+    }
+    if (blockers.length === 0 && pathContains(task.worktreePath, dependencies.currentWorkingDirectory())) {
+      fail("AUTOCLEANUP_TARGET_CWD_FORBIDDEN");
+    }
+    const preflightStartedAt = dependencies.monotonicNow();
+    try {
+      let recoveryApproval = null;
+      if (blockers.length === 0 && existsSync(paths.cleanupFile)) {
+        const journal = readJson(paths.cleanupFile, "CLEANUP_JOURNAL_INVALID");
+        if (validateCleanupManifest(journal).length > 0 || journal.status !== "CLEANING" ||
+            journal.taskId !== task.taskId || journal.branch !== task.branch ||
+            !samePath(journal.worktreePath, task.worktreePath)) fail("CLEANUP_JOURNAL_INVALID");
+        recoveryApproval = journal.snapshotFingerprint;
+      }
+      if (blockers.length > 0) {
+        stageTimings.preflightMs = timed(preflightStartedAt);
+      } else if (recoveryApproval !== null) {
+        cleanupFingerprint = recoveryApproval;
+        stageTimings.preflightMs = timed(preflightStartedAt);
+        const cleanupStartedAt = dependencies.monotonicNow();
+        let cleaned;
+        try {
+          cleaned = await serviceCleanup({
+            repoPath: context.topLevel,
+            branch,
+            approval: recoveryApproval,
+            now,
+          });
+        } finally {
+          stageTimings.cleanupMs = timed(cleanupStartedAt);
+        }
+        result = cleaned.status === "CLEANED" ? "CLEANED" : "FAILED";
+        if (result !== "CLEANED") blockers = ["AUTOCLEANUP_RESULT_INVALID"];
+      } else {
+        const report = await serviceFinalize({ repoPath: context.topLevel, branch });
+        stageTimings.preflightMs = timed(preflightStartedAt);
+        cleanupFingerprint = report.fingerprint;
+        let cleanupReport = report;
+        if (!report.ready && report.blockers.length === 1 && report.blockers[0] === "REMOTE_TASK_BRANCH_PRESENT") {
+        try {
+          cleanupReport = await withTaskOperationLock(paths, async (ownedLock) => {
+            const lockedReport = await finalizeWithDependencies(
+              { repoPath: context.topLevel, branch },
+              dependencies,
+              ownedLock,
+            );
+            if (lockedReport.blockers.length !== 1 || lockedReport.blockers[0] !== "REMOTE_TASK_BRANCH_PRESENT" ||
+                lockedReport.stabilityFingerprint !== report.stabilityFingerprint) {
+              fail("AUTOCLEANUP_STATE_CHANGED");
+            }
+            const authStartedAt = dependencies.monotonicNow();
+            let auth;
+            try {
+              auth = await dependencies.runOwnerAuth({
+                commandRunner: dependencies.ownerCommandRunner,
+                owner: "blackstarzck",
+                repoPath: context.topLevel,
+                publishApproved: true,
+                now,
+              });
+              if (auth?.status !== "OWNER_AUTHENTICATED") fail("OWNER_AUTH_NOT_AUTHENTICATED");
+              await dependencies.verifyRepositoryIdentity({
+                repoPath: context.topLevel,
+                commandRunner: dependencies.ownerCommandRunner,
+              });
+            } finally {
+              stageTimings.authMs = timed(authStartedAt);
+            }
+            const remoteStartedAt = dependencies.monotonicNow();
+            try {
+              const exactRemoteSha = remoteBranchOid(context.topLevel, task.branch, dependencies.networkCommandRunner);
+              if (exactRemoteSha !== lockedReport.prEvidence?.headRefOid) fail("REMOTE_BRANCH_SHA_MISMATCH");
+              await dependencies.deleteRemoteBranch({
+                repoPath: context.topLevel,
+                branch: task.branch,
+                expectedSha: lockedReport.prEvidence.headRefOid,
+                commandRunner: dependencies.networkCommandRunner,
+              });
+              dependencies.afterRemoteBranchDeleted();
+            } finally {
+              stageTimings.remoteMs = timed(remoteStartedAt);
+            }
+            const revalidationStartedAt = dependencies.monotonicNow();
+            let postDelete;
+            try {
+              postDelete = await finalizeWithDependencies(
+                { repoPath: context.topLevel, branch },
+                dependencies,
+                ownedLock,
+              );
+              if (!postDelete.ready || postDelete.stabilityFingerprint !== lockedReport.stabilityFingerprint) {
+                fail("AUTOCLEANUP_STATE_CHANGED");
+              }
+            } finally {
+              stageTimings.revalidationMs = timed(revalidationStartedAt);
+            }
+            return postDelete;
+          });
+          cleanupFingerprint = cleanupReport.fingerprint;
+        } catch (error) {
+          result = "PRESERVED";
+          blockers = [error instanceof TaskCleanupError || typeof error?.code === "string"
+            ? (error.code ?? "AUTOCLEANUP_REMOTE_PRESERVED")
+            : "AUTOCLEANUP_REMOTE_PRESERVED"];
+        }
+        } else if (!report.ready) {
+          blockers = report.blockers;
+        }
+        if (blockers.length === 0 && cleanupReport.ready) {
+          const cleanupStartedAt = dependencies.monotonicNow();
+          let cleaned;
+          try {
+            cleaned = await serviceCleanup({
+              repoPath: context.topLevel,
+              branch,
+              approval: cleanupReport.fingerprint,
+              now,
+            });
+          } finally {
+            stageTimings.cleanupMs = timed(cleanupStartedAt);
+          }
+          result = cleaned.status === "CLEANED" ? "CLEANED" : "FAILED";
+          if (result !== "CLEANED") blockers = ["AUTOCLEANUP_RESULT_INVALID"];
+        }
+      }
+    } catch (error) {
+      if (stageTimings.preflightMs === 0) stageTimings.preflightMs = timed(preflightStartedAt);
+      result = "FAILED";
+      blockers = [error instanceof TaskCleanupError ? error.code : "AUTOCLEANUP_FAILED"];
+    }
+    const finishedAt = dependencies.wallNow();
+    if (!validTimestamp(finishedAt) || Date.parse(finishedAt) < Date.parse(now)) fail("INVALID_TIMESTAMP");
+    stageTimings.totalMs = timed(totalStartedAt);
+    const retryAt = result === "CLEANED"
+      ? null
+      : new Date(Date.parse(finishedAt) + AUTO_CLEANUP_COOLDOWN_MS).toISOString();
+    const record = {
+      schemaVersion: 1,
+      recordType: "AutoCleanupReportV1",
+      taskId: task.taskId,
+      branch: task.branch,
+      trigger,
+      result,
+      blockers: [...new Set(blockers)].sort(),
+      startedAt: now,
+      finishedAt,
+      retryAt,
+      cleanupFingerprint,
+      stageTimings,
+      fingerprint: "",
+    };
+    record.fingerprint = fingerprint(Object.fromEntries(Object.entries(record).filter(([key]) => key !== "fingerprint")));
+    if (validateAutoCleanupReportV1(record).length > 0) fail("AUTOCLEANUP_REPORT_INVALID");
+    await dependencies.beforeAutoCleanupReportWrite(record);
+    return persistAutoCleanupReport(paths, record, dependencies.waitForAutoCleanupReportLock);
+  }
+
+  return Object.freeze({
+    finalizeTask: serviceFinalize,
+    cleanupTask: serviceCleanup,
+    autoCleanupTask: serviceAutoCleanup,
+  });
 }
 
 const productionService = createTaskCleanupService();
+
+const SWEEP_LIMIT = 10;
+const SWEEP_DEADLINE_MS = 10 * 60 * 1000;
+const SWEEP_LOCK_STALE_MS = 10 * 60 * 1000;
+const AUTO_CLEANUP_COOLDOWN_MS = 15 * 60 * 1000;
+const PROCESS_TREE_TERMINATION_TIMEOUT_MS = 5_000;
+const SWEEP_FINALIZATION_RESERVE_MS = 5_000;
+
+async function runBeforeSweepDeadline(operation, timeoutMs) {
+  let timer;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(operation),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new TaskCleanupError("SWEEP_DEADLINE_REACHED")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+export function reclaimTimedOutRemoteOperationLock({ repoPath, branch, pid }) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    const context = gitContext(repoPath);
+    const { paths } = readTask(context.commonDir, branch);
+    if (!existsSync(paths.operationLock)) return false;
+    const identity = lstatSync(paths.operationLock);
+    if (!identity.isFile() || identity.isSymbolicLink() || identity.size > 256) return false;
+    const content = readFileSync(paths.operationLock, "utf8");
+    if (content !== `${pid}:${content.slice(String(pid).length + 1)}` ||
+        !new RegExp(`^${pid}:${UUID_PATTERN.source.slice(1, -1)}\\n$`, "iu").test(content)) return false;
+    const claimed = atomicallyClaimOperationLock(
+      paths,
+      { identity, content },
+      "timedout-autocleanup",
+    );
+    if (!claimed?.valid) return false;
+    unlinkSync(claimed.claimPath);
+    return true;
+  } catch {
+    // Unknown, replaced, journal-based, or malformed locks are preserved.
+    return false;
+  }
+}
+
+function waitForChildClose(child) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+    child.once("close", (status, signal) => finish({ status, signal, spawnError: false }));
+    child.once("error", () => finish({ status: null, signal: null, spawnError: true }));
+  });
+}
+
+function withBoundedDeadline(promise, timeoutMs) {
+  let timer;
+  const deadline = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), Math.max(1, Math.floor(timeoutMs)));
+    timer.unref?.();
+  });
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
+
+function collectBoundedOutput(stream) {
+  const chunks = [];
+  let size = 0;
+  let overflow = false;
+  stream?.on("data", (chunk) => {
+    if (overflow) return;
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    size += buffer.length;
+    if (size > MAX_RECORD_BYTES) {
+      overflow = true;
+      chunks.length = 0;
+      return;
+    }
+    chunks.push(buffer);
+  });
+  return Object.freeze({
+    get overflow() { return overflow; },
+    text() { return overflow ? "" : Buffer.concat(chunks).toString("utf8"); },
+  });
+}
+
+async function runTerminationCommand(commandRunner, command, args, timeoutMs) {
+  let child;
+  try {
+    child = commandRunner(command, args, {
+      shell: false,
+      windowsHide: true,
+      stdio: "ignore",
+    });
+  } catch {
+    return false;
+  }
+  if (!child || typeof child.once !== "function") return false;
+  const close = waitForChildClose(child);
+  const result = await withBoundedDeadline(close, timeoutMs);
+  if (result === null) {
+    try { child.kill?.("SIGKILL"); } catch { /* The terminator may already be gone. */ }
+    return false;
+  }
+  return !result.spawnError && result.status === 0;
+}
+
+async function defaultTerminateProcessTree({ pid, platform, commandRunner, timeoutMs }) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  if (platform === "win32") {
+    return runTerminationCommand(
+      commandRunner,
+      "taskkill",
+      ["/PID", String(pid), "/T", "/F"],
+      timeoutMs,
+    );
+  }
+  try {
+    process.kill(-pid, "SIGKILL");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function processGroupInactive(pid) {
+  try {
+    process.kill(-pid, 0);
+    return false;
+  } catch (error) {
+    if (error?.code === "ESRCH") return true;
+    return false;
+  }
+}
+
+async function defaultConfirmProcessTreeTerminated({ pid, platform, timeoutMs }) {
+  if (platform === "win32") return true;
+  const deadline = performance.now() + timeoutMs;
+  while (performance.now() < deadline) {
+    if (processGroupInactive(pid)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  return processGroupInactive(pid);
+}
+
+function confirmedWorkerTimeout() {
+  const error = new TaskCleanupError("AUTOCLEANUP_TIMEOUT");
+  error.processTreeTerminated = true;
+  throw error;
+}
+
+export async function runAutoCleanupChild({
+  repoPath,
+  branch,
+  now,
+  timeoutMs,
+  commandRunner = spawn,
+  terminationCommandRunner = spawn,
+  terminateProcessTree = defaultTerminateProcessTree,
+  confirmProcessTreeTerminated = defaultConfirmProcessTreeTerminated,
+  reclaimOperationLock = reclaimTimedOutRemoteOperationLock,
+  cliPath = path.resolve(import.meta.dirname, "..", "ai-task.mjs"),
+  platform = process.platform,
+}) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || !path.isAbsolute(cliPath)) {
+    fail("AUTOCLEANUP_WORKER_INVALID");
+  }
+  let child;
+  try {
+    child = commandRunner(
+      process.execPath,
+      [cliPath, "autocleanup", "--repo", repoPath, "--branch", branch, "--now", now],
+      {
+        cwd: repoPath,
+        env: {
+          ...process.env,
+          GIT_TERMINAL_PROMPT: "0",
+          GH_PROMPT_DISABLED: "1",
+          TALKPIK_AUTOCLEANUP_TRIGGER: "SWEEP",
+        },
+        shell: false,
+        windowsHide: true,
+        detached: platform !== "win32",
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+  } catch {
+    fail("AUTOCLEANUP_WORKER_FAILED");
+  }
+  if (!child || typeof child.once !== "function" || !Number.isInteger(child.pid) || child.pid <= 0) {
+    fail("AUTOCLEANUP_WORKER_FAILED");
+  }
+  const stdout = collectBoundedOutput(child.stdout);
+  collectBoundedOutput(child.stderr);
+  const closePromise = waitForChildClose(child);
+  const totalTimeoutMs = Math.max(1, Math.floor(timeoutMs));
+  const terminationTimeoutMs = Math.min(
+    PROCESS_TREE_TERMINATION_TIMEOUT_MS,
+    Math.max(1, Math.floor(totalTimeoutMs / 2)),
+  );
+  const workerTimeoutMs = Math.max(1, totalTimeoutMs - terminationTimeoutMs);
+  const close = await withBoundedDeadline(closePromise, workerTimeoutMs);
+  if (close === null) {
+    const terminationDeadline = performance.now() + terminationTimeoutMs;
+    let terminationRequested = false;
+    try {
+      terminationRequested = await terminateProcessTree({
+        child,
+        pid: child.pid,
+        platform,
+        commandRunner: terminationCommandRunner,
+        timeoutMs: Math.max(1, Math.floor(terminationDeadline - performance.now())),
+      });
+    } catch {
+      terminationRequested = false;
+    }
+    if (!terminationRequested) {
+      child.stdout?.destroy?.();
+      child.stderr?.destroy?.();
+      child.unref?.();
+      fail("AUTOCLEANUP_TERMINATION_FAILED");
+    }
+    const closeBudgetMs = Math.floor(terminationDeadline - performance.now());
+    if (closeBudgetMs <= 0) {
+      child.stdout?.destroy?.();
+      child.stderr?.destroy?.();
+      child.unref?.();
+      fail("AUTOCLEANUP_TERMINATION_FAILED");
+    }
+    const closedAfterTermination = await withBoundedDeadline(closePromise, closeBudgetMs);
+    if (closedAfterTermination === null || closedAfterTermination.spawnError) {
+      child.stdout?.destroy?.();
+      child.stderr?.destroy?.();
+      child.unref?.();
+      fail("AUTOCLEANUP_TERMINATION_FAILED");
+    }
+    let treeConfirmed = false;
+    const confirmationBudgetMs = Math.floor(terminationDeadline - performance.now());
+    if (confirmationBudgetMs <= 0) fail("AUTOCLEANUP_TERMINATION_FAILED");
+    try {
+      treeConfirmed = await confirmProcessTreeTerminated({
+        pid: child.pid,
+        platform,
+        timeoutMs: confirmationBudgetMs,
+      });
+    } catch {
+      treeConfirmed = false;
+    }
+    if (!treeConfirmed) fail("AUTOCLEANUP_TERMINATION_FAILED");
+    reclaimOperationLock({ repoPath, branch, pid: child.pid });
+    confirmedWorkerTimeout();
+  }
+  if (close.spawnError || (close.status ?? 1) !== 0 || close.signal !== null || stdout.overflow) {
+    fail("AUTOCLEANUP_WORKER_FAILED");
+  }
+  let report;
+  try {
+    report = JSON.parse(stdout.text());
+  } catch (error) {
+    if (error instanceof TaskCleanupError) throw error;
+    fail("AUTOCLEANUP_WORKER_INVALID");
+  }
+  if (validateAutoCleanupReportV1(report).length > 0 || !autoCleanupFingerprintMatches(report) ||
+      report.branch !== branch || report.trigger !== "SWEEP") {
+    fail("AUTOCLEANUP_WORKER_INVALID");
+  }
+  return report;
+}
+
+function runnerFailureRecord(candidate, blocker, now, durationMs) {
+  const finishedAt = new Date(Date.parse(now) + durationMs).toISOString();
+  return {
+    taskId: candidate.taskId,
+    branch: candidate.branch,
+    blocker,
+    finishedAt,
+    retryAt: new Date(Date.parse(finishedAt) + AUTO_CLEANUP_COOLDOWN_MS).toISOString(),
+    cleanupFingerprint: fingerprint({
+      taskId: candidate.taskId,
+      branch: candidate.branch,
+      blocker,
+      finishedAt,
+    }),
+  };
+}
+
+async function writeConfirmedRunnerFailureReport(commonDir, candidate, runnerFailure, now, durationMs) {
+  const paths = registryPaths(commonDir, candidate.branch);
+  ensureRegistryDirectory(paths.v2, paths.autoCleanup);
+  assertNoSymlinkPlan(paths.v2, paths.autoCleanupFile, "REGISTRY_PATH_ESCAPE");
+  const stageTimings = {
+    preflightMs: 0,
+    authMs: 0,
+    remoteMs: 0,
+    revalidationMs: 0,
+    cleanupMs: 0,
+    totalMs: durationMs,
+  };
+  const record = {
+    schemaVersion: 1,
+    recordType: "AutoCleanupReportV1",
+    taskId: candidate.taskId,
+    branch: candidate.branch,
+    trigger: "SWEEP",
+    result: "FAILED",
+    blockers: [runnerFailure.blocker],
+    startedAt: now,
+    finishedAt: runnerFailure.finishedAt,
+    retryAt: runnerFailure.retryAt,
+    cleanupFingerprint: runnerFailure.cleanupFingerprint,
+    stageTimings,
+    fingerprint: "",
+  };
+  record.fingerprint = fingerprint(Object.fromEntries(
+    Object.entries(record).filter(([key]) => key !== "fingerprint"),
+  ));
+  if (validateAutoCleanupReportV1(record).length > 0) fail("AUTOCLEANUP_REPORT_INVALID");
+  return persistAutoCleanupReport(
+    paths,
+    record,
+    (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+    0,
+  );
+}
+
+function acquireSweepLock(paths, now, isPidActive) {
+  const content = `${JSON.stringify({
+    pid: process.pid,
+    nonce: randomUUID(),
+    createdAt: now,
+    holdUntil: new Date(
+      Date.parse(now) + SWEEP_DEADLINE_MS + AUTO_CLEANUP_COOLDOWN_MS,
+    ).toISOString(),
+  })}\n`;
+  try {
+    return createOperationLock({ operationLock: paths.sweepLock }, content);
+  } catch (error) {
+    if (error?.code !== "EEXIST") fail("SWEEP_LOCK_FAILED");
+  }
+  let stale = null;
+  try {
+    const identity = lstatSync(paths.sweepLock);
+    const existingContent = readFileSync(paths.sweepLock, "utf8");
+    const record = JSON.parse(existingContent);
+    if (!identity.isFile() || identity.isSymbolicLink() || !isPlainObject(record) ||
+        Object.keys(record).length !== SWEEP_LOCK_KEYS.size ||
+        !Object.keys(record).every((key) => SWEEP_LOCK_KEYS.has(key)) ||
+        !Number.isInteger(record.pid) || record.pid <= 0 ||
+        !UUID_PATTERN.test(record.nonce ?? "") || !validTimestamp(record.createdAt) ||
+        !validTimestamp(record.holdUntil) || Date.parse(record.holdUntil) <= Date.parse(record.createdAt) ||
+        Date.parse(now) < Date.parse(record.holdUntil) ||
+        Date.parse(now) - Date.parse(record.createdAt) < SWEEP_LOCK_STALE_MS || isPidActive(record.pid)) {
+      fail("SWEEP_IN_PROGRESS");
+    }
+    stale = { identity, content: existingContent };
+  } catch (error) {
+    if (error instanceof TaskCleanupError) throw error;
+    fail("SWEEP_IN_PROGRESS");
+  }
+  const claimed = atomicallyClaimOperationLock(
+    { operationLock: paths.sweepLock },
+    stale,
+    "stale-sweep",
+  );
+  if (!claimed?.valid) fail("SWEEP_IN_PROGRESS");
+  unlinkSync(claimed.claimPath);
+  try {
+    return createOperationLock({ operationLock: paths.sweepLock }, content);
+  } catch {
+    fail("SWEEP_IN_PROGRESS");
+  }
+}
+
+function releaseSweepLock(paths, ownedLock) {
+  const claimed = atomicallyClaimOperationLock(
+    { operationLock: paths.sweepLock },
+    ownedLock,
+    "owned-sweep",
+  );
+  if (claimed?.valid) unlinkSync(claimed.claimPath);
+}
+
+export function createAutoCleanupSweepService(options = {}) {
+  if (!isPlainObject(options)) fail("INVALID_SWEEP_SERVICE_OPTIONS");
+  const allowed = new Set([
+    "enumerateTasks", "previewTask", "autoCleanupTask", "runCandidate", "isPidActive", "monotonicNow",
+    "writeSweepReport",
+  ]);
+  if (Object.keys(options).some((key) => !allowed.has(key)) ||
+      Object.values(options).some((value) => typeof value !== "function") ||
+      (Object.hasOwn(options, "autoCleanupTask") && Object.hasOwn(options, "runCandidate"))) {
+    fail("INVALID_SWEEP_SERVICE_OPTIONS");
+  }
+  const runCandidate = options.runCandidate ?? options.autoCleanupTask ?? runAutoCleanupChild;
+  const dependencies = {
+    enumerateTasks: enumerateAutoCleanupTasks,
+    previewTask: finalizeTask,
+    runCandidate,
+    isPidActive: defaultPidActive,
+    monotonicNow: performance.now.bind(performance),
+    writeSweepReport: atomicWriteJson,
+    ...Object.fromEntries(Object.entries(options).filter(([key]) => key !== "autoCleanupTask")),
+  };
+
+  async function sweepTasks({ repoPath, now }) {
+    if (!validTimestamp(now)) fail("INVALID_TIMESTAMP");
+    const context = gitContext(repoPath);
+    const lifecycleRoot = path.join(context.commonDir, "talkpik-task-lifecycle");
+    const v2 = path.join(lifecycleRoot, "v2");
+    const sweeps = path.join(v2, "sweeps");
+    const paths = {
+      sweepLock: path.join(v2, "sweep.lock"),
+      sweeps,
+      sweepFile: path.join(sweeps, "latest.json"),
+    };
+    ensureRegistryDirectory(context.commonDir, lifecycleRoot);
+    ensureRegistryDirectory(lifecycleRoot, v2);
+    ensureRegistryDirectory(v2, sweeps);
+    assertNoSymlinkPlan(v2, paths.sweepLock, "REGISTRY_PATH_ESCAPE");
+    const ownedLock = acquireSweepLock(paths, now, dependencies.isPidActive);
+    const started = dependencies.monotonicNow();
+    const counts = { checked: 0, attempted: 0, cleaned: 0, preserved: 0, failed: 0, deferred: 0 };
+    let runnerFailure = null;
+    let sweepReportPersisted = false;
+    try {
+      if (existsSync(paths.sweepFile)) {
+        try {
+          const previousSweep = readJson(paths.sweepFile, "AUTOCLEANUP_SWEEP_INVALID");
+          if (autoCleanupSweepFingerprintMatches(previousSweep) && previousSweep.runnerFailure !== null &&
+              Date.parse(previousSweep.runnerFailure.retryAt) > Date.parse(now)) {
+            runnerFailure = previousSweep.runnerFailure;
+          }
+        } catch {
+          runnerFailure = null;
+        }
+      }
+      const candidates = dependencies.enumerateTasks({ repoPath: context.topLevel }).slice(0, SWEEP_LIMIT);
+      candidateLoop: for (const candidate of candidates) {
+        if (dependencies.monotonicNow() - started >= SWEEP_DEADLINE_MS) break;
+        let deferred = false;
+        const candidatePaths = registryPaths(context.commonDir, candidate.branch);
+        if (runnerFailure?.branch === candidate.branch) {
+          deferred = true;
+        } else if (existsSync(candidatePaths.autoCleanupFile)) {
+          try {
+              const previous = readJson(candidatePaths.autoCleanupFile, "AUTOCLEANUP_REPORT_INVALID");
+              if (autoCleanupFingerprintMatches(previous)) {
+                const previewRemainingMs = SWEEP_DEADLINE_MS - (dependencies.monotonicNow() - started);
+                if (previewRemainingMs <= NETWORK_TIMEOUT_MS + SWEEP_FINALIZATION_RESERVE_MS) {
+                  break candidateLoop;
+                }
+                const preview = await runBeforeSweepDeadline(
+                  () => dependencies.previewTask({
+                    repoPath: context.topLevel,
+                    branch: candidate.branch,
+                    timeoutMs: previewRemainingMs - SWEEP_FINALIZATION_RESERVE_MS,
+                  }),
+                  previewRemainingMs - SWEEP_FINALIZATION_RESERVE_MS,
+                );
+              const comparableBlockers = preview.blockers.length === 1 &&
+                  preview.blockers[0] === "REMOTE_TASK_BRANCH_PRESENT" &&
+                  previous.blockers.length > 0 && previous.blockers.every((code) => REMOTE_AUTOCLEANUP_BLOCKERS.has(code))
+                ? previous.blockers
+                : previous.blockers.length === 1 && AUTO_CLEANUP_RUNNER_BLOCKERS.has(previous.blockers[0])
+                  ? previous.blockers
+                : preview.blockers;
+              deferred = shouldDeferAutoCleanup(previous, comparableBlockers, now);
+            }
+          } catch (error) {
+            if (error instanceof TaskCleanupError && error.code === "SWEEP_DEADLINE_REACHED") {
+              break candidateLoop;
+            }
+            deferred = false;
+          }
+        }
+        if (deferred) {
+          counts.checked += 1;
+          counts.deferred += 1;
+          continue;
+        }
+        const remainingMs = SWEEP_DEADLINE_MS - (dependencies.monotonicNow() - started);
+        if (remainingMs <= SWEEP_FINALIZATION_RESERVE_MS) break;
+        counts.checked += 1;
+        counts.attempted += 1;
+        try {
+          const report = await dependencies.runCandidate({
+            repoPath: context.topLevel,
+            branch: candidate.branch,
+            now,
+            timeoutMs: remainingMs - SWEEP_FINALIZATION_RESERVE_MS,
+          });
+          if (report?.result === "CLEANED") counts.cleaned += 1;
+          else if (report?.result === "PRESERVED") counts.preserved += 1;
+          else counts.failed += 1;
+        } catch (error) {
+          counts.failed += 1;
+          const code = error?.code ?? error?.message;
+          if (AUTO_CLEANUP_RUNNER_BLOCKERS.has(code)) {
+            const durationMs = Math.max(0, Math.round(dependencies.monotonicNow() - started));
+            runnerFailure = runnerFailureRecord(candidate, code, now, durationMs);
+            if (code === "AUTOCLEANUP_TIMEOUT" && error?.processTreeTerminated === true) {
+              try {
+                const persisted = await writeConfirmedRunnerFailureReport(
+                  context.commonDir,
+                  candidate,
+                  runnerFailure,
+                  now,
+                  durationMs,
+                );
+                if (persisted.result === "CLEANED") {
+                  counts.failed -= 1;
+                  counts.cleaned += 1;
+                  runnerFailure = null;
+                }
+              } catch {
+                // The sweep sidecar still records the secret-safe runner failure and cooldown.
+              }
+            }
+            break;
+          }
+        }
+      }
+      const durationMs = Math.max(0, Math.round(dependencies.monotonicNow() - started));
+      const record = {
+        schemaVersion: 1,
+        recordType: "AutoCleanupSweepV1",
+        startedAt: now,
+        finishedAt: new Date(Date.parse(now) + durationMs).toISOString(),
+        durationMs,
+        ...counts,
+        runnerFailure,
+        fingerprint: "",
+      };
+      record.fingerprint = fingerprint(Object.fromEntries(Object.entries(record).filter(([key]) => key !== "fingerprint")));
+      if (validateAutoCleanupSweepV1(record).length > 0) fail("AUTOCLEANUP_SWEEP_INVALID");
+      assertNoSymlinkPlan(v2, paths.sweepFile, "REGISTRY_PATH_ESCAPE");
+      dependencies.writeSweepReport(paths.sweepFile, record);
+      sweepReportPersisted = true;
+      return record;
+    } finally {
+      const unsafeRunnerFailureUnrecorded = runnerFailure?.blocker === "AUTOCLEANUP_TERMINATION_FAILED" &&
+        !sweepReportPersisted;
+      if (!unsafeRunnerFailureUnrecorded) releaseSweepLock(paths, ownedLock);
+    }
+  }
+
+  return Object.freeze({ sweepTasks });
+}
+
+const productionSweepService = createAutoCleanupSweepService();
 
 export function finalizeTask(options) {
   return productionService.finalizeTask(options);
@@ -1370,4 +2559,12 @@ export function finalizeTask(options) {
 
 export function cleanupTask(options) {
   return productionService.cleanupTask(options);
+}
+
+export function autoCleanupTask(options) {
+  return productionService.autoCleanupTask(options);
+}
+
+export function sweepTasks(options) {
+  return productionSweepService.sweepTasks(options);
 }

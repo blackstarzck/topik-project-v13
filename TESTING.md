@@ -15,7 +15,10 @@ pnpm format           # Prettier check
 pnpm check:project-structure
 pnpm check:artifact-hygiene
 pnpm check:worktree-lifecycle   # 기존 v1 report-only 계약
-pnpm check:task-lifecycle       # v2 task + cleanup 계약
+pnpm check:task-lifecycle       # v2 task + 수동/자동 cleanup 계약
+pnpm task:autocleanup -- --repo <기준-checkout> --branch <task-branch>
+pnpm task:sweep -- --repo <기준-checkout>
+node "<new-worktree>/scripts/ai-task.mjs" sweep --repo "<기준-checkout>" --background true
 pnpm task:measure -- --repo <task-worktree> --branch <task-branch> --actor <actor> --phase test --scope focused --budget small-check -- pnpm test
 pnpm task:metrics -- --repo <repo-or-worktree> --branch <task-branch>
 ```
@@ -73,6 +76,8 @@ pnpm test:supabase:local
 | migration·RLS·RPC | SQL review, local reset/integration, migration index·`docs/supabase/` 일치 검사 |
 
 실패 시에는 실패 명령, 핵심 오류, 재현 조건과 남은 위험을 기록한다.
+
+자동 lifecycle cleanup 변경은 승인 없는 정상 병합 정리와 함께 dirty·runtime active·locked·detached·native owner·열린 PR·SHA 불일치 보존, `blackstarzck` 인증 성공·실패, 원격 삭제 뒤 상태 변경, 수동 approval journal 재개를 확인한다. 원격 ref 삭제는 exact SHA 조건부 lease 성공과 사전 확인 뒤 ref가 이동한 경쟁 상황의 보존을 실제 bare remote로 검증한다. sweep은 v2만 열거하고 legacy를 제외하는지, 동시 worker·stale lock·15분 cooldown·최대 10개·실행 중 후보를 포함한 10분 hard deadline을 dependency injection과 공용 Git fixture로 검증한다. 오래된 기준 CLI fallback은 최신 CLI의 `sweep --background true`가 실제 숨김 예약 경로를 호출하고 잘못된 boolean을 거부하는지 확인한다. 직접 실행과 sweep 보고가 엇갈려도 `CLEANED`가 오래된 보존·실패 기록으로 덮이지 않고 현재 sweep trigger로 성공 집계되는지, 결과별 blocker·재시도 시각 조합이 닫힌 schema를 지키는지도 검증한다. 보고서 lock 대기 중 parent를 junction으로 바꿔도 외부 경로에 쓰지 않는지, 오래된 malformed lock은 exact identity로만 회수하는지, 남은 시간이 35초 이하이면 cooldown preview를 시작하지 않는지도 확인한다. 종료가 확인된 timeout은 task 보고서에 기록되고, 종료 미확인 실패는 task 파일과 경쟁하지 않는 sweep runner failure에 기록되어 다음 sweep에서 같은 blocker를 15분 유예하는지도 확인한다. 이 runner failure 기록까지 실패하면 미리 기록한 `holdUntil` sweep lock이 남아 다음 sweep 전체를 막는지도 검증한다. Windows job에서는 대상 worktree 밖의 프로세스가 비강제 제거하는 흐름을 다시 실행한다.
 
 ## CI 변경 범위 분류
 

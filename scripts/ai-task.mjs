@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
   acceptTaskHandoff,
@@ -29,9 +29,11 @@ import {
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  autoCleanupTask,
   cleanupTask,
   finalizeTask,
   registerTaskRuntime,
+  sweepTasks,
 } from "./lib/ai-task-cleanup.mjs";
 
 const COMMANDS = new Set([
@@ -42,6 +44,8 @@ const COMMANDS = new Set([
   "runtime",
   "finalize",
   "cleanup",
+  "autocleanup",
+  "sweep",
   "finish",
   "metrics",
 ]);
@@ -60,6 +64,7 @@ const VALUE_FLAGS = new Set([
   "locks",
   "action",
   "context",
+  "background",
 ]);
 
 function cliError(code) {
@@ -84,8 +89,41 @@ function parseArguments(argv) {
     }
     values[name] = value;
   }
-  if (!values.repo || !values.branch) throw cliError("TASK_REPO_AND_BRANCH_REQUIRED");
+  if (!values.repo) throw cliError("TASK_REPOSITORY_REQUIRED");
+  if (command === "sweep") {
+    if (Object.keys(values).some((name) => !new Set(["repo", "background"]).has(name)) ||
+        (values.background !== undefined && values.background !== "true")) {
+      throw cliError("INVALID_TASK_ARGUMENTS");
+    }
+  } else if (command === "autocleanup") {
+    if (Object.keys(values).some((name) => !new Set(["repo", "branch", "now"]).has(name))) {
+      throw cliError("INVALID_TASK_ARGUMENTS");
+    }
+    if (!values.branch) throw cliError("TASK_REPO_AND_BRANCH_REQUIRED");
+  } else if (!values.branch) {
+    throw cliError("TASK_REPO_AND_BRANCH_REQUIRED");
+  }
   return { command, values };
+}
+
+export function scheduleAutoCleanupSweep({ baseRepoPath, cliPath, spawnWorker = spawn }) {
+  try {
+    const child = spawnWorker(
+      process.execPath,
+      [cliPath, "sweep", "--repo", baseRepoPath],
+      {
+        cwd: baseRepoPath,
+        detached: true,
+        windowsHide: true,
+        stdio: "ignore",
+        env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GH_PROMPT_DISABLED: "1" },
+      },
+    );
+    child.unref();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function required(values, name) {
@@ -159,16 +197,45 @@ function readHandoffContextFile(repoPath, branch, contextPath) {
   }
 }
 
-async function runParsed({ command, values }) {
+export async function runTaskLifecycleCommand(
+  { command, values },
+  {
+    scheduleSweep = scheduleAutoCleanupSweep,
+    onStartSuccess = () => {},
+    currentCliPath = path.resolve(import.meta.dirname, "ai-task.mjs"),
+  } = {},
+) {
   const common = { repoPath: values.repo, branch: values.branch };
   const now = values.now ?? new Date().toISOString();
   if (command === "start") {
-    return startTask({
+    const started = startTask({
       ...common,
       actor: required(values, "actor"),
       now,
       expectedBaseSha: values["base-sha"] ?? null,
     });
+    onStartSuccess(started);
+    try {
+      scheduleSweep({
+        baseRepoPath: path.resolve(values.repo),
+        cliPath: path.join(started.worktreePath, "scripts", "ai-task.mjs"),
+      });
+    } catch {
+      // A best-effort one-shot sweep never changes a successful task:start result.
+    }
+    return started;
+  }
+  if (command === "sweep" && values.background === "true") {
+    const repoPath = path.resolve(values.repo);
+    if (!scheduleSweep({ baseRepoPath: repoPath, cliPath: currentCliPath })) {
+      throw cliError("TASK_SWEEP_SCHEDULE_FAILED");
+    }
+    return { status: "SCHEDULED", repoPath };
+  }
+  if (command === "sweep") return sweepTasks({ repoPath: values.repo, now });
+  if (command === "autocleanup") {
+    const trigger = process.env.TALKPIK_AUTOCLEANUP_TRIGGER === "SWEEP" ? "SWEEP" : "DIRECT";
+    return autoCleanupTask({ ...common, trigger, now });
   }
   if (command === "status") {
     const status = readTaskStatus(common);
@@ -1109,7 +1176,7 @@ if (aiTaskIsMain) {
       if (command === "resume") {
         process.stderr.write("TASK_RESUME_DEPRECATED_USE_HANDOFF_ACCEPT\n");
       }
-      if (command !== "start" && command !== "metrics") {
+      if (!new Set(["start", "metrics", "sweep", "autocleanup"]).has(command)) {
         let status = null;
         try {
           status = readTaskStatus({ repoPath: values.repo, branch: values.branch });
@@ -1133,20 +1200,30 @@ if (aiTaskIsMain) {
       }
 
       try {
-        const result = await runParsed(parsed);
+        let startOutputWritten = false;
+        const result = await runTaskLifecycleCommand(parsed, command === "start" ? {
+          onStartSuccess(started) {
+            try {
+              const metricResult = recordCompletedTaskMetric({
+                repoPath: values.repo,
+                branch: values.branch,
+                actor: values.actor,
+                operation: "start",
+                startedAt: metricStartedAt,
+                finishedAt: new Date().toISOString(),
+                exitCode: 0,
+              });
+              if (metricResult?.exceeded) process.stderr.write("TASK_METRIC_BUDGET_EXCEEDED\n");
+            } catch {
+              metricWarning();
+            }
+            process.stdout.write(`${JSON.stringify(started, null, 2)}\n`);
+            startOutputWritten = true;
+          },
+        } : undefined);
         try {
           let metricResult = null;
-          if (command === "start") {
-            metricResult = recordCompletedTaskMetric({
-              repoPath: values.repo,
-              branch: values.branch,
-              actor: values.actor,
-              operation: "start",
-              startedAt: metricStartedAt,
-              finishedAt: new Date().toISOString(),
-              exitCode: 0,
-            });
-          } else if (lifecycleSpan !== null) {
+          if (lifecycleSpan !== null) {
             metricResult = finishLifecycleTaskMetricSpan({
               repoPath: values.repo,
               branch: values.branch,
@@ -1159,7 +1236,7 @@ if (aiTaskIsMain) {
         } catch {
           metricWarning();
         }
-        process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+        if (!startOutputWritten) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
       } catch (error) {
         if (lifecycleSpan !== null) {
           try {
