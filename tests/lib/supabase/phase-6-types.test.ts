@@ -53,6 +53,8 @@ describe("Phase 6 types snapshot — 4 new tables + 1 column + 4 new RPCs", () =
       storage_path: "browser-print://abc",
       options: { source: "browser_print" },
       status: "ready",
+      failure_code: null,
+      failed_at: null,
       created_at: "2026-05-22T00:00:00Z",
       ready_at: "2026-05-22T00:00:01Z",
     };

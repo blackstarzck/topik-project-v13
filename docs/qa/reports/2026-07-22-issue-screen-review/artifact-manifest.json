@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "recordType": "ArtifactManifest",
+  "taskId": "issue-screen-review",
+  "files": [
+    {
+      "path": "issue-screen-review-report.html",
+      "sha256": "8ba7329554ab70b9c47bf8634b398a14bc4a3fdfe965dfcf597391b96890f7d8",
+      "purpose": "GitHub 이슈별 화면 확인 결과를 보존하는 기존 HTML QA 보고서"
+    }
+  ],
+  "updatedAt": "2026-07-22T10:09:35.019Z"
+}

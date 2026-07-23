@@ -1202,7 +1202,9 @@
       "startOpenFailed": "풀이 화면을 여는 중 문제가 발생했어요. 다시 시도해 주세요.",
       "retry": "다시 시도",
       "viewResult": "결과 보기",
-      "statusFailed": "분석 실패",
+      "statusFailed": "분석 실패 · 다시 제출 필요",
+      "statusAnalyzing": "분석 중",
+      "statusSubmittedRecentFailure": "제출 완료 · 최근 재시도 분석 실패",
       "viewFailedStatus": "실패 상태 보기"
     }
   },
@@ -1621,12 +1623,6 @@
       "answerHintFallback": "앞뒤 문장과 자연스럽게 이어지는 표현을 고르세요.",
       "answerPlaceholder": "빈칸 {blank}에 들어갈 말을 한 문장으로 작성하세요.",
       "answerInputAria": "51번 단답 답안 입력",
-      "expressionTitle": "표현 힌트",
-      "expressionHint0": "그렇기 때문에",
-      "expressionHint1": "이 때문에",
-      "expressionHint2": "그래서",
-      "expressionHint3": "따라서",
-      "expressionHint4": "이러한 이유로",
       "guideAria": "AI 튜터 가이드",
       "guideTitle": "AI 튜터 가이드",
       "guideBody": "빈칸 {blank}은 앞 문장의 결과와 뒤 문장의 흐름을 자연스럽게 이어야 해요.",
@@ -1634,9 +1630,11 @@
       "tipsTitle": "작성 팁",
       "tip0": "앞 문장에서 제시된 문제의 결과를 설명하는 표현을 사용해 보세요.",
       "tip1": "따라서, 그렇기 때문에처럼 인과 관계를 나타내는 표현이 자주 쓰여요.",
-      "hintTitle": "예시 답안 힌트",
+      "hintTitle": "빈칸별 작성 힌트",
+      "hintRoleLabel": "역할",
+      "hintFunctionLabel": "문맥상 기능",
+      "hintAnswerTypeLabel": "요구 답안 형태",
       "tipsPlaceholder": "문제별 작성 팁이 이곳에 표시될 예정입니다.",
-      "hintPlaceholder": "문제별 빈칸 힌트가 이곳에 표시될 예정입니다.",
       "reviewPrompt": "지문 다시 보기"
     },
     "q52": {

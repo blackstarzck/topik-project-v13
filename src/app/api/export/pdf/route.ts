@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isEmailVerified } from "@/lib/auth/access-gate";
 import { fetchProfileStatus, isActiveStatus } from "@/lib/auth/profile";
 import { buildPdfDocument, registerPdfFonts } from "@/lib/export/pdf-document";
+import { PDF_EXPORT_ERROR_CODES } from "@/lib/export/pdf-export-errors";
 import {
   claimPdfExportQuota,
   commitPdfExportQuota,
@@ -38,16 +39,50 @@ function requestErrorBody(error: PdfExportRequestError) {
 async function markExportFailed(
   supabase: SupabaseServerClient,
   exportId: string | null,
+  failureCode: PdfExportFailureCode,
 ): Promise<void> {
   if (!exportId) return;
   await supabase
     .from("export_files")
-    .update({ status: "failed" })
+    .update({
+      status: "failed",
+      failure_code: failureCode,
+      failed_at: new Date().toISOString(),
+      ready_at: null,
+    })
     .eq("id", exportId)
     .then(
       () => undefined,
       () => undefined,
     );
+}
+
+type PdfExportFailureCode =
+  | "quota_exceeded"
+  | "quota_claim_failed"
+  | "analysis_unavailable"
+  | "item_unavailable"
+  | "item_resolution_failed"
+  | "server_render_failed"
+  | "storage_upload_failed"
+  | "quota_commit_failed"
+  | "export_record_failed"
+  | "unknown";
+
+function classifiedFailureCode(
+  error: unknown,
+  fallback: PdfExportFailureCode,
+): PdfExportFailureCode {
+  if (error instanceof PdfExportRequestError) {
+    if (error.code === PDF_EXPORT_ERROR_CODES.quotaExceeded) {
+      return "quota_exceeded";
+    }
+    if (error.code === PDF_EXPORT_ERROR_CODES.failedAnalysisUnavailable) {
+      return "analysis_unavailable";
+    }
+    return "item_unavailable";
+  }
+  return fallback;
 }
 
 async function releaseQuotaQuietly(
@@ -100,17 +135,10 @@ export async function POST(request: NextRequest) {
   let quotaClaim: PdfExportQuotaClaim | null = null;
   let exportId: string | null = null;
   let quotaSupabase: SupabaseServerClient | null = null;
+  let failureCode: PdfExportFailureCode = "unknown";
 
   try {
-    const items = await resolvePdfExportItems(supabase, exportRequest);
-    quotaSupabase =
-      createSupabaseServiceRoleClient() as unknown as SupabaseServerClient;
-    quotaClaim = await claimPdfExportQuota(
-      supabase,
-      user.id,
-      getPdfExportProblemIds(items),
-    );
-
+    failureCode = "export_record_failed";
     const { data: created, error: insertError } = await supabase
       .from("export_files")
       .insert({
@@ -133,6 +161,18 @@ export async function POST(request: NextRequest) {
     }
     exportId = created.id as string;
 
+    failureCode = "item_resolution_failed";
+    const items = await resolvePdfExportItems(supabase, exportRequest);
+    quotaSupabase =
+      createSupabaseServiceRoleClient() as unknown as SupabaseServerClient;
+    failureCode = "quota_claim_failed";
+    quotaClaim = await claimPdfExportQuota(
+      supabase,
+      user.id,
+      getPdfExportProblemIds(items),
+    );
+
+    failureCode = "server_render_failed";
     registerPdfFonts();
     const buffer = await renderToBuffer(
       buildPdfDocument({
@@ -143,6 +183,7 @@ export async function POST(request: NextRequest) {
       }),
     );
 
+    failureCode = "storage_upload_failed";
     const storagePath = `exports/${user.id}/${exportId}.pdf`;
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -154,18 +195,22 @@ export async function POST(request: NextRequest) {
       throw new Error(`storage upload: ${uploadError.message}`);
     }
 
+    failureCode = "export_record_failed";
     const { error: updateError } = await supabase
       .from("export_files")
       .update({
         storage_path: storagePath,
         status: "ready",
         ready_at: new Date().toISOString(),
+        failure_code: null,
+        failed_at: null,
       })
       .eq("id", exportId);
     if (updateError) {
       throw new Error(`export_files update: ${updateError.message}`);
     }
 
+    failureCode = "quota_commit_failed";
     await commitPdfExportQuota(
       quotaSupabase,
       user.id,
@@ -204,7 +249,8 @@ export async function POST(request: NextRequest) {
       filename: `${sanitizePdfFilename(exportRequest.options.filename)}.pdf`,
     });
   } catch (err) {
-    await markExportFailed(supabase, exportId);
+    const outcomeCode = classifiedFailureCode(err, failureCode);
+    await markExportFailed(supabase, exportId, outcomeCode);
     if (quotaSupabase) {
       await releaseQuotaQuietly(
         quotaSupabase,
