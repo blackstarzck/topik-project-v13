@@ -285,3 +285,11 @@ export function resolveStandardPlaywrightSafety(env) {
     testIgnore: STANDARD_PLAYWRIGHT_TEST_IGNORE,
   };
 }
+
+export function resolvePublicPlaywrightSafety(env) {
+  assertPublicRemoteReadTarget(env);
+  return {
+    baseUrl: assertLoopbackRuntimeTarget(env.E2E_BASE_URL),
+    testIgnore: STANDARD_PLAYWRIGHT_TEST_IGNORE,
+  };
+}

@@ -1113,6 +1113,78 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("renders exactly two complete Q52 submitted answers when annotations contain three fragments", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        score_total: 8,
+        score_max: 10,
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 4,
+              max_score: 5,
+              feedback: "첫 번째 빈칸 피드백",
+            },
+            {
+              trait: "blank_2",
+              score: 4,
+              max_score: 5,
+              feedback: "두 번째 빈칸 피드백",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [
+        sentence({
+          id: "annotation-1",
+          original_text: "정리하지 않으면",
+          corrected_text: "정리하지 않으면",
+          comment: "첫 번째 빈칸 교정",
+        }),
+        sentence({
+          id: "annotation-2",
+          original_text: "꼼꼼하게",
+          corrected_text: "꼼꼼하게",
+          comment: "두 번째 빈칸 교정 1",
+        }),
+        sentence({
+          id: "annotation-3",
+          original_text: "좋다",
+          corrected_text: "좋습니다",
+          comment: "두 번째 빈칸 교정 2",
+        }),
+      ],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({
+          question_no: 52,
+          answer_text: "ㄱ: 정리하지 않으면\nㄴ: 꼼꼼하게 정리하는 것이 좋다",
+        })}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const scoreItems = screen.getAllByTestId("feedback-report-score-item");
+    expect(scoreItems).toHaveLength(2);
+    expect(within(scoreItems[0]).getByText("제출 답안")).toBeTruthy();
+    expect(within(scoreItems[0]).getByText("정리하지 않으면")).toBeTruthy();
+    expect(within(scoreItems[1]).getByText("제출 답안")).toBeTruthy();
+    expect(
+      within(scoreItems[1]).getByText("꼼꼼하게 정리하는 것이 좋다"),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("feedback-sentence-card")).toBeNull();
+    expect(screen.queryAllByText("Before (내 답안)")).toHaveLength(0);
+  });
+
   it("does not render report metadata above the score sections", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({

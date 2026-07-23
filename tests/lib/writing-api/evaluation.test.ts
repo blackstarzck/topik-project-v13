@@ -200,4 +200,69 @@ describe("writing evaluation API adapter", () => {
       },
     ]);
   });
+
+  it("keeps two blank traits separate from three inline annotations", () => {
+    const payload = mapExternalEvaluationFeedback({
+      submission_id: "00000000-0000-0000-0000-000000000052",
+      status: "graded",
+      total_score: 8,
+      max_score: 10,
+      processing_time_seconds: 2.8,
+      trait_scores: [
+        {
+          trait: "blank_1",
+          score: 4,
+          max_score: 5,
+          feedback: "첫 번째 빈칸 피드백",
+        },
+        {
+          trait: "blank_2",
+          score: 4,
+          max_score: 5,
+          feedback: "두 번째 빈칸 피드백",
+        },
+      ],
+      errors: [],
+      annotations: [
+        {
+          original_text: "정리하지 않으면",
+          corrected_text: "정리하지 않으면",
+          comment: "첫 번째 빈칸 교정",
+        },
+        {
+          original_text: "꼼꼼하게",
+          corrected_text: "꼼꼼하게",
+          comment: "두 번째 빈칸 교정 1",
+        },
+        {
+          original_text: "좋다",
+          corrected_text: "좋습니다",
+          comment: "두 번째 빈칸 교정 2",
+        },
+      ],
+      ai_summary: "두 빈칸을 분석했습니다.",
+    });
+
+    expect(payload.dimensions).toEqual([]);
+    expect(payload.sentences).toEqual([
+      {
+        sentence_index: 0,
+        original_text: "정리하지 않으면",
+        corrected_text: "정리하지 않으면",
+        comment: "첫 번째 빈칸 교정",
+      },
+      {
+        sentence_index: 1,
+        original_text: "꼼꼼하게",
+        corrected_text: "꼼꼼하게",
+        comment: "두 번째 빈칸 교정 1",
+      },
+      {
+        sentence_index: 2,
+        original_text: "좋다",
+        corrected_text: "좋습니다",
+        comment: "두 번째 빈칸 교정 2",
+      },
+    ]);
+  });
 });

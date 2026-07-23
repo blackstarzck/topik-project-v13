@@ -7,7 +7,11 @@ import { test, expect, type Page } from "@playwright/test";
 // Each screen asserts: intended URL (no unexpected redirect), hydration (a heading
 // renders), and ZERO uncaught page errors. A page-level hydration error therefore
 // fails the screen — this is intentional (it surfaces real bugs, e.g. X-16).
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+  storageState: { cookies: [], origins: [] },
+  locale: "ko-KR",
+  extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+});
 
 type Screen = {
   ia: string;
@@ -141,7 +145,9 @@ for (const s of PUBLIC_SCREENS) {
           heroButtonIconHeight:
             heroButtonIcon?.getBoundingClientRect().height ?? 0,
           heroButtonIconStrokeWidth:
-            heroButtonIcon?.getAttribute("stroke-width") ?? "",
+            heroButtonIcon
+              ?.querySelector("[stroke-width]")
+              ?.getAttribute("stroke-width") ?? "",
           heroButtonIconWidth:
             heroButtonIcon?.getBoundingClientRect().width ?? 0,
           heroFontSize: readPx(window.getComputedStyle(hero).fontSize),
@@ -160,7 +166,7 @@ for (const s of PUBLIC_SCREENS) {
       expect(landingTypeMetrics.heroButtonFontSize).toBe(16);
       expect(landingTypeMetrics.heroButtonIconWidth).toBe(18);
       expect(landingTypeMetrics.heroButtonIconHeight).toBe(18);
-      expect(landingTypeMetrics.heroButtonIconStrokeWidth).toBe("2.25");
+      expect(landingTypeMetrics.heroButtonIconStrokeWidth).toBe("1.5");
 
       const landingHeader = page.locator(".landing-header");
       await expect(landingHeader).toBeVisible();
@@ -286,9 +292,11 @@ for (const s of PUBLIC_SCREENS) {
           .filter({ hasText: "라이브러리" }),
       ).toBeVisible();
       await page.locator("#blog").scrollIntoViewIfNeeded();
-      await expect(page.getByText("Future scope").first()).toBeVisible();
+      await expect(page.getByText("향후 범위").first()).toBeVisible();
       await page.locator("#contact").scrollIntoViewIfNeeded();
-      await expect(page.getByText("DOTORE TOPIK으로 시작하기")).toBeVisible();
+      await expect(page.locator(".landing-layout-footer__cta")).toContainText(
+        "도토리 토픽",
+      );
 
       const signupPill = page
         .locator(".landing-layout-pill[href='/sign-up']")

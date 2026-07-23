@@ -97,6 +97,15 @@ describe("GET /api/writing/evaluation-status", () => {
     const externalFeedback = {
       submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
+      trait_scores: [
+        { trait: "blank_1", score: 4, max_score: 5 },
+        { trait: "blank_2", score: 4, max_score: 5 },
+      ],
+      annotations: [
+        { original_text: "정리하지 않으면" },
+        { original_text: "꼼꼼하게" },
+        { original_text: "좋다" },
+      ],
     };
     helpers.getExternalEvaluationFeedbackMock.mockResolvedValue(
       externalFeedback,
@@ -113,6 +122,8 @@ describe("GET /api/writing/evaluation-status", () => {
       dimensions: [{ dimension: "grammar", score: 9, score_max: 10 }],
       sentences: [
         { sentence_index: 0, original_text: "A", corrected_text: "B" },
+        { sentence_index: 1, original_text: "C", corrected_text: "D" },
+        { sentence_index: 2, original_text: "E", corrected_text: "F" },
       ],
     });
 
@@ -147,6 +158,8 @@ describe("GET /api/writing/evaluation-status", () => {
         dimensions: [{ dimension: "grammar", score: 9, score_max: 10 }],
         sentences: [
           { sentence_index: 0, original_text: "A", corrected_text: "B" },
+          { sentence_index: 1, original_text: "C", corrected_text: "D" },
+          { sentence_index: 2, original_text: "E", corrected_text: "F" },
         ],
       },
     );

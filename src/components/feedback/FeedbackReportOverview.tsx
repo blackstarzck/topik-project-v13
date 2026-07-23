@@ -7,8 +7,14 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type {
   FeedbackDimensionScoreRow,
+  SubmittedAnswerDisplayItem,
   WritingFeedbackRow,
   WritingSubmissionRow,
+} from "@/lib/writing/types";
+import {
+  getSubmittedAnswerDisplayItems,
+  isQuestionNo,
+  isShortAnswer,
 } from "@/lib/writing/types";
 import type { ExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 
@@ -22,13 +28,14 @@ type OverviewScoreItem = {
   weightMax: number | null;
   summary: string | null;
   improvements: string[];
+  answer: string | null;
 };
 
 type Props = {
   feedback: WritingFeedbackRow;
   submission: Pick<
     WritingSubmissionRow,
-    "question_no" | "submitted_at" | "char_count"
+    "question_no" | "submitted_at" | "char_count" | "answer_text"
   >;
   dimensions: FeedbackDimensionScoreRow[];
   supplement: ExternalFeedbackSupplement;
@@ -60,7 +67,16 @@ export function FeedbackReportOverview({
   const { token } = theme.useToken();
   const totalMax = feedback.score_max ?? 100;
   const raw = asRecord(feedback.raw_ai_result);
-  const traitItems = readTraitScoreItems(raw, totalMax, t);
+  const submittedAnswers =
+    isQuestionNo(submission.question_no) &&
+    isShortAnswer(submission.question_no) &&
+    submission.answer_text
+      ? getSubmittedAnswerDisplayItems(
+          submission.question_no,
+          submission.answer_text,
+        )
+      : [];
+  const traitItems = readTraitScoreItems(raw, totalMax, submittedAnswers, t);
   const scoreItems =
     traitItems.length > 0 ? traitItems : readDimensionItems(dimensions, t);
   const focusAreas = supplement.learning.focusAreas.slice(0, 3);
@@ -132,6 +148,16 @@ export function FeedbackReportOverview({
                     size="small"
                     strokeColor={token.colorText}
                   />
+                  {item.answer ? (
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <Text type="secondary" className="block text-xs">
+                        {t("submittedAnswerLabel")}
+                      </Text>
+                      <Text className="block whitespace-pre-line break-words">
+                        {item.answer}
+                      </Text>
+                    </div>
+                  ) : null}
                   <Text
                     type="secondary"
                     className="block text-sm"
@@ -192,6 +218,7 @@ export function FeedbackReportOverview({
 function readTraitScoreItems(
   raw: Record<string, unknown> | null,
   totalMax: number,
+  submittedAnswers: SubmittedAnswerDisplayItem[],
   t: ReportTranslator,
 ): OverviewScoreItem[] {
   const traits = raw?.trait_scores;
@@ -225,6 +252,7 @@ function readTraitScoreItems(
         weightMax,
         summary: readString(record.feedback) ?? readString(record.comment),
         improvements: readStringArray(record.improvements),
+        answer: answerForTrait(trait, submittedAnswers),
       },
     ];
   });
@@ -245,7 +273,18 @@ function readDimensionItems(
       weightMax: item.score_max,
       summary: item.summary,
       improvements: [],
+      answer: null,
     }));
+}
+
+function answerForTrait(
+  trait: string | null,
+  submittedAnswers: SubmittedAnswerDisplayItem[],
+): string | null {
+  const answerIndex = trait === "blank_1" ? 0 : trait === "blank_2" ? 1 : -1;
+  return answerIndex >= 0
+    ? (submittedAnswers[answerIndex]?.text ?? null)
+    : null;
 }
 
 function buildRecommendations(
