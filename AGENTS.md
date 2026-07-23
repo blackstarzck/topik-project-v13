@@ -72,7 +72,7 @@
 - 완료된 branch/worktree도 publish·merge·소유권·runtime 종료를 확인하기 전 삭제하지 않는다. 강제 정리는 하지 않는다.
 - 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only이며, 사용자가 승인한 동일 fingerprint를 `task:cleanup`이 재검증한 경우에만 비강제 정리를 수행한다.
 
-`origin/main`은 PR과 필수 검사를 거쳐 반영한다. 저장소 소유자 `blackstarzck`가 만든 PR은 필수 검사 통과와 검토 의견 처리가 끝난 뒤 소유자 예외 권한으로 병합할 수 있다. 다른 개발자가 만든 PR은 같은 조건에 더해 `blackstarzck`의 승인을 받아야 한다. 승인만을 위한 보조 계정이나 자동 승인 계정은 사용하지 않으며, 필수 검사와 검토 의견 처리는 소유자도 우회하지 않는다. 실제 협업자가 늘어나면 중요 파일 담당자를 팀으로 전환하고 소유자 예외 권한을 다시 검토한다.
+`origin/main`은 PR과 필수 검사를 거쳐 반영한다. `blackstarzck`와 실제 협업자 `guestkeduall-design`은 보호 경로의 공동 CODEOWNER다. 사용자가 publish·merge를 승인한 작업에서 두 `gh` 세션과 collaborator write 권한이 모두 확인되면, 필수 검사 통과·미해결 review thread 없음·최종 push 이후라는 조건 아래 PR 작성자가 아닌 계정으로 CODEOWNER 승인을 제출하고 `blackstarzck`으로 전환해 merge까지 계속한다. self-review, 필수 검사 우회, stale approval 재사용은 금지하며 계정 또는 권한 확인에 실패하면 중단한다.
 
 `collab` remote의 `main`은 Vercel production에 즉시 노출된다. 사용자가 정확히 `collab`과 배포 의도를 명시하지 않으면 merge, rebase, push 또는 PR target으로 사용하지 않는다. 명시된 경우에도 변경 범위, 검증, secret 점검과 즉시 노출 위험을 먼저 보고하고 별도 확인을 받는다.
 
