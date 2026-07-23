@@ -17,12 +17,7 @@ import { APP_ROUTES } from "@/lib/routes";
 import { extractExternalFeedbackSupplement } from "@/lib/writing/external-feedback";
 import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 import { writingProblemHref } from "@/lib/writing/routes";
-import {
-  isQuestionNo,
-  isShortAnswer,
-  type FeedbackBundle,
-  type WritingSubmissionRow,
-} from "@/lib/writing/types";
+import type { FeedbackBundle, WritingSubmissionRow } from "@/lib/writing/types";
 
 type ReportTranslator = (
   key: string,
@@ -123,12 +118,6 @@ export function FeedbackPageContent({
     showShortReportOverview ||
     (withSentences && showSubmissionMeta && showDimensionGrid === false);
   const showStickyReportHeader = withSentences;
-  const showSentenceCorrections =
-    withSentences &&
-    !(
-      isQuestionNo(submission.question_no) &&
-      isShortAnswer(submission.question_no)
-    );
   const defaultRetryLabelKey = showShortReportOverview
     ? "retryDefault"
     : withSentences
@@ -232,7 +221,7 @@ export function FeedbackPageContent({
           />
         ) : null}
 
-        {showSentenceCorrections ? (
+        {withSentences ? (
           <SentenceFeedbackList
             rows={bundle.sentences}
             onReanalyze={onReanalyze}

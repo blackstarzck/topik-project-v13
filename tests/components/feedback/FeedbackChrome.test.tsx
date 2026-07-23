@@ -1113,7 +1113,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("renders exactly two complete Q52 submitted answers when annotations contain three fragments", () => {
+  it("renders two complete Q52 submitted answers and keeps three sentence corrections", () => {
     const bundle: FeedbackBundle = {
       feedback: feedback({
         score_total: 8,
@@ -1181,8 +1181,22 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(
       within(scoreItems[1]).getByText("꼼꼼하게 정리하는 것이 좋다"),
     ).toBeTruthy();
-    expect(screen.queryByTestId("feedback-sentence-card")).toBeNull();
-    expect(screen.queryAllByText("Before (내 답안)")).toHaveLength(0);
+    const sentenceCard = screen.getByTestId("feedback-sentence-card");
+    expect(
+      within(sentenceCard).getByRole("heading", {
+        level: 5,
+        name: "문장별 첨삭",
+      }),
+    ).toBeTruthy();
+    expect(within(sentenceCard).getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      within(sentenceCard)
+        .getAllByTestId("feedback-sentence-group-label")
+        .map((node) => node.textContent),
+    ).toEqual(["ㄱ", "ㄴ"]);
+    expect(within(sentenceCard).getAllByText("Before (내 답안)")).toHaveLength(
+      3,
+    );
   });
 
   it("does not render report metadata above the score sections", () => {

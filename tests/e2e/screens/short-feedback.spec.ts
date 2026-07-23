@@ -315,8 +315,17 @@ test("E-01 short feedback matches the wireframe constraints", async ({
   await expect(scoreItems.nth(1)).toContainText("제출 답안");
   await expect(scoreItems.nth(1)).toContainText("꼼꼼하게 정리하는 것이 좋다");
   await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(0);
-  await expect(page.getByTestId("feedback-sentence-card")).toHaveCount(0);
-  await expect(page.getByText("Before (내 답안)")).toHaveCount(0);
+  const sentenceCard = page.getByTestId("feedback-sentence-card");
+  await expect(sentenceCard).toBeVisible();
+  await expect(
+    sentenceCard.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
+  ).toBeVisible();
+  await expect(
+    sentenceCard.getByTestId("feedback-sentence-group-label"),
+  ).toHaveText(["ㄱ", "ㄴ"]);
+  await expect(
+    sentenceCard.getByTestId("feedback-sentence-before"),
+  ).toHaveCount(3);
   await expect(page.locator('[data-testid^="feedback-reco-"]')).toHaveCount(3);
   await expect(
     page.getByRole("heading", { level: 5, name: "추천 학습" }),
