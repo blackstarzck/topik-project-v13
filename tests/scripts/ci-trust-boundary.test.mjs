@@ -1389,7 +1389,7 @@ describe("CI trusted UI contract boundary", () => {
     expect(workflow).toContain("npm_config_userconfig");
     expect(workflow).toContain("BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF");
     expect(codeowners).toMatch(
-      /^\/config\/ui-contract-runtime\/\s+@blackstarzck\s+@guestkeduall-design$/mu,
+      /^\/config\/ui-contract-runtime\/[ \t]+@blackstarzck[ \t]+@guestkeduall-design$/mu,
     );
   });
 
