@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   symlinkSync,
@@ -39,6 +40,10 @@ const tempRoots = [];
 let repositoryTemplate;
 let mergeReadyTemplate;
 
+function makeFixtureRoot(prefix, parent = tmpdir()) {
+  return realpathSync.native(mkdtempSync(path.join(parent, prefix)));
+}
+
 function removeFixtureRoot(root) {
   if (existsSync(root)) rmSync(root, {
     recursive: true,
@@ -49,7 +54,7 @@ function removeFixtureRoot(root) {
 }
 
 beforeAll(() => {
-  const root = mkdtempSync(path.join(tmpdir(), "talkpik-autocleanup-template-"));
+  const root = makeFixtureRoot("talkpik-autocleanup-template-");
   const remote = path.join(root, "remote.git");
   const seed = path.join(root, "seed");
   const base = path.join(root, "base");
@@ -125,7 +130,7 @@ function pidActive(pid) {
 }
 
 function copyRepository(source, track = true) {
-  const root = mkdtempSync(path.join(tmpdir(), "talkpik-autocleanup-"));
+  const root = makeFixtureRoot("talkpik-autocleanup-");
   if (track) tempRoots.push(root);
   const remote = path.join(root, "remote.git");
   const seed = path.join(root, "seed");
@@ -312,6 +317,19 @@ function sweep(overrides = {}) {
 }
 
 describe("automatic lifecycle cleanup contracts", () => {
+  it.runIf(process.platform === "win32")("canonicalizes fixture roots created through a Windows path alias", () => {
+    const targetParent = mkdtempSync(path.join(tmpdir(), "talkpik-autocleanup-real-parent-"));
+    const aliasParent = path.join(tmpdir(), `talkpik-autocleanup-alias-${randomUUID()}`);
+    try {
+      symlinkSync(targetParent, aliasParent, "junction");
+      const root = makeFixtureRoot("child-", aliasParent);
+      expect(root).toBe(realpathSync.native(root));
+    } finally {
+      if (existsSync(aliasParent)) unlinkSync(aliasParent);
+      removeFixtureRoot(targetParent);
+    }
+  });
+
   it("validates closed secret-safe report and sweep records", () => {
     expect(validateAutoCleanupReportV1(report())).toEqual([]);
     expect(validateAutoCleanupSweepV1(sweep())).toEqual([]);

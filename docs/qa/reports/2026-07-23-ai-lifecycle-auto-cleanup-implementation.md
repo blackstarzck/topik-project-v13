@@ -94,6 +94,10 @@ flowchart LR
 | 리뷰 보완 뒤 autocleanup 전체 1차 | 해당 없음 | wall 116.000초 | 36/37 성공; 새 시각 조회에 맞지 않은 기존 fake clock fixture 1건 발견 |
 | 리뷰 보완 뒤 autocleanup 전체 최종 | 해당 없음 | test 118.630초, wall 125.000초 | 37/37 성공; 측정 예산 120초는 5초 초과 경고 |
 | 절대 deadline 공유·최종 autocleanup | 2개 실패 확인 | test 95.190초, wall 99.600초 | 38/38 성공; 120초 예산 안으로 복귀 |
+| Windows CI 1차 | 해당 없음 | 8분 35초 | 15건 실패. runner의 짧은 사용자 경로 별칭 때문에 복제 fixture가 원본 Git metadata를 참조한 것이 14건의 연쇄 실패를 만들었고, 별도 `pnpm` shim 검사는 44.233초로 40초 test 상한을 초과 |
+| Windows 경로 별칭 회귀 | 1/1 실패, 6.6초 | 1/1 성공, 4.9초 | junction 별칭으로 CI 조건을 로컬 재현한 뒤 fixture root를 native 실제 경로로 통일 |
+| Windows CI 보완 뒤 autocleanup 전체 | 해당 없음 | test 112.280초, wall 115.000초 | 39/39 성공; 120초 예산 안 유지 |
+| Windows `pnpm` shim 선택 검사 | CI에서 44.233초 timeout | 로컬 1/1 성공, 4.1초 | 기능 상한을 40초에서 60초로 조정; production timeout 변경 없음 |
 | 전체 test 첫 실행 | 해당 없음 | wall 811.300초 | 3,033개 성공, 공용 Git template `beforeAll`이 병렬 부하에서 기본 10초 timeout을 넘어 suite 시작 실패; assertion 실패 없음 |
 | 전체 test 두 번째 실행 | 해당 없음 | wall 829.000초 | 3,063개 성공, Git-heavy 통합 3개가 병렬 I/O에서 기본 40초 상한을 0.339~15.308초 초과; assertion 실패 없음 |
 | 전체 lifecycle 리뷰 전 최종 | 해당 없음 | wall 787.400초 | 5 files, 206/206 성공; 직전 715.835초보다 10.0% 느리지만 기존 로컬 1,290.453초보다 39.0% 단축 |
@@ -151,7 +155,7 @@ flowchart LR
 | 항목 | 현재 상태 | 다음 안전 행동 |
 | --- | --- | --- |
 | 전체 project/lifecycle/typecheck/test/lint/build | 모두 성공. 전체 test 첫 두 번은 Windows 병렬 Git I/O timeout을 찾아 hook·고비용 통합 test 상한을 좁게 보완한 뒤 최종 3,066개 성공. 마지막 deadline 보완은 focused 38/38, lint, build와 정적 계약으로 재검증 | PR에서 전체 lifecycle과 전체 test를 다시 실행 |
-| Windows lifecycle CI | 미실행 | PR ready 검사에서 대상 밖 프로세스 제거와 path case/reparse 재검증 |
+| Windows lifecycle CI | 1차 8분 35초에 실패. fixture 경로 별칭과 부하 시 test 상한 원인을 보완했고 로컬 관련 검사는 성공 | PR CI 재실행에서 전체 lifecycle 재검증 |
 | 최초 기존 v2 sweep | 미실행 | 구현 PR 병합 뒤 안전한 기준 checkout에서 한 번 실행 |
 | 기존 v2 task 실제 삭제 결과 | 미확인 | 최초 sweep sidecar의 CLEANED/PRESERVED/FAILED 건수로 후속 기록 |
 | `collab`, 원격 Supabase | 범위 밖 | 변경하지 않음 |
