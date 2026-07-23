@@ -50,7 +50,7 @@ flowchart LR
   L --> M["CLEANED 기록"]
 ```
 
-핵심은 시작할 때 기준 SHA를 고정하고, 끝날 때는 먼저 삭제 가능성만 보고한 다음 사용자가 승인한 동일 상태만 비강제로 정리하는 것이다.
+핵심은 시작할 때 기준 SHA를 고정하는 것이다. 정상 병합된 v2 task는 자동 경로가 같은 안전 조건을 다시 확인해 비강제로 정리하고, 자동 경로가 보존한 작업을 사람이 복구할 때만 `finalize` fingerprint 승인 경로를 사용한다.
 
 ## 명령 사용법
 
@@ -147,6 +147,8 @@ GitHub Actions의 각 runner는 로컬 task registry를 공유하지 않으므�
 pnpm task:finish -- --repo <task-worktree> --branch feat/example-task --actor codex
 pnpm task:finalize -- --repo <기준-checkout-or-worktree> --branch feat/example-task
 pnpm task:cleanup -- --repo <기준-checkout-or-worktree> --branch feat/example-task --approval <fingerprint>
+pnpm task:autocleanup -- --repo <기준-checkout> --branch feat/example-task
+pnpm task:sweep -- --repo <기준-checkout>
 ```
 
 `task:finish`는 구현을 끝낼 때 빠르게 실행하는 로컬 report-only 명령이다. 현재 실행자와 worktree branch·HEAD, 일반 Git status, upstream과 로컬 ahead/behind만 읽고 `FinishReportV1`을 저장한다. `node_modules`, `.next` 같은 ignored dependency tree를 열거하거나 해시하지 않으며 fetch, push, PR 조회·생성·merge, Git 수정, 파일 삭제를 하지 않는다. dirty 상태면 검증·커밋 준비를, clean이지만 미게시 상태면 게시 승인을 안내한다. 원격만 앞서면 fast-forward 한 명령을, 양쪽이 갈라졌으면 기록을 먼저 비교하고 사람이 merge·rebase 방식을 결정하는 한 명령을 제공한다. 정확한 `origin/<task-branch>`가 ahead 0·behind 0일 때만 게시 완료로 판단한다. 공백이 있는 Windows 경로도 복사 실행할 수 있도록 경로 인자를 안전하게 quote한다.
@@ -155,7 +157,23 @@ pnpm task:cleanup -- --repo <기준-checkout-or-worktree> --branch feat/example-
 
 두 명령의 목적은 다르다. `finish`는 일상적인 작업 마감 안내를 빠르게 만들고, `finalize`는 실제 삭제 승인값을 만들기 위한 깊은 정리 사전 검사다. `finalize`와 `cleanup`은 주요 단계별 실제 소요 시간을 `timings`로 함께 출력한다. 이 시간은 진단 정보일 뿐 승인 fingerprint나 registry schema에는 포함하지 않는다.
 
-`ready: true`이면 후보 목록과 fingerprint를 사용자에게 보고한다. 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. GitHub가 초 단위로 주는 `mergedAt` 값은 동일한 UTC 시각의 밀리초 포함 형식으로 정규화해 기록하지만, 내부 registry가 받는 시간은 계속 밀리초까지 정확한 ISO 형식만 허용한다.
+수동 복구 경로에서는 `ready: true`인 후보 목록과 fingerprint를 사용자에게 보고하고, 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. 정상 병합 자동 경로는 별도의 사용자 승인값을 받지 않는다. `task:autocleanup`은 정식 ACTIVE v2 task 하나를, `task:sweep`은 최대 10개를 순차 검사해 병합·소유권·runtime·경로·HEAD/PR SHA가 모두 안전할 때만 같은 비강제 cleanup journal을 실행한다. GitHub가 초 단위로 주는 `mergedAt` 값은 동일한 UTC 시각의 밀리초 포함 형식으로 정규화해 기록하지만, 내부 registry가 받는 시간은 계속 밀리초까지 정확한 ISO 형식만 허용한다.
+
+원격 task branch가 남아 있으면 다른 안전 조건을 먼저 통과시킨다. 그 뒤 저장된 GitHub 인증에서 `blackstarzck` 전환을 시도하고, origin의 GitHub 저장소 identity와 원격 ref가 merged PR head SHA와 정확히 같을 때만 해당 ref를 삭제한다. 실제 push는 `--force-with-lease=<remote-ref>:<expected-sha>`와 delete refspec을 함께 써서 서버가 expected SHA를 원자 비교한 경우에만 삭제한다. 이는 무조건 `--force`가 아니며, 사전 조회 뒤 ref가 이동하면 삭제가 실패하고 모든 로컬 항목을 보존한다. 삭제 직후 전체 snapshot을 다시 계산하며 조금이라도 달라지면 worktree와 로컬 branch는 보존한다. 인증·identity·SHA 확인 실패도 로컬 항목을 그대로 보존한다.
+
+`origin/main` PR 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 `pnpm task:autocleanup -- --repo <기준-checkout> --branch <정확한-task-branch>`를 즉시 실행한다. 에이전트 밖에서 병합됐거나 즉시 실행이 끊긴 작업만 다음 `task:start`의 sweep이 따라잡는다.
+
+`task:start`은 새 worktree 생성을 성공으로 확정한 뒤 최신 worktree CLI를 숨김 일회성 프로세스로 실행해 sweep을 예약한다. daemon은 만들지 않으며 예약 실패는 시작 결과를 실패로 바꾸지 않는다. 오래된 기준 checkout CLI가 이 hook을 모르면 새 worktree에서 최신 CLI 경로를 확인한 뒤, 대상 밖의 안전한 기준 checkout에서 다음 명령을 한 번 실행한다.
+
+```powershell
+node "<new-worktree>/scripts/ai-task.mjs" sweep --repo "<base-checkout>" --background true
+```
+
+이 명령은 최신 CLI가 자기 자신을 숨김 일회성 프로세스로 다시 실행하도록 예약하고 즉시 반환한다. `--background`는 정확히 `true`만 허용하며 예약 자체가 실패하면 오류를 반환한다. 프로세스 작업 위치와 `--repo`는 기준 checkout이고, 실행할 코드만 새 worktree에 있으므로 최신 코드의 위치와 정리 프로세스가 서 있는 안전한 위치를 혼동하지 않는다.
+
+sweep은 저장소 단위 lock과 기존 task별 lock을 함께 사용하고 전체 10분에서 멈춘다. cooldown 확인용 preview에는 네트워크 상한 30초와 종료 기록 여유 5초를 함께 예약하므로 남은 시간이 35초 이하이면 새 preview를 시작하지 않는다. preview의 `fetch`, GitHub PR 조회, 원격 branch 조회는 각각 새 30초를 받지 않고 하나의 절대 deadline을 공유하며, 비동기 preview에도 남은 시간에서 기록 여유를 뺀 timeout을 적용한다. 각 후보는 현재 `scripts/ai-task.mjs autocleanup` child process로 실행하고, 전체 deadline의 마지막 5초는 sweep 보고서 기록에 남긴다. child는 자기 예산 안에서 다시 최대 5초를 process tree 종료 확인에 예약한다. 시간 초과가 나면 Windows에서는 정확한 root PID에 `taskkill /PID <pid> /T /F`를 `shell: false`로 실행하고, 그 명령의 성공과 root child의 `close`를 모두 확인한다. Windows가 아닌 환경에서는 child를 전용 process group으로 띄우고 그 group에만 종료 신호를 보낸 뒤 root `close`와 group 부재를 확인한다. 이 확인이 모두 끝난 뒤에만 해당 root PID와 UUID가 정확히 일치하는 일반 task operation lock을 원자 회수한다. 종료가 확인된 timeout은 task별 `AutoCleanupReportV1`에도 blocker와 15분 재시도 시각을 기록하되, 10분을 넘겨 보고서 lock을 기다리지는 않는다. process tree 종료를 확인하지 못하면 실행 중일 수 있는 child와 같은 task 파일을 경쟁해 쓰지 않고 `AutoCleanupSweepV1.runnerFailure`에 task·branch·blocker·재시도 시각·cleanup fingerprint만 기록한다. 이 경우 lock과 cleanup journal을 그대로 보존하고 이후 후보를 시작하지 않으며, 다음 sweep은 runner failure의 15분 cooldown을 이어받는다. runner failure sidecar 자체를 쓰지 못한 경우에는 sweep 시작 때 미리 기록한 최대 25분(`10분 실행 한도 + 15분 cooldown`)의 `holdUntil` lock을 남겨 다음 sweep 전체를 fail-closed한다. 원문 stdout·stderr는 오류나 sidecar에 넣지 않는다.
+
+child는 대상 밖의 기준 checkout에서 `shell: false`, 숨김 창, stdin 차단, 제한된 출력 buffer로 실행되고 닫힌 report schema와 fingerprint만 받는다. 같은 blocker는 `AutoCleanupReportV1.retryAt`까지 15분 동안 미루지만 직접 `task:autocleanup` 호출은 cooldown을 적용하지 않는다. 일반적인 위험 task 하나가 보존·실패해도 다음 task와 새 작업 시작을 막지 않지만, process tree 종료를 확인하지 못한 경우에는 남아 있을 수 있는 하위 `git`·`gh`와 경쟁하지 않도록 해당 sweep의 다음 후보를 시작하지 않는다. 대상 worktree 내부에서 실행된 worker, legacy registry만 있는 작업, 비정식 경로는 정리하지 않는다.
 
 승인 fingerprint는 disposable root의 내용 전체가 아니라 정확한 root 경로·종류·device·inode·생성 시각 identity를 묶는다. 따라서 `node_modules`, `.next`, task 임시 로그 안의 내용 변화만으로 승인이 만료되지는 않는다. 반대로 root가 삭제 후 다시 생성되거나 symlink·junction으로 바뀌거나 identity를 안전하게 얻지 못하면 `APPROVAL_INVALIDATED` 또는 경로 안전 오류로 멈춘다. `tsconfig.tsbuildinfo`는 정확한 파일 하나만 disposable 후보로 허용한다. ignored 탐색은 directory 단위로 접고, `.codex/work/<slug>` 이외의 다른 task 폴더나 임의 ignored root가 있으면 보존한다.
 
@@ -190,10 +208,14 @@ GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 �
 ├── owner-auth/<task-id>.json
 ├── metrics/<task-id>/<span-id>.json
 ├── runtimes/<task-id>.json
-└── cleanups/<task-id>.json
+├── cleanups/<task-id>.json
+├── auto-cleanup/<task-id>.json
+├── auto-cleanup/<task-id>.lock (보고서 교체 중에만 존재)
+├── sweeps/latest.json
+└── sweep.lock (실행 중에만 존재)
 ```
 
-기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. 새 공개 sidecar는 `HandoffContextV1`, `StartRecoveryV1`, `FinishReportV1`, `OwnerAuthResultV1`, `TaskMetricSpanV1`로 분리한다. 모든 record는 허용 필드만 받고 크기·문자열·배열·시간·경로·fingerprint를 검증하며 원자적으로 교체한다. 같은 task의 새 finish·owner-auth sidecar 시간은 task와 직전 sidecar보다 과거일 수 없다. unknown field, secret·token·원문 thread ID와 유사한 key, prototype 오염, symlink·경로 탈출은 거부한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
+기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. 새 공개 sidecar는 `HandoffContextV1`, `StartRecoveryV1`, `FinishReportV1`, `OwnerAuthResultV1`, `TaskMetricSpanV1`, `AutoCleanupReportV1`, `AutoCleanupSweepV1`로 분리한다. 자동 정리 보고서는 결과(`CLEANED|PRESERVED|FAILED`), blocker, 재시도 시각, cleanup fingerprint와 단계별 소요 시간만 저장한다. `CLEANED`는 blocker와 재시도 시각이 없어야 하고, 나머지 결과는 blocker와 미래의 재시도 시각이 있어야 한다. 같은 task의 직접 실행과 sweep이 겹치면 짧은 보고서 전용 lock 아래에서 비교해 `CLEANED`를 최종 상태로 보존하고, 그 밖에는 더 늦게 끝난 유효 기록만 남긴다. 호출자에게는 저장된 최종 결과를 현재 trigger로 다시 fingerprint한 응답을 돌려주므로, direct가 먼저 정리한 상황도 sweep이 실패로 잘못 집계하지 않는다. 보고서 lock을 기다리는 동안에는 매 재시도와 획득 직후 parent directory identity·symlink 상태를 다시 확인한다. 정상 형식이고 PID가 종료된 lock은 exact identity로 회수하며, 비정상 형식은 최소 10분 지난 exact file만 원자 claim 뒤 복구한다. sweep 보고서는 검사·시도·정리·보존·실패·연기 건수와 실제 전체 시간을 저장하고, 종료를 확인하지 못한 worker가 하나 있으면 닫힌 `runnerFailure` 한 건을 함께 저장한다. 모든 record는 허용 필드만 받고 크기·문자열·배열·시간·경로·fingerprint를 검증하며 원자적으로 교체한다. 같은 task의 새 finish·owner-auth sidecar 시간은 task와 직전 sidecar보다 과거일 수 없다. unknown field, secret·token·원문 thread ID와 유사한 key, prototype 오염, symlink·경로 탈출은 거부한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
 
 ```mermaid
 stateDiagram-v2
@@ -201,7 +223,7 @@ stateDiagram-v2
   ACTIVE --> HANDOFF_PENDING: handoff offer
   HANDOFF_PENDING --> HANDOFF_PENDING: handoff refresh
   HANDOFF_PENDING --> ACTIVE: handoff accept
-  ACTIVE --> CLEANING: 승인된 task:cleanup
+  ACTIVE --> CLEANING: 승인된 수동 cleanup 또는 안전한 자동 cleanup
   CLEANING --> CLEANED: 모든 단계 재검증
   CLEANING --> CLEANING: 부분 실패 journal 재개
 ```
@@ -321,5 +343,7 @@ production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI t
 | approval 만료 | cleanup을 재시도하지 말고 finalize의 새 fingerprint를 다시 보고·승인받는다. |
 | cleanup 부분 실패 | journal과 실제 Git 목록을 읽고, 같은 승인값으로만 재개한다. 강제 정리하지 않는다. |
 | stale operation lock 의심 | process·task·lock 소유권을 먼저 확인한다. 불명확하면 보존하고 owner에게 이관한다. |
+| 자동 정리 보존·실패 | `AutoCleanupReportV1`의 blocker와 retry 시각을 확인한다. 새 작업은 계속하며, 조건을 해소한 뒤 직접 autocleanup 또는 다음 sweep으로 재시도한다. |
+| sweep lock이 남음 | PID가 살아 있거나 형식·소유권이 불명확하거나 `holdUntil` 전이면 보존한다. 종료 PID이고 10분 이상 지났으며 `holdUntil`도 지난 정확한 sweep lock만 원자 claim 뒤 회수한다. |
 
 stage, commit, push, PR 생성, merge, 활성 ruleset 변경, head branch 자동 삭제, bootstrap worktree 제거는 각각 사용자 요청 또는 결과 보고 후 승인된 범위에서만 수행한다. `origin/main`은 PR과 활성 필수 검사를 거치며, `collab`은 사용자가 정확히 배포 의도까지 명시하고 별도 확인하기 전에는 건드리지 않는다.
