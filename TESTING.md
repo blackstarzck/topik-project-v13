@@ -16,9 +16,13 @@ pnpm check:project-structure
 pnpm check:artifact-hygiene
 pnpm check:worktree-lifecycle   # 기존 v1 report-only 계약
 pnpm check:task-lifecycle       # v2 task + cleanup 계약
+pnpm task:measure -- --repo <task-worktree> --branch <task-branch> --actor <actor> --phase test --scope focused --budget small-check -- pnpm test
+pnpm task:metrics -- --repo <repo-or-worktree> --branch <task-branch>
 ```
 
 작은 변경은 관련 test 파일이나 `-g` filter부터 실행한다. auth, middleware, app shell, route guard, global theme처럼 여러 route에 영향을 주거나 범위를 좁히기 어려우면 전체 관련 suite를 실행한다.
+
+10초 이상 걸릴 것으로 예상되는 setup·test·typecheck·lint·build·review·CI·publish 명령은 `task:measure`로 감싼다. 명령이 끝난 뒤 `task:metrics`에서 명령 합계와 겹친 구간을 제외한 실제 측정 시간, 실패·미완료·예산 초과를 확인하고 작업 보고의 실측 근거로 사용한다. 명령 원문·인자·환경·출력은 저장되지 않으며, 측정 저장 실패나 예산 초과는 원래 검증 결과를 바꾸지 않는다. 자세한 phase·scope·budget 기준은 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다.
 
 ## UI 변경
 

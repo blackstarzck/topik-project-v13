@@ -54,10 +54,10 @@
 
 1. **기준 확인**: 이 문서와 `README.md`를 읽고 요청에 필요한 최소 owner, source, tests만 확인한다.
 2. **영향도와 계획**: 제품·코드·데이터·UI·테스트·문서 영향을 나누고, 목적·범위·TODO·검증 방법을 정한다.
-3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 공용 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finalize`, `task:cleanup` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 lifecycle workflow owner다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
+3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 공용 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finish`, `task:finalize`, `task:cleanup`, `task:measure`, `task:metrics` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 lifecycle workflow owner다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
 4. **구현과 TDD**: 실패하는 관련 테스트를 먼저 만들거나 확인하고, 프로젝트 구조를 유지한 최소 변경으로 통과시킨다.
 5. **비판적 리뷰**: critic 관점에서 요구사항 누락, 회귀, 권한·secret·RLS, 실패 복구와 불필요한 확장을 확인한다. 가능하면 독립 에이전트 리뷰를 사용한다.
-6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
+6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. 10초 이상 걸릴 것으로 예상되는 setup·검증·review·CI 대기는 `task:measure`로 감싸고, 보고 전 `task:metrics`로 실제 소요 시간·중복 실행·예산 초과를 확인한다. 측정 실패와 예산 초과는 경고일 뿐 원래 명령의 성공·실패나 Git 안전 조건을 바꾸지 않는다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
 7. **보고와 Git 승인**: 바뀐 내용, 검증 결과, 남은 위험과 Git 상태를 쉽게 설명한다. stage, commit, push, PR, merge는 사용자가 요청했거나 결과 보고 뒤 승인한 범위에서만 수행한다.
 
 작업 방식은 Superpowers만 사용한다. OMX와 gstack을 사용하지 않는다. UI 컴포넌트·페이지 styling 작업에는 프로젝트 로컬 `frontend-design`을 함께 사용하되, 이는 domain skill이며 `DESIGN.md`, 기존 Ant Design/theme 구조, Superpowers workflow보다 우선하지 않는다.
