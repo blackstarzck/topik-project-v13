@@ -133,13 +133,13 @@
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
 | 39 | `16:00:00` | [`20260612160000_user_notifications.sql`](./20260612160000_user_notifications.sql) | `user_notifications` 인앱 수신함(벨 뱃지/알림센터/B-01 카드). owner select + `read_at` 단일 컬럼 grant update, insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 topik-ai 소유 `notification_delivery_attempts` soft 참조(FK 없음 — 소유권 계약). |
-| 40 | `18:00:00` | [`20260612180000_notification_dispatcher.sql`](./20260612180000_notification_dispatcher.sql) | v13 사용자 알림 dispatcher 함수. topik-ai 운영 스키마를 v13 migration에 만들지 않고, 공유 객체는 soft reference/contract 방식으로 연결한다. |
-| 41 | `18:01:00` | [`20260612180100_register_notification_cron.sql`](./20260612180100_register_notification_cron.sql) | 알림 dispatch cron 등록/정리용 migration. 실행 환경에서 `pg_cron` 사용 가능 여부에 따라 동작한다. |
-| 42 | `19:00:00` | [`20260612190000_notification_email_pipeline.sql`](./20260612190000_notification_email_pipeline.sql) | 이메일 알림 파이프라인 보강. `notification_email_config`와 이메일 처리 함수를 추가하되, 실제 provider/secret은 환경 설정에 둔다. |
-| 43 | `19:01:00` | [`20260612190100_email_transport_fail_user.sql`](./20260612190100_email_transport_fail_user.sql) | 이메일 전송 실패 시 사용자 알림 상태를 안전하게 실패 처리하도록 보강한다. |
-| 44 | `19:02:00` | [`20260612190200_email_live_defer.sql`](./20260612190200_email_live_defer.sql) | live 이메일 전송을 deferred 상태로 유지하는 안전장치. 실제 provider 활성화 전까지 운영 발송을 막는다. |
+| 40 | `18:00:00` | [`20260612180000_notification_dispatcher.sql`](./20260612180000_notification_dispatcher.sql) | 역사적 replay-safe no-op. dispatcher migration home은 topik-ai `supabase/migrations-admin/20260723011242_notification_pipeline_ownership_transfer.sql`로 이관됐다. |
+| 41 | `18:01:00` | [`20260612180100_register_notification_cron.sql`](./20260612180100_register_notification_cron.sql) | 역사적 replay-safe no-op. `dispatch_notifications` cron은 topik-ai admin migration이 소유한다. |
+| 42 | `19:00:00` | [`20260612190000_notification_email_pipeline.sql`](./20260612190000_notification_email_pipeline.sql) | 역사적 replay-safe no-op. `notification_email_config`와 이메일 파이프라인은 topik-ai admin migration이 소유한다. |
+| 43 | `19:01:00` | [`20260612190100_email_transport_fail_user.sql`](./20260612190100_email_transport_fail_user.sql) | 역사적 replay-safe no-op. fail-user 최종 정의는 topik-ai forward migration에 포함된다. |
+| 44 | `19:02:00` | [`20260612190200_email_live_defer.sql`](./20260612190200_email_live_defer.sql) | 역사적 replay-safe no-op. live defer 최종 정의는 topik-ai forward migration에 포함된다. |
 | 45 | `20:00:00` | [`20260612200000_user_marketing_consent.sql`](./20260612200000_user_marketing_consent.sql) | H-2 마케팅 동의 저장소. `user_marketing_consent`(가산형, profiles 미변경): `consented_at`/`unsubscribed_at`/`unsubscribe_token uuid unique`/`source`. 유효 동의 = `consented_at not null AND unsubscribed_at null`. owner select/insert/update RLS + force, service_role read. |
-| 46 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | H-2 dispatch consent 게이트. hard-coded marketing→`opted_out`를 `private.is_marketing_consented()` 조회로 교체(admin/event 함수). 동의 O+채널 on→eligible, 동의 O+채널 off→skipped, 동의 X→opted_out. 비-마케팅 동작 불변. |
+| 46 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | 역사적 replay-safe no-op. H-2 consent gate 함수는 topik-ai forward migration이 소유하며, v13은 `user_marketing_consent` 테이블 owner로 남는다. |
 | 47 | `22:10:00` | [`20260612221000_fix_legal_documents_public_read_policy.sql`](./20260612221000_fix_legal_documents_public_read_policy.sql) | `legal_documents_published_read` 정책에서 공개 published read와 `private.is_platform_admin()` admin helper를 분리. anon 공개 약관 조회가 helper 실행 권한 오류(42501)로 실패하지 않도록 `status='published'`만 평가. |
 
 #### 17 (Writing submission visibility guard)
