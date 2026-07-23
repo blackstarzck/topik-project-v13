@@ -48,7 +48,7 @@ import { WritingExamShell } from "./WritingExamShell";
 import { WritingRecoveryConflictModal } from "./WritingRecoveryConflictModal";
 import { serializeWritingAnswerSnapshot } from "./writingAnswerSnapshot";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 type Q51Problem = Extract<NormalizedWritingProblem, { kind: "q51" }>;
 
@@ -90,15 +90,6 @@ function uniqueNonEmpty(items: Array<string | null | undefined>) {
   return Array.from(
     new Set(items.map((item) => item?.trim()).filter(Boolean) as string[]),
   );
-}
-
-function blankHintText(blank: NormalizedBlank) {
-  const parts = uniqueNonEmpty([
-    blank.role,
-    blank.functionLabel,
-    blank.answerType,
-  ]);
-  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 export function ShortAnswerWriting51Workspace({
@@ -636,23 +627,10 @@ export function ShortAnswerWriting51Workspace({
 
               <div className="writing-answer-card">
                 <div className="writing-answer-card__head">
-                  <div>
-                    <Text strong>
-                      {tPage("answerTitle", {
-                        blank: activeBlank?.label ?? "ㄱ",
-                      })}
-                    </Text>
-                    <Paragraph
-                      type="secondary"
-                      className="writing-answer-card__hint"
-                    >
-                      {activeBlank
-                        ? (blankHintText(activeBlank) ??
-                          tPage("answerHintFallback"))
-                        : tPage("answerHintFallback")}
-                    </Paragraph>
-                  </div>
-                  <Text type={inRecommended ? "success" : "secondary"}>
+                  <Text
+                    type={inRecommended ? "success" : "secondary"}
+                    className="self-end text-right"
+                  >
                     {tEditor("charCount", {
                       charCount,
                       hardMax: limit.hardMax,
