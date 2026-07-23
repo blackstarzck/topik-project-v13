@@ -38,9 +38,9 @@ flowchart LR
   D --> E{"실행자 변경?"}
   E -- 예 --> F["handoff offer → accept"]
   F --> D
-  E -- 아니요 --> N{"owner-auth 성공?"}
-  N -- 예 --> O["소유자 PR → 필수 CI·review 의견 처리 → merge"]
-  N -- 아니요 --> P["협업자 PR → 필수 CI·review 의견 처리 → blackstarzck 승인 → merge"]
+  E -- 아니요 --> N{"두 CODEOWNER 세션·권한 확인?"}
+  N -- 예 --> O["필수 CI·review 의견 처리 → 비작성자 승인 → blackstarzck merge"]
+  N -- 아니요 --> P["CODEOWNER 승인 단계에서 BLOCKED"]
   O --> H["runtime 종료·등록"]
   P --> H
   H --> I["finalize 보고"]
@@ -110,6 +110,8 @@ pnpm task:owner-auth -- --repo <task-worktree> --branch feat/example-task --owne
 명령은 먼저 `origin` URL에서 실제 소유자를 확인한 뒤 `gh api user`로 현재 로그인을 읽는다. 이미 `blackstarzck`이면 전역 계정을 바꾸지 않고 성공한다. 다른 계정이면 기본 호출은 `SWITCH_REQUIRED`와 `manualApprovalRequired: true`만 안전한 JSON으로 반환하며 `gh auth switch`를 실행하지 않는다. 첫 로그인 확인 자체가 실패하면 승인 없는 호출은 즉시 실패한다. 사용자가 원격 게시를 승인한 작업에서만 `--publish-approved`를 붙일 수 있고, 이 경우 첫 확인 실패도 저장된 소유자 계정으로 전환한 뒤 `gh api user`를 한 번만 다시 검증한다. 전환이나 재검증이 실패하면 중단한다. `--branch`를 함께 주면 성공 결과를 해당 task의 `OwnerAuthResultV1` sidecar로 남긴다.
 
 token·인증 명령의 stdout·stderr는 결과에 포함하지 않으며 각 하위 명령은 30초가 지나면 실패한다. 성공 결과의 `manualApprovalRequired: false`는 계정 확인의 중복 절차만 생략한다는 뜻이다. 필수 CI와 review 의견 처리는 그대로 의무이며 어떤 인증 경로도 이를 우회할 수 없다.
+
+보호 경로의 공동 CODEOWNER는 `blackstarzck`와 `guestkeduall-design`이다. 사용자가 publish·merge를 승인한 작업에서 `gh auth status`에 두 세션이 있고 `guestkeduall-design`의 대상 저장소 collaborator write 권한이 확인되면, 최종 head의 필수 CI가 모두 통과하고 미해결 review thread가 없는지 다시 확인한다. 그 뒤 PR 작성자가 아닌 계정으로 CODEOWNER 승인을 제출하고 `blackstarzck`으로 전환해 동일 head를 merge한다. PR head가 바뀌면 기존 승인을 재사용하지 않고 검사와 승인을 다시 확인한다. 어느 계정이나 권한이 없으면 자동 전환·승인·merge를 시도하지 않고 `BLOCKED`로 보고한다.
 
 ### 파이프라인 소요 시간 측정
 
