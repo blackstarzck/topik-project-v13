@@ -14,6 +14,7 @@
 | 내보내기 | export file, PDF quota 정책·사용·reset materialization |
 | 알림 | 사용자 알림, 설정, dispatch/email 상태와 마케팅 동의 |
 | 기관 | 조직, 구성원, 배정과 제출 연결 |
+| 시스템 리포팅 | 익명·로그인 사용자의 버그·문의·제안과 허용된 진단 정보 |
 | 운영 기반 | audit, subscription/payment 구조, legal document |
 
 운영 기반 table이 존재한다는 사실이 v13의 admin UI, 실제 billing provider 또는 외부 발송 기능을 활성화한다는 뜻은 아니다. 제품 노출 범위는 PRD가 결정한다.
@@ -49,6 +50,25 @@
 - quota usage뿐 아니라 사용자에게 materialize된 quota reset header/target 조회도 active profile 전용이다. 탈퇴 JWT는 reset 이력을 읽을 수 없고 quota 예약 RPC도 진입 단계에서 거부된다.
 
 정확한 RPC 이름, argument, return shape와 권한은 해당 migration 및 호출 source/tests를 확인한다.
+
+## 시스템 리포팅
+
+### HTTP 경계
+
+`POST /api/system-reports`는 익명·로그인 사용자에게 공통으로 제공되는 유일한 접수 경계다.
+
+- client는 사용자 의도마다 UUID `Idempotency-Key`를 만들고, 응답을 확인하지 못해 같은 payload를 재시도할 때 같은 값을 사용한다.
+- JSON 본문은 `category`, `email`, `title`, `message`, `context`만 받는다. `category`는 `bug | question | suggestion`이고 이메일·제목·내용의 최대 길이는 각각 254자, 120자, 4,000자다.
+- `context`는 query·hash가 없는 pathname, 브라우저·OS·기기 유형의 대분류, viewport width/height, locale만 받는다. 앱 버전은 신뢰하는 server 환경에서 추가한다.
+- IP·referrer·원본 User-Agent·query·hash와 browser가 보낸 사용자 ID는 요청하거나 저장하지 않는다. 서버가 쿠키 session을 직접 확인해 로그인 사용자의 ID만 선택적으로 연결한다.
+- `Content-Type: application/json`, `Sec-Fetch-Site: same-origin`과 정확한 origin을 요구하며 JSON 본문은 16 KiB로 제한한다.
+- 새 행을 만들면 `201`, 같은 idempotency key의 재요청이면 기존 접수번호·접수 시각과 함께 `200`을 반환한다. 입력 오류는 `400`, 본문 초과는 `413`, 저장소 장애는 내부 정보를 숨긴 일반 오류 `503`이다.
+
+DB 정본은 `20260723170000_system_reports.sql`이다. 이 migration은 `private.system_reports`에 내부 UUID, 사용자·시간을 드러내지 않는 무작위 `SR-` 접수번호, 고유 idempotency key, 선택적 Auth 사용자 ID, 유형·이메일·제목·내용, 허용된 화면 정보, 앱 버전과 생성 시각을 저장한다. 보관 기한과 자동 삭제 작업은 두지 않으며 topik-ai 운영 owner가 필요할 때 승인된 절차로 수동 삭제한다.
+
+Data API의 직접 table 접근은 허용하지 않는다. 쓰기는 고정된 `search_path`를 사용하는 `SECURITY DEFINER` RPC `submit_system_report`만 담당하고 `PUBLIC`, `anon`, `authenticated` 실행 권한을 회수하며 `service_role`에만 실행 권한을 부여한다. 고유 idempotency key와 같은 transaction의 conflict 처리가 동일 재요청을 기존 행 하나로 수렴시킨다.
+
+파생 TypeScript 계약은 `src/lib/supabase/types.ts`에 기록하지만 migration보다 앞서지 않는다. v13은 원격 DB에 이 migration을 적용하지 않으며 dev·production 적용과 role별 권한 증거는 [`../operations/system-reporting-handoff.md`](../operations/system-reporting-handoff.md)에 따라 topik-ai가 돌려준다.
 
 ### 가입 완료와 정확한 약관 스냅샷
 

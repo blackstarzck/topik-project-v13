@@ -75,6 +75,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:supabase:local": "cross-env SUPABASE_LOCAL_STACK=1 E2E_ALLOW_DEV_DB_MUTATION=1 vitest run tests/integration/account-deletion-rpc.test.ts tests/integration/auth-completion-gate-rpc.test.ts tests/integration/institution-writing-exposure.test.ts tests/integration/pdf-export-quota-rpc.test.ts tests/integration/profile-trigger.test.ts tests/integration/rls-smoke.test.ts tests/integration/user-data-reference-integrity-local.test.ts tests/integration/writing-submission-dedup.test.ts tests/integration/writing-submission-outbox-local.test.ts",
+    "test:system-reporting:db-runtime": "cross-env SYSTEM_REPORTING_DB_RUNTIME_TEST=1 vitest run tests/integration/system-reporting-db-runtime.test.ts --maxWorkers=1",
     "format": "prettier --check .",
     "format:write": "prettier --write ."
   },
