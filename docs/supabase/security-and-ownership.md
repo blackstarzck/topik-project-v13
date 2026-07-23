@@ -32,7 +32,7 @@
 
 - 탈퇴 요청은 사용자 접근을 막는 soft delete와 30일 복구 유예를 기본으로 한다.
 - 미인증 계정 cleanup은 확인 상태와 retention floor를 검사하고 private/cron 경계에서 실행한다.
-- 사용자 알림 읽음 상태·설정·마케팅 동의 테이블인 `user_notifications`, `user_marketing_consent`는 v13이 소유한다. dispatch, email transport, retry, marketing gate, pg_cron과 admin 대상 생성은 topik-ai `admin_schema_migrations` 소유 private/server 운영 경계다. v13의 과거 파이프라인 migration은 독립 clean replay를 위한 no-op이며 topik-ai 운영 테이블을 정적으로 참조하지 않는다.
+- 사용자 알림 읽음 상태·설정·마케팅 동의 테이블인 `user_notifications`, `user_marketing_consent`는 v13이 소유한다. dispatch, email transport, retry, marketing gate, pg_cron과 admin 대상 생성은 topik-ai `admin_schema_migrations` 소유 private/server 운영 경계다. v13의 과거 파이프라인 migration은 독립 clean replay를 위한 no-op이며 topik-ai 운영 테이블을 정적으로 참조하지 않는다. replay guard는 이관 marker와 고정된 notice-only `DO` 본문만 허용하고, 그 밖의 실행 SQL은 종류와 관계없이 거부한다.
 - marketing 전달은 저장된 consent가 있는 경우에만 가능하며, provider가 준비되지 않은 상태를 성공 발송으로 기록하지 않는다.
 
 ## 현재 Storage 권한

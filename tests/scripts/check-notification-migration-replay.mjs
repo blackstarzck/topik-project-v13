@@ -21,19 +21,22 @@ const RETIRED_DOWN_MIGRATIONS = [
   "20260612200100_marketing_consent_in_dispatch.sql",
 ];
 const RETIREMENT_MARKER = "notification pipeline migration home: topik-ai";
-const FORBIDDEN_EXECUTABLE_SQL = [
-  /\bcreate\s+(?:or\s+replace\s+)?function\b/iu,
-  /\bcreate\s+table\b/iu,
-  /\balter\s+table\b/iu,
-  /\bdrop\s+(?:function|table)\b/iu,
-  /\binsert\s+into\b/iu,
-  /\bcron\.(?:schedule|unschedule)\s*\(/iu,
-];
+const ALLOWED_NOTICE_ONLY_SQL = [
+  "do $notification_pipeline_replay$",
+  "begin",
+  "raise notice 'notification pipeline replay skipped; canonical migration home is topik-ai';",
+  "end",
+  "$notification_pipeline_replay$;",
+].join(" ");
 
 function withoutSqlComments(sql) {
   return sql
     .replace(/\/\*[\s\S]*?\*\//gu, "")
     .replace(/--.*$/gmu, "");
+}
+
+function normalizeExecutableSql(sql) {
+  return withoutSqlComments(sql).trim().replace(/\s+/gu, " ");
 }
 
 function inspectMigration(rootDir, relativePath) {
@@ -42,12 +45,8 @@ function inspectMigration(rootDir, relativePath) {
   if (!sql.includes(RETIREMENT_MARKER)) {
     failures.push(`${relativePath} must declare the topik-ai migration home.`);
   }
-  const executableSql = withoutSqlComments(sql);
-  for (const pattern of FORBIDDEN_EXECUTABLE_SQL) {
-    if (pattern.test(executableSql)) {
-      failures.push(`${relativePath} must be a replay-safe no-op after ownership transfer.`);
-      break;
-    }
+  if (normalizeExecutableSql(sql) !== ALLOWED_NOTICE_ONLY_SQL) {
+    failures.push(`${relativePath} must be a replay-safe no-op after ownership transfer.`);
   }
   return failures;
 }

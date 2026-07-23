@@ -17,7 +17,14 @@ const UP_FILES = [
   "20260612200100_marketing_consent_in_dispatch.sql",
 ];
 const DOWN_FILES = UP_FILES.slice(2);
-const NOOP = `-- notification pipeline migration home: topik-ai\n\n`;
+const NOOP = `-- notification pipeline migration home: topik-ai
+
+do $notification_pipeline_replay$
+begin
+  raise notice 'notification pipeline replay skipped; canonical migration home is topik-ai';
+end
+$notification_pipeline_replay$;
+`;
 let roots = [];
 
 function createFixture() {
@@ -53,6 +60,28 @@ describe("check-notification-migration-replay", () => {
     writeFileSync(
       join(root, "supabase", "migrations", UP_FILES[0]),
       `${NOOP}create or replace function private.dispatch_notifications() returns void language sql as $$ select 1 $$;\n`,
+      "utf8",
+    );
+
+    expect(evaluateNotificationMigrationReplay({ rootDir: root }).failures).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "20260612180000_notification_dispatcher.sql must be a replay-safe no-op after ownership transfer.",
+        ),
+      ]),
+    );
+  });
+
+  it.each([
+    ["GRANT", "grant execute on function private.dispatch_notifications() to authenticated;"],
+    ["CREATE POLICY", "create policy notification_read on public.user_notifications for select using (true);"],
+    ["UPDATE", "update public.user_notifications set is_read = true;"],
+    ["arbitrary DO", "do $$ begin perform 1; end $$;"],
+  ])("rejects %s in a retired migration", (_label, executableSql) => {
+    const root = createFixture();
+    writeFileSync(
+      join(root, "supabase", "migrations", UP_FILES[0]),
+      `${NOOP}\n${executableSql}\n`,
       "utf8",
     );
 
