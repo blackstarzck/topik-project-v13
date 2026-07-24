@@ -926,6 +926,9 @@ export interface Database {
           user_id: string;
           source_type: "submission" | "report" | "library_selection";
           source_id: string | null;
+          request_id: string | null;
+          attempt_id: string | null;
+          lease_expires_at: string | null;
           storage_path: string;
           options: Json | null;
           status: "queued" | "ready" | "failed";
@@ -939,6 +942,9 @@ export interface Database {
           user_id: string;
           source_type: "submission" | "report" | "library_selection";
           source_id?: string | null;
+          request_id?: string | null;
+          attempt_id?: string | null;
+          lease_expires_at?: string | null;
           storage_path: string;
           options?: Json | null;
           status?: "queued" | "ready" | "failed";
@@ -952,6 +958,9 @@ export interface Database {
           user_id?: string;
           source_type?: "submission" | "report" | "library_selection";
           source_id?: string | null;
+          request_id?: string | null;
+          attempt_id?: string | null;
+          lease_expires_at?: string | null;
           storage_path?: string;
           options?: Json | null;
           status?: "queued" | "ready" | "failed";
@@ -1015,6 +1024,7 @@ export interface Database {
           policy_id: string;
           user_id: string;
           problem_id: string;
+          request_id: string;
           export_file_id: string | null;
           period_start: string;
           period_end: string;
@@ -1030,6 +1040,7 @@ export interface Database {
           policy_id: string;
           user_id: string;
           problem_id: string;
+          request_id: string;
           export_file_id?: string | null;
           period_start: string;
           period_end: string;
@@ -1045,6 +1056,7 @@ export interface Database {
           policy_id?: string;
           user_id?: string;
           problem_id?: string;
+          request_id?: string;
           export_file_id?: string | null;
           period_start?: string;
           period_end?: string;
@@ -1082,6 +1094,51 @@ export interface Database {
             columns: ["export_file_id"];
             isOneToOne: false;
             referencedRelation: "export_files";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pdf_export_request_periods: {
+        Row: {
+          user_id: string;
+          request_id: string;
+          policy_id: string;
+          problem_ids: string[];
+          period_start: string;
+          period_end: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          request_id: string;
+          policy_id: string;
+          problem_ids: string[];
+          period_start: string;
+          period_end: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          request_id?: string;
+          policy_id?: string;
+          problem_ids?: string[];
+          period_start?: string;
+          period_end?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pdf_export_request_periods_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_request_periods_policy_id_fkey";
+            columns: ["policy_id"];
+            isOneToOne: false;
+            referencedRelation: "pdf_export_quota_policies";
             referencedColumns: ["id"];
           },
         ];
@@ -1655,10 +1712,21 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      acquire_pdf_export_attempt: {
+        Args: {
+          p_request_id: string;
+          p_source_type: string;
+          p_source_id: string | null;
+          p_request_options: Json;
+          p_render_source: string;
+        };
+        Returns: Json;
+      };
       claim_pdf_export_quota: {
         Args: {
           p_user_id: string;
           p_problem_ids: string[];
+          p_request_id: string;
         };
         Returns: Json;
       };
@@ -1669,6 +1737,30 @@ export interface Database {
           p_export_file_id: string;
         };
         Returns: undefined;
+      };
+      complete_pdf_export_attempt: {
+        Args: {
+          p_user_id: string;
+          p_usage_ids: string[];
+          p_export_file_id: string;
+          p_attempt_id: string;
+          p_storage_path: string;
+        };
+        Returns: boolean;
+      };
+      fail_pdf_export_attempt: {
+        Args: {
+          p_user_id: string;
+          p_usage_ids: string[];
+          p_export_file_id: string;
+          p_attempt_id: string;
+          p_failure_code: string;
+          p_reason: string;
+        };
+        Returns:
+          | "failed_current"
+          | "already_ready_current"
+          | "stale_attempt";
       };
       release_pdf_export_quota: {
         Args: {

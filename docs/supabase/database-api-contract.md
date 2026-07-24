@@ -41,7 +41,11 @@
 - 사용자와 문제의 활성 draft는 하나로 수렴한다. 반복 autosave와 동일 요청 재시도는 중복 draft 또는 submission을 만들지 않아야 한다.
 - 외부 분석 결과 수신과 feedback retry는 기존 제출 관계를 보존하고 중복 요청을 식별한다.
 - 기관 초대 수락, 가입 완료, nickname 확인처럼 경쟁 가능성이 있는 변경은 DB constraint와 RPC 검증을 함께 사용한다.
-- PDF 생성은 distinct 문제 단위로 quota를 reserve하고 성공 시 commit, 실패 시 release한다. 저장 파일 재다운로드는 새 usage가 아니다.
+- PDF 생성은 browser가 한 번 만든 UUID 요청 번호와 서버가 확정한 distinct 문제 집합으로 quota를 reserve하고 성공 시 commit, 실패 시 release한다. 사용자 session/JWT가 `acquire_pdf_export_attempt`에서 활성 상태와 원본 소유권을 확인받고 DB가 attempt·lease를 만든 뒤 `claim_pdf_export_quota`를 호출해야 service-only terminal 경계로 진입한다. claim RPC는 획득 기록의 원본 관계에서 문제 집합을 다시 계산하고, 정렬·중복 제거된 1~6개 입력과 정확히 같으며 모든 원본이 여전히 유효할 때만 quota row를 만든다. `complete_pdf_export_attempt`는 현재 attempt의 `queued→ready`와 동일 request의 quota commit을, `fail_pdf_export_attempt`는 현재 attempt의 `queued→failed`와 동일 request의 quota release를 각각 한 트랜잭션으로 처리한다.
+- 같은 사용자·요청 번호·문제·기간의 claim은 기존 usage를 돌려준다. released usage는 같은 기간과 정확히 같은 문제 집합에서만 다시 reserve할 수 있고, `pdf_export_request_periods`가 요청 번호를 최초 policy 기간에 고정해 기간을 넘긴 새 생성에 재사용하지 못하게 한다.
+- `export_files.request_id`의 사용자별 unique index는 server render와 자동 browser print가 한 ledger row를 공유하게 한다. `attempt_id`와 `lease_expires_at`은 failed 또는 만료 queued 재취득을 한 실행으로 제한한다. `ready` 재전송도 원본 항목 resolve·JWT quota claim·service commit 확인을 다시 거치며, owner가 직접 만든 `ready` 값만 신뢰하지 않는다. 저장 파일 재다운로드는 새 usage가 아니다.
+- 획득 RPC는 route와 같은 6개 option key, 타입·enum, 4KB 상한을 다시 검증한다. 서재 선택은 중복 없는 UUID 1~6개로 제한하며 각 항목이 `submission | report`이고 연결된 제출·리포트도 같은 JWT 사용자의 소유인지 확인한다. `problem | attempt | export` 서재 항목은 새 PDF 원본으로 획득할 수 없다.
+- 요청 식별자 cutover는 기존 `request_id is null` queued export를 `failed/legacy_unknown`으로 종료하고 기존 reserved quota를 `released/request_identity_cutover`로 해제한 뒤 과거 행 UUID를 채운다. 원격 적용은 PDF 요청과 worker를 잠시 멈추고 drain을 확인한 뒤 migration과 같은 버전의 앱을 한 rollout window에서 배포해야 하며, 상세 절차와 handback은 [`../operations/topik-ai-pdf-request-identity-cutover-handoff.md`](../operations/topik-ai-pdf-request-identity-cutover-handoff.md)를 따른다.
 - quota usage뿐 아니라 사용자에게 materialize된 quota reset header/target 조회도 active profile 전용이다. 탈퇴 JWT는 reset 이력을 읽을 수 없고 quota 예약 RPC도 진입 단계에서 거부된다.
 
 정확한 RPC 이름, argument, return shape와 권한은 해당 migration 및 호출 source/tests를 확인한다.
@@ -121,8 +125,12 @@ respond_institution_invitation(p_invitation_id uuid, p_accept boolean) -> jsonb
 ## PDF 생성 운영 기록
 
 - `export_files`는 인증되고 형식이 검증된 PDF 생성 요청을 `queued | ready | failed`로 보존한다. 실패 시에는 허용된 `failure_code`와 `failed_at`만 기록하고 원본 예외, 답안, provider 응답을 저장하지 않는다.
+- authenticated 역할은 `export_files`를 본인 범위에서 SELECT만 할 수 있다. INSERT·UPDATE·DELETE는 직접 허용하지 않으며, 획득은 JWT 전용 `acquire_pdf_export_attempt`, 완료·실패는 service-only terminal RPC를 통해서만 수행한다.
+- 새 요청은 필수 `requestId` UUID를 저장한다. server render 실패 뒤 자동 browser print는 같은 `request_id`와 export id를 이어 쓰며, 다른 source/payload가 같은 요청 번호를 재사용하면 충돌로 거절한다.
+- server render Storage 경로는 attempt별로 분리한다. 현재 attempt의 원자적 실패가 확인되거나 더 새 attempt가 소유권을 취득한 경우에만 이전 실행의 자기 object를 제거한다. complete 응답 timeout처럼 DB terminal 결과가 불명확하면 object를 보존하며, 동일 요청 replay가 ready+commit을 재확인한다. 운영 복구는 attempt, 실패 기록과 Storage 잔존 여부를 함께 확인한다.
 - server render의 기술 성공률은 종료된 기술 결과 중 `ready / (ready + technical_failed)`로 계산한다. queued, quota 거절, 인증·형식 거절은 기술 성공률 분모에서 제외한다.
 - `options.source = browser_print`의 ready는 브라우저 인쇄 화면에 전달할 자료 준비 성공을 의미하며 사용자가 실제 파일로 저장했다는 증거가 아니다. server render 결과와 별도로 집계한다.
+- 알려진 후속 위험: DB가 `ready`와 quota commit을 끝낸 직후 `export_downloaded` 이벤트 기록 전에 응답이 유실되면 동일 요청 replay가 이벤트를 복원한다고 보장하지 않는다. 완전한 해결에는 export/request 단위 event idempotency key와 partial unique 제약이 필요하며, 현재 보안·quota 경계 변경과 분리해 다룬다.
 
 ## 보존과 정리
 

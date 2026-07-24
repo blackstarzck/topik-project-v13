@@ -96,7 +96,12 @@ describe("PDF export quota", () => {
     };
 
     await expect(
-      claimPdfExportQuota(supabase as never, "user-1", ["problem-1"]),
+      claimPdfExportQuota(
+        supabase as never,
+        "user-1",
+        ["problem-2", "problem-1", "problem-2"],
+        "33333333-3333-4333-8333-333333333333",
+      ),
     ).resolves.toMatchObject({
       usageIds: ["usage-1"],
       limit: 3,
@@ -104,7 +109,8 @@ describe("PDF export quota", () => {
     });
     expect(rpc).toHaveBeenCalledWith("claim_pdf_export_quota", {
       p_user_id: "user-1",
-      p_problem_ids: ["problem-1"],
+      p_problem_ids: ["problem-1", "problem-2"],
+      p_request_id: "33333333-3333-4333-8333-333333333333",
     });
   });
 
@@ -125,7 +131,12 @@ describe("PDF export quota", () => {
     };
 
     await expect(
-      claimPdfExportQuota(supabase as never, "user-1", ["problem-1"]),
+      claimPdfExportQuota(
+        supabase as never,
+        "user-1",
+        ["problem-1"],
+        "33333333-3333-4333-8333-333333333333",
+      ),
     ).rejects.toMatchObject({
       status: 429,
       code: "pdf_export_quota_exceeded",

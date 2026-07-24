@@ -13,7 +13,11 @@ import type {
   PdfProblemContext,
   PdfSubmissionItem,
 } from "./pdf-document";
-import { PDF_EXPORT_MAX_ITEMS, type PdfExportRequest } from "./pdf-options";
+import {
+  PDF_EXPORT_MAX_ITEMS,
+  type PdfExportRequest,
+  type PdfExportRequestInput,
+} from "./pdf-options";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -34,6 +38,11 @@ export type PdfExportQuotaDetails = {
 export type PdfExportQuotaClaim = PdfExportQuotaDetails & {
   usageIds: string[];
 };
+
+export type PdfExportAttemptFailureOutcome =
+  | "failed_current"
+  | "already_ready_current"
+  | "stale_attempt";
 
 type PdfExportQuotaRpcResult = {
   allowed?: boolean;
@@ -129,8 +138,11 @@ export async function claimPdfExportQuota(
   supabase: SupabaseServerClient,
   userId: string,
   problemIds: string[],
+  requestId: string,
 ): Promise<PdfExportQuotaClaim> {
-  const distinctProblemIds = Array.from(new Set(problemIds.filter(Boolean)));
+  const distinctProblemIds = Array.from(
+    new Set(problemIds.filter(Boolean)),
+  ).sort();
   if (distinctProblemIds.length === 0) {
     throw new PdfExportRequestError(
       400,
@@ -141,6 +153,7 @@ export async function claimPdfExportQuota(
   const { data, error } = await supabase.rpc("claim_pdf_export_quota", {
     p_user_id: userId,
     p_problem_ids: distinctProblemIds,
+    p_request_id: requestId,
   });
   if (error) throw new Error(`pdf export quota claim: ${error.message}`);
   if (!data || typeof data !== "object") {
@@ -197,6 +210,53 @@ export async function releasePdfExportQuota(
     p_reason: reason ?? null,
   });
   if (error) throw new Error(`pdf export quota release: ${error.message}`);
+}
+
+export async function completePdfExportAttempt(
+  supabase: SupabaseServerClient,
+  userId: string,
+  usageIds: string[],
+  exportFileId: string,
+  attemptId: string,
+  storagePath: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("complete_pdf_export_attempt", {
+    p_user_id: userId,
+    p_usage_ids: usageIds,
+    p_export_file_id: exportFileId,
+    p_attempt_id: attemptId,
+    p_storage_path: storagePath,
+  });
+  if (error) throw new Error(`pdf export attempt complete: ${error.message}`);
+  return data === true;
+}
+
+export async function failPdfExportAttempt(
+  supabase: SupabaseServerClient,
+  userId: string,
+  usageIds: string[],
+  exportFileId: string,
+  attemptId: string,
+  failureCode: string,
+  reason: string,
+): Promise<PdfExportAttemptFailureOutcome> {
+  const { data, error } = await supabase.rpc("fail_pdf_export_attempt", {
+    p_user_id: userId,
+    p_usage_ids: usageIds,
+    p_export_file_id: exportFileId,
+    p_attempt_id: attemptId,
+    p_failure_code: failureCode,
+    p_reason: reason,
+  });
+  if (error) throw new Error(`pdf export attempt fail: ${error.message}`);
+  if (
+    data !== "failed_current" &&
+    data !== "already_ready_current" &&
+    data !== "stale_attempt"
+  ) {
+    throw new Error("pdf export attempt fail: invalid response");
+  }
+  return data;
 }
 
 function formatDate(value: string): string {
@@ -398,7 +458,7 @@ async function loadReportItem(
 
 export async function resolvePdfExportItems(
   supabase: SupabaseServerClient,
-  request: PdfExportRequest,
+  request: PdfExportRequest | PdfExportRequestInput,
 ): Promise<PdfExportItem[]> {
   if (request.sourceType === "submission") {
     return [
@@ -412,6 +472,12 @@ export async function resolvePdfExportItems(
 
   if (request.sourceType === "report") {
     return [await loadReportItem(supabase, request.sourceId)];
+  }
+  if (!("itemIds" in request)) {
+    throw new PdfExportRequestError(
+      400,
+      "PDF 내보내기 대상을 확인할 수 없어요.",
+    );
   }
 
   // library_selection: 본인 library_items(submission 항목) → 제출별 PDF 블록.

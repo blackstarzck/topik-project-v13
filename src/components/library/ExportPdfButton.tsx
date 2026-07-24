@@ -14,7 +14,7 @@ import {
 } from "@/lib/export/pdf-export-errors";
 import {
   PDF_EXPORT_DEFAULT_OPTIONS,
-  type PdfExportRequest,
+  type PdfExportRequestInput,
 } from "@/lib/export/pdf-options";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
@@ -128,7 +128,7 @@ export function ExportPdfButton({
     { sourceType, sourceId },
     {
       trigger: (args) => {
-        const request: PdfExportRequest = {
+        const request: PdfExportRequestInput = {
           sourceType: args.sourceType,
           sourceId: args.sourceId,
           options: {

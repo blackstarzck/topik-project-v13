@@ -15,7 +15,12 @@ import {
 } from "./pdf-export-api-error";
 import type { PdfExportErrorCode } from "./pdf-export-errors";
 import { triggerPdfExport } from "./pdf-export";
-import { sanitizePdfFilename, type PdfExportRequest } from "./pdf-options";
+import {
+  sanitizePdfFilename,
+  withPdfExportRequestId,
+  type PdfExportRequest,
+  type PdfExportRequestInput,
+} from "./pdf-options";
 import {
   createClientOperationalEvent,
   emitClientOperationalEvent,
@@ -152,17 +157,18 @@ export type PdfExportOutcome = {
 };
 
 export async function exportPdfWithPrintFallback(
-  input: PdfExportRequest,
+  input: PdfExportRequestInput,
 ): Promise<PdfExportOutcome> {
+  const request = withPdfExportRequestId(input);
   try {
-    const result = await requestServerPdfExport(input);
+    const result = await requestServerPdfExport(request);
     return { mode: "file", exportId: result.exportId };
   } catch (err) {
     if (!shouldUsePrintFallback(err)) {
       throw err;
     }
     recordPdfExportFailure();
-    const printed = await triggerPdfExport(input);
+    const printed = await triggerPdfExport(request);
     return {
       mode: "print",
       exportId: printed.exportId,
