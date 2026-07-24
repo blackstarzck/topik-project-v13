@@ -39,6 +39,9 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   await page.goto("/terms");
   const launcher = page.getByTestId("system-report-launcher");
   await expect(launcher).toBeVisible();
+  expect(
+    await launcher.evaluate((element) => getComputedStyle(element).boxShadow),
+  ).not.toBe("none");
 
   const anonymousContext = await browser.newContext({
     storageState: { cookies: [], origins: [] },
@@ -92,6 +95,11 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
       .locator(".app-system-report-modal .ant-modal-container")
       .evaluate((element) => getComputedStyle(element).scrollbarWidth),
   ).toBe("none");
+  expect(
+    await page
+      .locator(".app-system-report-modal .ant-modal-container")
+      .evaluate((element) => getComputedStyle(element).boxShadow),
+  ).not.toBe("none");
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe(
     "hidden",
   );
@@ -107,10 +115,17 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
     (viewport?.width ?? 0) - (modalBox?.x ?? 0) - (modalBox?.width ?? 0),
   ).toBeGreaterThanOrEqual(12);
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth - window.innerWidth,
-    ),
-  ).toBeLessThanOrEqual(1);
+    await page.evaluate(() => ({
+      bodyOverflow:
+        document.body.scrollWidth - document.documentElement.clientWidth,
+      documentOverflow:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    })),
+  ).toEqual({
+    bodyOverflow: 0,
+    documentOverflow: 0,
+  });
 
   await launcher.click();
   await expect(modal).toBeHidden();
