@@ -327,7 +327,6 @@ jobs:
       github.event_name != 'push' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
-
     steps:
       - name: Record service start
         shell: bash
@@ -545,6 +544,8 @@ jobs:
           tests/scripts/ai-task-lifecycle-v2.test.mjs
           tests/scripts/ai-task-practical-flow.test.mjs
           tests/scripts/ai-task-cleanup.test.mjs
+          tests/scripts/ai-task-metrics.test.mjs
+          tests/scripts/ai-task-measure-cli.test.mjs
           tests/scripts/artifact-hygiene.test.mjs
           tests/scripts/github-owner-auth.test.mjs
           --maxWorkers=1
@@ -592,7 +593,6 @@ jobs:
       github.event_name != 'push' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: windows-latest
-
     steps:
       - name: Record service start
         shell: pwsh
@@ -650,7 +650,6 @@ jobs:
       github.event_name == 'push' &&
       needs.classify-changes.result == 'success'
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

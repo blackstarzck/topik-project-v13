@@ -54,11 +54,11 @@
 
 1. **기준 확인**: 이 문서와 `README.md`를 읽고 요청에 필요한 최소 owner, source, tests만 확인한다.
 2. **영향도와 계획**: 제품·코드·데이터·UI·테스트·문서 영향을 나누고, 목적·범위·TODO·검증 방법을 정한다.
-3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 공용 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finalize`, `task:cleanup` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 lifecycle workflow owner다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
+3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 공용 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finish`, `task:finalize`, `task:cleanup`, `task:autocleanup`, `task:sweep`, `task:measure`, `task:metrics` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 lifecycle workflow owner다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. `task:start`은 새 worktree 생성을 먼저 끝낸 뒤 숨김 일회성 sweep을 예약하며, 예약 실패는 새 작업을 막지 않는다. 오래된 기준 checkout의 CLI로 시작했다면 새 worktree에서 최신 CLI 경로를 확인한 뒤 대상 밖의 안전한 기준 checkout에서 `node "<new-worktree>/scripts/ai-task.mjs" sweep --repo "<base-checkout>" --background true`를 한 번 실행한다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
 4. **구현과 TDD**: 실패하는 관련 테스트를 먼저 만들거나 확인하고, 프로젝트 구조를 유지한 최소 변경으로 통과시킨다.
 5. **비판적 리뷰**: critic 관점에서 요구사항 누락, 회귀, 권한·secret·RLS, 실패 복구와 불필요한 확장을 확인한다. 가능하면 독립 에이전트 리뷰를 사용한다.
-6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
-7. **보고와 Git 승인**: 바뀐 내용, 검증 결과, 남은 위험과 Git 상태를 쉽게 설명한다. stage, commit, push, PR, merge는 사용자가 요청했거나 결과 보고 뒤 승인한 범위에서만 수행한다.
+6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. 10초 이상 걸릴 것으로 예상되는 setup·검증·review·CI 대기는 `task:measure`로 감싸고, 보고 전 `task:metrics`로 실제 소요 시간·중복 실행·예산 초과를 확인한다. 측정 실패와 예산 초과는 경고일 뿐 원래 명령의 성공·실패나 Git 안전 조건을 바꾸지 않는다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
+7. **보고와 Git 승인**: 바뀐 내용, 검증 결과, 남은 위험과 Git 상태를 쉽게 설명한다. stage, commit, push, PR, merge는 사용자가 요청했거나 결과 보고 뒤 승인한 범위에서만 수행한다. `origin/main` PR 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 정확한 `--repo`와 `--branch`로 `task:autocleanup`을 즉시 실행한다. 다른 주체가 병합한 작업은 다음 `task:start`의 sweep이 따라잡는다.
 
 작업 방식은 Superpowers만 사용한다. OMX와 gstack을 사용하지 않는다. UI 컴포넌트·페이지 styling 작업에는 프로젝트 로컬 `frontend-design`을 함께 사용하되, 이는 domain skill이며 `DESIGN.md`, 기존 Ant Design/theme 구조, Superpowers workflow보다 우선하지 않는다.
 
@@ -70,9 +70,9 @@
 - worktree는 포트, dev server, 로컬 DB, `.env.local`, test data를 격리하지 않는다. 병렬 runtime은 고유 loopback port와 분리된 test data를 사용한다.
 - 다른 사용자의 변경을 되돌리지 않는다. dirty·untracked·ignored-sensitive 파일이나 미게시 commit이 있으면 소유자를 확인하기 전 삭제하지 않는다.
 - 완료된 branch/worktree도 publish·merge·소유권·runtime 종료를 확인하기 전 삭제하지 않는다. 강제 정리는 하지 않는다.
-- 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only이며, 사용자가 승인한 동일 fingerprint를 `task:cleanup`이 재검증한 경우에만 비강제 정리를 수행한다.
+- 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only다. 병합이 확인된 정식 v2 task는 `task:autocleanup` 또는 다음 `task:start`의 일회성 `task:sweep`이 승인 입력 없이 동일한 안전 조건을 재검증해 비강제 정리한다. 위험 조건이 있으면 삭제하지 않고 기록하며 새 작업을 막지 않는다. `task:cleanup --approval`은 자동 경로가 보존한 task를 사람이 진단·복구할 때 쓰는 호환 경로로 유지한다.
 
-`origin/main`은 PR과 필수 검사를 거쳐 반영한다. 저장소 소유자 `blackstarzck`가 만든 PR은 필수 검사 통과와 검토 의견 처리가 끝난 뒤 소유자 예외 권한으로 병합할 수 있다. 다른 개발자가 만든 PR은 같은 조건에 더해 `blackstarzck`의 승인을 받아야 한다. 승인만을 위한 보조 계정이나 자동 승인 계정은 사용하지 않으며, 필수 검사와 검토 의견 처리는 소유자도 우회하지 않는다. 실제 협업자가 늘어나면 중요 파일 담당자를 팀으로 전환하고 소유자 예외 권한을 다시 검토한다.
+`origin/main`은 PR과 필수 검사를 거쳐 반영한다. `blackstarzck`와 실제 협업자 `guestkeduall-design`은 보호 경로의 공동 CODEOWNER다. 사용자가 publish·merge를 승인한 작업에서 두 `gh` 세션과 collaborator write 권한이 모두 확인되면, 필수 검사 통과·미해결 review thread 없음·최종 push 이후라는 조건 아래 PR 작성자가 아닌 계정으로 CODEOWNER 승인을 제출하고 `blackstarzck`으로 전환해 merge까지 계속한다. self-review, 필수 검사 우회, stale approval 재사용은 금지하며 계정 또는 권한 확인에 실패하면 중단한다.
 
 `collab` remote의 `main`은 Vercel production에 즉시 노출된다. 사용자가 정확히 `collab`과 배포 의도를 명시하지 않으면 merge, rebase, push 또는 PR target으로 사용하지 않는다. 명시된 경우에도 변경 범위, 검증, secret 점검과 즉시 노출 위험을 먼저 보고하고 별도 확인을 받는다.
 
