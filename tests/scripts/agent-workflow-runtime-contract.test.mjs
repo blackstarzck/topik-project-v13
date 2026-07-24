@@ -15,7 +15,10 @@ describe("agent workflow runtime contract", () => {
     expect(claude).toContain("@../AGENTS.md");
     expect(gitignore).toContain("!.claude/CLAUDE.md");
     expect(() => readProjectFile("CLAUDE.md")).toThrow();
-    expect(agents).toContain("한 task = 한 의미 있는 slug = 한 branch = 한 worktree");
+    expect(agents).toContain("먼저 `task:prepare`로 요청을 분류한다");
+    expect(agents).toContain(
+      "작은 순차 코드 작업은 task branch 하나와 `.worktrees/shared-dev` 공용 slot을 재사용한다",
+    );
   });
 
   it("requires safe worktree env preparation before runtime verification", () => {

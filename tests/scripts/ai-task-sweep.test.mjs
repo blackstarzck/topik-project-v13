@@ -2,6 +2,7 @@ import {
   existsSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -21,7 +22,7 @@ import {
 const tempRoots = [];
 
 function makeRoot(prefix = "talkpik-task-sweep-") {
-  const root = mkdtempSync(path.join(tmpdir(), prefix));
+  const root = realpathSync.native(mkdtempSync(path.join(tmpdir(), prefix)));
   tempRoots.push(root);
   return root;
 }

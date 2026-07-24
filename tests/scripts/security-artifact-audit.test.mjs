@@ -528,7 +528,10 @@ describe("security artifact audit CLI", () => {
     expect(report.findings).toEqual([
       expect.objectContaining({
         ref: "HEAD",
-        path: ".ScRaTcH/new-session.json",
+        path:
+          process.platform === "win32"
+            ? ".ScRaTcH/new-session.json"
+            : ".scratch/new-session.json",
         rule: "TRACKED_SCRATCH_PATH",
       }),
       expect.objectContaining({
@@ -575,7 +578,10 @@ describe("security artifact audit CLI", () => {
     expect(historyReport.findings).toEqual([
       expect.objectContaining({
         ref: "HEAD",
-        path: ".TmP/transient.log",
+        path:
+          process.platform === "win32"
+            ? ".TmP/transient.log"
+            : ".tmp/transient.log",
         rule: "TRACKED_TMP_PATH",
       }),
     ]);
