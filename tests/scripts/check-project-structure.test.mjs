@@ -39,6 +39,7 @@ const operationsPolicyPaths = [
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/operations/topik-ai-notification-migration-order-handoff.md",
   "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
+  "docs/operations/writing-submission-gate-runbook.md",
 ];
 
 function tempRoot() {
@@ -114,6 +115,16 @@ describe("project structure allowlist", () => {
       evaluateProjectStructure({
         rootDir: root,
         changedPaths: ["scripts/lib/ai-task-lifecycle-v3.mjs"],
+      }).errors,
+    ).toEqual(
+      expect.arrayContaining([
+        "Pipeline v3.1 implementation and owner documentation must change together.",
+      ]),
+    );
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["scripts/check-project-structure.mjs"],
       }).errors,
     ).toEqual(
       expect.arrayContaining([

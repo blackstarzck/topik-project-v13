@@ -24,6 +24,7 @@ export const requiredOwnerPaths = [
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/operations/topik-ai-notification-migration-order-handoff.md",
   "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
+  "docs/operations/writing-submission-gate-runbook.md",
   "docs/swagger-api/",
   "docs/supabase/README.md",
   "docs/supabase/database-api-contract.md",
@@ -54,6 +55,7 @@ const operationsAllowlist = new Map([
   ["topik-ai-operations-handoff.md", "file"],
   ["topik-ai-notification-migration-order-handoff.md", "file"],
   ["topik-ai-writing-pdf-metrics-handoff.md", "file"],
+  ["writing-submission-gate-runbook.md", "file"],
 ]);
 const activeDirectoryRoots = [
   ".github",
@@ -130,6 +132,7 @@ const pipelineContractImplementationPaths = Object.freeze([
   "scripts/ai-release.mjs",
   "scripts/ai-task.mjs",
   "scripts/ai-validation-evidence.mjs",
+  "scripts/check-project-structure.mjs",
   "scripts/security-artifact-audit.mjs",
   "scripts/lib/ai-release-promotion.mjs",
   "scripts/lib/ai-task-sweep.mjs",
