@@ -199,6 +199,7 @@ function syntheticManagedTask(suffix) {
 
 function syntheticGitRunner(synthetic) {
   const common = realpathSync.native(path.join(repository.base, ".git"));
+  const branchName = synthetic.task.branch?.name ?? null;
   return (repoPath, args) => {
     const command = args.join(" ");
     if (command === "rev-parse --show-toplevel") {
@@ -216,7 +217,8 @@ function syntheticGitRunner(synthetic) {
     if (command === "rev-parse --verify origin/main^{commit}") {
       return { status: 0, stdout: synthetic.mainSha };
     }
-    if (command === `rev-parse --verify refs/heads/${synthetic.task.branch.name}^{commit}`) {
+    if (branchName !== null &&
+        command === `rev-parse --verify refs/heads/${branchName}^{commit}`) {
       return { status: 0, stdout: synthetic.task.headSha };
     }
     if (command.startsWith("merge-base --is-ancestor ")) return { status: 0, stdout: "" };
@@ -226,13 +228,13 @@ function syntheticGitRunner(synthetic) {
         stdout: [
           `worktree ${synthetic.task.workspace.path}`,
           `HEAD ${synthetic.task.headSha}`,
-          `branch refs/heads/${synthetic.task.branch.name}`,
+          ...(branchName === null ? [] : [`branch refs/heads/${branchName}`]),
           "",
         ].join("\n"),
       };
     }
     if (command === "branch --show-current") {
-      return { status: 0, stdout: synthetic.task.branch.name };
+      return { status: 0, stdout: branchName ?? "" };
     }
     if (command === "rev-parse HEAD") return { status: 0, stdout: synthetic.task.headSha };
     if (command === "status --porcelain=v1 --untracked-files=all") {
@@ -402,6 +404,44 @@ describe("TaskRecordV3 automatic cleanup", () => {
       });
       expect(existsSync(entry.synthetic.task.workspace.path)).toBe(true);
     }
+  });
+
+  it("preserves a managed record without a branch before any branch mutation", () => {
+    const synthetic = syntheticManagedTask("null-branch");
+    synthetic.task = writeTaskRecordV3({
+      repoPath: repository.base,
+      record: createTaskRecordV3({
+        ...synthetic.task,
+        branch: null,
+        revision: synthetic.task.revision + 1,
+        updatedAt: CLEANUP,
+      }),
+      expectedRevision: synthetic.task.revision,
+      expectedFingerprint: synthetic.task.fingerprint,
+    });
+    const commands = [];
+    const runner = syntheticGitRunner(synthetic);
+
+    const report = autoCleanupTaskRecordV3({
+      repoPath: repository.base,
+      taskId: synthetic.task.taskId,
+      mergeEvidence: mergeEvidence(synthetic.task, synthetic.mainSha),
+      now: CLEANUP,
+      gitRunner(repoPath, args) {
+        commands.push(args);
+        return runner(repoPath, args);
+      },
+    });
+
+    expect(report).toMatchObject({
+      result: "PRESERVED",
+      blocker: "PROTECTED_BRANCH",
+      stage: "PRECHECK",
+    });
+    expect(commands).not.toContainEqual(
+      expect.arrayContaining(["branch", "-d"]),
+    );
+    expect(commands.flat().join(" ")).not.toContain("refs/heads/null");
   });
 
   it("releases host/adopted claims and never deletes stg or main", () => {

@@ -228,8 +228,8 @@ describe("task lifecycle automatic metrics", () => {
     const packageJson = JSON.parse(readFileSync(path.join(projectRoot, "package.json"), "utf8"));
     expect(packageJson.scripts["task:measure"]).toBe("node scripts/ai-task.mjs measure");
     expect(packageJson.scripts["task:metrics"]).toBe("node scripts/ai-task.mjs metrics");
-    expect(packageJson.scripts["check:task-lifecycle"]).toContain("tests/scripts/ai-task-metrics.test.mjs");
-    expect(packageJson.scripts["check:task-lifecycle"]).toContain("tests/scripts/ai-task-measure-cli.test.mjs");
+    expect(packageJson.scripts["check:task-lifecycle:metrics"]).toContain("tests/scripts/ai-task-metrics.test.mjs");
+    expect(packageJson.scripts["check:task-lifecycle:metrics"]).toContain("tests/scripts/ai-task-measure-cli.test.mjs");
   });
 
   it("can be imported without executing the command-line entrypoint", async () => {

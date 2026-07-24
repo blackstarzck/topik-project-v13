@@ -239,39 +239,49 @@ export function assertPublicReleaseResumeEvent(values) {
   return true;
 }
 
+export function enforceReleaseSecurityResult({
+  security,
+  commonDir,
+  dependencies = {},
+}) {
+  if (security?.ok === true) return security;
+  const code = security?.code ?? "SECURITY_AUDIT_SCHEMA_INVALID";
+  if (code !== "SECURITY_INCIDENT_BLOCKED") throw cliError(code);
+
+  const readPolicy = dependencies.readPolicy ?? readApprovalPolicy;
+  const resetPolicy = dependencies.resetPolicy ?? resetApprovalPolicy;
+  const writePolicy = dependencies.writePolicy ?? writeApprovalPolicy;
+  try {
+    const existingPolicy = readPolicy({ gitCommonDir: commonDir });
+    const reset = resetPolicy(existingPolicy, "SECURITY_INCIDENT");
+    writePolicy({
+      gitCommonDir: commonDir,
+      policy: reset,
+      expectedFingerprint: existingPolicy.fingerprint,
+    });
+  } catch (policyError) {
+    if (policyError?.code !== "APPROVAL_POLICY_NOT_FOUND") throw policyError;
+  }
+  throw cliError(code);
+}
+
 function runStart(values) {
   const repository = safeRepository(values.repo ?? values["git-common-dir"]);
   const commonDir = gitCommonDir(values);
-  let collected;
-  try {
-    collected = collectReleaseStartEvidence({
-      repoPath: repository,
-      stgReady: bool(values["stg-ready"]),
-    });
-    const security = validateSecurityAuditEvidence(
-      collected.securityAudit,
-      collected.expectedSecurityRefs,
-      {
+  const collected = collectReleaseStartEvidence({
+    repoPath: repository,
+    stgReady: bool(values["stg-ready"]),
+  });
+  const security = validateSecurityAuditEvidence(
+    collected.securityAudit,
+    collected.expectedSecurityRefs,
+    {
       sourceSha: collected.sourceSha,
       stgBaseSha: collected.stgBaseSha,
       stgReady: bool(values["stg-ready"]),
-      },
-    );
-    if (!security.ok) throw cliError("SECURITY_INCIDENT_BLOCKED");
-  } catch {
-    try {
-      const existingPolicy = readApprovalPolicy({ gitCommonDir: commonDir });
-      const reset = resetApprovalPolicy(existingPolicy, "SECURITY_INCIDENT");
-      writeApprovalPolicy({
-        gitCommonDir: commonDir,
-        policy: reset,
-        expectedFingerprint: existingPolicy.fingerprint,
-      });
-    } catch (policyError) {
-      if (policyError?.code !== "APPROVAL_POLICY_NOT_FOUND") throw policyError;
-    }
-    throw cliError("SECURITY_INCIDENT_BLOCKED");
-  }
+    },
+  );
+  enforceReleaseSecurityResult({ security, commonDir });
   const profileFingerprint = promotionProfileFingerprint({
     vercelProject: values["vercel-project"],
     vercelDomain: values["vercel-domain"],

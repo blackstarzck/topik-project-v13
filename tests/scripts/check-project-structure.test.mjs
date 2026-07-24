@@ -967,9 +967,30 @@ describe("package interface", () => {
     expect(packageJson.scripts["check:project-structure"]).toBe(
       "node scripts/check-project-structure.mjs",
     );
+    const lifecycleShards = [
+      "check:task-lifecycle:v2",
+      "check:task-lifecycle:cleanup-finalize",
+      "check:task-lifecycle:cleanup-locks",
+      "check:task-lifecycle:cleanup-mutate",
+      "check:task-lifecycle:cleanup-recovery",
+      "check:task-lifecycle:cleanup-contract",
+      "check:task-lifecycle:autocleanup-contract",
+      "check:task-lifecycle:autocleanup-remote",
+      "check:task-lifecycle:autocleanup-worker",
+      "check:task-lifecycle:autocleanup-recovery",
+      "check:task-lifecycle:metrics",
+      "check:task-lifecycle:v3",
+      "check:task-lifecycle:sweep",
+      "check:task-lifecycle:release",
+      "check:task-lifecycle:security",
+      "check:task-lifecycle:validation",
+    ];
     expect(packageJson.scripts["check:task-lifecycle"]).toBe(
-      "vitest run tests/scripts/ai-task-lifecycle-v2.test.mjs tests/scripts/ai-task-cleanup.test.mjs tests/scripts/ai-task-autocleanup.test.mjs tests/scripts/ai-task-metrics.test.mjs tests/scripts/ai-task-measure-cli.test.mjs tests/scripts/ai-task-lifecycle-v3.test.mjs tests/scripts/ai-task-lifecycle-v3-autocleanup.test.mjs tests/scripts/ai-task-v3-adapter.test.mjs tests/scripts/ai-task-sweep.test.mjs tests/scripts/ai-release-promotion.test.mjs tests/scripts/security-artifact-audit.test.mjs tests/scripts/ai-validation-evidence.test.mjs --maxWorkers=2",
+      lifecycleShards.map((name) => `pnpm ${name}`).join(" && "),
     );
+    for (const shard of lifecycleShards) {
+      expect(packageJson.scripts[shard]).toContain("vitest run");
+    }
     expect(packageJson.scripts["validation:record"]).toBe(
       "node scripts/ai-validation-evidence.mjs record",
     );

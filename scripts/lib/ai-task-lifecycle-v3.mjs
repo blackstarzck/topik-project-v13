@@ -1862,8 +1862,9 @@ function runtimeActive(record, context, probes) {
 
 function cleanupWorkspaceSnapshot({ context, record, evidence, runner, probes }) {
   const blockers = [];
+  const branchName = record.branch?.name ?? null;
   if (!AUTOCLEANUP_ELIGIBLE_STATES.has(record.state)) blockers.push("TASK_STATE_NOT_ELIGIBLE");
-  if (record.branch === null || new Set(["main", "stg"]).has(record.branch.name)) {
+  if (branchName === null || new Set(["main", "stg"]).has(branchName)) {
     blockers.push("PROTECTED_BRANCH");
   }
   if (record.repoProfile.repositoryIdentity !== evidence.repositoryIdentity) {
@@ -1930,12 +1931,17 @@ function cleanupWorkspaceSnapshot({ context, record, evidence, runner, probes })
   } catch (caught) {
     blockers.push(caught.code ?? "RUNTIME_EVIDENCE_INVALID");
   }
-  const branchSha = runGit(
-    context.topLevel,
-    ["rev-parse", "--verify", `refs/heads/${record.branch.name}^{commit}`],
-    runner,
-  );
-  if (branchSha.status !== 0 || branchSha.stdout !== record.headSha) blockers.push("LOCAL_BRANCH_SHA_MISMATCH");
+  const branchSha = branchName === null
+    ? { status: 1, stdout: "" }
+    : runGit(
+        context.topLevel,
+        ["rev-parse", "--verify", `refs/heads/${branchName}^{commit}`],
+        runner,
+      );
+  if (branchName !== null &&
+      (branchSha.status !== 0 || branchSha.stdout !== record.headSha)) {
+    blockers.push("LOCAL_BRANCH_SHA_MISMATCH");
+  }
   const fingerprintValue = {
     taskFingerprint: record.fingerprint,
     evidence,
@@ -2012,6 +2018,7 @@ export function autoCleanupTaskRecordV3({
     }
     const startedAt = now;
     const strategy = planTaskCleanupV3(record).strategy;
+    const branchName = record.branch?.name ?? null;
     const finishReport = (result, blocker, stage, retry = false) => writeCleanupReport(paths, cleanupReport({
       taskId,
       branch: record.branch?.name ?? null,
@@ -2042,8 +2049,8 @@ export function autoCleanupTaskRecordV3({
           gitRunner,
         ).status === 0;
       const safeRelease =
-        record.branch !== null &&
-        !new Set(["main", "stg"]).has(record.branch.name) &&
+        branchName !== null &&
+        !new Set(["main", "stg"]).has(branchName) &&
         record.repoProfile.repositoryIdentity === mergeEvidence.repositoryIdentity &&
         record.repoProfile.authLogin === mergeEvidence.authLogin &&
         record.headSha === mergeEvidence.headSha &&
@@ -2075,6 +2082,9 @@ export function autoCleanupTaskRecordV3({
       }
       return finishReport("PRESERVED", blocker, "PRECHECK", !preserveTerminal);
     }
+    if (branchName === null) {
+      return finishReport("PRESERVED", "PROTECTED_BRANCH", "PRECHECK");
+    }
     if (mergeEvidence.remoteBranch.exists) {
       if (mergeEvidence.remoteBranch.sha !== record.headSha) {
         return finishReport("PRESERVED", "REMOTE_BRANCH_SHA_MISMATCH", "REMOTE_PRECHECK");
@@ -2085,13 +2095,13 @@ export function autoCleanupTaskRecordV3({
       const deletion = deleteRemoteBranch({
         repositoryIdentity: record.repoProfile.repositoryIdentity,
         authLogin: record.repoProfile.authLogin,
-        branch: record.branch.name,
+        branch: branchName,
         expectedSha: record.headSha,
       });
       if (deletion?.deleted !== true ||
           verifyRemoteBranchAbsent({
             repositoryIdentity: record.repoProfile.repositoryIdentity,
-            branch: record.branch.name,
+            branch: branchName,
           }) !== true) {
         return finishReport("PRESERVED", "REMOTE_DELETE_NOT_CONFIRMED", "REMOTE_DELETE", true);
       }
@@ -2143,13 +2153,13 @@ export function autoCleanupTaskRecordV3({
       if (detachedHead !== mergeEvidence.mainSha || detachedBranch !== "") fail("SHARED_SLOT_VERIFY_FAILED");
       requireGit(
         context.topLevel,
-        ["branch", "-d", record.branch.name],
+        ["branch", "-d", branchName],
         "SHARED_SLOT_BRANCH_NOT_DISPOSABLE",
         gitRunner,
       );
       if (runGit(
         context.topLevel,
-        ["show-ref", "--verify", "--quiet", `refs/heads/${record.branch.name}`],
+        ["show-ref", "--verify", "--quiet", `refs/heads/${branchName}`],
         gitRunner,
       ).status === 0) {
         fail("SHARED_SLOT_BRANCH_DELETE_NOT_CONFIRMED");

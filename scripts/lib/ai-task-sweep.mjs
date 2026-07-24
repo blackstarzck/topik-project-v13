@@ -430,6 +430,17 @@ export async function withRepositoryAuth({
     lease.release();
   }
 
+  const authRestoreFailure = {
+    result: "PRESERVED",
+    blocker: "AUTH_RESTORE_FAILED",
+    message: "The original GitHub account could not be restored.",
+  };
+  if (pendingError) {
+    if (restoreFailed && pendingError instanceof Error) {
+      pendingError.authRestoreFailure = authRestoreFailure;
+    }
+    throw pendingError;
+  }
   if (restoreFailed) {
     return {
       result: "PRESERVED",
@@ -437,7 +448,6 @@ export async function withRepositoryAuth({
       message: "The original GitHub account could not be restored.",
     };
   }
-  if (pendingError) throw pendingError;
   return outcome;
 }
 

@@ -15,7 +15,7 @@ pnpm format           # Prettier check
 pnpm check:project-structure
 pnpm check:artifact-hygiene
 pnpm check:worktree-lifecycle   # 기존 v1 report-only 계약
-pnpm check:task-lifecycle       # v2 task + 수동/자동 cleanup 계약
+pnpm check:task-lifecycle       # v2, v3, release/security/validation shard를 순차 검증
 pnpm task:autocleanup -- --repo <기준-checkout> --branch <task-branch>
 pnpm task:sweep -- --repo <기준-checkout>
 node "<new-worktree>/scripts/ai-task.mjs" sweep --repo "<기준-checkout>" --background true

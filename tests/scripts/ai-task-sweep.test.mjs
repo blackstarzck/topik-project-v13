@@ -205,6 +205,36 @@ describe("repository authentication for one-shot task sweep", () => {
       value: "done",
     });
   });
+
+  it("preserves a pending budget error when account restoration also fails", async () => {
+    const root = makeRoot();
+    const outputs = [
+      { stdout: "blackstarzck\n", stderr: "", exitCode: 0 },
+      { stdout: "", stderr: "", exitCode: 0 },
+      { stdout: "guestkeduall-design\n", stderr: "", exitCode: 0 },
+      { stdout: "true\n", stderr: "", exitCode: 0 },
+      { stdout: "", stderr: "restore failed", exitCode: 1 },
+    ];
+    const recorder = commandRecorder(() => outputs.shift());
+    const pendingError = Object.assign(new Error("budget exhausted"), {
+      name: "TaskSweepBudgetExceeded",
+      pendingOperations: [Promise.resolve()],
+    });
+
+    await expect(withRepositoryAuth({
+      profile: PIPELINE_REPOSITORY_PROFILES.collab,
+      localAppData: root,
+      runCommand: recorder.runCommand,
+      operation: async () => {
+        throw pendingError;
+      },
+    })).rejects.toMatchObject({
+      name: "TaskSweepBudgetExceeded",
+      authRestoreFailure: {
+        blocker: "AUTH_RESTORE_FAILED",
+      },
+    });
+  });
 });
 
 describe("one-shot task sweep lease and budget", () => {

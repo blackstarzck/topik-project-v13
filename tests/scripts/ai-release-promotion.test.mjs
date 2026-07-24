@@ -634,6 +634,80 @@ describe("registry and CLI contract", () => {
     expect(packageJson.scripts["release:resume"]).toBe("node scripts/ai-release.mjs resume");
   });
 
+  it("splits the lifecycle contract into bounded runnable shards", () => {
+    const packageJson = JSON.parse(readFileSync(path.resolve("package.json"), "utf8"));
+    expect(packageJson.scripts["check:task-lifecycle"]).toBe(
+      "pnpm check:task-lifecycle:v2 && pnpm check:task-lifecycle:cleanup-finalize && pnpm check:task-lifecycle:cleanup-locks && pnpm check:task-lifecycle:cleanup-mutate && pnpm check:task-lifecycle:cleanup-recovery && pnpm check:task-lifecycle:cleanup-contract && pnpm check:task-lifecycle:autocleanup-contract && pnpm check:task-lifecycle:autocleanup-remote && pnpm check:task-lifecycle:autocleanup-worker && pnpm check:task-lifecycle:autocleanup-recovery && pnpm check:task-lifecycle:metrics && pnpm check:task-lifecycle:v3 && pnpm check:task-lifecycle:sweep && pnpm check:task-lifecycle:release && pnpm check:task-lifecycle:security && pnpm check:task-lifecycle:validation",
+    );
+    const shardNames = [
+      "check:task-lifecycle:v2",
+      "check:task-lifecycle:cleanup-finalize",
+      "check:task-lifecycle:cleanup-locks",
+      "check:task-lifecycle:cleanup-mutate",
+      "check:task-lifecycle:cleanup-recovery",
+      "check:task-lifecycle:cleanup-contract",
+      "check:task-lifecycle:autocleanup-contract",
+      "check:task-lifecycle:autocleanup-remote",
+      "check:task-lifecycle:autocleanup-worker",
+      "check:task-lifecycle:autocleanup-recovery",
+      "check:task-lifecycle:metrics",
+      "check:task-lifecycle:v3",
+      "check:task-lifecycle:sweep",
+      "check:task-lifecycle:release",
+      "check:task-lifecycle:security",
+      "check:task-lifecycle:validation",
+    ];
+    for (const shardName of shardNames) {
+      expect(packageJson.scripts[shardName]).toMatch(/^vitest run .+ --maxWorkers=2$/u);
+    }
+    const coveredTests = shardNames.flatMap((shardName) =>
+      packageJson.scripts[shardName].match(/tests\/scripts\/\S+\.test\.mjs/gu) ?? []);
+    expect(new Set(coveredTests)).toEqual(new Set([
+      "tests/scripts/ai-task-lifecycle-v2.test.mjs",
+      "tests/scripts/ai-task-cleanup.test.mjs",
+      "tests/scripts/ai-task-autocleanup.test.mjs",
+      "tests/scripts/ai-task-metrics.test.mjs",
+      "tests/scripts/ai-task-measure-cli.test.mjs",
+      "tests/scripts/ai-task-lifecycle-v3.test.mjs",
+      "tests/scripts/ai-task-lifecycle-v3-autocleanup.test.mjs",
+      "tests/scripts/ai-task-v3-adapter.test.mjs",
+      "tests/scripts/ai-task-sweep.test.mjs",
+      "tests/scripts/ai-release-promotion.test.mjs",
+      "tests/scripts/security-artifact-audit.test.mjs",
+      "tests/scripts/ai-validation-evidence.test.mjs",
+    ]));
+  });
+
+  it("resets approval only for a confirmed security finding", async () => {
+    const { enforceReleaseSecurityResult } =
+      await import("../../scripts/ai-release.mjs");
+    const readPolicy = vi.fn(() => ({ fingerprint: digest("policy") }));
+    const resetPolicy = vi.fn(() => ({ fingerprint: digest("reset") }));
+    const writePolicy = vi.fn();
+    const dependencies = { readPolicy, resetPolicy, writePolicy };
+
+    expect(() => enforceReleaseSecurityResult({
+      security: { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" },
+      commonDir: tempRoot(),
+      dependencies,
+    })).toThrowError("SECURITY_AUDIT_SCHEMA_INVALID");
+    expect(readPolicy).not.toHaveBeenCalled();
+    expect(resetPolicy).not.toHaveBeenCalled();
+    expect(writePolicy).not.toHaveBeenCalled();
+
+    expect(() => enforceReleaseSecurityResult({
+      security: { ok: false, code: "SECURITY_INCIDENT_BLOCKED" },
+      commonDir: tempRoot(),
+      dependencies,
+    })).toThrowError("SECURITY_INCIDENT_BLOCKED");
+    expect(readPolicy).toHaveBeenCalledOnce();
+    expect(resetPolicy).toHaveBeenCalledWith(
+      expect.objectContaining({ fingerprint: digest("policy") }),
+      "SECURITY_INCIDENT",
+    );
+    expect(writePolicy).toHaveBeenCalledOnce();
+  });
+
   it("keeps the documented release examples aligned with the public CLI", async () => {
     const { parseReleaseArguments } = await import("../../scripts/ai-release.mjs");
     const operations = readFileSync(

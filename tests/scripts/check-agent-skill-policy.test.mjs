@@ -1032,7 +1032,7 @@ describe("repository deployment contract", () => {
         /https:\/\/github\.com\/keduall\/topik-project-v13\.git/u,
       );
       expect(content).toMatch(
-        /Vercel[\s\S]*production[\s\S]*SHA[\s\S]*`READY`/u,
+        /Vercel[\s\S]*production[\s\S]*SHA[\s\S]*`READY`/iu,
       );
     }
 

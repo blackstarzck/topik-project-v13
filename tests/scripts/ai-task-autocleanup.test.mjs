@@ -356,7 +356,14 @@ describe("automatic lifecycle cleanup contracts", () => {
     const packageJson = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8"));
     expect(packageJson.scripts["task:autocleanup"]).toBe("node scripts/ai-task.mjs autocleanup");
     expect(packageJson.scripts["task:sweep"]).toBe("node scripts/ai-task.mjs sweep");
-    expect(packageJson.scripts["check:task-lifecycle"]).toContain("tests/scripts/ai-task-autocleanup.test.mjs");
+    for (const shard of [
+      "check:task-lifecycle:autocleanup-contract",
+      "check:task-lifecycle:autocleanup-remote",
+      "check:task-lifecycle:autocleanup-worker",
+      "check:task-lifecycle:autocleanup-recovery",
+    ]) {
+      expect(packageJson.scripts[shard]).toContain("tests/scripts/ai-task-autocleanup.test.mjs");
+    }
   });
 
   it("requires immediate post-merge autocleanup and documents conditional remote deletion", () => {
