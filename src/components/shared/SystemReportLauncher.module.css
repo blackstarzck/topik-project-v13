@@ -2,7 +2,10 @@
   inset-inline-end: max(24px, calc(16px + env(safe-area-inset-right)));
   bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
   z-index: 999;
-  box-shadow: var(--app-shadow-elevated);
+}
+
+.launcher:global(.ant-float-btn.ant-float-btn-individual) {
+  box-shadow: var(--app-shadow-floating-strong);
 }
 
 :global(body:has(.app-workspace-fixed-action-bar))
@@ -24,6 +27,13 @@
   overflow: hidden auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
+}
+
+:global(.app-system-report-popover.app-system-report-popover)
+  :global(
+    .app-system-report-popover__container.app-system-report-popover__container
+  ) {
+  box-shadow: var(--app-shadow-floating-strong);
 }
 
 :global(.app-system-report-popover__container)::-webkit-scrollbar {

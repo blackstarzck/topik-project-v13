@@ -424,7 +424,6 @@ export function SystemReportLauncher() {
         )}
         type="primary"
         icon={open ? <X aria-hidden="true" /> : <LifeBuoy aria-hidden="true" />}
-        tooltip={open ? t("close") : t("launcherTooltip")}
         aria-label={open ? t("close") : t("launcherAria")}
         aria-controls="system-report-panel"
         aria-expanded={open}

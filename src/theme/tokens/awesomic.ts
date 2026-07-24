@@ -11,6 +11,7 @@ export const allowedAppBridgeVars = [
   "--app-radius",
   "--app-font-family",
   "--app-shadow-elevated",
+  "--app-shadow-floating-strong",
 ] as const;
 
 export type AppBridgeVarName = (typeof allowedAppBridgeVars)[number];
@@ -39,6 +40,8 @@ export const awesomicThemeTokens = {
   },
   shadow: {
     elevated: "rgba(0, 0, 0, 0.04) 0px 4px 12px 0px",
+    floatingStrong:
+      "0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)",
     none: "none",
   },
   font: {
@@ -58,4 +61,5 @@ export const awesomicBridgeVars = {
   "--app-radius": `${awesomicThemeTokens.radius.base}px`,
   "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
   "--app-shadow-elevated": awesomicThemeTokens.shadow.elevated,
+  "--app-shadow-floating-strong": awesomicThemeTokens.shadow.floatingStrong,
 } as const satisfies AppBridgeVars;

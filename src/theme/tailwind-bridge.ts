@@ -11,6 +11,8 @@ const DEFAULT_LIGHT_SHADOW_ELEVATED =
   "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)";
 const DEFAULT_DARK_SHADOW_ELEVATED =
   "0 6px 16px 0 rgba(255, 255, 255, 0.016), 0 3px 6px -4px rgba(255, 255, 255, 0.024), 0 9px 28px 8px rgba(255, 255, 255, 0.01)";
+const DEFAULT_SHADOW_FLOATING_STRONG =
+  "0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)";
 
 const DEFAULT_BRIDGE_VARS = {
   light: {
@@ -24,6 +26,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-radius": "6px",
     "--app-font-family": appFontFamily,
     "--app-shadow-elevated": DEFAULT_LIGHT_SHADOW_ELEVATED,
+    "--app-shadow-floating-strong": DEFAULT_SHADOW_FLOATING_STRONG,
   },
   dark: {
     "--app-color-primary": "#1668dc",
@@ -36,6 +39,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-radius": "6px",
     "--app-font-family": appFontFamily,
     "--app-shadow-elevated": DEFAULT_DARK_SHADOW_ELEVATED,
+    "--app-shadow-floating-strong": DEFAULT_SHADOW_FLOATING_STRONG,
   },
 } as const satisfies Record<ThemeAppearance, AppBridgeVars>;
 

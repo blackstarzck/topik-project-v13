@@ -39,9 +39,11 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   await page.goto("/terms");
   const launcher = page.getByTestId("system-report-launcher");
   await expect(launcher).toBeVisible();
-  expect(
-    await launcher.evaluate((element) => getComputedStyle(element).boxShadow),
-  ).not.toBe("none");
+  const launcherShadow = await launcher.evaluate(
+    (element) => getComputedStyle(element).boxShadow,
+  );
+  expect(launcherShadow).not.toBe("none");
+  expect(launcherShadow).toContain("rgba(15, 23, 42, 0.16)");
 
   const anonymousContext = await browser.newContext({
     storageState: { cookies: [], origins: [] },
@@ -92,11 +94,11 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
       (element) => getComputedStyle(element).scrollbarWidth,
     ),
   ).toBe("none");
-  expect(
-    await popoverContainer.evaluate(
-      (element) => getComputedStyle(element).boxShadow,
-    ),
-  ).not.toBe("none");
+  const popoverShadow = await popoverContainer.evaluate(
+    (element) => getComputedStyle(element).boxShadow,
+  );
+  expect(popoverShadow).not.toBe("none");
+  expect(popoverShadow).toContain("rgba(15, 23, 42, 0.16)");
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe(
     "hidden",
   );
@@ -135,6 +137,21 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   await expect(popover).toBeHidden();
   await expect(launcher).toHaveAttribute("aria-label", OPEN_LAUNCHER_LABEL);
   await expect(launcher).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".ant-tooltip")).toHaveCount(0);
+  await expect
+    .poll(async () =>
+      page.evaluate(() => ({
+        bodyOverflow:
+          document.body.scrollWidth - document.documentElement.clientWidth,
+        documentOverflow:
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      })),
+    )
+    .toEqual({
+      bodyOverflow: 0,
+      documentOverflow: 0,
+    });
   await launcher.click();
   await page.getByTestId("system-report-title").fill("다시 열어도 유지할 제목");
   await launcher.click();

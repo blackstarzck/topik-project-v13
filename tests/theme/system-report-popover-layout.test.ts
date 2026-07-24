@@ -24,11 +24,23 @@ function blockFor(css: string, selector: string): string {
 }
 
 describe("system report popover layout", () => {
-  test("keeps the launcher elevated and constrains the popover to the viewport", () => {
-    expect(blockFor(launcherCss, ".launcher:global(.ant-float-btn)")).toContain(
-      "box-shadow: var(--app-shadow-elevated)",
+  test("uses the strong floating shadow on the launcher and popover surface", () => {
+    const launcher = blockFor(
+      launcherCss,
+      ".launcher:global(.ant-float-btn.ant-float-btn-individual)",
     );
+    expect(launcher).toContain("box-shadow: var(--app-shadow-floating-strong)");
 
+    const container = blockFor(
+      launcherCss,
+      ":global(.app-system-report-popover.app-system-report-popover) :global( .app-system-report-popover__container.app-system-report-popover__container )",
+    );
+    expect(container).toContain(
+      "box-shadow: var(--app-shadow-floating-strong)",
+    );
+  });
+
+  test("constrains the popover to the viewport", () => {
     const root = blockFor(
       launcherCss,
       ":global(.app-system-report-popover.ant-popover)",
