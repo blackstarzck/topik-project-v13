@@ -26,6 +26,8 @@
 - self-deactivation도 일반 profile UPDATE의 예외가 아니다. authenticated role은 허용된 일반 프로필 열에만 UPDATE 권한이 있어 admin JWT를 포함해 `status`와 `deleted_at`을 직접 바꿀 수 없다. 본인 탈퇴는 호출자를 다시 확인하는 idempotent `request_account_deletion()`만 사용한다.
 - 탈퇴 후 일반 profile RLS가 닫혀도 로그인 경계가 상태를 판별할 수 있도록 `get_my_account_state()`는 호출자 본인의 상태 문자열만 반환한다. 다른 profile 필드, 탈퇴 시각 또는 다른 사용자의 상태는 반환하지 않는다.
 - 사용자 입력 metadata를 권한 근거로 사용하지 않는다. 권한은 DB row, trusted app metadata 또는 server 검증에서 가져온다.
+- 기관 초대 생성·회수는 topik-ai가 소유한다. v13 사용자는 본인 JWT session으로 `respond_institution_invitation`을 호출하며, 초대 UUID·소유자·pending 상태는 DB가 검증한다.
+- `private.protect_profile_columns()`의 `app.claim_affiliation_code` 검사는 topik-ai 소유 응답 RPC가 같은 트랜잭션에서 소속을 갱신하기 위한 transaction-local 호환 경계다. v13 browser가 이 값을 설정하거나 raw affiliation code RPC로 우회하지 않는다.
 - `SECURITY DEFINER` function은 RLS 우회가 필요한 최소 작업에만 사용하고, 함수 내부에서 auth·소유권을 다시 확인하며 `search_path`와 execute grant를 제한한다.
 - 사용자 전용 데이터를 다루는 공개 `SECURITY DEFINER` RPC는 진입 시 active profile을 다시 확인한다. 현재 대상은 dashboard KPI, 제출 이력 문맥, 오래된 초안 교체, 비교 리포트 생성, PDF quota 예약, nickname 중복 확인, 서재 문제 목록이다. 제거된 canonical 쓰기 경로에 의존하는 구형 제출 RPC는 authenticated 실행 권한을 회수한다.
 - private schema function과 cron은 browser callable API로 간주하지 않는다.

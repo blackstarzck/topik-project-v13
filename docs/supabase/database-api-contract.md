@@ -85,6 +85,8 @@
 
 ## 기관 초대 알림과 응답 RPC
 
+관리자는 topik-ai에서 초대를 생성·회수한다. 로그인한 v13 사용자는 browser의 publishable key와 본인 JWT session으로 자신에게 발급된 pending 초대에만 응답한다. v13은 URL·브라우저 저장소·가입 metadata에서 raw affiliation code를 받아 소속을 직접 기록하지 않는다.
+
 기관 초대 알림은 `template_key` 또는 payload의 `kind`가 `institution_invitation`일 때 modal-first 동작으로 판별한다. payload의 `invitation_id`는 응답할 초대 UUID이고, `code`와 `code_label`은 표시용 정보다. `expires_at`은 초대 만료 시각을 나타내는 UTC 기준 ISO 8601 timestamp다. 이 값들은 payload field이며 RPC 인자가 아니다. 현재 v13 모달은 `code`만 사용자에게 보여 준다. `code_label`은 payload 호환을 위해 파싱·보존하지만 현재 v13 모달에는 표시하지 않는다.
 
 v13 client는 shared RPC `respond_institution_invitation` 시그니처만 사용한다.
@@ -99,7 +101,7 @@ respond_institution_invitation(p_invitation_id uuid, p_accept boolean) -> jsonb
 - `canceled`와 `error = code_inactive`(`code_inactive`) 조합은 이전 계약과의 호환을 위해 만료 상태로 해석하고, 그 밖의 `canceled`는 회수 상태로 표시한다.
 - `already responded`, `unauthenticated`, `profile_not_found`, `already affiliated` 등의 exception은 `src/components/notifications/notifications-data.ts`의 분류를 거쳐 raw DB message를 사용자에게 직접 노출하지 않는다.
 
-이 RPC와 관련 table의 migration home은 외부 topik-ai 운영 저장소다. 확인된 외부 migration 이름은 `20260707140000_institution_invitations.sql`, `20260707141000_institution_invitation_respond.sql`, `20260708120000_institution_invitation_expiry.sql`이다. v13은 typed client 호출과 사용자 UI만 소유하므로 v13 migration을 추가하지 않는다. 이 문서는 외부 SQL의 grants, RLS 또는 내부 구현을 v13이 소유한다고 선언하지 않는다. 원격 DB apply도 v13 작업면에서 실행하지 않는다.
+이 RPC와 관련 table의 migration home은 외부 topik-ai 운영 저장소다. 확인된 외부 migration 이름은 `20260707140000_institution_invitations.sql`, `20260707141000_institution_invitation_respond.sql`, `20260708120000_institution_invitation_expiry.sql`이다. v13의 `20260724130000_institution_invite_trust_boundary.sql`은 v13이 과거에 만들었던 raw-code RPC와 가입 metadata seed만 폐기하며, 외부 invitation table·응답 RPC의 소유권을 가져오지 않는다. 원격 DB apply도 v13 작업면에서 실행하지 않는다.
 
 ## 기관별 쓰기 문제 노출 경계
 

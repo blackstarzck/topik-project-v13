@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 import {
   expect,
   test,
@@ -18,21 +16,9 @@ const BASE_URL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const EMAIL = process.env.E2E_STUDENT_EMAIL ?? "student@audit.local";
 const PASSWORD =
   process.env.E2E_STUDENT_PASSWORD ?? process.env.SUPABASE_TEST_PASSWORD;
-const ENV_LABEL = (process.env.SUPABASE_ENV_LABEL ?? "").toLowerCase();
-const NON_PROD_ENV_LABELS = new Set([
-  "dev",
-  "development",
-  "local",
-  "preview",
-  "qa",
-  "staging",
-  "test",
-  "testing",
-]);
 const canRunLocalRecoveryBoundary = (() => {
   try {
     assertLocalPrivilegedMutationTarget(process.env);
@@ -165,119 +151,6 @@ async function countUserRecoveryRecords(page: Page, userId: string) {
       }),
     { databaseName: RECOVERY_DATABASE, storeName: RECOVERY_STORE, userId },
   );
-}
-
-function publicClient() {
-  if (!SUPABASE_URL || !PUBLISHABLE_KEY) {
-    throw new Error("Missing Supabase public credentials for account e2e");
-  }
-  return createClient(SUPABASE_URL, PUBLISHABLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-async function createInvitedUser(marker: string) {
-  assertLocalPrivilegedMutationTarget(process.env);
-  if (!PASSWORD) {
-    throw new Error("Missing e2e password for account invite flow");
-  }
-
-  const email = `e2e-account-invite-${marker}@example.com`;
-  const { data, error } = await serviceClient().auth.admin.createUser({
-    email,
-    password: PASSWORD,
-    email_confirm: true,
-    user_metadata: {
-      display_name: "E2E Account Invite",
-      nationality_country_code: "KR",
-      ui_locale: "ko",
-      ui_locale_source: "manual",
-    },
-  });
-  if (error) throw error;
-  const userId = data.user?.id;
-  if (!userId) throw new Error("Supabase did not return a temp user id.");
-  return { email, userId };
-}
-
-async function waitForProfile(userId: string) {
-  await expect
-    .poll(async () => {
-      const { data, error } = await serviceClient()
-        .from("profiles")
-        .select("status")
-        .eq("id", userId)
-        .maybeSingle();
-      if (error) throw error;
-      return data?.status ?? null;
-    })
-    .toBe("active");
-}
-
-async function dismissPhoneReminder(userId: string) {
-  assertLocalPrivilegedMutationTarget(process.env);
-  const { error } = await serviceClient()
-    .from("profiles")
-    .update({ phone_number_prompt_dismissed_at: new Date().toISOString() })
-    .eq("id", userId);
-  if (error) {
-    throw new Error("Local account invite phone reminder setup failed.");
-  }
-}
-
-async function waitForPasswordSignInReady(email: string) {
-  if (!PASSWORD) {
-    throw new Error("Missing e2e password for account invite flow");
-  }
-
-  let lastMessage = "";
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const { error } = await publicClient().auth.signInWithPassword({
-      email,
-      password: PASSWORD,
-    });
-    if (!error) {
-      await publicClient().auth.signOut();
-      return;
-    }
-    lastMessage = error.message;
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  throw new Error(`Temp user password sign-in was not ready: ${lastMessage}`);
-}
-
-async function insertInstitutionInviteNotification(params: {
-  affiliationCode: string;
-  notificationId: string;
-  userId: string;
-}) {
-  assertLocalPrivilegedMutationTarget(process.env);
-  const { error } = await serviceClient()
-    .from("user_notifications")
-    .insert({
-      id: params.notificationId,
-      user_id: params.userId,
-      template_key: "institution_invite",
-      category: "notice",
-      title: "기관 초대가 도착했어요",
-      body: "초대를 확인하고 이 계정을 기관에 연결할지 선택하세요.",
-      link_url: `/auth/institution-invite?aff=${params.affiliationCode}&next=/settings/account`,
-      payload: {
-        affiliation_code: params.affiliationCode,
-        kind: "institution_invite",
-      },
-      read_at: null,
-      created_at: new Date(Date.now() + 30_000).toISOString(),
-    });
-  if (error) throw error;
-}
-
-async function cleanupInviteFixture(userId: string | null) {
-  if (!userId || !SERVICE_KEY || !SUPABASE_URL) return;
-  if (!NON_PROD_ENV_LABELS.has(ENV_LABEL)) return;
-  assertLocalPrivilegedMutationTarget(process.env);
-  await serviceClient().auth.admin.deleteUser(userId);
 }
 
 async function loginTempUser(page: Page, email: string) {
@@ -537,76 +410,4 @@ test("server-confirmed account deletion clears future local recovery records", a
 
   await expect.poll(() => deletionRequests).toBe(1);
   await expect.poll(() => countUserRecoveryRecords(page, userId)).toBe(0);
-});
-
-test("institution invite notification connects the account and appears in account settings", async ({
-  browser,
-}, testInfo) => {
-  test.skip(
-    !["desktop-1280", "mobile-360"].includes(testInfo.project.name),
-    "Account invite notification e2e runs on desktop and mobile.",
-  );
-  test.skip(
-    !SUPABASE_URL || !SERVICE_KEY || !PUBLISHABLE_KEY || !PASSWORD,
-    "Institution invite notification e2e requires Supabase test credentials.",
-  );
-  test.skip(
-    !NON_PROD_ENV_LABELS.has(ENV_LABEL),
-    "Institution invite notification e2e must not create production data.",
-  );
-  test.skip(
-    !canRunLocalRecoveryBoundary,
-    "Institution invite notification fixtures require the guarded local Supabase stack.",
-  );
-  test.setTimeout(120_000);
-
-  const marker = randomUUID().slice(0, 8);
-  const affiliationCode = `E2E_INVITE_${marker}`;
-  const notificationId = randomUUID();
-  let userId: string | null = null;
-
-  try {
-    const user = await createInvitedUser(marker);
-    userId = user.userId;
-    await waitForProfile(userId);
-    await dismissPhoneReminder(userId);
-    await waitForPasswordSignInReady(user.email);
-    await insertInstitutionInviteNotification({
-      affiliationCode,
-      notificationId,
-      userId,
-    });
-
-    await withFreshPage(browser, testInfo.project.name, async (page) => {
-      const errors = collectErrors(page);
-      await loginTempUser(page, user.email);
-      await page.goto("/dashboard", { waitUntil: "networkidle" });
-
-      await page.getByRole("button", { name: "알림 열기" }).click();
-      await page
-        .locator(".app-notification-panel")
-        .getByText("기관 초대가 도착했어요")
-        .click();
-
-      await expect(page).toHaveURL(/\/auth\/institution-invite/);
-      await expect(
-        page.getByText("기관 초대가 도착했어요").first(),
-      ).toBeVisible();
-      await expect(page.getByText(affiliationCode)).toBeVisible();
-
-      await page.getByRole("checkbox", { name: "동의하시겠습니까?" }).check();
-      await page.getByRole("button", { name: "기관에 연결" }).click();
-      await expect(page.getByText("기관 연결이 완료됐어요")).toBeVisible();
-      await page.getByRole("button", { name: "계속하기" }).click();
-
-      await expect(page).toHaveURL(/\/settings\/account/);
-      await expect(page.getByText("기관 소속")).toBeVisible();
-      await expect(
-        page.getByText(`기관 코드 ${affiliationCode}`),
-      ).toBeVisible();
-      expect(errors).toEqual([]);
-    });
-  } finally {
-    await cleanupInviteFixture(userId);
-  }
 });

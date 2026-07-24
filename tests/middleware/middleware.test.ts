@@ -81,12 +81,13 @@ describe("middleware route protection", () => {
     expect(response.status).toBe(200);
   });
 
-  it("allows anon user to access the institution invite route", async () => {
+  it("does not expose the retired institution invite route to anon users", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
     const response = await callMiddleware(
       "http://localhost/auth/institution-invite",
     );
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toContain("/login");
   });
 
   it("redirects authenticated users away from /login", async () => {
@@ -113,7 +114,7 @@ describe("middleware route protection", () => {
     );
   });
 
-  it("redirects authenticated users with aff on /login to the institution invite route", async () => {
+  it("ignores a raw aff query when redirecting authenticated users from /login", async () => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: "user-123" } },
       error: null,
@@ -123,11 +124,11 @@ describe("middleware route protection", () => {
     );
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost/auth/institution-invite?aff=EXPO2026-BOOTH-A",
+      "http://localhost/auth/post-auth?intent=login",
     );
   });
 
-  it("redirects authenticated users with aff on /sign-up to the institution invite route", async () => {
+  it("ignores a raw aff query when redirecting authenticated users from /sign-up", async () => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: "user-123" } },
       error: null,
@@ -137,11 +138,11 @@ describe("middleware route protection", () => {
     );
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost/auth/institution-invite?aff=EXPO2026-BOOTH-A",
+      "http://localhost/auth/post-auth?intent=sign-up",
     );
   });
 
-  it("redirects authenticated users with an invite next target back to the institution invite route", async () => {
+  it("does not preserve a retired invite next target on an auth entry route", async () => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: "user-123" } },
       error: null,
@@ -151,7 +152,7 @@ describe("middleware route protection", () => {
     );
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost/auth/institution-invite",
+      "http://localhost/auth/post-auth?intent=login",
     );
   });
 

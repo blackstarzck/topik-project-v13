@@ -57,15 +57,6 @@ export function buildPostAuthPath(intent: PostAuthIntent): string {
   return `/auth/post-auth?intent=${intent}`;
 }
 
-export function buildClaimAffiliationPath(nextPath: string): string {
-  return buildInstitutionInvitePath(nextPath);
-}
-
-export function buildInstitutionInvitePath(nextPath: string): string {
-  const params = new URLSearchParams({ next: ensureRelativePath(nextPath) });
-  return `/auth/institution-invite?${params.toString()}`;
-}
-
 export function buildOAuthNextPath(
   intent: GoogleOAuthIntent,
   nextPath?: string,

@@ -54,6 +54,23 @@ describe("message catalog parity", () => {
     }
   });
 
+  it("removes retired raw-code invite messages but keeps UUID invitation messages", () => {
+    for (const [name, cat] of [
+      ["ko", ko],
+      ["en", en],
+      ["vi", vi],
+    ] as const) {
+      expect(
+        valueAtPath(cat, "auth.institutionInvite"),
+        `${name} still has retired auth.institutionInvite messages`,
+      ).toBeUndefined();
+      expect(
+        valueAtPath(cat, "notifications.institutionInvitation.accept"),
+        `${name} lost the active UUID invitation messages`,
+      ).toEqual(expect.any(String));
+    }
+  });
+
   it("uses TOPIK page title labels without legacy TALKPIK wording", () => {
     for (const [name, cat] of [
       ["ko", ko],
