@@ -39,6 +39,7 @@ const operationsPolicyPaths = [
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/operations/topik-ai-notification-migration-order-handoff.md",
   "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
+  "docs/operations/writing-submission-gate-runbook.md",
 ];
 
 function tempRoot() {
