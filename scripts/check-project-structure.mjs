@@ -23,6 +23,7 @@ export const requiredOwnerPaths = [
   "docs/operations/environment-and-agent-safety.md",
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/operations/topik-ai-notification-migration-order-handoff.md",
+  "docs/operations/topik-ai-pdf-request-identity-cutover-handoff.md",
   "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
   "docs/operations/writing-submission-gate-runbook.md",
   "docs/swagger-api/",
@@ -54,6 +55,7 @@ const operationsAllowlist = new Map([
   ["environment-and-agent-safety.md", "file"],
   ["topik-ai-operations-handoff.md", "file"],
   ["topik-ai-notification-migration-order-handoff.md", "file"],
+  ["topik-ai-pdf-request-identity-cutover-handoff.md", "file"],
   ["topik-ai-writing-pdf-metrics-handoff.md", "file"],
   ["writing-submission-gate-runbook.md", "file"],
 ]);

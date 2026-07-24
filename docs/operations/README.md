@@ -22,6 +22,7 @@
 | [`topik-ai-notification-migration-order-handoff.md`](./topik-ai-notification-migration-order-handoff.md) | 실행 대기 | topik-ai DB·migration 운영 | 알림 관리자 원본과 v13 dispatcher의 교차 저장소 migration 순서·단독 재생 복구 | 관련 migration 소유권 이전·replay 수정·handback 때 |
 | [`topik-ai-writing-pdf-metrics-handoff.md`](./topik-ai-writing-pdf-metrics-handoff.md) | 실행 대기 | topik-ai 운영·분석 | 쓰기 제출 시도·분석 결과·PDF 생성 결과의 분리 집계와 관리자 화면 계약 | 관련 migration·관리자 화면 구현·handback 때 |
 | [`writing-submission-gate-runbook.md`](./writing-submission-gate-runbook.md) | 활성 | v13 클라이언트 운영 | 작문 제출 게이트 상태 확인, 드릴 재인증·활성화, 비상 차단 | outbox 계약·제출 경로 변경 때 |
+| [`topik-ai-pdf-request-identity-cutover-handoff.md`](./topik-ai-pdf-request-identity-cutover-handoff.md) | 실행 대기 | topik-ai DB·배포 운영 | 기존 PDF queued/reserved 안전 종료, 요청 식별자 migration과 v13 앱의 maintenance cutover | PDF 요청 식별자 migration 원격 적용·배포·handback 때 |
 
 ## 적용 원칙
 

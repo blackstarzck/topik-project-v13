@@ -38,6 +38,7 @@ const operationsPolicyPaths = [
   "docs/operations/environment-and-agent-safety.md",
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/operations/topik-ai-notification-migration-order-handoff.md",
+  "docs/operations/topik-ai-pdf-request-identity-cutover-handoff.md",
   "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
   "docs/operations/writing-submission-gate-runbook.md",
 ];

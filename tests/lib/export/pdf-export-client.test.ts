@@ -56,6 +56,24 @@ afterEach(() => {
 });
 
 describe("exportPdfWithPrintFallback", () => {
+  it("reuses one client-generated request id for server render and automatic print fallback", async () => {
+    const requestId = "33333333-3333-4333-8333-333333333333";
+    vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(requestId);
+    mockFetch(500, { error: "render failed" });
+    vi.mocked(triggerPdfExport).mockResolvedValue({ exportId: "print-1" });
+
+    await exportPdfWithPrintFallback(request);
+
+    const serverBody = JSON.parse(
+      String(vi.mocked(fetch).mock.calls[0]?.[1]?.body),
+    ) as Record<string, unknown>;
+    expect(serverBody.requestId).toBe(requestId);
+    expect(triggerPdfExport).toHaveBeenCalledWith({
+      ...request,
+      requestId,
+    });
+  });
+
   it("does not print-fallback for failed-analysis business-rule errors", async () => {
     mockFetch(400, {
       error: "분석 실패 답안은 PDF로 내보낼 수 없어요.",
@@ -87,7 +105,10 @@ describe("exportPdfWithPrintFallback", () => {
       exportId: "print-1",
       fallbackReason: "server_generation_unavailable",
     });
-    expect(triggerPdfExport).toHaveBeenCalledWith(request);
+    expect(triggerPdfExport).toHaveBeenCalledWith({
+      ...request,
+      requestId: expect.any(String),
+    });
   });
 
   it("never returns a raw client or provider error as user-facing copy", () => {

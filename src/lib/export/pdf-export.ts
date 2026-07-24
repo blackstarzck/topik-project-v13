@@ -1,10 +1,14 @@
 "use client";
 
 import { readPdfExportApiError } from "./pdf-export-api-error";
-import type { PdfExportRequest } from "./pdf-options";
+import {
+  withPdfExportRequestId,
+  type PdfExportRequest,
+  type PdfExportRequestInput,
+} from "./pdf-options";
 
 export type PdfExportSourceType = "submission" | "report" | "library_selection";
-export type PdfExportInput = PdfExportRequest;
+export type PdfExportInput = PdfExportRequestInput | PdfExportRequest;
 
 export type PdfExportResult = {
   exportId: string;
@@ -16,10 +20,11 @@ export async function triggerPdfExport(
   input: PdfExportInput,
   fetcher: Fetcher = fetch,
 ): Promise<PdfExportResult> {
+  const request = withPdfExportRequestId(input);
   const response = await fetcher("/api/export/pdf/print", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify(request),
   });
 
   if (!response.ok) {

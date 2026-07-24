@@ -22,7 +22,9 @@ const helpers = vi.hoisted(() => {
   return {
     buildPdfDocumentMock: vi.fn(),
     claimPdfExportQuotaMock: vi.fn(),
+    completePdfExportAttemptMock: vi.fn(),
     commitPdfExportQuotaMock: vi.fn(),
+    failPdfExportAttemptMock: vi.fn(),
     fetchProfileStatusMock: vi.fn(),
     exportInsertMock: vi.fn(),
     exportUpdateMock: vi.fn(),
@@ -32,6 +34,7 @@ const helpers = vi.hoisted(() => {
     ),
     getUserMock: vi.fn(),
     PdfExportRequestError,
+    preparePdfExportLedgerMock: vi.fn(),
     registerPdfFontsMock: vi.fn(),
     renderToBufferMock: vi.fn(),
     releasePdfExportQuotaMock: vi.fn(),
@@ -59,11 +62,20 @@ vi.mock("@/lib/export/pdf-document", () => ({
     helpers.registerPdfFontsMock(...args),
 }));
 
+vi.mock("@/lib/export/pdf-export-ledger", () => ({
+  preparePdfExportLedger: (...args: unknown[]) =>
+    helpers.preparePdfExportLedgerMock(...args),
+}));
+
 vi.mock("@/lib/export/pdf-export-server", () => ({
   claimPdfExportQuota: (...args: unknown[]) =>
     helpers.claimPdfExportQuotaMock(...args),
+  completePdfExportAttempt: (...args: unknown[]) =>
+    helpers.completePdfExportAttemptMock(...args),
   commitPdfExportQuota: (...args: unknown[]) =>
     helpers.commitPdfExportQuotaMock(...args),
+  failPdfExportAttempt: (...args: unknown[]) =>
+    helpers.failPdfExportAttemptMock(...args),
   getPdfExportProblemIds: (items: Array<{ problemId: string }>) =>
     helpers.getPdfExportProblemIdsMock(items),
   PdfExportRequestError: helpers.PdfExportRequestError,
@@ -91,6 +103,7 @@ vi.mock("@/lib/supabase/service-role.server", () => ({
 import { POST } from "../../../../src/app/api/export/pdf/route";
 
 const validRequestBody = {
+  requestId: "33333333-3333-4333-8333-333333333333",
   sourceType: "submission",
   sourceId: "00000000-0000-0000-0000-000000000099",
   options: {
@@ -126,6 +139,14 @@ describe("POST /api/export/pdf", () => {
       error: null,
     });
     helpers.fetchProfileStatusMock.mockResolvedValue("active");
+    helpers.preparePdfExportLedgerMock.mockResolvedValue({
+      exportId: "00000000-0000-0000-0000-000000000111",
+      state: "queued",
+      attemptId: "00000000-0000-4000-8000-000000000123",
+      storagePath:
+        "server-render://00000000-0000-0000-0000-000000000111/00000000-0000-4000-8000-000000000123",
+      renderSource: "server_render",
+    });
     helpers.claimPdfExportQuotaMock.mockResolvedValue({
       usageIds: ["usage-1"],
       limit: 3,
@@ -135,6 +156,8 @@ describe("POST /api/export/pdf", () => {
       periodUnit: "month",
     });
     helpers.commitPdfExportQuotaMock.mockResolvedValue(undefined);
+    helpers.completePdfExportAttemptMock.mockResolvedValue(true);
+    helpers.failPdfExportAttemptMock.mockResolvedValue("failed_current");
     helpers.releasePdfExportQuotaMock.mockResolvedValue(undefined);
     helpers.exportInsertMock.mockReturnValue({
       select: vi.fn(() => ({
@@ -223,15 +246,20 @@ describe("POST /api/export/pdf", () => {
       resetAt: "2026-08-01T00:00:00+09:00",
       periodUnit: "month",
     });
-    expect(helpers.exportInsertMock).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "queued" }),
+    expect(helpers.preparePdfExportLedgerMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      validRequestBody,
+      "server_render",
     );
-    expect(helpers.exportUpdateMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "failed",
-        failure_code: "quota_exceeded",
-        failed_at: expect.any(String),
-      }),
+    expect(helpers.failPdfExportAttemptMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      [],
+      "00000000-0000-0000-0000-000000000111",
+      "00000000-0000-4000-8000-000000000123",
+      "quota_exceeded",
+      "server_render_failed",
     );
     expect(helpers.renderToBufferMock).not.toHaveBeenCalled();
   });
@@ -244,11 +272,14 @@ describe("POST /api/export/pdf", () => {
     const response = await postPdf();
 
     expect(response.status).toBe(500);
-    expect(helpers.exportUpdateMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "failed",
-        failure_code: "quota_claim_failed",
-      }),
+    expect(helpers.failPdfExportAttemptMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      [],
+      "00000000-0000-0000-0000-000000000111",
+      "00000000-0000-4000-8000-000000000123",
+      "quota_claim_failed",
+      "server_render_failed",
     );
   });
 
@@ -259,7 +290,8 @@ describe("POST /api/export/pdf", () => {
     await expect(response.json()).resolves.toMatchObject({
       exportId: "00000000-0000-0000-0000-000000000111",
       filename: "learning-export.pdf",
-      storagePath: "exports/user-1/00000000-0000-0000-0000-000000000111.pdf",
+      storagePath:
+        "exports/user-1/00000000-0000-0000-0000-000000000111/00000000-0000-4000-8000-000000000123.pdf",
     });
     expect(helpers.fetchProfileStatusMock).toHaveBeenCalledWith(
       expect.anything(),
@@ -269,20 +301,17 @@ describe("POST /api/export/pdf", () => {
       expect.anything(),
       "user-1",
       ["problem-1"],
+      validRequestBody.requestId,
     );
-    expect(helpers.commitPdfExportQuotaMock).toHaveBeenCalledWith(
+    expect(helpers.completePdfExportAttemptMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",
       ["usage-1"],
       "00000000-0000-0000-0000-000000000111",
+      "00000000-0000-4000-8000-000000000123",
+      "exports/user-1/00000000-0000-0000-0000-000000000111/00000000-0000-4000-8000-000000000123.pdf",
     );
-    expect(helpers.exportUpdateMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "ready",
-        failure_code: null,
-        failed_at: null,
-      }),
-    );
+    expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
   });
 
   it("releases reserved quota when server rendering fails", async () => {
@@ -292,60 +321,99 @@ describe("POST /api/export/pdf", () => {
 
     expect(response.status).toBe(500);
     expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
-    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
+    expect(helpers.failPdfExportAttemptMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",
       ["usage-1"],
+      "00000000-0000-0000-0000-000000000111",
+      "00000000-0000-4000-8000-000000000123",
+      "server_render_failed",
       "server_render_failed",
     );
-    expect(helpers.exportUpdateMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "failed",
-        failure_code: "server_render_failed",
-        failed_at: expect.any(String),
-      }),
-    );
+    expect(helpers.releasePdfExportQuotaMock).not.toHaveBeenCalled();
   });
 
   it("releases reserved quota when quota commit fails after export generation", async () => {
-    helpers.commitPdfExportQuotaMock.mockRejectedValueOnce(
+    helpers.completePdfExportAttemptMock.mockRejectedValueOnce(
       new Error("commit boom"),
     );
 
     const response = await postPdf();
 
     expect(response.status).toBe(500);
-    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
+    expect(helpers.storageRemoveMock).toHaveBeenCalledWith([
+      "exports/user-1/00000000-0000-0000-0000-000000000111/00000000-0000-4000-8000-000000000123.pdf",
+    ]);
+  });
+
+  it("passes the client request id to the shared export ledger", async () => {
+    const response = await postPdf();
+
+    expect(response.status).toBe(200);
+    expect(helpers.preparePdfExportLedgerMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",
-      ["usage-1"],
-      "server_render_failed",
+      expect.objectContaining({ requestId: validRequestBody.requestId }),
+      "server_render",
     );
   });
 
-  it("removes the uploaded object when the ready export update fails", async () => {
-    helpers.exportUpdateMock
-      .mockReturnValueOnce({
-        eq: vi.fn().mockResolvedValue({
-          error: { message: "ready update failed" },
-        }),
-      })
-      .mockReturnValueOnce({
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      });
+  it("preserves a committed object when only the complete RPC response is lost", async () => {
+    helpers.completePdfExportAttemptMock.mockRejectedValueOnce(
+      new Error("response timeout"),
+    );
+    helpers.failPdfExportAttemptMock.mockResolvedValueOnce(
+      "already_ready_current",
+    );
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(500);
+    expect(helpers.failPdfExportAttemptMock).toHaveBeenCalled();
+    expect(helpers.storageRemoveMock).not.toHaveBeenCalled();
+    expect(helpers.releasePdfExportQuotaMock).not.toHaveBeenCalled();
+  });
+
+  it("deletes only the old attempt object without releasing a newer attempt quota", async () => {
+    helpers.completePdfExportAttemptMock.mockResolvedValueOnce(false);
+    helpers.failPdfExportAttemptMock.mockResolvedValueOnce("stale_attempt");
 
     const response = await postPdf();
 
     expect(response.status).toBe(500);
     expect(helpers.storageRemoveMock).toHaveBeenCalledWith([
-      "exports/user-1/00000000-0000-0000-0000-000000000111.pdf",
+      "exports/user-1/00000000-0000-0000-0000-000000000111/00000000-0000-4000-8000-000000000123.pdf",
     ]);
-    expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
-    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
+    expect(helpers.releasePdfExportQuotaMock).not.toHaveBeenCalled();
+  });
+
+  it("claims and commits quota before trusting an owner-visible ready replay", async () => {
+    helpers.preparePdfExportLedgerMock.mockResolvedValueOnce({
+      exportId: "00000000-0000-0000-0000-000000000111",
+      state: "ready",
+      attemptId: null,
+      storagePath: "exports/user-1/ready.pdf",
+      renderSource: "server_render",
+    });
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(200);
+    expect(helpers.resolvePdfExportItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      validRequestBody,
+    );
+    expect(helpers.claimPdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["problem-1"],
+      validRequestBody.requestId,
+    );
+    expect(helpers.commitPdfExportQuotaMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",
       ["usage-1"],
-      "server_render_failed",
+      "00000000-0000-0000-0000-000000000111",
     );
   });
 

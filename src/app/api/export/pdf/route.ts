@@ -6,14 +6,18 @@ import { isEmailVerified } from "@/lib/auth/access-gate";
 import { fetchProfileStatus, isActiveStatus } from "@/lib/auth/profile";
 import { buildPdfDocument, registerPdfFonts } from "@/lib/export/pdf-document";
 import { PDF_EXPORT_ERROR_CODES } from "@/lib/export/pdf-export-errors";
+import { preparePdfExportLedger } from "@/lib/export/pdf-export-ledger";
 import {
   claimPdfExportQuota,
   commitPdfExportQuota,
+  completePdfExportAttempt,
+  failPdfExportAttempt,
   getPdfExportProblemIds,
   PdfExportRequestError,
   releasePdfExportQuota,
   resolvePdfExportItems,
   type PdfExportQuotaClaim,
+  type PdfExportAttemptFailureOutcome,
 } from "@/lib/export/pdf-export-server";
 import {
   pdfExportRequestSchema,
@@ -34,27 +38,6 @@ function requestErrorBody(error: PdfExportRequestError) {
     code: error.code,
     ...error.details,
   };
-}
-
-async function markExportFailed(
-  supabase: SupabaseServerClient,
-  exportId: string | null,
-  failureCode: PdfExportFailureCode,
-): Promise<void> {
-  if (!exportId) return;
-  await supabase
-    .from("export_files")
-    .update({
-      status: "failed",
-      failure_code: failureCode,
-      failed_at: new Date().toISOString(),
-      ready_at: null,
-    })
-    .eq("id", exportId)
-    .then(
-      () => undefined,
-      () => undefined,
-    );
 }
 
 type PdfExportFailureCode =
@@ -134,43 +117,65 @@ export async function POST(request: NextRequest) {
 
   let quotaClaim: PdfExportQuotaClaim | null = null;
   let exportId: string | null = null;
+  let attemptId: string | null = null;
   let quotaSupabase: SupabaseServerClient | null = null;
   let failureCode: PdfExportFailureCode = "unknown";
+  let ledgerState: "queued" | "ready" | null = null;
+  let uploadedStoragePath: string | null = null;
 
   try {
     failureCode = "export_record_failed";
-    const { data: created, error: insertError } = await supabase
-      .from("export_files")
-      .insert({
-        user_id: user.id,
-        source_type: exportRequest.sourceType,
-        source_id:
-          exportRequest.sourceType === "library_selection"
-            ? null
-            : exportRequest.sourceId,
-        storage_path: `server-render://${crypto.randomUUID()}`,
-        options: { source: "server_render", ...exportRequest.options },
-        status: "queued",
-      })
-      .select("id")
-      .single();
-    if (insertError || !created) {
-      throw new Error(
-        insertError?.message ?? "failed to insert export_files row",
-      );
+    const ledger = await preparePdfExportLedger(
+      supabase,
+      user.id,
+      exportRequest,
+      "server_render",
+    );
+    exportId = ledger.exportId;
+    attemptId = ledger.attemptId;
+    ledgerState = ledger.state;
+    if (ledger.state === "ready") {
+      if (
+        ledger.renderSource !== "server_render" ||
+        !ledger.storagePath.startsWith(`exports/${user.id}/`)
+      ) {
+        return NextResponse.json(
+          { error: "같은 PDF 요청이 이미 브라우저 인쇄로 완료됐어요." },
+          { status: 409 },
+        );
+      }
     }
-    exportId = created.id as string;
 
     failureCode = "item_resolution_failed";
     const items = await resolvePdfExportItems(supabase, exportRequest);
-    quotaSupabase =
-      createSupabaseServiceRoleClient() as unknown as SupabaseServerClient;
     failureCode = "quota_claim_failed";
     quotaClaim = await claimPdfExportQuota(
       supabase,
       user.id,
       getPdfExportProblemIds(items),
+      exportRequest.requestId,
     );
+    quotaSupabase =
+      createSupabaseServiceRoleClient() as unknown as SupabaseServerClient;
+
+    if (ledger.state === "ready") {
+      failureCode = "quota_commit_failed";
+      await commitPdfExportQuota(
+        quotaSupabase,
+        user.id,
+        quotaClaim.usageIds,
+        exportId,
+      );
+      quotaClaim = null;
+      return NextResponse.json({
+        exportId,
+        storagePath: ledger.storagePath,
+        filename: `${sanitizePdfFilename(exportRequest.options.filename)}.pdf`,
+      });
+    }
+    if (!attemptId) {
+      throw new Error("PDF export attempt id missing");
+    }
 
     failureCode = "server_render_failed";
     registerPdfFonts();
@@ -184,7 +189,8 @@ export async function POST(request: NextRequest) {
     );
 
     failureCode = "storage_upload_failed";
-    const storagePath = `exports/${user.id}/${exportId}.pdf`;
+    const storagePath = `exports/${user.id}/${exportId}/${attemptId}.pdf`;
+    uploadedStoragePath = storagePath;
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(storagePath, buffer, {
@@ -195,36 +201,18 @@ export async function POST(request: NextRequest) {
       throw new Error(`storage upload: ${uploadError.message}`);
     }
 
-    failureCode = "export_record_failed";
-    const { error: updateError } = await supabase
-      .from("export_files")
-      .update({
-        storage_path: storagePath,
-        status: "ready",
-        ready_at: new Date().toISOString(),
-        failure_code: null,
-        failed_at: null,
-      })
-      .eq("id", exportId);
-    if (updateError) {
-      await supabase.storage
-        .from(BUCKET)
-        .remove([storagePath])
-        .then(
-          () => undefined,
-          () => undefined,
-        );
-      throw new Error(`export_files update: ${updateError.message}`);
-    }
-
     failureCode = "quota_commit_failed";
-    await commitPdfExportQuota(
+    const completed = await completePdfExportAttempt(
       quotaSupabase,
       user.id,
       quotaClaim.usageIds,
       exportId,
+      attemptId,
+      storagePath,
     );
+    if (!completed) throw new Error("PDF export attempt lease lost");
     quotaClaim = null;
+    uploadedStoragePath = null;
 
     await supabase
       .from("study_events")
@@ -257,8 +245,40 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     const outcomeCode = classifiedFailureCode(err, failureCode);
-    await markExportFailed(supabase, exportId, outcomeCode);
-    if (quotaSupabase) {
+    let failureOutcome: PdfExportAttemptFailureOutcome | null = null;
+    if (ledgerState === "queued" && exportId && attemptId && !quotaSupabase) {
+      try {
+        quotaSupabase =
+          createSupabaseServiceRoleClient() as unknown as SupabaseServerClient;
+      } catch {
+        quotaSupabase = null;
+      }
+    }
+    if (ledgerState === "queued" && quotaSupabase && exportId && attemptId) {
+      failureOutcome = await failPdfExportAttempt(
+        quotaSupabase,
+        user.id,
+        quotaClaim?.usageIds ?? [],
+        exportId,
+        attemptId,
+        outcomeCode,
+        "server_render_failed",
+      ).catch(() => null);
+    }
+    if (
+      uploadedStoragePath &&
+      (failureOutcome === "failed_current" ||
+        failureOutcome === "stale_attempt")
+    ) {
+      await supabase.storage
+        .from(BUCKET)
+        .remove([uploadedStoragePath])
+        .then(
+          () => undefined,
+          () => undefined,
+        );
+    }
+    if (ledgerState === "ready" && quotaSupabase) {
       await releaseQuotaQuietly(
         quotaSupabase,
         user.id,

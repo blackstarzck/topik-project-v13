@@ -146,7 +146,12 @@ Future 항목은 제품 방향이지 현재 제공 약속이 아니다. 사용�
 - 한 PDF에 같은 문제가 여러 번 포함돼도 distinct 문제 하나로 한 번만 계산한다.
 - 대상 문제는 서버가 제출·리포트 관계에서 결정하며 browser가 임의로 quota 대상을 선택하지 않는다.
 - 새 생성은 quota를 먼저 예약하고 성공 시 확정한다. 생성 실패는 예약을 해제해 횟수를 소비하지 않는다.
+- 한 번의 사용자 내보내기 행동은 browser가 만든 UUID 요청 번호 하나를 사용한다. 서버 PDF가 실패해 browser print로 자동 전환돼도 같은 요청 번호, export 기록과 quota 예약을 이어 쓰며 두 번 계산하지 않는다.
+- 같은 요청의 네트워크 재전송은 유효한 처리 lease가 남아 있으면 중복 생성하지 않고 진행 상태를 알리며, 중단되어 lease가 만료됐으면 한 실행만 같은 기록을 이어받는다. 완료 기록도 사용자 session으로 대상 문제와 요청 번호의 quota binding을 다시 확인하고 service-only commit을 멱등 확인한 뒤 기존 결과를 돌려준다. 실패 후 재시도는 같은 기록과 해제된 예약을 다시 사용한다. 요청 번호는 최초로 묶인 사용자·대상 문제·quota 기간 밖의 새 생성에 재사용할 수 없다.
 - PDF 생성 요청은 인증과 요청 형식 검증 뒤 `queued`로 기록하고 `ready` 또는 `failed`로 마감한다. 기술 실패, quota 거절, browser print 전달은 서로 다른 결과로 분류한다.
+- 사용자 session/JWT가 `acquire_pdf_export_attempt`를 호출하면 DB가 활성 사용자와 원본 소유권을 검증하고 attempt UUID와 lease를 만든다. 일반 사용자는 `export_files`를 직접 추가·수정·삭제할 수 없고 자기 기록을 읽을 수만 있다.
+- 서재 묶음 내보내기는 선택한 서재 항목 가운데 본인의 제출 또는 비교 리포트에 실제로 연결된 항목만 허용한다. 문제·시도·기존 export 항목은 서재에 존재하더라도 새 PDF의 원본으로 사용하지 않는다.
+- 각 실행은 별도 attempt UUID와 Storage 경로를 사용한다. 현재 attempt만 원자적으로 `ready + quota commit` 또는 `failed + quota release`를 수행할 수 있으며, lease를 잃은 실행은 새 실행의 기록·예약·파일을 건드리지 않고 자기 경로만 정리한다. 완료 응답만 유실돼 DB 결과를 확정할 수 없으면 성공 파일을 파괴하지 않고 다음 동일 요청에서 복구한다.
 - 저장된 PDF의 재다운로드는 새 생성이 아니므로 횟수를 소비하지 않는다.
 - 서버 PDF와 browser print 경로는 같은 quota 검사를 거치며 fallback으로 우회할 수 없다.
 - 초과는 시스템 장애가 아닌 중립적 제한 안내로 표시하고 limit, used, remaining, reset 시점과 period 단위를 제공한다.

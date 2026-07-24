@@ -30,6 +30,7 @@
 - `private.protect_profile_columns()`의 `app.claim_affiliation_code` 검사는 topik-ai 소유 응답 RPC가 같은 트랜잭션에서 소속을 갱신하기 위한 transaction-local 호환 경계다. v13 browser가 이 값을 설정하거나 raw affiliation code RPC로 우회하지 않는다.
 - `SECURITY DEFINER` function은 RLS 우회가 필요한 최소 작업에만 사용하고, 함수 내부에서 auth·소유권을 다시 확인하며 `search_path`와 execute grant를 제한한다.
 - 사용자 전용 데이터를 다루는 공개 `SECURITY DEFINER` RPC는 진입 시 active profile을 다시 확인한다. 현재 대상은 dashboard KPI, 제출 이력 문맥, 오래된 초안 교체, 비교 리포트 생성, PDF quota 예약, nickname 중복 확인, 서재 문제 목록이다. 제거된 canonical 쓰기 경로에 의존하는 구형 제출 RPC는 authenticated 실행 권한을 회수한다.
+- PDF 획득과 quota claim은 browser의 사용자 session/JWT로만 실행하고 함수 안에서 `auth.uid()`, 활성 사용자, 원본 소유권을 다시 확인한다. claim 시 DB는 획득 기록의 제출·리포트·서재 항목에서 문제 집합을 다시 계산하며, 정렬·중복 제거된 1~6개 입력과 정확히 같고 모든 원본이 여전히 존재할 때만 quota를 변경한다. 서재 선택은 서재 row 소유권뿐 아니라 허용된 `submission | report` 유형과 연결 대상의 실제 소유권까지 확인한다. DB가 attempt UUID와 lease를 만들며 authenticated 역할의 `export_files` 직접 INSERT·UPDATE·DELETE 권한은 제거한다. service role은 사용자 대신 획득·claim하거나 일반 CRUD를 수행하는 용도가 아니고, JWT 단계가 성공한 뒤 현재 attempt와 export 요청 번호가 usage 요청 번호에 정확히 일치하는 경우에만 원자적 ready+commit 또는 failed+release에 사용한다.
 - private schema function과 cron은 browser callable API로 간주하지 않는다.
 - admin RPC와 audit 구조가 migration에 남아 있어도 v13 user app은 admin UI나 운영 권한을 소유하지 않는다.
 - `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_ACCESS_TOKEN` 직접 접근은 공용 service-role helper로 제한한다. 현재 notification worker와 unsubscribe route의 두 직접 접근은 별도 notification 소유권 정리 전까지의 명시적 임시 예외이며, 후속 notification task가 shared server-only helper로 옮긴 뒤 allowlist에서 제거한다.
@@ -56,6 +57,8 @@
 | `generated-exports` | private bucket, active authenticated 본인의 `exports/{user_id}/...` 경로만 SELECT | active·email-confirmed 본인의 경로만 INSERT, active 본인의 경로만 DELETE, UPDATE policy 없음 |
 
 public bucket과 SELECT policy는 콘텐츠 table의 publish/visibility RLS를 자동으로 상속하지 않는다. 이미 발급된 avatar signed URL은 최대 5분 동안 유효할 수 있지만, 탈퇴한 사용자의 기존 JWT로 새 signed URL을 만들거나 object를 읽고 쓸 수는 없다. 앱의 정상 export 생성은 server 경로지만 위 표는 현재 SQL이 실제 허용하는 범위를 기록한다. bucket, path와 policy의 최종 정본은 Storage migration이다.
+
+서버 PDF는 attempt별 object 경로를 사용한다. service-only terminal 함수가 현재 attempt의 실패 또는 lease 상실을 확정한 경우에만 그 실행의 object를 삭제하고, 새 attempt의 ledger·quota·object는 변경하지 않는다. complete 호출 결과만 유실돼 ready 여부도 확정할 수 없으면 복구 가능성을 위해 object를 남긴다. 삭제 자체는 Storage 장애로 실패할 수 있으므로 운영 정리 대상은 attempt, `failed` ledger와 object 존재 여부를 함께 대사한다.
 
 ## 변경 검토 체크리스트
 
