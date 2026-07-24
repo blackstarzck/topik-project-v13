@@ -646,10 +646,7 @@ export function ShortAnswerWriting51Workspace({
                       type="secondary"
                       className="writing-answer-card__hint"
                     >
-                      {activeBlank
-                        ? (blankHintText(activeBlank) ??
-                          tPage("answerHintFallback"))
-                        : tPage("answerHintFallback")}
+                      {activeBlank ? blankHintText(activeBlank) : null}
                     </Paragraph>
                   </div>
                   <Text type={inRecommended ? "success" : "secondary"}>

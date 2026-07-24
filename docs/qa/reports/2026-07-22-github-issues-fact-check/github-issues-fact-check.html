@@ -63,7 +63,7 @@
       <dt>코드 기준</dt><dd><code>git pull --ff-only origin main</code> 후 <code>22eb1413bf9e61dddde0e87529098f5146be6293</code>. 이전 기준 이후 변경은 CI·문서·테스트이며 앱 소스 변경은 없었습니다.</dd>
       <dt>QA 작성자 계정</dt><dd>main의 <code>.env.local</code>로 로컬 앱을 실행하고 로그인된 지정 계정에서 문제 목록, 51~54 작성 화면, 추천, 서재, 피드백, 성장·약점, 설정을 직접 열었습니다. 서재에는 저장 답안 22건과 비교 가능 14건이 표시됐습니다.</dd>
       <dt>두 번째 E2E 계정</dt><dd>Playwright 격리 세션에서 저장소의 기존 E2E 학습자 계정으로 로그인을 시도했습니다. 현재 설정된 비밀번호는 인증에 실패했고 2026-07-15 저장 세션도 만료돼 로그인 화면으로 돌아왔습니다. 임의 비밀번호 변경·계정 재생성은 하지 않았으므로 교차 계정 데이터 판정은 미완료입니다.</dd>
-      <dt>현재 브라우저 재검증</dt><dd>현재 worktree의 로컬 서버에서 보호된 51번 경로가 로그인 화면으로 정상 전환되는 것까지 Playwright MCP로 확인했습니다. 준비된 두 테스트 계정은 모두 <code>invalid_credentials</code>였고, 사용자가 열어 둔 사용자 앱도 로그아웃 상태여서 #3·#6·#8의 로그인 후 화면을 두 계정으로 교차 확인하는 단계는 실행할 수 없었습니다.</dd>
+      <dt>현재 브라우저 재검증</dt><dd>현재 worktree의 로컬 서버에서 보호된 51번 경로가 로그인 화면으로 정상 전환되는 것까지 Playwright MCP로 확인했습니다. 준비된 두 테스트 계정은 모두 <code>invalid_credentials</code>였고, 사용자가 열어 둔 사용자 앱도 로그아웃 상태여서 #3·#6·#8의 로그인 후 화면을 두 계정으로 교차 확인하는 단계는 실행할 수 없었습니다. 필수 인증 Playwright CLI·MCP 검증은 미실행이며, 이 증거가 준비되기 전에는 해당 UI 변경을 merge-ready로 판정할 수 없습니다.</dd>
       <dt>로컬 교차검증 재시도</dt><dd>main과 같은 <code>.env.local</code>을 사용해 로컬 Supabase에서 별도 E2E 학습자 생성을 재시도했습니다. 그러나 전체 migration 재생이 기존 <code>20260612180000_notification_dispatcher.sql</code>에서 중단됐습니다. 이 migration이 <code>notification_templates</code>를 참조하지만 현재 선행 migration에는 해당 테이블 생성이 없어, #8 migration 적용 전 단계에서 로컬 DB가 멈췄습니다.</dd>
       <dt>변경하지 않은 것</dt><dd>새 답안 제출, PDF 쿼터 소비, 비교 리포트 생성, 비밀번호 변경, 약관 발행, 원격 DB 변경은 수행하지 않았습니다. 필요한 곳은 기존 데이터와 현재 소스·테스트로 교차 검증했습니다.</dd>
     </dl>

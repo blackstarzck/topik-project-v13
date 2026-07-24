@@ -33,7 +33,9 @@ alter table public.export_files
       'export_record_failed',
       'unknown'
     )
-  );
+  ) not valid;
+alter table public.export_files
+  validate constraint export_files_failure_code_allowed;
 
 alter table public.export_files
   drop constraint if exists export_files_failure_terminal_shape;
@@ -50,7 +52,9 @@ alter table public.export_files
       and failure_code is null
       and failed_at is null
     )
-  );
+  ) not valid;
+alter table public.export_files
+  validate constraint export_files_failure_terminal_shape;
 
 comment on column public.export_files.failure_code is
   'Sanitized terminal classification only. Never stores exception messages, answers, provider payloads, or PII.';

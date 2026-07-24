@@ -37,6 +37,8 @@ const helpers = vi.hoisted(() => {
     releasePdfExportQuotaMock: vi.fn(),
     resolvePdfExportItemsMock: vi.fn(),
     storageFromMock: vi.fn(),
+    storageRemoveMock: vi.fn(),
+    storageUploadMock: vi.fn(),
   };
 });
 
@@ -147,8 +149,11 @@ describe("POST /api/export/pdf", () => {
     ]);
     helpers.buildPdfDocumentMock.mockReturnValue({ type: "pdf-doc" });
     helpers.renderToBufferMock.mockResolvedValue(Buffer.from("pdf"));
+    helpers.storageUploadMock.mockResolvedValue({ error: null });
+    helpers.storageRemoveMock.mockResolvedValue({ error: null });
     helpers.storageFromMock.mockReturnValue({
-      upload: vi.fn().mockResolvedValue({ error: null }),
+      upload: helpers.storageUploadMock,
+      remove: helpers.storageRemoveMock,
     });
     helpers.fromMock.mockImplementation((table: string) => {
       if (table === "export_files") {
@@ -307,6 +312,32 @@ describe("POST /api/export/pdf", () => {
     const response = await postPdf();
 
     expect(response.status).toBe(500);
+    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1",
+      ["usage-1"],
+      "server_render_failed",
+    );
+  });
+
+  it("removes the uploaded object when the ready export update fails", async () => {
+    helpers.exportUpdateMock
+      .mockReturnValueOnce({
+        eq: vi.fn().mockResolvedValue({
+          error: { message: "ready update failed" },
+        }),
+      })
+      .mockReturnValueOnce({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+    const response = await postPdf();
+
+    expect(response.status).toBe(500);
+    expect(helpers.storageRemoveMock).toHaveBeenCalledWith([
+      "exports/user-1/00000000-0000-0000-0000-000000000111.pdf",
+    ]);
+    expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
     expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
       expect.anything(),
       "user-1",

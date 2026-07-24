@@ -46,5 +46,17 @@ describe("writing completion and PDF outcome migration", () => {
     expect(sql).toContain("server_render_failed");
     expect(sql).toContain("browser_print_prepare_failed");
     expect(sql).toContain("export_files_failure_terminal_shape");
+    expect(sql).toMatch(
+      /add constraint export_files_failure_code_allowed check \([\s\S]*?\)\s+not valid;/,
+    );
+    expect(sql).toContain(
+      "validate constraint export_files_failure_code_allowed;",
+    );
+    expect(sql).toMatch(
+      /add constraint export_files_failure_terminal_shape check \([\s\S]*?\)\s+not valid;/,
+    );
+    expect(sql).toContain(
+      "validate constraint export_files_failure_terminal_shape;",
+    );
   });
 });
