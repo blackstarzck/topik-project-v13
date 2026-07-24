@@ -4,7 +4,7 @@
 | --- | --- |
 | 상태 | 활성 운영 정책 |
 | owner | TALKPIK AI v13 클라이언트 운영 |
-| 범위 | 사용자 안전, 임시 복구, 실행 환경·에이전트 안전, AI 개발 lifecycle, 저장소 간 복구 경계 |
+| 범위 | 사용자 안전, 임시 복구, 실행 환경·에이전트 안전, AI 개발 lifecycle, 저장소 간 복구 경계, 시스템 리포팅 DB 이관 |
 | 마지막 검토 | 2026-07-24 |
 | 재검토 | 관련 제품·환경·복구 계약 변경 때마다, 최소 분기 1회 |
 
@@ -23,6 +23,7 @@
 | [`topik-ai-writing-pdf-metrics-handoff.md`](./topik-ai-writing-pdf-metrics-handoff.md) | 실행 대기 | topik-ai 운영·분석 | 쓰기 제출 시도·분석 결과·PDF 생성 결과의 분리 집계와 관리자 화면 계약 | 관련 migration·관리자 화면 구현·handback 때 |
 | [`writing-submission-gate-runbook.md`](./writing-submission-gate-runbook.md) | 활성 | v13 클라이언트 운영 | 작문 제출 게이트 상태 확인, 드릴 재인증·활성화, 비상 차단 | outbox 계약·제출 경로 변경 때 |
 | [`topik-ai-pdf-request-identity-cutover-handoff.md`](./topik-ai-pdf-request-identity-cutover-handoff.md) | 실행 대기 | topik-ai DB·배포 운영 | 기존 PDF queued/reserved 안전 종료, 요청 식별자 migration과 v13 앱의 maintenance cutover | PDF 요청 식별자 migration 원격 적용·배포·handback 때 |
+| [`system-reporting-handoff.md`](./system-reporting-handoff.md) | 실행 대기 | topik-ai DB·운영 | 시스템 리포팅 migration의 dev 검증, production 적용, 권한 검증과 v13 handback | 리포팅 DB 적용·검증·배포 때 |
 
 ## 적용 원칙
 

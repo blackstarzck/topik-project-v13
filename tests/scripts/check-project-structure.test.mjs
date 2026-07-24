@@ -36,6 +36,7 @@ const operationsPolicyPaths = [
   "docs/operations/client-resilience-policy.md",
   "docs/operations/cross-repo-recovery-boundary.md",
   "docs/operations/environment-and-agent-safety.md",
+  "docs/operations/system-reporting-handoff.md",
   "docs/operations/topik-ai-operations-handoff.md",
   "docs/operations/topik-ai-notification-migration-order-handoff.md",
   "docs/operations/topik-ai-pdf-request-identity-cutover-handoff.md",

@@ -2806,6 +2806,52 @@
       "linkSignUp": "가입"
     }
   },
+  "systemReport": {
+    "launcherTooltip": "도움 요청 및 의견 보내기",
+    "launcherAria": "도움 요청 및 의견 보내기",
+    "title": "도움이 필요하신가요?",
+    "helper": "문제나 궁금한 점을 알려주시면 확인 후 도와드릴게요.",
+    "close": "도움 요청 닫기",
+    "category": {
+      "label": "문의 유형",
+      "bug": "버그",
+      "question": "문의",
+      "suggestion": "제안"
+    },
+    "email": {
+      "label": "답변 받을 이메일",
+      "placeholder": "name@example.com"
+    },
+    "reportTitle": {
+      "label": "제목",
+      "placeholder": "어떤 도움이 필요한지 요약해 주세요"
+    },
+    "message": {
+      "label": "내용",
+      "placeholder": "발생한 문제나 궁금한 점을 자세히 알려주세요"
+    },
+    "validation": {
+      "emailRequired": "이메일을 입력해 주세요.",
+      "emailInvalid": "올바른 이메일 주소를 입력해 주세요.",
+      "emailTooLong": "이메일은 {max}자 이내로 입력해 주세요.",
+      "titleRequired": "제목을 입력해 주세요.",
+      "titleTooLong": "제목은 {max}자 이내로 입력해 주세요.",
+      "messageRequired": "내용을 입력해 주세요.",
+      "messageTooLong": "내용은 {max}자 이내로 입력해 주세요."
+    },
+    "diagnosticsDisclosure": "현재 경로와 브라우저·기기 환경을 간단히 첨부합니다. 신고는 직접 삭제할 때까지 보관되며 정해진 보관 기간은 없습니다.",
+    "sending": "보내는 중",
+    "send": "보내기",
+    "retry": "다시 보내기",
+    "errorTitle": "보내지 못했어요",
+    "errorDescription": "잠시 후 다시 보내 주세요.",
+    "success": {
+      "title": "요청을 보냈어요",
+      "body": "확인에 필요한 접수 정보를 보관해 주세요.",
+      "reference": "접수 번호",
+      "time": "접수 시간"
+    }
+  },
   "shared": {
     "unavailable": {
       "title": "잠시 사용할 수 없습니다",

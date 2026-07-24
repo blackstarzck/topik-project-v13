@@ -49,7 +49,8 @@ const viewportProjects = publicReadOnly
   ? [
       {
         name: "public-mobile-360",
-        testMatch: /screens\/(?:landing-locales|screens-public)\.spec\.ts$/,
+        testMatch:
+          /screens\/(?:landing-locales|screens-public|system-reporting)\.spec\.ts$/,
         use: {
           ...devices["Desktop Chrome"],
           viewport: { width: 360, height: 720 },
@@ -57,7 +58,8 @@ const viewportProjects = publicReadOnly
       },
       {
         name: "public-desktop-1280",
-        testMatch: /screens\/(?:landing-locales|screens-public)\.spec\.ts$/,
+        testMatch:
+          /screens\/(?:landing-locales|screens-public|system-reporting)\.spec\.ts$/,
         use: {
           ...devices["Desktop Chrome"],
           viewport: { width: 1280, height: 800 },
