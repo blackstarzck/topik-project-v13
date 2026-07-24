@@ -27,10 +27,22 @@ describe("ShortAnswerWriting51Workspace structure", () => {
     expect(source).not.toContain("expressionHints");
     expect(source).not.toContain('tPage("expressionHint0")');
     expect(source).not.toContain("writing-expression-chip-list");
-    expect(source).toContain("activeBlank ? blankHintText(activeBlank) : null");
     expect(source).not.toContain('tPage("answerHintFallback")');
     expect(messages.writing.q51.hintTitle).toBe("빈칸별 작성 힌트");
     expect(messages.writing.q51).not.toHaveProperty("expressionHint0");
+  });
+
+  it("keeps only the character count above the q51 answer input", () => {
+    const source = readFileSync(sourcePath, "utf8");
+    const messages = JSON.parse(readFileSync(messagesPath, "utf8"));
+
+    expect(source).toContain('className="writing-answer-card__head');
+    expect(source).toContain('tEditor("charCount"');
+    expect(source).not.toContain('tPage("answerTitle"');
+    expect(source).not.toContain('tPage("answerHintFallback"');
+    expect(source).not.toContain("writing-answer-card__hint");
+    expect(messages.writing.q51).not.toHaveProperty("answerTitle");
+    expect(messages.writing.q51).not.toHaveProperty("answerHintFallback");
   });
 
   it("delegates local recovery, latest-save flushing, and conflicts to the shared resilience controller", () => {

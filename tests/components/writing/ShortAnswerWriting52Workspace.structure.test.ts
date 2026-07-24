@@ -13,12 +13,12 @@ describe("ShortAnswerWriting52Workspace structure", () => {
     const source = readFileSync(sourcePath, "utf8");
 
     expect(source).toContain("<WritingGuideAccordion");
-    expect(source).toContain("Collapse");
-    expect(source).toContain("Plus");
-    expect(source).toContain('className="writing-expression-accordion"');
-    expect(source).toContain('defaultActiveKey={["expression"]}');
-    expect(source).toContain("writing-expression-chip-list");
-    expect(source).toContain("writing-expression-chip");
+    expect(source).toContain("Descriptions");
+    expect(source).not.toContain("Collapse");
+    expect(source).not.toContain("Plus");
+    expect(source).not.toContain('className="writing-expression-accordion"');
+    expect(source).not.toContain("writing-expression-chip-list");
+    expect(source).not.toContain("writing-expression-chip");
     expect(source).not.toContain('className="writing-answer-card__actions"');
     expect(source).not.toContain(
       'import { ConditionsPanel } from "./ConditionsPanel";',
@@ -45,7 +45,9 @@ describe("ShortAnswerWriting52Workspace structure", () => {
   it("configures the same guide, tips, and hints rail structure as q51", () => {
     const source = readFileSync(sourcePath, "utf8");
 
-    expect(source).toContain('defaultActiveKeys={["guide", "tips", "hints"]}');
+    expect(source).toContain("blankHints.length > 0");
+    expect(source).toContain('["guide", "tips", "hints"]');
+    expect(source).toContain('["guide", "tips"]');
     expect(source).toContain('key: "guide"');
     expect(source).toContain('key: "tips"');
     expect(source).toContain('key: "hints"');
@@ -53,6 +55,10 @@ describe("ShortAnswerWriting52Workspace structure", () => {
     expect(source).toContain('title: tPage("tipsTitle")');
     expect(source).toContain('title: tPage("hintTitle")');
     expect(source).toContain("blankHints");
+    expect(source).toContain("blank.role?.trim()");
+    expect(source).toContain("blank.functionLabel?.trim()");
+    expect(source).toContain("blank.answerType?.trim()");
+    expect(source).toContain("<Descriptions");
     expect(source).toContain("problem.rubric.criteria");
     expect(source).not.toContain("problem.rubric.conditions.slice(0, 4)");
     expect(source).not.toContain("problem.validationMessages.slice(0, 2)");
@@ -60,22 +66,15 @@ describe("ShortAnswerWriting52Workspace structure", () => {
     expect(source).not.toContain('key: "examples"');
   });
 
-  it("renders q52 example expressions as answer-card chips, not a right-rail list", () => {
+  it("does not invent generic expressions for every q52 problem", () => {
     const source = readFileSync(sourcePath, "utf8");
 
-    expect(source).toContain('key: "expression"');
-    expect(source).toContain("label: (");
-    expect(source).toContain('tPage("expressionTitle")');
-    expect(source).toContain("writing-expression-chip-list");
-    expect(source).toContain("writing-expression-chip");
-    expect(source).toContain("onClick={onToggleAutosave}");
-    expect(source).not.toContain(
-      '<ul className="writing-guide-list writing-guide-list--examples">',
-    );
-    expect(source).not.toContain("<li key={hint}>{hint}</li>");
+    expect(source).not.toContain("expressionHints");
+    expect(source).not.toContain('tPage("expressionTitle")');
+    expect(source).not.toContain('tPage("expressionHint0")');
   });
 
-  it("uses the shared q51 expression accordion and chip styles", () => {
+  it("keeps shared expression styles available for other writing screens", () => {
     const styles = readFileSync(stylesPath, "utf8");
 
     expect(styles).toContain(".writing-expression-accordion.ant-collapse");
@@ -106,16 +105,16 @@ describe("ShortAnswerWriting52Workspace structure", () => {
 
   it("uses wireframe terminology for q52 guide titles in all locales", () => {
     const expectations = {
-      "messages/ko.json": ["문제 조건", "작성 가이드", "예시 표현"],
+      "messages/ko.json": ["문제 조건", "작성 가이드", "빈칸별 작성 힌트"],
       "messages/en.json": [
         "Problem conditions",
         "Writing guide",
-        "Example expressions",
+        "Blank-specific hints",
       ],
       "messages/vi.json": [
         "Điều kiện đề bài",
         "Hướng dẫn viết",
-        "Cụm diễn đạt mẫu",
+        "Gợi ý theo từng chỗ trống",
       ],
     };
 
@@ -129,6 +128,20 @@ describe("ShortAnswerWriting52Workspace structure", () => {
       expect(messages.writing.q52.guideTitle).toBe(guideTitle);
       expect(messages.writing.q52.tipsTitle).toBe(tipsTitle);
       expect(messages.writing.q52.hintTitle).toBe(hintTitle);
+      expect(messages.writing.q52).not.toHaveProperty("answerTitle");
+      expect(messages.writing.q52).not.toHaveProperty("answerHintFallback");
+      expect(messages.writing.q52).not.toHaveProperty("expressionTitle");
+      expect(messages.writing.q52).not.toHaveProperty("expressionHint0");
     }
+  });
+
+  it("keeps only the character count above the q52 answer input", () => {
+    const source = readFileSync(sourcePath, "utf8");
+
+    expect(source).toContain('className="writing-answer-card__head');
+    expect(source).toContain('tEditor("charCount"');
+    expect(source).not.toContain('tPage("answerTitle"');
+    expect(source).not.toContain('tPage("answerHintFallback"');
+    expect(source).not.toContain("writing-answer-card__hint");
   });
 });
