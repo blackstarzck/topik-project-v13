@@ -6,7 +6,6 @@ import { getMessages } from "next-intl/server";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 import { GoogleAnalyticsTags } from "@/components/analytics/GoogleAnalyticsTags";
-import { SystemReportLauncher } from "@/components/shared/SystemReportLauncher";
 import { DEFAULT_TIME_ZONE } from "@/i18n/locales";
 import { resolveLocale } from "@/i18n/request";
 import { AppProviders } from "./providers";
@@ -110,7 +109,6 @@ export default async function RootLayout({
           <AntdRegistry>
             <AppProviders initialAppearance={appearance}>
               {children}
-              <SystemReportLauncher />
             </AppProviders>
           </AntdRegistry>
         </NextIntlClientProvider>

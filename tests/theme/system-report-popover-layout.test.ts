@@ -12,6 +12,14 @@ const launcherCss = readFileSync(
   ),
   "utf8",
 );
+const providersSource = readFileSync(
+  join(process.cwd(), "src", "app", "providers.tsx"),
+  "utf8",
+);
+const rootLayoutSource = readFileSync(
+  join(process.cwd(), "src", "app", "layout.tsx"),
+  "utf8",
+);
 
 function blockFor(css: string, selector: string): string {
   const escaped = selector
@@ -24,6 +32,11 @@ function blockFor(css: string, selector: string): string {
 }
 
 describe("system report popover layout", () => {
+  test("mounts the global launcher in client providers without changing the server layout", () => {
+    expect(providersSource).toContain("<SystemReportLauncher />");
+    expect(rootLayoutSource).not.toContain("SystemReportLauncher");
+  });
+
   test("uses the strong floating shadow on the launcher and popover surface", () => {
     const launcher = blockFor(
       launcherCss,
