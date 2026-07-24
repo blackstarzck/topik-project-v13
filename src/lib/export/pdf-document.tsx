@@ -17,6 +17,7 @@ import {
 } from "@react-pdf/renderer";
 
 import type { PdfExportOptions } from "./pdf-options";
+import pdfDocumentStyles from "./pdf-document-styles.json";
 
 export type PdfFeedbackDimension = {
   dimension: string;
@@ -32,11 +33,72 @@ export type PdfSentenceFeedback = {
   comment: string | null;
 };
 
+export type PdfBlankContext = {
+  label: string;
+  role: string | null;
+  functionLabel: string | null;
+  answerType: string | null;
+};
+
+export type PdfChartContext = {
+  title: string;
+  unit: string | null;
+  yearRange: Array<string | number>;
+  series: Array<{
+    label: string;
+    values: number[];
+  }>;
+};
+
+export type PdfMaterialCardContext =
+  | {
+      id: string;
+      kind: "chart";
+      title: string;
+      subtitle: string | null;
+      chart: PdfChartContext;
+    }
+  | {
+      id: string;
+      kind: "reference";
+      title: string;
+      subtitle: string | null;
+      rows: Array<{ label: string; value: string }>;
+    };
+
+type PdfAvailableProblemContext = {
+  title: string;
+  prompt: string;
+};
+
+export type PdfProblemContext =
+  | {
+      kind: "unavailable";
+      questionNo: number;
+    }
+  | (PdfAvailableProblemContext & {
+      kind: "q51" | "q52";
+      blankedPrompt: string;
+      blanks: PdfBlankContext[];
+    })
+  | (PdfAvailableProblemContext & {
+      kind: "q53";
+      writingTasks: string[];
+      materialCards: PdfMaterialCardContext[];
+    })
+  | (PdfAvailableProblemContext & {
+      kind: "q54";
+      topicTitle: string;
+      topicDefinition: string | null;
+      background: string | null;
+      requiredQuestions: string[];
+    });
+
 export type PdfSubmissionItem = {
   kind: "submission";
   problemId: string;
   questionNo: number;
-  problemTitle: string | null;
+  problemContext: PdfProblemContext;
   submittedAt: string;
   answerText: string;
   charCount: number;
@@ -99,80 +161,172 @@ export function registerPdfFonts(): void {
   fontsRegistered = true;
 }
 
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: FONT_FAMILY,
-    fontSize: 10,
-    lineHeight: 1.55,
-    color: "#1f1f1f",
-    paddingTop: 44,
-    paddingBottom: 52,
-    paddingHorizontal: 48,
-  },
-  brandRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e5e5",
-  },
-  brand: { fontSize: 11, fontWeight: 700, letterSpacing: 1 },
-  brandMeta: { fontSize: 8, color: "#8c8c8c" },
-  docTitle: { fontSize: 16, fontWeight: 700, marginBottom: 2 },
-  docSubtitle: { fontSize: 9, color: "#8c8c8c", marginBottom: 14 },
-  itemBlock: { marginBottom: 18 },
-  itemTitle: { fontSize: 12, fontWeight: 700, marginBottom: 2 },
-  itemMeta: { fontSize: 8, color: "#8c8c8c", marginBottom: 8 },
-  sectionTitle: {
-    fontSize: 10,
-    fontWeight: 700,
-    marginTop: 8,
-    marginBottom: 4,
-    paddingBottom: 2,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ededed",
-  },
-  scoreRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 4,
-  },
-  scoreTotal: { fontSize: 13, fontWeight: 700 },
-  scoreChip: {
-    fontSize: 8,
-    color: "#454545",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 3,
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-  },
-  bodyText: { fontSize: 9.5 },
-  answerBox: {
-    backgroundColor: "#fafafa",
-    borderWidth: 1,
-    borderColor: "#ededed",
-    borderRadius: 4,
-    padding: 10,
-  },
-  sentenceRow: { marginBottom: 6 },
-  sentenceOriginal: { fontSize: 9, color: "#8c8c8c" },
-  sentenceCorrected: { fontSize: 9.5, fontWeight: 700 },
-  sentenceComment: { fontSize: 8.5, color: "#454545" },
-  emptyNote: { fontSize: 9, color: "#8c8c8c" },
-  footer: {
-    position: "absolute",
-    left: 48,
-    right: 48,
-    bottom: 24,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    fontSize: 8,
-    color: "#8c8c8c",
-  },
-});
+type PdfStyleValue =
+  | ReturnType<typeof StyleSheet.create>[string]
+  | Array<ReturnType<typeof StyleSheet.create>[string]>;
+
+const styles = StyleSheet.create(
+  pdfDocumentStyles as Parameters<typeof StyleSheet.create>[0],
+);
+/*
+ * react-pdf의 style은 브라우저 DOM inline style이 아니다. JSX attribute를
+ * 직접 쓰지 않고 이 adapter를 통과시켜 두 렌더러의 style 계약을 분리한다.
+ */
+function pdfStyle(style: PdfStyleValue) {
+  return { style };
+}
+
+function ProblemContextBlock({ context }: { context: PdfProblemContext }) {
+  if (context.kind === "unavailable") {
+    return (
+      <View>
+        <Text {...pdfStyle(styles.sectionTitle)}>문제</Text>
+        <View {...pdfStyle(styles.problemCard)}>
+          <Text {...pdfStyle(styles.emptyNote)}>
+            제출 당시 문제 정보를 확인할 수 없습니다.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      <Text {...pdfStyle(styles.sectionTitle)}>실제 제출 문제</Text>
+      <View {...pdfStyle(styles.problemCard)}>
+        <Text {...pdfStyle(styles.bodyText)}>{context.prompt}</Text>
+      </View>
+
+      {context.kind === "q51" || context.kind === "q52" ? (
+        <View>
+          {context.blanks.map((blank, index) => {
+            const fields = [
+              blank.role ? `역할: ${blank.role}` : null,
+              blank.functionLabel
+                ? `문맥상 기능: ${blank.functionLabel}`
+                : null,
+              blank.answerType ? `요구 답안 형태: ${blank.answerType}` : null,
+            ].filter((field): field is string => Boolean(field));
+            return fields.length > 0 ? (
+              <View
+                key={`${blank.label}-${index}`}
+                {...pdfStyle(styles.contextCard)}
+              >
+                <Text {...pdfStyle(styles.contextTitle)}>
+                  빈칸 {blank.label || index + 1}
+                </Text>
+                {fields.map((field) => (
+                  <Text key={field} {...pdfStyle(styles.contextMeta)}>
+                    {field}
+                  </Text>
+                ))}
+              </View>
+            ) : null;
+          })}
+        </View>
+      ) : null}
+
+      {context.kind === "q53" ? (
+        <View>
+          {context.writingTasks.length > 0 ? (
+            <View {...pdfStyle(styles.contextCard)}>
+              <Text {...pdfStyle(styles.contextTitle)}>작성 과제</Text>
+              {context.writingTasks.map((task, index) => (
+                <Text key={`${task}-${index}`} {...pdfStyle(styles.listItem)}>
+                  {index + 1}. {task}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+          {context.materialCards.map((card) => (
+            <View key={card.id} {...pdfStyle(styles.contextCard)}>
+              <Text {...pdfStyle(styles.contextTitle)}>{card.title}</Text>
+              {card.subtitle ? (
+                <Text {...pdfStyle(styles.contextMeta)}>{card.subtitle}</Text>
+              ) : null}
+              {card.kind === "reference" ? (
+                card.rows.map((row, index) => (
+                  <Text
+                    key={`${row.label}-${index}`}
+                    {...pdfStyle(styles.contextMeta)}
+                  >
+                    {row.label}: {row.value}
+                  </Text>
+                ))
+              ) : (
+                <View {...pdfStyle(styles.table)}>
+                  <View {...pdfStyle([styles.tableRow, styles.tableHeader])}>
+                    <Text {...pdfStyle(styles.tableCell)}>범례</Text>
+                    {(card.chart.yearRange.length > 0
+                      ? card.chart.yearRange
+                      : (card.chart.series[0]?.values.map(
+                          (_, index) => index + 1,
+                        ) ?? [])
+                    ).map((label, index, labels) => (
+                      <Text
+                        key={`${label}-${index}`}
+                        {...pdfStyle([
+                          styles.tableCell,
+                          index === labels.length - 1
+                            ? styles.tableCellLast
+                            : {},
+                        ])}
+                      >
+                        {String(label)}
+                      </Text>
+                    ))}
+                  </View>
+                  {card.chart.series.map((series) => (
+                    <View key={series.label} {...pdfStyle(styles.tableRow)}>
+                      <Text {...pdfStyle(styles.tableCell)}>
+                        {series.label}
+                      </Text>
+                      {series.values.map((value, index) => (
+                        <Text
+                          key={`${series.label}-${index}`}
+                          {...pdfStyle([
+                            styles.tableCell,
+                            index === series.values.length - 1
+                              ? styles.tableCellLast
+                              : {},
+                          ])}
+                        >
+                          {value}
+                          {card.chart.unit ?? ""}
+                        </Text>
+                      ))}
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {context.kind === "q54" ? (
+        <View {...pdfStyle(styles.contextCard)}>
+          <Text {...pdfStyle(styles.contextTitle)}>{context.topicTitle}</Text>
+          {context.topicDefinition ? (
+            <Text {...pdfStyle(styles.contextMeta)}>
+              {context.topicDefinition}
+            </Text>
+          ) : null}
+          {context.background ? (
+            <Text {...pdfStyle(styles.contextMeta)}>
+              배경: {context.background}
+            </Text>
+          ) : null}
+          {context.requiredQuestions.map((question, index) => (
+            <Text key={`${question}-${index}`} {...pdfStyle(styles.listItem)}>
+              {index + 1}. {question}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 function SubmissionBlock({
   item,
@@ -183,36 +337,24 @@ function SubmissionBlock({
 }) {
   const fb = item.feedback;
   return (
-    <View style={styles.itemBlock}>
-      <Text style={styles.itemTitle}>
-        {item.questionNo}번 · {item.problemTitle ?? "쓰기 문제"}
+    <View {...pdfStyle(styles.itemBlock)}>
+      <Text {...pdfStyle(styles.itemTitle)}>
+        {item.questionNo}번 ·{" "}
+        {item.problemContext.kind === "unavailable"
+          ? "쓰기 문제"
+          : item.problemContext.title}
       </Text>
-      <Text style={styles.itemMeta}>
+      <Text {...pdfStyle(styles.itemMeta)}>
         제출일 {item.submittedAt} · {item.charCount}자
       </Text>
 
-      {options.includeFeedback && fb ? (
-        <View>
-          <Text style={styles.sectionTitle}>점수</Text>
-          <View style={styles.scoreRow}>
-            <Text style={styles.scoreTotal}>
-              {fb.scoreTotal ?? "-"} / {fb.scoreMax ?? 100}
-            </Text>
-            {fb.dimensions.map((d) => (
-              <Text key={d.dimension} style={styles.scoreChip}>
-                {DIMENSION_LABELS[d.dimension] ?? d.dimension} {d.score ?? "-"}/
-                {d.scoreMax ?? 100}
-              </Text>
-            ))}
-          </View>
-        </View>
-      ) : null}
+      <ProblemContextBlock context={item.problemContext} />
 
       {options.includeAnswers ? (
         <View>
-          <Text style={styles.sectionTitle}>내 답안</Text>
-          <View style={styles.answerBox}>
-            <Text style={styles.bodyText}>
+          <Text {...pdfStyle(styles.sectionTitle)}>내 답안</Text>
+          <View {...pdfStyle(styles.answerBox)}>
+            <Text {...pdfStyle(styles.bodyText)}>
               {item.answerText.trim().length > 0
                 ? item.answerText
                 : "(작성된 답안이 없습니다)"}
@@ -222,38 +364,57 @@ function SubmissionBlock({
       ) : null}
 
       {options.includeFeedback ? (
-        <View>
-          <Text style={styles.sectionTitle}>AI 피드백</Text>
+        <View {...pdfStyle(styles.feedbackSection)}>
+          <Text {...pdfStyle(styles.sectionTitle)}>점수와 종합 피드백</Text>
           {fb ? (
             <View>
+              <View {...pdfStyle(styles.scoreRow)}>
+                <Text {...pdfStyle(styles.scoreTotal)}>
+                  {fb.scoreTotal ?? "-"} / {fb.scoreMax ?? 100}
+                </Text>
+              </View>
               {fb.overallSummary ? (
-                <Text style={styles.bodyText}>{fb.overallSummary}</Text>
+                <Text {...pdfStyle(styles.bodyText)}>{fb.overallSummary}</Text>
               ) : null}
-              {fb.dimensions
-                .filter((d) => d.summary)
-                .map((d) => (
-                  <Text key={`s-${d.dimension}`} style={styles.bodyText}>
-                    · {DIMENSION_LABELS[d.dimension] ?? d.dimension}:{" "}
-                    {d.summary}
+              {fb.dimensions.length > 0 ? (
+                <Text {...pdfStyle(styles.sectionTitle)}>영역별 피드백</Text>
+              ) : null}
+              {fb.dimensions.map((d) => (
+                <View
+                  key={`s-${d.dimension}`}
+                  {...pdfStyle(styles.sentenceRow)}
+                >
+                  <Text {...pdfStyle(styles.scoreChip)}>
+                    {DIMENSION_LABELS[d.dimension] ?? d.dimension}{" "}
+                    {d.score ?? "-"}/{d.scoreMax ?? 100}
                   </Text>
-                ))}
+                  {d.summary ? (
+                    <Text {...pdfStyle(styles.bodyText)}>{d.summary}</Text>
+                  ) : null}
+                </View>
+              ))}
               {fb.sentences.length > 0 ? (
-                <View style={{ marginTop: 6 }}>
-                  <Text style={styles.sectionTitle}>문장별 첨삭</Text>
+                <View {...pdfStyle(styles.sentenceList)}>
+                  <Text {...pdfStyle(styles.sectionTitle)}>문장별 첨삭</Text>
                   {fb.sentences.map((s) => (
-                    <View key={s.sentenceIndex} style={styles.sentenceRow}>
+                    <View
+                      key={s.sentenceIndex}
+                      {...pdfStyle(styles.sentenceRow)}
+                    >
                       {s.originalText ? (
-                        <Text style={styles.sentenceOriginal}>
+                        <Text {...pdfStyle(styles.sentenceOriginal)}>
                           {s.sentenceIndex + 1}. {s.originalText}
                         </Text>
                       ) : null}
                       {s.correctedText ? (
-                        <Text style={styles.sentenceCorrected}>
+                        <Text {...pdfStyle(styles.sentenceCorrected)}>
                           → {s.correctedText}
                         </Text>
                       ) : null}
                       {s.comment ? (
-                        <Text style={styles.sentenceComment}>{s.comment}</Text>
+                        <Text {...pdfStyle(styles.sentenceComment)}>
+                          {s.comment}
+                        </Text>
                       ) : null}
                     </View>
                   ))}
@@ -261,7 +422,7 @@ function SubmissionBlock({
               ) : null}
             </View>
           ) : (
-            <Text style={styles.emptyNote}>
+            <Text {...pdfStyle(styles.emptyNote)}>
               아직 생성된 AI 피드백이 없습니다.
             </Text>
           )}
@@ -273,11 +434,11 @@ function SubmissionBlock({
 
 function ReportBlock({ item }: { item: PdfReportItem }) {
   return (
-    <View style={styles.itemBlock}>
-      <Text style={styles.itemTitle}>비교 리포트</Text>
-      <Text style={styles.itemMeta}>생성일 {item.generatedAt}</Text>
-      <Text style={styles.sectionTitle}>리포트 내용</Text>
-      <Text style={styles.bodyText}>
+    <View {...pdfStyle(styles.itemBlock)}>
+      <Text {...pdfStyle(styles.itemTitle)}>비교 리포트</Text>
+      <Text {...pdfStyle(styles.itemMeta)}>생성일 {item.generatedAt}</Text>
+      <Text {...pdfStyle(styles.sectionTitle)}>리포트 내용</Text>
+      <Text {...pdfStyle(styles.bodyText)}>
         {item.narrative ?? "(리포트 내용이 없습니다)"}
       </Text>
     </View>
@@ -295,14 +456,14 @@ function PageChrome({
 }) {
   return (
     <>
-      <View style={styles.brandRow} fixed>
-        <Text style={styles.brand}>DOTORE TOPIK</Text>
-        <Text style={styles.brandMeta}>답안 및 피드백 리포트</Text>
+      <View {...pdfStyle(styles.brandRow)} fixed>
+        <Text {...pdfStyle(styles.brand)}>DOTORE TOPIK</Text>
+        <Text {...pdfStyle(styles.brandMeta)}>답안 및 피드백 리포트</Text>
       </View>
-      <Text style={styles.docTitle}>{title}</Text>
-      <Text style={styles.docSubtitle}>생성일 {generatedAtLabel}</Text>
+      <Text {...pdfStyle(styles.docTitle)}>{title}</Text>
+      <Text {...pdfStyle(styles.docSubtitle)}>생성일 {generatedAtLabel}</Text>
       {children}
-      <View style={styles.footer} fixed>
+      <View {...pdfStyle(styles.footer)} fixed>
         <Text>DOTORE TOPIK · 학습용 리포트</Text>
         <Text
           render={({ pageNumber, totalPages }) =>
@@ -333,7 +494,7 @@ export function buildPdfDocument({
             key={index}
             size="A4"
             orientation={orientation}
-            style={styles.page}
+            {...pdfStyle(styles.page)}
           >
             <PageChrome title={title} generatedAtLabel={generatedAtLabel}>
               {item.kind === "submission" ? (
@@ -349,7 +510,7 @@ export function buildPdfDocument({
   }
   return (
     <Document title={title} language="ko">
-      <Page size="A4" orientation={orientation} style={styles.page}>
+      <Page size="A4" orientation={orientation} {...pdfStyle(styles.page)}>
         <PageChrome title={title} generatedAtLabel={generatedAtLabel}>
           {items.map((item, index) =>
             item.kind === "submission" ? (

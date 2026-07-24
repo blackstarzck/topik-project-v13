@@ -1202,7 +1202,9 @@
       "startOpenFailed": "Something went wrong opening the solving screen. Please try again.",
       "retry": "Retry",
       "viewResult": "View result",
-      "statusFailed": "Analysis failed",
+      "statusFailed": "Analysis failed · Resubmit required",
+      "statusAnalyzing": "Analyzing",
+      "statusSubmittedRecentFailure": "Submitted · Latest retry analysis failed",
       "viewFailedStatus": "View failed status"
     }
   },
@@ -1621,12 +1623,6 @@
       "answerHintFallback": "Choose an expression that naturally connects the surrounding sentences.",
       "answerPlaceholder": "Write one sentence for blank {blank}.",
       "answerInputAria": "Question 51 short answer input",
-      "expressionTitle": "Expression hints",
-      "expressionHint0": "For that reason",
-      "expressionHint1": "Because of this",
-      "expressionHint2": "So",
-      "expressionHint3": "Therefore",
-      "expressionHint4": "For this reason",
       "guideAria": "AI tutor guide",
       "guideTitle": "AI Tutor Guide",
       "guideBody": "Blank {blank} should connect the result of the previous sentence to the next sentence naturally.",
@@ -1634,9 +1630,11 @@
       "tipsTitle": "Writing tips",
       "tip0": "Use an expression that explains the result of the issue stated earlier.",
       "tip1": "Causal connectors such as therefore and for that reason are common here.",
-      "hintTitle": "Example-answer hint",
+      "hintTitle": "Hints for each blank",
+      "hintRoleLabel": "Role",
+      "hintFunctionLabel": "Context function",
+      "hintAnswerTypeLabel": "Required answer form",
       "tipsPlaceholder": "Problem-specific writing tips will appear here.",
-      "hintPlaceholder": "Problem-specific blank hints will appear here.",
       "reviewPrompt": "Review prompt"
     },
     "q52": {

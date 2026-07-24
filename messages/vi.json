@@ -1202,7 +1202,9 @@
       "startOpenFailed": "Đã xảy ra lỗi khi mở màn hình làm bài. Vui lòng thử lại.",
       "retry": "Thử lại",
       "viewResult": "Xem kết quả",
-      "statusFailed": "Phân tích thất bại",
+      "statusFailed": "Phân tích thất bại · Cần nộp lại",
+      "statusAnalyzing": "Đang phân tích",
+      "statusSubmittedRecentFailure": "Đã nộp · Lần thử lại gần nhất phân tích thất bại",
       "viewFailedStatus": "Xem trạng thái thất bại"
     }
   },
@@ -1621,12 +1623,6 @@
       "answerHintFallback": "Chọn cách diễn đạt nối tự nhiên với các câu xung quanh.",
       "answerPlaceholder": "Viết một câu cho chỗ trống {blank}.",
       "answerInputAria": "Ô nhập câu trả lời ngắn câu 51",
-      "expressionTitle": "Gợi ý cách diễn đạt",
-      "expressionHint0": "Vì vậy",
-      "expressionHint1": "Vì điều này",
-      "expressionHint2": "Cho nên",
-      "expressionHint3": "Do đó",
-      "expressionHint4": "Vì lý do này",
       "guideAria": "Hướng dẫn gia sư AI",
       "guideTitle": "Hướng dẫn gia sư AI",
       "guideBody": "Chỗ trống {blank} cần nối kết quả của câu trước với câu sau một cách tự nhiên.",
@@ -1634,9 +1630,11 @@
       "tipsTitle": "Mẹo viết",
       "tip0": "Hãy dùng cách diễn đạt giải thích kết quả của vấn đề đã nêu trước đó.",
       "tip1": "Các từ nối nhân quả như do đó, vì vậy thường được dùng ở đây.",
-      "hintTitle": "Gợi ý câu trả lời mẫu",
+      "hintTitle": "Gợi ý theo từng chỗ trống",
+      "hintRoleLabel": "Vai trò",
+      "hintFunctionLabel": "Chức năng trong ngữ cảnh",
+      "hintAnswerTypeLabel": "Dạng câu trả lời yêu cầu",
       "tipsPlaceholder": "Mẹo viết riêng cho đề sẽ xuất hiện ở đây.",
-      "hintPlaceholder": "Gợi ý chỗ trống riêng cho đề sẽ xuất hiện ở đây.",
       "reviewPrompt": "Xem lại đề"
     },
     "q52": {
