@@ -27,6 +27,7 @@ describe("ShortAnswerWriting51Workspace structure", () => {
     expect(source).not.toContain("expressionHints");
     expect(source).not.toContain('tPage("expressionHint0")');
     expect(source).not.toContain("writing-expression-chip-list");
+    expect(source).not.toContain('tPage("answerHintFallback")');
     expect(messages.writing.q51.hintTitle).toBe("빈칸별 작성 힌트");
     expect(messages.writing.q51).not.toHaveProperty("expressionHint0");
   });

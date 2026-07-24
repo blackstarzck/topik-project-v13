@@ -7,10 +7,12 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   createFinishReport,
+  offerTaskHandoff,
   readTaskStatus,
   startTask,
   validateFinishReportV1,
 } from "../../scripts/lib/ai-task-lifecycle-v2.mjs";
+import { createTaskMetricsReport } from "../../scripts/ai-task.mjs";
 
 const NOW = "2026-07-22T01:00:00.000Z";
 const roots = [];
@@ -200,6 +202,33 @@ describe("task:finish practical report", () => {
     expect(JSON.parse(regressed.stderr)).toEqual({ code: "TIMESTAMP_REGRESSION" });
     expect(readTaskStatus({ repoPath: started.worktreePath, branch: started.branch }).ownerAuthResult.fingerprint)
       .toBe(stored.fingerprint);
+    expect(createTaskMetricsReport({ repoPath: started.worktreePath, branch: started.branch })).toMatchObject({
+      counts: { total: 2, completed: 2, passed: 1, failed: 1 },
+      byPhase: [{ phase: "lifecycle", attempts: 2, completed: 2, failures: 1 }],
+    });
+
+    offerTaskHandoff({
+      repoPath: started.worktreePath,
+      branch: started.branch,
+      actor: "codex",
+      toActor: "claude",
+      context: {
+        objective: "Verify owner authentication timing during handoff.",
+        completed: ["Owner authentication baseline recorded."],
+        decisions: ["Keep the existing task worktree."],
+        remaining: ["Accept the handoff."],
+        verification: ["Run owner-auth while handoff is pending."],
+        blockers: [],
+        nextAction: "Claude accepts the handoff after authentication.",
+      },
+      now: "2026-07-22T01:06:00.000Z",
+    });
+    const pending = await runAuth("2026-07-22T01:07:00.000Z");
+    expect(pending).toMatchObject({ exitCode: 0, stderr: "" });
+    expect(createTaskMetricsReport({ repoPath: started.worktreePath, branch: started.branch })).toMatchObject({
+      counts: { total: 3, completed: 3, passed: 2, failed: 1 },
+      byPhase: [{ phase: "lifecycle", attempts: 3, completed: 3, failures: 1 }],
+    });
   });
 
   it("rejects finish reports older than the task or the last finish report", async () => {

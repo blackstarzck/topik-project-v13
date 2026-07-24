@@ -207,6 +207,13 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", exportId);
     if (updateError) {
+      await supabase.storage
+        .from(BUCKET)
+        .remove([storagePath])
+        .then(
+          () => undefined,
+          () => undefined,
+        );
       throw new Error(`export_files update: ${updateError.message}`);
     }
 

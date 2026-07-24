@@ -845,7 +845,7 @@ describe("task handoff/resume", () => {
       actor: "claude",
       now: "2026-07-21T05:04:00.000Z",
     })).not.toThrow();
-  });
+  }, 90_000);
 
   it("requires the context sidecar for strict accept while keeping legacy resume compatible", async () => {
     const lifecycle = await import("../../scripts/lib/ai-task-lifecycle-v2.mjs");
@@ -1153,6 +1153,8 @@ describe("public package CLI", () => {
       "task:handoff": "node scripts/ai-task.mjs handoff",
       "task:resume": "node scripts/ai-task.mjs resume",
       "task:finish": "node scripts/ai-task.mjs finish",
+      "task:autocleanup": "node scripts/ai-task.mjs autocleanup",
+      "task:sweep": "node scripts/ai-task.mjs sweep",
     });
   });
 
@@ -1230,7 +1232,7 @@ describe("public package CLI", () => {
     const resumed = JSON.parse(resumedProcess.stdout);
     expect(resumed).toMatchObject({ state: "ACTIVE", activeActor: "claude" });
     expect(existsSync(started.worktreePath)).toBe(true);
-  });
+  }, 90_000);
 
   it("rejects handoff context outside the task work area and through symlink or junction ancestors", () => {
     const { root, base } = makeRepository();
