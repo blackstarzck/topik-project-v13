@@ -7,6 +7,7 @@ const ENTRYPOINTS = [
   "tests/integration/auth-completion-gate-rpc.test.ts",
   "tests/integration/institution-writing-exposure.test.ts",
   "tests/integration/pdf-export-quota-rpc.test.ts",
+  "tests/integration/user-data-reference-integrity-local.test.ts",
   "tests/integration/writing-submission-dedup.test.ts",
   "tests/integration/writing-submission-outbox-local.test.ts",
 ].sort();
