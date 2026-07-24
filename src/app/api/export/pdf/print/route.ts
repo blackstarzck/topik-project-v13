@@ -37,7 +37,6 @@ type PdfExportFailureCode =
   | "analysis_unavailable"
   | "item_unavailable"
   | "item_resolution_failed"
-  | "browser_print_prepare_failed"
   | "quota_commit_failed"
   | "export_record_failed"
   | "unknown";
@@ -151,7 +150,6 @@ export async function POST(request: NextRequest) {
       throw new Error("PDF export attempt id missing");
     }
 
-    failureCode = "browser_print_prepare_failed";
     failureCode = "quota_commit_failed";
     const completed = await completePdfExportAttempt(
       quotaSupabase,

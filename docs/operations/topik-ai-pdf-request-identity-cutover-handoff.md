@@ -21,7 +21,7 @@
 ## 필수 전환 순서
 
 1. 새 PDF 요청을 maintenance 상태로 전환한다. 최소 대상은 `/api/export/pdf`, `/api/export/pdf/print`와 PDF background worker다. 다른 학습 기능은 별도 영향 검토 후 유지할 수 있다.
-2. 구 버전 worker가 새 작업을 받지 않는지 확인하고 현재 PDF 작업이 끝날 때까지 기다린다. 적용 직전 `export_files.status = 'queued'` 수와 15분 미만 `pdf_export_quota_usages.status = 'reserved'` 수를 기록한다.
+2. 구 버전 worker가 새 작업을 받지 않는지 확인하고 현재 PDF 작업이 끝날 때까지 기다린다. 적용 직전 `export_files.status = 'queued'` 수와 시간 제한 없는 전체 `pdf_export_quota_usages.status = 'reserved'` 수를 baseline으로 기록한다.
 3. 남은 작업이 0인지 확인한다. 업무상 기다릴 수 없는 잔여 작업은 migration이 `legacy_unknown`/`request_identity_cutover`로 안전 종료한다는 사실을 운영 기록에 남긴다.
 4. 승인된 backup과 대상 Supabase ref를 확인한다. secret 값은 handback이나 로그에 남기지 않는다.
 5. maintenance를 유지한 채 migration `20260724140000`을 적용하고, 이어서 이 migration의 typed caller가 포함된 v13 앱을 같은 rollout window에 배포한다. 둘 사이에 PDF 요청을 다시 열지 않는다.
@@ -44,11 +44,20 @@ where request_id is null;
 
 select count(*)
 from public.pdf_export_quota_usages
-where status = 'reserved'
-  and release_reason = 'request_identity_cutover';
+where status = 'reserved';
 ```
 
 추가로 확인한다.
+
+- 아래 쿼리 결과는 적용 직전 기록한 전체 reserved baseline과 같아야 한다.
+
+```sql
+select count(*)
+from public.pdf_export_quota_usages
+where status = 'released'
+  and release_reason = 'request_identity_cutover'
+  and released_at is not null;
+```
 
 - legacy queued 표본은 `failed`, `legacy_unknown`, `failed_at not null`, `ready_at is null`, `lease_expires_at is null`이다.
 - legacy reserved 표본은 `released`, `request_identity_cutover`, `released_at not null`이다.
