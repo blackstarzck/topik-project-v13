@@ -1358,6 +1358,13 @@ describe("CI trusted UI contract boundary", () => {
   });
 
   it("gates trusted artifact updates on an externally approved exact head", () => {
+    expect(
+      workflow.match(/name: Check artifact hygiene diff baseline \(trusted\)/gu),
+    ).toHaveLength(2);
+    expect(jobBlock("main-integrity")).toContain(
+      "ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA",
+    );
+    expect(jobBlock("main-integrity")).toContain("--allow-trusted-update");
     expect(workflow).toContain(
       "vars.ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA",
     );

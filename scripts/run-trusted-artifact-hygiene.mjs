@@ -63,6 +63,7 @@ export async function main(args = process.argv.slice(2)) {
   }));
   const presentCount = availability.filter(({ exists }) => exists).length;
   const bootstrap = args.includes("--allow-bootstrap");
+  const trustedUpdate = args.includes("--allow-trusted-update");
   if (presentCount === 0) {
     const baseContained = git(workspace, [
       "merge-base",
@@ -149,6 +150,97 @@ export async function main(args = process.argv.slice(2)) {
   if (presentCount !== TRUSTED_ARTIFACT_PATHS.length) {
     process.stderr.write("TRUSTED_BASE_INCOMPLETE\t<trusted-files>\n");
     return 2;
+  }
+  if (trustedUpdate) {
+    const approvedHead =
+      process.env.ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA;
+    const candidateHead = option(args, "--candidate-head-sha");
+    if (
+      !/^[0-9a-f]{40}$/iu.test(approvedHead ?? "") ||
+      approvedHead.toLowerCase() !== candidateHead?.toLowerCase()
+    ) {
+      process.stderr.write(
+        "ARTIFACT_TRUSTED_UPDATE_EXTERNAL_APPROVAL_REQUIRED\t<approved-head>\n",
+      );
+      return 2;
+    }
+    const candidate = git(workspace, [
+      "cat-file",
+      "-e",
+      `${candidateHead}^{commit}`,
+    ]);
+    if (candidate.status !== 0) {
+      process.stderr.write(
+        "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_INVALID\t<candidate>\n",
+      );
+      return 2;
+    }
+    const baseContained = git(workspace, [
+      "merge-base",
+      "--is-ancestor",
+      baseSha,
+      candidateHead,
+    ]);
+    if (baseContained.status !== 0) {
+      process.stderr.write(
+        "ARTIFACT_TRUSTED_UPDATE_BASE_NOT_CONTAINED\t<candidate>\n",
+      );
+      return 2;
+    }
+    const candidateContained = git(workspace, [
+      "merge-base",
+      "--is-ancestor",
+      candidateHead,
+      "HEAD",
+    ]);
+    if (candidateContained.status !== 0) {
+      process.stderr.write(
+        "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_NOT_CONTAINED\t<candidate>\n",
+      );
+      return 2;
+    }
+    for (const relativePath of TRUSTED_ARTIFACT_PATHS) {
+      const entry = git(workspace, [
+        "ls-tree",
+        candidateHead,
+        "--",
+        relativePath,
+      ]);
+      if (
+        entry.status !== 0 ||
+        !/^(100644|100755) blob [0-9a-f]+\t/u.test(
+          entry.stdout.toString("utf8"),
+        )
+      ) {
+        process.stderr.write(
+          "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_SURFACE_INVALID\t<trusted-files>\n",
+        );
+        return 2;
+      }
+    }
+    const candidateSurfaceUnchanged = git(workspace, [
+      "diff",
+      "--quiet",
+      candidateHead,
+      "HEAD",
+      "--",
+      ...TRUSTED_ARTIFACT_PATHS,
+    ]);
+    if (candidateSurfaceUnchanged.status !== 0) {
+      process.stderr.write(
+        "ARTIFACT_TRUSTED_UPDATE_SURFACE_MISMATCH\t<trusted-files>\n",
+      );
+      return 2;
+    }
+    const { evaluateArtifactHygiene } = await import(
+      "./lib/artifact-hygiene.mjs"
+    );
+    const result = evaluateArtifactHygiene({
+      rootDir: workspace,
+      baseRef: baseSha,
+    });
+    printResult(result);
+    return result.ok ? 0 : 1;
   }
   for (const { relativePath } of availability) {
     const unchanged = git(workspace, [
