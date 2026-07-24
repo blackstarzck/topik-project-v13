@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -36,7 +37,9 @@ const NOW = "2026-07-23T00:00:00.000Z";
 const roots = [];
 
 function tempRoot() {
-  const root = mkdtempSync(path.join(tmpdir(), "talkpik-validation-evidence-"));
+  const root = realpathSync.native(
+    mkdtempSync(path.join(tmpdir(), "talkpik-validation-evidence-")),
+  );
   roots.push(root);
   return root;
 }

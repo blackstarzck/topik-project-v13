@@ -3,6 +3,7 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   unlinkSync,
@@ -62,7 +63,9 @@ function createRepository({
   withFindings = true,
   withNestedFindings = false,
 } = {}) {
-  const fixtureRoot = mkdtempSync(path.join(tmpdir(), "security-artifact-audit-"));
+  const fixtureRoot = realpathSync.native(
+    mkdtempSync(path.join(tmpdir(), "security-artifact-audit-")),
+  );
   temporaryRoots.push(fixtureRoot);
   const repoPath = path.join(fixtureRoot, "repository");
   mkdirSync(repoPath, { recursive: true });
