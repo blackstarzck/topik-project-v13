@@ -22,6 +22,7 @@ describe.skipIf(!ENABLED)("user data reference integrity (local stack)", () => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const users: string[] = [];
+    let caughtError: unknown;
 
     async function makeUser(label: string) {
       const client = createClient(url, publicKey, {
@@ -239,13 +240,16 @@ describe.skipIf(!ENABLED)("user data reference integrity (local stack)", () => {
         .update({ payload: { arbitrary: true } })
         .eq("id", unrelatedEventId);
       expect(unrelatedUpdate.error).toBeNull();
+    } catch (testError) {
+      caughtError = testError;
+      throw testError;
     } finally {
       const cleanupErrors: unknown[] = [];
       for (const userId of users) {
         const { error } = await service.auth.admin.deleteUser(userId);
         if (error) cleanupErrors.push(error);
       }
-      if (cleanupErrors.length > 0) {
+      if (cleanupErrors.length > 0 && !caughtError) {
         throw new AggregateError(cleanupErrors, "local cleanup failed");
       }
     }
