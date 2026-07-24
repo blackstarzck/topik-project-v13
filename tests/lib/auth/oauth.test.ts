@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildClientAuthCallbackUrl,
-  buildInstitutionInvitePath,
   buildOAuthNextPath,
   buildPostAuthPath,
   getGoogleOAuthBrowserSupport,
@@ -18,22 +17,16 @@ describe("Google OAuth URL helpers", () => {
     );
   });
 
-  it("buildInstitutionInvitePath wraps the sign-up post-auth path as a relative next route", () => {
-    expect(buildInstitutionInvitePath(buildPostAuthPath("sign-up"))).toBe(
-      "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
-    );
-  });
-
   it("buildOAuthNextPath sends default sign-up OAuth to post-auth without invite confirmation", () => {
     expect(buildOAuthNextPath("sign-up")).toBe(
       "/auth/post-auth?intent=sign-up",
     );
   });
 
-  it("buildOAuthNextPath preserves an explicit sign-up institution invite target", () => {
-    const invitePath = buildInstitutionInvitePath(buildPostAuthPath("sign-up"));
-
-    expect(buildOAuthNextPath("sign-up", invitePath)).toBe(invitePath);
+  it("buildOAuthNextPath preserves an explicit internal next target", () => {
+    expect(buildOAuthNextPath("sign-up", "/settings/account")).toBe(
+      "/settings/account",
+    );
   });
 
   it("buildClientAuthCallbackUrl uses the active browser origin", () => {
@@ -65,28 +58,6 @@ describe("Google OAuth URL helpers", () => {
         "http://localhost:3000",
       ),
     ).toThrow(/relative/);
-  });
-
-  it("buildClientAuthCallbackUrl can target the sign-up institution invite confirmation", () => {
-    expect(
-      buildClientAuthCallbackUrl(
-        buildInstitutionInvitePath(buildPostAuthPath("sign-up")),
-        "http://localhost:3000",
-      ),
-    ).toBe(
-      "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
-    );
-  });
-
-  it("buildClientAuthCallbackUrl preserves the invite route as a login next target", () => {
-    expect(
-      buildClientAuthCallbackUrl(
-        buildInstitutionInvitePath("/dashboard"),
-        "http://localhost:3000",
-      ),
-    ).toBe(
-      "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fdashboard",
-    );
   });
 
   it("allows normal mobile browsers to start Google OAuth", () => {

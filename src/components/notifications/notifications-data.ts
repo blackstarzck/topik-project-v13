@@ -273,17 +273,25 @@ export function resolveNotificationDestination(
 ): string | null {
   for (const field of NOTIFICATION_DESTINATION_FIELDS) {
     const route = normalizeInternalRoute(item[field]);
-    if (route) return route;
+    if (route && !isRetiredAffiliationRoute(route)) return route;
   }
 
   if (isRecord(item.payload)) {
     for (const field of NOTIFICATION_PAYLOAD_DESTINATION_FIELDS) {
       const route = normalizeInternalRoute(item.payload[field]);
-      if (route) return route;
+      if (route && !isRetiredAffiliationRoute(route)) return route;
     }
   }
 
   return null;
+}
+
+function isRetiredAffiliationRoute(route: string): boolean {
+  const pathname = route.split(/[?#]/, 1)[0];
+  return ["/auth/institution-invite", "/auth/claim-affiliation"].some(
+    (retiredPath) =>
+      pathname === retiredPath || pathname.startsWith(`${retiredPath}/`),
+  );
 }
 
 export function resolveNotificationAction(

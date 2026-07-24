@@ -1685,19 +1685,6 @@ export interface Database {
         };
         Returns: Json;
       };
-      accept_affiliation_invite: {
-        Args: {
-          p_code: string;
-          p_confirmed: boolean;
-        };
-        Returns: Json;
-      };
-      claim_affiliation_code: {
-        Args: {
-          p_code: string;
-        };
-        Returns: string | null;
-      };
       complete_auth_gate: {
         Args: {
           p_display_name: string | null;

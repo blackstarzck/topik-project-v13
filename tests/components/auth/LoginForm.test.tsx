@@ -118,8 +118,8 @@ describe("LoginForm", () => {
     expect(pushMock).toHaveBeenCalledWith("/dashboard");
   });
 
-  it("submits password login and preserves an institution invite next target", async () => {
-    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+  it("submits password login and preserves an internal next target", async () => {
+    searchParamsMock = new URLSearchParams("next=/settings/account");
     renderInApp(<LoginForm />);
 
     const emailInput = document.querySelector(
@@ -146,7 +146,7 @@ describe("LoginForm", () => {
     await waitFor(() => {
       expect(signInWithPasswordMock).toHaveBeenCalledTimes(1);
     });
-    expect(pushMock).toHaveBeenCalledWith("/auth/institution-invite");
+    expect(pushMock).toHaveBeenCalledWith("/settings/account");
   });
 
   it("switches to magic-link mode and sends OTP with redirect URL", async () => {
@@ -174,8 +174,8 @@ describe("LoginForm", () => {
     );
   });
 
-  it("sends magic-link OTP back to the institution invite when next is present", async () => {
-    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+  it("sends magic-link OTP back to an internal next target when present", async () => {
+    searchParamsMock = new URLSearchParams("next=/settings/account");
     renderInApp(<LoginForm />);
 
     const [, magicLinkSegment] = Array.from(
@@ -201,7 +201,7 @@ describe("LoginForm", () => {
       expect(signInWithOtpMock).toHaveBeenCalledTimes(1);
     });
     expect(signInWithOtpMock.mock.calls[0][0].options.emailRedirectTo).toBe(
-      "https://talkpik.example.com/auth/callback?next=%2Fauth%2Finstitution-invite",
+      "https://talkpik.example.com/auth/callback?next=%2Fsettings%2Faccount",
     );
   });
 
@@ -285,8 +285,8 @@ describe("LoginForm", () => {
     });
   });
 
-  it("starts Google OAuth with the institution invite next target when present", async () => {
-    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+  it("starts Google OAuth with an internal next target when present", async () => {
+    searchParamsMock = new URLSearchParams("next=/settings/account");
     renderInApp(<LoginForm />);
 
     await act(async () => {
@@ -302,7 +302,7 @@ describe("LoginForm", () => {
       provider: "google",
       options: {
         redirectTo:
-          "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite",
+          "http://localhost:3000/auth/callback?next=%2Fsettings%2Faccount",
       },
     });
   });

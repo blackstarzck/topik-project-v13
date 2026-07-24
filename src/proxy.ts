@@ -5,9 +5,6 @@ import { APP_ROUTES, AUTH_ENTRY_PATHS, PUBLIC_PATHS } from "./lib/routes";
 import { getPublicEnv } from "./lib/supabase/env";
 import type { Database } from "./lib/supabase/types";
 
-const AFFILIATION_CODE_PARAM = "aff";
-const INSTITUTION_INVITE_PATH = "/auth/institution-invite";
-
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
@@ -24,47 +21,6 @@ function redirectWithRefreshedCookies(url: URL, response: NextResponse) {
     redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
   });
   return redirectResponse;
-}
-
-function isSafeRelativePath(path: string | null): path is string {
-  return Boolean(
-    path &&
-    path.startsWith("/") &&
-    !path.startsWith("//") &&
-    !path.includes(":"),
-  );
-}
-
-function isInstitutionInviteNext(path: string | null): path is string {
-  return (
-    isSafeRelativePath(path) &&
-    (path === INSTITUTION_INVITE_PATH ||
-      path.startsWith(`${INSTITUTION_INVITE_PATH}?`))
-  );
-}
-
-function buildInstitutionInviteRedirectUrl(request: NextRequest) {
-  const aff = request.nextUrl.searchParams.get(AFFILIATION_CODE_PARAM);
-  const next = request.nextUrl.searchParams.get("next");
-  const url = request.nextUrl.clone();
-
-  if (isInstitutionInviteNext(next)) {
-    const inviteUrl = new URL(next, request.url);
-    if (aff) {
-      inviteUrl.searchParams.set(AFFILIATION_CODE_PARAM, aff);
-    }
-    return inviteUrl;
-  }
-
-  url.pathname = INSTITUTION_INVITE_PATH;
-  url.search = "";
-  if (aff) {
-    url.searchParams.set(AFFILIATION_CODE_PARAM, aff);
-  }
-  if (isSafeRelativePath(next)) {
-    url.searchParams.set("next", next);
-  }
-  return url;
 }
 
 export async function proxy(request: NextRequest) {
@@ -99,18 +55,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (
-    user &&
-    isAuthEntryPath(pathname) &&
-    (request.nextUrl.searchParams.has(AFFILIATION_CODE_PARAM) ||
-      isInstitutionInviteNext(request.nextUrl.searchParams.get("next")))
-  ) {
-    return redirectWithRefreshedCookies(
-      buildInstitutionInviteRedirectUrl(request),
-      response,
-    );
-  }
 
   if (user && isAuthEntryPath(pathname)) {
     const url = request.nextUrl.clone();
