@@ -2,6 +2,7 @@
   inset-inline-end: max(24px, calc(16px + env(safe-area-inset-right)));
   bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
   z-index: 999;
+  box-shadow: var(--app-shadow-elevated);
 }
 
 :global(body:has(.app-workspace-fixed-action-bar))

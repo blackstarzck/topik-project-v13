@@ -38,6 +38,18 @@
   transform-origin: bottom right !important;
 }
 
+.bottomRight :global(.ant-modal .ant-modal-container.ant-modal-container),
+.bottomRight :global(.ant-modal .ant-modal-content.ant-modal-content) {
+  box-shadow: var(--app-shadow-elevated);
+}
+
+.nonBlocking {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .nonBlocking :global(.ant-modal-wrap) {
   pointer-events: none;
 }
