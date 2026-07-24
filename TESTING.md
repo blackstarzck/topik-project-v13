@@ -66,7 +66,7 @@ $env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="<supabase start가 출력한 local ke
 pnpm test:supabase:local
 ```
 
-`test:supabase:local`은 `SUPABASE_LOCAL_STACK=1`을 설정하며, 이 값은 loopback local API에만 사용한다. service-role key와 테스트 계정 비밀번호는 terminal output, report, screenshot, commit에 남기지 않는다. migration 또는 auth/RLS 경로를 바꾸면 local stack test를 실행하고, v13에서 원격 Supabase schema/data apply는 하지 않는다.
+`test:supabase:local`은 `SUPABASE_LOCAL_STACK=1`을 설정하며, 이 값은 loopback local API에만 사용한다. 이 명령은 사용자 데이터 참조 무결성 검사를 포함한 모든 Supabase 변경 통합 테스트를 명시적으로 실행한다. service-role key와 테스트 계정 비밀번호는 terminal output, report, screenshot, commit에 남기지 않는다. migration 또는 auth/RLS 경로를 바꾸면 local stack test를 실행하고, v13에서 원격 Supabase schema/data apply는 하지 않는다.
 
 ## 검증 선택 기준
 
