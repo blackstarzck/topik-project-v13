@@ -397,7 +397,7 @@ export function SystemReportLauncher() {
       placement="topRight"
       destroyOnHidden={false}
       classNames={{
-        root: "app-system-report-popover",
+        root: "app-system-report-popover app-notification-popover",
         container: "app-system-report-popover__container",
       }}
       title={

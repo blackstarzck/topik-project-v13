@@ -44,7 +44,6 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
     (element) => getComputedStyle(element).boxShadow,
   );
   expect(launcherShadow).not.toBe("none");
-  expect(launcherShadow).toContain("rgba(15, 23, 42, 0.16)");
 
   const anonymousContext = await browser.newContext({
     storageState: { cookies: [], origins: [] },

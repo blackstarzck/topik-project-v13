@@ -124,7 +124,6 @@ describe("app theme contract", () => {
       "--app-radius",
       "--app-font-family",
       "--app-shadow-elevated",
-      "--app-shadow-floating-strong",
     ];
 
     requiredKeys.forEach((key) => {

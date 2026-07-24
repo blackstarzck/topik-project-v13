@@ -37,20 +37,12 @@ describe("system report popover layout", () => {
     expect(rootLayoutSource).not.toContain("SystemReportLauncher");
   });
 
-  test("uses the strong floating shadow on the launcher and popover surface", () => {
+  test("uses the shared elevated shadow on the launcher", () => {
     const launcher = blockFor(
       launcherCss,
       ".launcher:global(.ant-float-btn.ant-float-btn-individual)",
     );
-    expect(launcher).toContain("box-shadow: var(--app-shadow-floating-strong)");
-
-    const container = blockFor(
-      launcherCss,
-      ":global(.app-system-report-popover.app-system-report-popover) :global( .app-system-report-popover__container.app-system-report-popover__container )",
-    );
-    expect(container).toContain(
-      "box-shadow: var(--app-shadow-floating-strong)",
-    );
+    expect(launcher).toContain("box-shadow: var(--app-shadow-elevated)");
   });
 
   test("constrains the popover to the viewport", () => {
