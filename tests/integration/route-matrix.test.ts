@@ -31,7 +31,12 @@ async function callMiddleware(url: string) {
   return proxy(request);
 }
 
-import { PROTECTED_ROUTE_CASES, PUBLIC_PATHS } from "../../src/lib/routes";
+import {
+  APP_ROUTES,
+  AUTH_ENTRY_PATHS,
+  PROTECTED_ROUTE_CASES,
+  PUBLIC_PATHS,
+} from "../../src/lib/routes";
 
 const PROTECTED_PATHS = PROTECTED_ROUTE_CASES.map((c) => c.path);
 
@@ -67,6 +72,22 @@ describe("route matrix — anonymous context", () => {
 });
 
 describe("route matrix — authenticated context (middleware-level)", () => {
+  it("keeps the public auth-error recovery outside auth-entry redirects", async () => {
+    expect(PUBLIC_PATHS).toContain(APP_ROUTES.authError);
+    expect(AUTH_ENTRY_PATHS).not.toContain(APP_ROUTES.authError);
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user-123" } },
+      error: null,
+    });
+
+    const response = await callMiddleware(
+      `http://localhost${APP_ROUTES.authError}?reason=unknown`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
   // Middleware does not perform role-based gating; it only checks
   // authentication. There are no admin routes in this app (the admin console
   // lives in the separate topik-ai app); role values remain only as RLS

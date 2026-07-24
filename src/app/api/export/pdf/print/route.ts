@@ -13,8 +13,8 @@ import {
 } from "@/lib/export/pdf-export-server";
 import { PDF_EXPORT_ERROR_CODES } from "@/lib/export/pdf-export-errors";
 import { pdfExportRequestSchema } from "@/lib/export/pdf-options";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";

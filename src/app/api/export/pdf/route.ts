@@ -19,8 +19,8 @@ import {
   pdfExportRequestSchema,
   sanitizePdfFilename,
 } from "@/lib/export/pdf-options";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role.server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";

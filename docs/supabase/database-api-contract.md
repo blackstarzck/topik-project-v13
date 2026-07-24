@@ -23,7 +23,14 @@
 - local config는 `public`과 `graphql_public`을 노출 schema로 설정한다.
 - table/view/function이 schema에 존재하는 것만으로 사용자 권한을 가정하지 않는다. role별 grants와 RLS/policy를 migration에서 함께 확인한다.
 - browser client는 publishable key와 사용자 session으로 접근하고, user-owned row는 본인 범위로 제한한다.
+- 사용자 CRUD 인증은 사용자 JWT가 담당하고 RLS 또는 owner 검증 RPC가 범위를 제한한다. service-role key는 사용자 CRUD 인증을 대신하지 않으며, 별도 server-only 모듈을 통해 제한된 시스템 작업에서만 사용한다.
 - TypeScript 타입은 DB의 파생 산출물이며 migration보다 앞서지 않는다.
+
+### 비활성 계정 상태 확인
+
+- `/auth/account-inactive`는 P0 보안 migration `20260723234527_consent_account_deletion_rls.sql`의 `get_my_account_state()`를 우선 사용한다. 이 branch는 같은 RPC를 중복 생성하는 migration을 추가하지 않는다.
+- RPC는 현재 JWT 소유자의 profile status 한 값만 반환한다. route는 `blocked`/`deleted`를 확인하고 local sign-out까지 성공한 경우에만 login notice로 이동하며, URL query의 `status`는 권한 판단에 사용하지 않는다.
+- P0와 순서가 엇갈린 단독 배포를 위해 RPC 오류 코드가 정확히 `PGRST202`일 때만 같은 request-bound JWT client로 `profiles`의 본인 `id`와 `status`를 조회한다. RLS 범위, `id === user.id`, `active | blocked | deleted`를 모두 만족해야 하며, 다른 RPC 오류·조회 오류·unknown 값은 fallback 없이 public auth-error recovery로 이동한다. P0가 결합되면 RPC 성공 경로가 우선되고 profile fallback은 실행되지 않는다.
 
 ## 원자성과 idempotency
 

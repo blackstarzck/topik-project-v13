@@ -1655,6 +1655,13 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      // Forward dependency: defined by
+      // 20260723234527_consent_account_deletion_rls.sql in the P0 security task.
+      // It returns only the current JWT owner's lifecycle state.
+      get_my_account_state: {
+        Args: Record<string, never>;
+        Returns: "active" | "blocked" | "deleted" | null;
+      };
       claim_pdf_export_quota: {
         Args: {
           p_user_id: string;

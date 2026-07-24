@@ -80,6 +80,9 @@ vi.mock("@/lib/supabase/server", () => ({
       from: helpers.fromMock,
       storage: { from: helpers.storageFromMock },
     }),
+}));
+
+vi.mock("@/lib/supabase/service-role.server", () => ({
   createSupabaseServiceRoleClient: () => ({
     rpc: vi.fn(),
   }),
