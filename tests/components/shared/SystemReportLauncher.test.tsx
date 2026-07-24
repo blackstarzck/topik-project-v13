@@ -154,6 +154,11 @@ describe("SystemReportLauncher visibility", () => {
       "system-report-panel",
     );
     expect(document.getElementById("system-report-panel")).toBeTruthy();
+    expect(
+      document.querySelector(".app-system-report-popover.ant-popover"),
+    ).toBeTruthy();
+    expect(document.querySelector(".app-system-report-modal")).toBeNull();
+    expect(document.querySelector(".ant-modal")).toBeNull();
     expect(document.querySelector(".ant-modal-close")).toBeNull();
     expect(screen.queryByTestId("system-report-cancel")).toBeNull();
     expect(screen.queryByTestId("system-report-discard")).toBeNull();
@@ -192,18 +197,20 @@ describe("SystemReportLauncher visibility", () => {
     ).toBe("계속 작성할 제목");
   });
 
-  it("does not close from Escape or render a blocking background", () => {
+  it("does not close from Escape or outside interaction", () => {
     renderWithIntl(<SystemReportLauncher />);
     openPanel();
 
     fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+    fireEvent.mouseDown(document.body);
+    fireEvent.click(document.body);
 
-    expect(
-      screen.getByRole("dialog", { name: koMessages.systemReport.title }),
-    ).toBeTruthy();
-    expect(
-      document.querySelector(".app-system-report-modal .ant-modal-mask"),
-    ).toBeNull();
+    const panel = screen.getByRole("dialog", {
+      name: koMessages.systemReport.title,
+    });
+    expect(panel).toBeTruthy();
+    expect(panel.getAttribute("aria-modal")).toBe("false");
+    expect(document.querySelector(".ant-modal-mask")).toBeNull();
   });
 });
 
@@ -436,10 +443,8 @@ describe("SystemReportLauncher form", () => {
       key: "Escape",
       code: "Escape",
     });
-    const mask = document.querySelector(
-      ".app-system-report-modal .ant-modal-mask",
-    );
-    if (mask) fireEvent.click(mask);
+    fireEvent.mouseDown(document.body);
+    fireEvent.click(document.body);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(

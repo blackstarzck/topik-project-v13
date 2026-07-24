@@ -6,6 +6,7 @@ import {
   FloatButton,
   Form,
   Input,
+  Popover,
   Segmented,
   Typography,
 } from "antd";
@@ -13,7 +14,6 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { AppModal } from "@/components/shared/AppModal";
 import { LifeBuoy, X } from "@/components/shared/AppIcons";
 import { collectSystemReportDiagnostics } from "@/lib/system-report-diagnostics";
 import {
@@ -171,8 +171,252 @@ export function SystemReportLauncher() {
 
   if (pathname === "/") return null;
 
+  const reportContent = succeeded ? (
+    <section
+      className={mergeClassNames("app-system-report-success", styles.success)}
+      aria-labelledby="system-report-success-title"
+      data-testid="system-report-success"
+    >
+      <div
+        className={mergeClassNames(
+          "app-system-report-success__copy",
+          styles.successCopy,
+        )}
+      >
+        <Typography.Title
+          ref={successTitleRef}
+          id="system-report-success-title"
+          level={4}
+          className="!mb-0"
+          tabIndex={-1}
+        >
+          {t("success.title")}
+        </Typography.Title>
+        <Paragraph type="secondary" className="!mb-0">
+          {t("success.body")}
+        </Paragraph>
+      </div>
+      <dl
+        className={mergeClassNames("app-system-report-receipt", styles.receipt)}
+      >
+        <div>
+          <dt>{t("success.reference")}</dt>
+          <dd data-testid="system-report-reference">{receipt.referenceCode}</dd>
+        </div>
+        <div>
+          <dt>{t("success.time")}</dt>
+          <dd>
+            {format.dateTime(new Date(receipt.createdAt), {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
+          </dd>
+        </div>
+      </dl>
+    </section>
+  ) : (
+    <div
+      className={mergeClassNames("app-system-report-panel", styles.panel)}
+      data-testid="system-report-form"
+    >
+      <Paragraph type="secondary" className="!mb-0">
+        {t("helper")}
+      </Paragraph>
+
+      {submissionState === "failure" ? (
+        <Alert
+          type="error"
+          showIcon
+          title={t("errorTitle")}
+          description={t("errorDescription")}
+        />
+      ) : null}
+
+      <Form<ReportFormValues>
+        name="system-report"
+        form={form}
+        layout="vertical"
+        initialValues={{ category: "bug" }}
+        requiredMark
+        disabled={submitting}
+        onValuesChange={(changedValues) => {
+          if (submissionState === "failure") {
+            idempotencyKeyRef.current = null;
+            setSubmissionState("idle");
+          }
+          if (Object.prototype.hasOwnProperty.call(changedValues, "email")) {
+            emailManuallyEditedRef.current = true;
+          }
+        }}
+        onFinish={(values) => void submitReport(values)}
+      >
+        <Form.Item
+          name="category"
+          label={t("category.label")}
+          rules={[{ required: true }]}
+        >
+          <Segmented
+            block
+            aria-label={t("category.label")}
+            options={[
+              { label: t("category.bug"), value: "bug" },
+              { label: t("category.question"), value: "question" },
+              { label: t("category.suggestion"), value: "suggestion" },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="email"
+          label={t("email.label")}
+          rules={[
+            {
+              required: true,
+              message: t("validation.emailRequired"),
+            },
+            {
+              type: "email",
+              message: t("validation.emailInvalid"),
+            },
+            {
+              max: SYSTEM_REPORT_MAX_EMAIL_LENGTH,
+              message: t("validation.emailTooLong", {
+                max: SYSTEM_REPORT_MAX_EMAIL_LENGTH,
+              }),
+            },
+          ]}
+        >
+          <Input
+            data-testid="system-report-email"
+            type="email"
+            autoComplete="email"
+            maxLength={SYSTEM_REPORT_MAX_EMAIL_LENGTH}
+            placeholder={t("email.placeholder")}
+            onChange={() => {
+              emailManuallyEditedRef.current = true;
+            }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="title"
+          label={t("reportTitle.label")}
+          rules={[
+            {
+              validator: async (_, value: unknown) => {
+                if (typeof value !== "string" || !value.trim()) {
+                  throw new Error(t("validation.titleRequired"));
+                }
+              },
+            },
+            {
+              max: SYSTEM_REPORT_MAX_TITLE_LENGTH,
+              message: t("validation.titleTooLong", {
+                max: SYSTEM_REPORT_MAX_TITLE_LENGTH,
+              }),
+            },
+          ]}
+        >
+          <Input
+            data-testid="system-report-title"
+            maxLength={SYSTEM_REPORT_MAX_TITLE_LENGTH}
+            showCount
+            placeholder={t("reportTitle.placeholder")}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="message"
+          label={t("message.label")}
+          rules={[
+            {
+              validator: async (_, value: unknown) => {
+                if (typeof value !== "string" || !value.trim()) {
+                  throw new Error(t("validation.messageRequired"));
+                }
+              },
+            },
+            {
+              max: SYSTEM_REPORT_MAX_MESSAGE_LENGTH,
+              message: t("validation.messageTooLong", {
+                max: SYSTEM_REPORT_MAX_MESSAGE_LENGTH,
+              }),
+            },
+          ]}
+        >
+          <TextArea
+            data-testid="system-report-message"
+            rows={5}
+            maxLength={SYSTEM_REPORT_MAX_MESSAGE_LENGTH}
+            showCount
+            placeholder={t("message.placeholder")}
+          />
+        </Form.Item>
+
+        <Text
+          type="secondary"
+          className={mergeClassNames(
+            "app-system-report-disclosure",
+            styles.disclosure,
+          )}
+        >
+          {t("diagnosticsDisclosure")}
+        </Text>
+
+        <div className="app-modal-footer-actions">
+          <Button
+            data-testid="system-report-submit"
+            type="primary"
+            block
+            htmlType="submit"
+            loading={submitting}
+            disabled={submitting}
+            aria-label={
+              submitting
+                ? t("sending")
+                : submissionState === "failure"
+                  ? t("retry")
+                  : t("send")
+            }
+          >
+            {submitting
+              ? t("sending")
+              : submissionState === "failure"
+                ? t("retry")
+                : t("send")}
+          </Button>
+        </div>
+      </Form>
+    </div>
+  );
+
   return (
-    <>
+    <Popover
+      open={open}
+      trigger={[]}
+      placement="topRight"
+      destroyOnHidden={false}
+      classNames={{
+        root: "app-system-report-popover",
+        container: "app-system-report-popover__container",
+      }}
+      title={
+        <Text id="system-report-popover-title" strong>
+          {t("title")}
+        </Text>
+      }
+      content={
+        <div
+          id="system-report-panel"
+          className="app-system-report-popover__body"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="system-report-popover-title"
+        >
+          {reportContent}
+        </div>
+      }
+    >
       <FloatButton
         className={mergeClassNames(
           "app-system-report-launcher",
@@ -189,249 +433,6 @@ export function SystemReportLauncher() {
         onClick={togglePanel}
         data-testid="system-report-launcher"
       />
-
-      <AppModal
-        open={open}
-        placement="bottom-right"
-        rootClassName="app-system-report-modal"
-        nonBlocking
-        title={t("title")}
-        width={440}
-        footer={null}
-        closable={false}
-        keyboard={false}
-      >
-        {succeeded ? (
-          <section
-            id="system-report-panel"
-            className={mergeClassNames(
-              "app-system-report-success",
-              styles.success,
-            )}
-            aria-labelledby="system-report-success-title"
-            data-testid="system-report-success"
-          >
-            <div
-              className={mergeClassNames(
-                "app-system-report-success__copy",
-                styles.successCopy,
-              )}
-            >
-              <Typography.Title
-                ref={successTitleRef}
-                id="system-report-success-title"
-                level={4}
-                className="!mb-0"
-                tabIndex={-1}
-              >
-                {t("success.title")}
-              </Typography.Title>
-              <Paragraph type="secondary" className="!mb-0">
-                {t("success.body")}
-              </Paragraph>
-            </div>
-            <dl
-              className={mergeClassNames(
-                "app-system-report-receipt",
-                styles.receipt,
-              )}
-            >
-              <div>
-                <dt>{t("success.reference")}</dt>
-                <dd data-testid="system-report-reference">
-                  {receipt.referenceCode}
-                </dd>
-              </div>
-              <div>
-                <dt>{t("success.time")}</dt>
-                <dd>
-                  {format.dateTime(new Date(receipt.createdAt), {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </dd>
-              </div>
-            </dl>
-          </section>
-        ) : (
-          <div
-            id="system-report-panel"
-            className={mergeClassNames("app-system-report-panel", styles.panel)}
-            data-testid="system-report-form"
-          >
-            <Paragraph type="secondary" className="!mb-0">
-              {t("helper")}
-            </Paragraph>
-
-            {submissionState === "failure" ? (
-              <Alert
-                type="error"
-                showIcon
-                title={t("errorTitle")}
-                description={t("errorDescription")}
-              />
-            ) : null}
-
-            <Form<ReportFormValues>
-              name="system-report"
-              form={form}
-              layout="vertical"
-              initialValues={{ category: "bug" }}
-              requiredMark
-              disabled={submitting}
-              onValuesChange={(changedValues) => {
-                if (submissionState === "failure") {
-                  idempotencyKeyRef.current = null;
-                  setSubmissionState("idle");
-                }
-                if (
-                  Object.prototype.hasOwnProperty.call(changedValues, "email")
-                ) {
-                  emailManuallyEditedRef.current = true;
-                }
-              }}
-              onFinish={(values) => void submitReport(values)}
-            >
-              <Form.Item
-                name="category"
-                label={t("category.label")}
-                rules={[{ required: true }]}
-              >
-                <Segmented
-                  block
-                  aria-label={t("category.label")}
-                  options={[
-                    { label: t("category.bug"), value: "bug" },
-                    { label: t("category.question"), value: "question" },
-                    { label: t("category.suggestion"), value: "suggestion" },
-                  ]}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="email"
-                label={t("email.label")}
-                rules={[
-                  {
-                    required: true,
-                    message: t("validation.emailRequired"),
-                  },
-                  {
-                    type: "email",
-                    message: t("validation.emailInvalid"),
-                  },
-                  {
-                    max: SYSTEM_REPORT_MAX_EMAIL_LENGTH,
-                    message: t("validation.emailTooLong", {
-                      max: SYSTEM_REPORT_MAX_EMAIL_LENGTH,
-                    }),
-                  },
-                ]}
-              >
-                <Input
-                  data-testid="system-report-email"
-                  type="email"
-                  autoComplete="email"
-                  maxLength={SYSTEM_REPORT_MAX_EMAIL_LENGTH}
-                  placeholder={t("email.placeholder")}
-                  onChange={() => {
-                    emailManuallyEditedRef.current = true;
-                  }}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="title"
-                label={t("reportTitle.label")}
-                rules={[
-                  {
-                    validator: async (_, value: unknown) => {
-                      if (typeof value !== "string" || !value.trim()) {
-                        throw new Error(t("validation.titleRequired"));
-                      }
-                    },
-                  },
-                  {
-                    max: SYSTEM_REPORT_MAX_TITLE_LENGTH,
-                    message: t("validation.titleTooLong", {
-                      max: SYSTEM_REPORT_MAX_TITLE_LENGTH,
-                    }),
-                  },
-                ]}
-              >
-                <Input
-                  data-testid="system-report-title"
-                  maxLength={SYSTEM_REPORT_MAX_TITLE_LENGTH}
-                  showCount
-                  placeholder={t("reportTitle.placeholder")}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="message"
-                label={t("message.label")}
-                rules={[
-                  {
-                    validator: async (_, value: unknown) => {
-                      if (typeof value !== "string" || !value.trim()) {
-                        throw new Error(t("validation.messageRequired"));
-                      }
-                    },
-                  },
-                  {
-                    max: SYSTEM_REPORT_MAX_MESSAGE_LENGTH,
-                    message: t("validation.messageTooLong", {
-                      max: SYSTEM_REPORT_MAX_MESSAGE_LENGTH,
-                    }),
-                  },
-                ]}
-              >
-                <TextArea
-                  data-testid="system-report-message"
-                  rows={5}
-                  maxLength={SYSTEM_REPORT_MAX_MESSAGE_LENGTH}
-                  showCount
-                  placeholder={t("message.placeholder")}
-                />
-              </Form.Item>
-
-              <Text
-                type="secondary"
-                className={mergeClassNames(
-                  "app-system-report-disclosure",
-                  styles.disclosure,
-                )}
-              >
-                {t("diagnosticsDisclosure")}
-              </Text>
-
-              <div className="app-modal-footer-actions">
-                <Button
-                  data-testid="system-report-submit"
-                  type="primary"
-                  block
-                  htmlType="submit"
-                  loading={submitting}
-                  disabled={submitting}
-                  aria-label={
-                    submitting
-                      ? t("sending")
-                      : submissionState === "failure"
-                        ? t("retry")
-                        : t("send")
-                  }
-                >
-                  {submitting
-                    ? t("sending")
-                    : submissionState === "failure"
-                      ? t("retry")
-                      : t("send")}
-                </Button>
-              </div>
-            </Form>
-          </div>
-        )}
-      </AppModal>
-    </>
+    </Popover>
   );
 }

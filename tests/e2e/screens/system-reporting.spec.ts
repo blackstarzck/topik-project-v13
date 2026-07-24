@@ -72,47 +72,51 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   ).toBeLessThanOrEqual(120);
 
   await openReport(page);
-  const modal = page.locator(".app-system-report-modal .ant-modal");
-  const modalWrap = page.locator(".app-system-report-modal .ant-modal-wrap");
-  const modalBox = await modal.boundingBox();
-  expect(modalBox).not.toBeNull();
+  const popover = page.locator(".app-system-report-popover.ant-popover");
+  const popoverContainer = popover.locator(".ant-popover-container");
+  const popoverBox = await popover.boundingBox();
+  const documentWidth = await page.evaluate(
+    () => document.documentElement.clientWidth,
+  );
+  expect(popoverBox).not.toBeNull();
+  await expect(popover).toBeVisible();
   await expect(
-    page.locator(".app-system-report-modal .ant-modal-mask"),
+    page.locator(".app-system-report-modal, .ant-modal, .ant-modal-mask"),
   ).toHaveCount(0);
-  await expect(modal).toHaveAttribute("aria-modal", "false");
-  await expect(modal.locator(".ant-modal-close")).toHaveCount(0);
+  await expect(
+    page.locator('#system-report-panel[role="dialog"]'),
+  ).toHaveAttribute("aria-modal", "false");
   await expect(page.getByTestId("system-report-cancel")).toHaveCount(0);
   expect(
-    await modalWrap.evaluate(
-      (element) => getComputedStyle(element).pointerEvents,
+    await popoverContainer.evaluate(
+      (element) => getComputedStyle(element).scrollbarWidth,
     ),
   ).toBe("none");
   expect(
-    await modal.evaluate((element) => getComputedStyle(element).pointerEvents),
-  ).toBe("auto");
-  expect(
-    await page
-      .locator(".app-system-report-modal .ant-modal-container")
-      .evaluate((element) => getComputedStyle(element).scrollbarWidth),
-  ).toBe("none");
-  expect(
-    await page
-      .locator(".app-system-report-modal .ant-modal-container")
-      .evaluate((element) => getComputedStyle(element).boxShadow),
+    await popoverContainer.evaluate(
+      (element) => getComputedStyle(element).boxShadow,
+    ),
   ).not.toBe("none");
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe(
     "hidden",
   );
-  await page.mouse.move(8, 240);
+  await page.mouse.move(
+    Math.min(
+      documentWidth - 2,
+      (popoverBox?.x ?? 0) + (popoverBox?.width ?? 0) + 8,
+    ),
+    240,
+  );
   await page.mouse.wheel(0, 360);
   await expect
     .poll(async () => page.evaluate(() => window.scrollY))
     .toBeGreaterThan(0);
-  expect(modalBox?.width ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
-    (viewport?.width ?? 0) - 32,
+  expect(popoverBox?.width ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
+    documentWidth - 24,
   );
+  expect(popoverBox?.x ?? Number.NEGATIVE_INFINITY).toBeGreaterThanOrEqual(8);
   expect(
-    (viewport?.width ?? 0) - (modalBox?.x ?? 0) - (modalBox?.width ?? 0),
+    documentWidth - (popoverBox?.x ?? 0) - (popoverBox?.width ?? 0),
   ).toBeGreaterThanOrEqual(12);
   expect(
     await page.evaluate(() => ({
@@ -128,7 +132,7 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   });
 
   await launcher.click();
-  await expect(modal).toBeHidden();
+  await expect(popover).toBeHidden();
   await expect(launcher).toHaveAttribute("aria-label", OPEN_LAUNCHER_LABEL);
   await expect(launcher).toHaveAttribute("aria-expanded", "false");
   await launcher.click();
@@ -303,40 +307,45 @@ for (const { name, viewport } of [
     ).toBeGreaterThanOrEqual(8);
 
     await launcher.click();
-    const modal = page.locator(".app-system-report-modal .ant-modal");
-    await expect(modal).toBeVisible();
-    await expect(modal.locator(".ant-modal-close")).toHaveCount(0);
+    const popover = page.locator(".app-system-report-popover.ant-popover");
+    await expect(popover).toBeVisible();
+    await expect(
+      page.locator(".app-system-report-modal, .ant-modal"),
+    ).toHaveCount(0);
     await expect(launcher).toHaveAttribute("aria-label", CLOSE_LAUNCHER_LABEL);
     await expect
       .poll(async () => {
         const currentFixedBarBox = await fixedBar.boundingBox();
-        const currentModalBox = await modal.boundingBox();
+        const currentPopoverBox = await popover.boundingBox();
         const currentLauncherBox = await launcher.boundingBox();
-        if (!currentFixedBarBox || !currentModalBox || !currentLauncherBox) {
+        if (!currentFixedBarBox || !currentPopoverBox || !currentLauncherBox) {
           return false;
         }
         return (
-          currentModalBox.y >= 8 &&
-          currentFixedBarBox.y - (currentModalBox.y + currentModalBox.height) >=
+          currentPopoverBox.y >= 8 &&
+          currentFixedBarBox.y -
+            (currentPopoverBox.y + currentPopoverBox.height) >=
             8 &&
-          currentLauncherBox.y - (currentModalBox.y + currentModalBox.height) >=
+          currentLauncherBox.y -
+            (currentPopoverBox.y + currentPopoverBox.height) >=
             8 &&
           currentLauncherBox.y + currentLauncherBox.height <= viewport.height
         );
       })
       .toBe(true);
 
-    const modalBox = await modal.boundingBox();
+    const popoverBox = await popover.boundingBox();
     const closeLauncherBox = await launcher.boundingBox();
-    expect(modalBox).not.toBeNull();
-    expect(modalBox?.y ?? -1).toBeGreaterThanOrEqual(8);
+    expect(popoverBox).not.toBeNull();
+    expect(popoverBox?.y ?? -1).toBeGreaterThanOrEqual(8);
     expect(
-      (modalBox?.y ?? Number.POSITIVE_INFINITY) + (modalBox?.height ?? 0),
+      (popoverBox?.y ?? Number.POSITIVE_INFINITY) + (popoverBox?.height ?? 0),
     ).toBeLessThan((fixedBarBox?.y ?? 0) - 8);
     expect(closeLauncherBox).not.toBeNull();
     expect(
       (closeLauncherBox?.y ?? Number.NEGATIVE_INFINITY) -
-        ((modalBox?.y ?? Number.POSITIVE_INFINITY) + (modalBox?.height ?? 0)),
+        ((popoverBox?.y ?? Number.POSITIVE_INFINITY) +
+          (popoverBox?.height ?? 0)),
     ).toBeGreaterThanOrEqual(8);
     expect(closeLauncherBox?.y ?? -1).toBeGreaterThanOrEqual(0);
     expect(
