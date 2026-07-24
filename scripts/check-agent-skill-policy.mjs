@@ -1012,14 +1012,54 @@ export function validateSkillPolicy({ skillName, content }) {
       );
     }
 
+    const canonicalKeduallTarget =
+      /collab\/main is the local remote alias for https:\/\/github\.com\/keduall\/topik-project-v13\.git refs\/heads\/main/i.test(
+        content,
+      ) &&
+      /a Keduall clone calls the same ref origin\/main/i.test(content);
+    const releaseRequestStartsOrchestration =
+      /user request to promote to production starts release orchestration; it does not authorize an immediate collab\/main update/i.test(
+        content,
+      );
+    const enforcesFirstTwoConfirmations =
+      /first two successful production promotions pause once at AWAITING_PROD_APPROVAL before the main merge; later runs may use AUTO/i.test(
+        content,
+      ) &&
+      /explicit production-mutation request does not bypass those first two confirmations/i.test(
+        content,
+      );
+    const resetsApprovalPolicy =
+      /reset the two-confirmation policy after a pipeline contract, DB workflow or compatibility policy, Vercel project environment or domain, remote branch or auth profile change, or after a deployment failure, rollback, or security incident/i.test(
+        content,
+      );
+    const protectsSecurityAndDbGates =
+      /before promotion, require a secret-safe security artifact audit, credential rotation, and the approved history response/i.test(
+        content,
+      ) &&
+      /production DB automatic apply stays disabled until the baseline and trusted workflow gates pass/i.test(
+        content,
+      );
+    const validatesRemoteIdentity =
+      /before mutation,[^\n]*validate[^\n]*collab remote URL[^\n]*https:\/\/github\.com\/keduall\/topik-project-v13\.git/i.test(
+        content,
+      );
+    const verifiesProductionDeployment =
+      /after a Keduall production mutation,[^\n]*verify[^\n]*Vercel production deployment[^\n]*exact resulting SHA[^\n]*READY/i.test(
+        content,
+      );
     const protectsCollab =
-      /collab/i.test(content) &&
-      /explicit deployment confirmation/i.test(content);
+      canonicalKeduallTarget &&
+      releaseRequestStartsOrchestration &&
+      enforcesFirstTwoConfirmations &&
+      resetsApprovalPolicy &&
+      protectsSecurityAndDbGates &&
+      validatesRemoteIdentity &&
+      verifiesProductionDeployment;
     if (!protectsCollab) {
       issues.push(
         issue(
           "COLLAB_PROTECTION",
-          "Publishing guidance must preserve the collab deployment confirmation guard.",
+          "Publishing guidance must preserve the canonical Keduall target, staged promotion, first-two confirmation policy, reset conditions, security and DB gates, remote identity guard, and exact-SHA Vercel verification.",
         ),
       );
     }

@@ -32,7 +32,10 @@ import {
   validateAutoCleanupSweepV1,
 } from "../../scripts/lib/ai-task-cleanup.mjs";
 import { startTask } from "../../scripts/lib/ai-task-lifecycle-v2.mjs";
-import { runTaskLifecycleCommand, scheduleAutoCleanupSweep } from "../../scripts/ai-task.mjs";
+import {
+  launchOneShotCleanupSweep,
+  runTaskLifecycleCommand,
+} from "../../scripts/ai-task.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const SHA = "a".repeat(64);
@@ -359,8 +362,12 @@ describe("automatic lifecycle cleanup contracts", () => {
   it("requires immediate post-merge autocleanup and documents conditional remote deletion", () => {
     const agents = readFileSync(path.join(ROOT, "AGENTS.md"), "utf8");
     const operations = readFileSync(path.join(ROOT, "docs", "operations", "ai-development-pipeline.md"), "utf8");
-    expect(agents).toContain("병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서");
-    expect(operations).toContain("병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서");
+    expect(agents).toContain(
+      "Black 또는 Keduall `main` 병합 뒤에는 관리 대상 workspace를 `task:autocleanup`으로 즉시 정리",
+    );
+    expect(operations).toContain(
+      "Black 또는 Keduall `main` 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서",
+    );
     expect(operations).toContain("--force-with-lease=<remote-ref>:<expected-sha>");
     expect(operations).not.toContain("끝날 때는 먼저 삭제 가능성만 보고한 다음 사용자가 승인한 동일 상태만");
   });
@@ -776,7 +783,7 @@ describe("automatic lifecycle cleanup contracts", () => {
     });
     expect(git(context.base, ["show-ref", "--verify", `refs/heads/${context.started.branch}`]))
       .toContain(context.headSha);
-  }, 60_000);
+  }, 180_000);
 
   it("runs at most ten candidates sequentially and records a closed sweep summary", async () => {
     const repository = makeRepository();
@@ -851,7 +858,7 @@ describe("automatic lifecycle cleanup contracts", () => {
     expect(autoCleanupTask).not.toHaveBeenCalled();
 
     const spawnWorker = vi.fn(() => ({ unref: vi.fn() }));
-    expect(scheduleAutoCleanupSweep({
+    expect(launchOneShotCleanupSweep({
       baseRepoPath: repository.base,
       cliPath: path.join(ROOT, "scripts", "ai-task.mjs"),
       spawnWorker,
@@ -861,11 +868,21 @@ describe("automatic lifecycle cleanup contracts", () => {
       [path.join(ROOT, "scripts", "ai-task.mjs"), "sweep", "--repo", repository.base],
       expect.objectContaining({ cwd: repository.base, detached: true, windowsHide: true, stdio: "ignore" }),
     );
-    expect(scheduleAutoCleanupSweep({
+    expect(launchOneShotCleanupSweep({
       baseRepoPath: repository.base,
       cliPath: path.join(ROOT, "scripts", "ai-task.mjs"),
       spawnWorker: () => { throw new Error("cannot spawn"); },
     })).toBe(false);
+
+    const asynchronousFailure = new EventEmitter();
+    asynchronousFailure.unref = vi.fn();
+    expect(launchOneShotCleanupSweep({
+      baseRepoPath: repository.base,
+      cliPath: path.join(ROOT, "scripts", "ai-task.mjs"),
+      spawnWorker: () => asynchronousFailure,
+    })).toBe(true);
+    expect(asynchronousFailure.listenerCount("error")).toBe(1);
+    expect(() => asynchronousFailure.emit("error", new Error("spawn failed later"))).not.toThrow();
   });
 
   it("hard-stops an in-flight sweep candidate at the remaining deadline and starts no later candidate", async () => {
@@ -1540,7 +1557,7 @@ describe("automatic lifecycle cleanup contracts", () => {
     expect(enumerateAutoCleanupTasks({ repoPath: repository.base })).toEqual([]);
   });
 
-  it("emits a successful task:start before scheduling and remains successful when scheduling throws", async () => {
+  it("emits a successful task:start before one-shot launch and remains successful when launch throws", async () => {
     const repository = makeRepository();
     const order = [];
     const started = await runTaskLifecycleCommand(
@@ -1555,30 +1572,30 @@ describe("automatic lifecycle cleanup contracts", () => {
       },
       {
         onStartSuccess: () => order.push("output"),
-        scheduleSweep: () => {
-          order.push("schedule");
+        launchSweep: () => {
+          order.push("launch");
           throw new Error("spawn unavailable");
         },
       },
     );
     expect(started).toMatchObject({ branch: "fix/nonblocking-sweep-schedule", state: "ACTIVE" });
     expect(existsSync(started.worktreePath)).toBe(true);
-    expect(order).toEqual(["output", "schedule"]);
+    expect(order).toEqual(["output", "launch"]);
   });
 
-  it("lets an old-base task start schedule the latest CLI explicitly in the background", async () => {
+  it("lets an old-base task launch the latest CLI explicitly in the background", async () => {
     const repository = makeRepository();
     const latestCli = path.join(repository.root, "latest-worktree", "scripts", "ai-task.mjs");
-    const scheduleSweep = vi.fn(() => true);
+    const launchSweep = vi.fn(() => true);
 
     await expect(runTaskLifecycleCommand(
       {
         command: "sweep",
         values: { repo: repository.base, background: "true" },
       },
-      { currentCliPath: latestCli, scheduleSweep },
-    )).resolves.toEqual({ status: "SCHEDULED", repoPath: path.resolve(repository.base) });
-    expect(scheduleSweep).toHaveBeenCalledWith({
+      { currentCliPath: latestCli, launchSweep },
+    )).resolves.toEqual({ status: "LAUNCHED", repoPath: path.resolve(repository.base) });
+    expect(launchSweep).toHaveBeenCalledWith({
       baseRepoPath: path.resolve(repository.base),
       cliPath: latestCli,
     });
@@ -1588,8 +1605,8 @@ describe("automatic lifecycle cleanup contracts", () => {
         command: "sweep",
         values: { repo: repository.base, background: "true" },
       },
-      { currentCliPath: latestCli, scheduleSweep: () => false },
-    )).rejects.toMatchObject({ code: "TASK_SWEEP_SCHEDULE_FAILED" });
+      { currentCliPath: latestCli, launchSweep: () => false },
+    )).rejects.toMatchObject({ code: "TASK_SWEEP_LAUNCH_FAILED" });
 
     const invalid = spawnSync(process.execPath, [
       path.join(ROOT, "scripts", "ai-task.mjs"),

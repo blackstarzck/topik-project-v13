@@ -120,6 +120,89 @@ const referenceScanExemptions = new Set([
   "scripts/check-project-structure.mjs",
   "tests/fixtures/project-structure-retired-references.json",
 ]);
+const pipelineContractImplementationPaths = Object.freeze([
+  "config/artifact-hygiene-policy.json",
+  "package.json",
+  "scripts/ai-release.mjs",
+  "scripts/ai-task.mjs",
+  "scripts/ai-validation-evidence.mjs",
+  "scripts/security-artifact-audit.mjs",
+  "scripts/lib/ai-release-promotion.mjs",
+  "scripts/lib/ai-task-sweep.mjs",
+  "scripts/lib/ai-task-lifecycle-v3.mjs",
+  "scripts/lib/ai-task-v3-adapter.mjs",
+  "scripts/lib/ai-validation-evidence.mjs",
+  "scripts/lib/security-artifact-audit.mjs",
+]);
+const pipelineContractDocumentationPaths = Object.freeze([
+  ".codex/skills/finishing-a-development-branch/SKILL.md",
+  "AGENTS.md",
+  "README.md",
+  "TESTING.md",
+  "docs/operations/README.md",
+  "docs/operations/ai-development-pipeline.md",
+]);
+
+function inspectPipelineContractCoupling(changedPaths, errors) {
+  if (changedPaths === null) return;
+  if (
+    !Array.isArray(changedPaths) ||
+    changedPaths.some(
+      (entry) =>
+        typeof entry !== "string" ||
+        entry.length === 0 ||
+        entry.includes("\\") ||
+        path.isAbsolute(entry) ||
+        entry.split("/").some((segment) => segment === ".."),
+    )
+  ) {
+    errors.push("Pipeline contract changed-path inventory is invalid.");
+    return;
+  }
+  const changed = new Set(changedPaths);
+  const implementationChanged = pipelineContractImplementationPaths.some(
+    (entry) => changed.has(entry),
+  );
+  const documentationChanged = pipelineContractDocumentationPaths.some(
+    (entry) => changed.has(entry),
+  );
+  if (implementationChanged !== documentationChanged) {
+    errors.push(
+      "Pipeline v3.1 implementation and owner documentation must change together.",
+    );
+  }
+}
+
+function pipelineChangedPathsFromGit(rootDir) {
+  const baseRef = process.env.PROJECT_STRUCTURE_BASE_REF;
+  if (baseRef === undefined || baseRef.length === 0) return null;
+  if (!/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/iu.test(baseRef)) {
+    throw new Error("Pipeline contract base ref is invalid.");
+  }
+  const result = spawnSync(
+    "git",
+    ["diff", "--name-only", "-z", `${baseRef}...HEAD`, "--"],
+    {
+      cwd: rootDir,
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "",
+        SystemRoot: process.env.SystemRoot ?? "",
+        WINDIR: process.env.WINDIR ?? "",
+      },
+      maxBuffer: 4 * 1024 * 1024,
+      shell: false,
+      timeout: 10_000,
+      windowsHide: true,
+    },
+  );
+  if (result.status !== 0 || result.error || result.signal) {
+    throw new Error("Pipeline contract changed-path inventory failed.");
+  }
+  return String(result.stdout ?? "")
+    .split("\0")
+    .filter(Boolean);
+}
 
 function normalizedPath(value) {
   const resolved = path.resolve(value);
@@ -553,10 +636,14 @@ function activeFiles(rootDir, errors) {
   return gitActiveFiles(rootDir, errors, inventory);
 }
 
-export function evaluateProjectStructure({ rootDir = process.cwd() } = {}) {
+export function evaluateProjectStructure({
+  rootDir = process.cwd(),
+  changedPaths = null,
+} = {}) {
   const errors = [];
   if (!existsSync(rootDir))
     return { errors: [`Project root does not exist: ${rootDir}`] };
+  inspectPipelineContractCoupling(changedPaths, errors);
   inspectDocsTopLevel(rootDir, errors);
   inspectOperationsRoot(rootDir, errors);
   inspectQaRoot(rootDir, errors);
@@ -575,7 +662,15 @@ export function evaluateProjectStructure({ rootDir = process.cwd() } = {}) {
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
 if (invokedPath === fileURLToPath(import.meta.url)) {
-  const result = evaluateProjectStructure();
+  let changedPaths = null;
+  let changedPathError = null;
+  try {
+    changedPaths = pipelineChangedPathsFromGit(process.cwd());
+  } catch (error) {
+    changedPathError = error.message;
+  }
+  const result = evaluateProjectStructure({ changedPaths });
+  if (changedPathError !== null) result.errors.unshift(changedPathError);
   if (result.errors.length > 0) {
     for (const error of result.errors) process.stderr.write(`- ${error}\n`);
     process.exitCode = 1;

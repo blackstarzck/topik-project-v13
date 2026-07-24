@@ -1,4 +1,5 @@
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -101,6 +102,41 @@ describe("project structure allowlist", () => {
     for (const policy of operationsPolicyPaths) write(root, policy);
 
     expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
+  it("requires pipeline implementation and owner documentation to change together", () => {
+    const root = createValidTree();
+    for (const policy of operationsPolicyPaths) write(root, policy);
+
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["scripts/lib/ai-task-lifecycle-v3.mjs"],
+      }).errors,
+    ).toEqual(
+      expect.arrayContaining([
+        "Pipeline v3.1 implementation and owner documentation must change together.",
+      ]),
+    );
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["AGENTS.md"],
+      }).errors,
+    ).toEqual(
+      expect.arrayContaining([
+        "Pipeline v3.1 implementation and owner documentation must change together.",
+      ]),
+    );
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: [
+          "scripts/lib/ai-task-lifecycle-v3.mjs",
+          "docs/operations/ai-development-pipeline.md",
+        ],
+      }).errors,
+    ).toEqual([]);
   });
 
   it.each(operationsPolicyPaths)(
@@ -930,8 +966,28 @@ describe("package interface", () => {
       "node scripts/check-project-structure.mjs",
     );
     expect(packageJson.scripts["check:task-lifecycle"]).toBe(
-      "vitest run tests/scripts/ai-task-lifecycle-v2.test.mjs tests/scripts/ai-task-cleanup.test.mjs tests/scripts/ai-task-autocleanup.test.mjs tests/scripts/ai-task-metrics.test.mjs tests/scripts/ai-task-measure-cli.test.mjs --maxWorkers=1",
+      "vitest run tests/scripts/ai-task-lifecycle-v2.test.mjs tests/scripts/ai-task-cleanup.test.mjs tests/scripts/ai-task-autocleanup.test.mjs tests/scripts/ai-task-metrics.test.mjs tests/scripts/ai-task-measure-cli.test.mjs tests/scripts/ai-task-lifecycle-v3.test.mjs tests/scripts/ai-task-lifecycle-v3-autocleanup.test.mjs tests/scripts/ai-task-v3-adapter.test.mjs tests/scripts/ai-task-sweep.test.mjs tests/scripts/ai-release-promotion.test.mjs tests/scripts/security-artifact-audit.test.mjs tests/scripts/ai-validation-evidence.test.mjs --maxWorkers=2",
     );
+    expect(packageJson.scripts["validation:record"]).toBe(
+      "node scripts/ai-validation-evidence.mjs record",
+    );
+    expect(packageJson.scripts["validation:check"]).toBe(
+      "node scripts/ai-validation-evidence.mjs check",
+    );
+    expect(packageJson.scripts["task:sweep"]).toBe(
+      "node scripts/ai-task.mjs sweep",
+    );
+    expect(
+      Object.keys(packageJson.scripts).filter((name) => name.startsWith("scheduler:")),
+    ).toEqual([]);
+    expect(existsSync(path.join(process.cwd(), "scripts", "lib", "ai-task-sweep.mjs"))).toBe(true);
+    for (const retiredPath of [
+      path.join("scripts", "ai-pipeline-runner.mjs"),
+      path.join("scripts", "ai-pipeline-scheduler-cli.mjs"),
+      path.join("scripts", "lib", "ai-pipeline-scheduler.mjs"),
+    ]) {
+      expect(existsSync(path.join(process.cwd(), retiredPath))).toBe(false);
+    }
     expect(packageJson.scripts["test:supabase:local"]).toContain(
       "tests/integration/pdf-export-quota-rpc.test.ts",
     );

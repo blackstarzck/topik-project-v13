@@ -15,7 +15,7 @@ TALKPIK AI는 TOPIK 학습자가 목표를 세우고, 추천 문제와 쓰기 51
 | 알고 싶은 것 | 기준 |
 | --- | --- |
 | AI 작업 방식과 안전 경계 | [`AGENTS.md`](./AGENTS.md) |
-| AI 개발 task 시작·인수인계·산출물·정리 | [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md) |
+| AI 개발 task 준비·공용 workspace·인수인계·산출물·자동 정리, Keduall 승격·DB·Vercel | [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md) |
 | 제품 목표, 현재 범위와 사용자 약속 | [`docs/prd.md`](./docs/prd.md) |
 | 현재 route와 구현 동작 | `src/app/`, `src/lib/routes.ts`, tests |
 | UI와 theme | [`DESIGN.md`](./DESIGN.md), `src/theme/`, `src/styles/global.css` |

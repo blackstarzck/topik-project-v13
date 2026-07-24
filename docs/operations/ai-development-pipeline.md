@@ -1,4 +1,4 @@
-# AI 개발 파이프라인
+# AI 개발·운영 승격·자동 정리 파이프라인 v3.1
 
 | 항목 | 값 |
 | --- | --- |
@@ -6,19 +6,23 @@
 | owner | TALKPIK AI 저장소 작업 lifecycle |
 | 적용 대상 | 사람, Codex, Claude가 수행하는 모든 개발 task |
 | 정본 | 이 문서와 실행 가능한 `package.json` 명령·contract test |
-| 마지막 검토 | 2026-07-22 |
+| 마지막 검토 | 2026-07-24 |
 
-이 문서는 AI 개발 작업의 시작, 인수인계, 검증, 종료와 정리를 한 흐름으로 정의한다. `AGENTS.md`는 공통 행동 계약이고, 이 문서는 branch·worktree·registry·산출물·정리의 세부 workflow owner다.
+이 문서는 AI 개발 작업의 시작, Codex↔Claude 인수인계, Black 개발 저장소 검증, Keduall 운영 승격, Vercel 배포와 자동 정리를 한 흐름으로 정의하는 유일한 세부 workflow owner다. `AGENTS.md`, 이 문서, 실행 명령과 contract test는 같은 변경 묶음에서 함께 바뀌어야 한다.
 
 ## 용어와 불변 조건
 
 | 용어 | 뜻 | 지켜야 할 조건 |
 | --- | --- | --- |
-| task | 한 가지 목적을 가진 변경 단위 | 한 task는 한 branch와 한 worktree만 소유한다. |
+| task | 한 가지 목적을 가진 변경 단위 | branch와 workspace는 요청 종류에 따라 선택하며 task identity와 분리한다. |
 | 기준 checkout | `origin/main`을 확인하고 task를 시작하는 공유 저장소 | 다른 task를 위해 branch를 바꾸거나 merge·rebase하지 않는다. |
-| task worktree | task 전용 작업 폴더 | 기준 checkout의 `.worktrees/<type>-<slug>`에만 둔다. |
-| lifecycle registry v2 | 도구와 무관한 task 상태 기록 | Git common directory의 `talkpik-task-lifecycle/v2/`에 둔다. secret·token·원문 thread ID를 기록하지 않는다. |
+| shared slot | 작은 순차 코드 작업이 재사용하는 `.worktrees/shared-dev` | 한 번에 task 하나만 claim하며 task가 끝나도 폴더는 유지한다. |
+| isolated workspace | 병렬·장기·위험 작업용 관리 worktree | 사용자 선택 뒤 `.worktrees/<type>-<slug>`에 만들며 병합 뒤 비강제 정리한다. |
+| host/adopted workspace | Codex·Claude·사람이 이미 연 작업 공간 | claim과 task 산출물만 관리하고 폴더·Git ref는 보존한다. |
+| lifecycle registry v3 | task와 선택적 branch·workspace를 분리한 도구 중립 기록 | Git common directory의 `talkpik-task-lifecycle/v3/`에 두고 secret·token·원문 thread ID를 기록하지 않는다. |
+| PromotionRunV1 | Black source부터 Keduall `main`·Vercel까지 추적하는 별도 승격 기록 | 개발 task와 분리하고 SHA·digest·deployment identity·승인 mode만 저장한다. |
 | fingerprint | 특정 시점의 Git·PR·runtime·정리 후보를 묶은 SHA-256 승인값 | 상태가 달라지면 기존 정리 승인은 무효다. |
+| Keduall production target | 이 checkout의 `collab/main`, 즉 `keduall/topik-project-v13`의 `refs/heads/main` | Keduall 저장소를 직접 clone한 checkout의 `origin/main`과 같은 ref다. 이 checkout의 `origin/main`과는 다른 저장소다. |
 
 branch는 다음 형식만 허용한다.
 
@@ -32,50 +36,63 @@ feat|fix|refactor|test|docs|chore|ci/<kebab-slug>
 
 ```mermaid
 flowchart LR
-  A["origin fetch"] --> B["SHA 고정"]
-  B --> C["task:start"]
-  C --> D["구현·측정된 검증"]
-  D --> E{"실행자 변경?"}
-  E -- 예 --> F["handoff offer → accept"]
-  F --> D
-  E -- 아니요 --> N{"두 CODEOWNER 세션·권한 확인?"}
-  N -- 예 --> O["필수 CI·review 의견 처리 → 비작성자 승인 → blackstarzck merge"]
-  N -- 아니요 --> P["CODEOWNER 승인 단계에서 BLOCKED"]
-  O --> H["runtime 종료·등록"]
-  P --> H
-  H --> I["finalize 보고"]
-  I --> J{"fingerprint 승인?"}
-  J -- 아니요 --> K["보존"]
-  J -- 예 --> L["비강제 cleanup"]
-  L --> M["CLEANED 기록"]
+  A["task:prepare"] --> B{"요청 종류"}
+  B -- 읽기 --> C["현재 checkout"]
+  B -- 순차 코드 --> D["shared-dev + branch"]
+  B -- 병렬·위험 --> E["사용자 선택 + isolated"]
+  D --> F["Black PR·main"]
+  E --> F
+  F --> G["자동 cleanup"]
+  F --> H{"운영 승격 요청?"}
+  H -- 예 --> I["Keduall stg·DB·Preview"]
+  I --> J["첫 2회 최종 확인 / 이후 AUTO"]
+  J --> K["Keduall main·Production"]
+  K --> L["자동 cleanup"]
 ```
 
-핵심은 시작할 때 기준 SHA를 고정하는 것이다. 정상 병합된 v2 task는 자동 경로가 같은 안전 조건을 다시 확인해 비강제로 정리하고, 자동 경로가 보존한 작업을 사람이 복구할 때만 `finalize` fingerprint 승인 경로를 사용한다.
+질문·조사·리뷰에는 Git 자원을 만들지 않는다. 작은 순차 작업마다 새 폴더를 만들지 않고, 병렬성이 실제로 필요할 때만 별도 worktree를 선택한다. production은 Black `main` 병합만으로 시작되지 않고 사용자의 명시적 승격 요청으로만 시작한다.
 
 ## 명령 사용법
 
 모든 예시는 기준 checkout 또는 해당 task worktree의 절대 경로를 사용한다. `--actor`는 `codex`, `claude`, `manual` 중 하나다.
 
-### 시작과 상태 확인
+### 준비·시작·상태 확인
 
 ```bash
+pnpm task:prepare -- --repo <기준-checkout> --intent read-only
+pnpm task:prepare -- --repo <기준-checkout> --intent code --branch feat/example-task --actor codex
 pnpm task:start -- --repo <기준-checkout> --branch feat/example-task --actor codex
 pnpm task:status -- --repo <기준-checkout-or-worktree> --branch feat/example-task
 ```
 
-`task:start`은 다음을 한 묶음으로 수행한다.
+`task:prepare --intent read-only`는 Git status·remote identity 같은 읽기 전용 기준만 확인하고 fetch, pull, branch, worktree, registry를 만들지 않는다.
 
-1. 기준 checkout과 Git common directory가 안전한 실제 경로인지 확인한다.
-2. 기준 checkout이 clean인지, branch·worktree·registry가 중복되지 않는지 확인한다.
-3. `git fetch --prune origin`을 실행한다.
-4. 조회한 `origin/main` SHA를 record에 고정한다. `--base-sha <sha>`가 있으면 일치해야 한다.
-5. 고정 SHA에서 branch와 `.worktrees/<type>-<slug>` worktree를 만든다.
+코드 작업은 다음을 한 묶음으로 수행한다.
 
-fetch 실패, stale base, dirty 기준 checkout, 이름 중복, 기존 native worktree 소유권 충돌은 fail-closed다. 공유 `main`에서는 `pull`, `merge`, `rebase`, `switch`, `checkout`, `reset`을 실행하지 않는다.
+1. 기준 checkout·Git common directory·remote identity를 안전한 실제 경로로 확인한다.
+2. 기존 ACTIVE task가 있으면 새 Git 자원을 만들지 않고 동일 branch·workspace를 재사용한다.
+3. 새 작업이면 `git fetch --prune origin` 뒤 clean하고 fast-forward 가능한 기준 `main`에서만 `git pull --ff-only origin main`을 실행한다.
+4. 정확한 최신 `origin/main` SHA를 `TaskRecordV3`에 고정한다.
+5. 작은 순차 작업은 task branch와 `.worktrees/shared-dev`를 claim한다.
+6. shared slot이 사용 중이거나 병렬·장기·위험 작업이면 자동 생성하지 않고 `공용 작업 공간 / 별도 안전 폴더` 선택을 사용자에게 돌려준다.
 
-worktree가 만들어진 직후 프로세스가 중단되면 `StartRecoveryV1` 기록이 남는다. 같은 실행자가 같은 branch·경로·기준 SHA로 `task:start`을 다시 실행했을 때만 복구를 시도한다. 실행 복구와 `task:status`는 같은 read-only 진단기로 missing·dirty·detached·wrong branch·wrong HEAD·native ownership·remote branch 충돌을 확인한다. 원격 branch 부재 확인은 최대 5초로 제한하며 시간 안에 증명하지 못하면 `REMOTE_EVIDENCE_UNAVAILABLE`로 불확실성을 명시한다. 모든 조건을 확인한 뒤에만 기존 worktree를 TaskRecord에 연결하며, 하나라도 불명확하면 파일이나 branch를 삭제하지 않는다.
+dirty, fetch 실패, 갈라진 `main`, 진행 중 Git 작업, 이름 중복, native worktree 소유권 충돌은 fail-closed다. merge·rebase·reset으로 자동 우회하지 않는다. 기준 `main`에 대한 유일한 변경은 위 조건을 모두 통과한 `pull --ff-only`다.
 
-`task:status`는 기존 원본 record와 함께 사람이 읽는 `summary`, 전체 `blockers`, 실행할 명령 하나만 담은 `nextAction`을 출력한다. 출력하는 PowerShell 명령의 경로는 공백과 작은따옴표가 있어도 그대로 복사해 실행할 수 있게 인용한다. 작업 시작이 중단되어 아직 `TaskRecordV2`가 없는 경우에도 복구 안내를 읽을 수 있다.
+`workspaceMode`는 `shared-slot | isolated | adopted | host`, `ownership`은 `managed | adopted | host`다. Codex와 Claude는 같은 task claim의 현재 실행자와 revision만 원자적으로 전환한다. workspace·HEAD·fingerprint가 바뀌거나 claim이 살아 있으면 동시 수정을 차단한다. host/adopted 경로는 같은 Git common directory의 native worktree임을 확인해도 cleanup은 preserve-only다.
+
+기존 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:finish`, `task:runtime`, `task:finalize`, `task:cleanup`, `task:measure`, `task:metrics`, `task:owner-auth`는 유지하고 v3 record를 읽는다. 기존 v2 record는 변경하지 않고 v3로 복사한다. 미등록 legacy worktree는 read-only 발견 목록에만 남기고 자동 소유권을 부여하거나 삭제하지 않는다.
+
+### 검증 증거 재사용
+
+```bash
+pnpm validation:record -- --repo <repo> --workflow pipeline-v3.1-black-pr-full
+pnpm validation:check -- --repo <repo> --workflow pipeline-v3.1-black-pr-full
+pnpm validation:status -- --repo <repo>
+```
+
+`validation:record`는 caller가 SHA·digest·성공 여부·소요시간을 제출하는 명령이 아니다. 승인된 workflow ID만 받고, clean worktree의 현재 `HEAD`, 고정된 `origin/main`, 정본 파일에서 계산한 workflow digest를 직접 읽는다. 그 뒤 고정된 project structure, artifact hygiene, agent policy·skill, 전체 test, typecheck, lint, build preflight와 build를 shell 없이 직접 실행해 실제 종료 코드와 시간을 기록한다. 실행 전후 Git 상태나 digest가 달라지면 실패·미완료로 기록하며 재사용하지 않는다.
+
+저장소에는 완료된 검증의 결과·소요시간과 정확한 `(head SHA, base SHA, workflow digest)`만 저장한다. 명령 원문, 환경변수, stdout·stderr, token은 저장하지 않는다. `validation:check`도 현재 Git 상태와 정본에서 세 값을 다시 계산하고 모두 같으며 결과가 `SUCCESS`이고 완료된 record일 때만 재사용 가능으로 반환한다. caller가 `--result SUCCESS`, 임의 SHA나 digest를 넣는 입력은 거부한다. 실패·미완료·변조·동시 갱신 충돌은 cache miss 또는 오류로 처리한다.
 
 ### Codex ↔ Claude 인수인계
 
@@ -98,20 +115,59 @@ pnpm task:runtime -- --repo <task-worktree> --branch feat/example-task
 
 runtime을 사용하지 않았어도 두 번째 예처럼 빈 상태를 명시적으로 등록한다. 포트·PID·lock은 task별 최대 32개다. lock 경로는 해당 worktree의 `.codex/work/<slug>/` 안의 절대 경로만 허용한다. worktree 자체가 포트나 프로세스를 격리하지 않으므로 병렬 runtime은 서로 다른 loopback port와 test data를 사용한다.
 
-### GitHub 소유자 인증 사전 확인
+### GitHub 계정 profile
 
-외부 GitHub에 publish·approval·merge 작업을 하기 직전에 다음 명령으로 현재 계정이 저장소 소유자인지 확인한다. 이 저장소의 소유자는 `blackstarzck`이다.
+Black `origin` 작업은 `blackstarzck`, Keduall `collab` 작업은 `guestkeduall-design`으로 관리한다.
 
 ```bash
 pnpm task:owner-auth -- --repo <repo-or-worktree> --owner blackstarzck
-pnpm task:owner-auth -- --repo <task-worktree> --branch feat/example-task --owner blackstarzck --publish-approved
+pnpm task:owner-auth -- --repo <repo-or-worktree> --owner guestkeduall-design
 ```
 
-명령은 먼저 `origin` URL에서 실제 소유자를 확인한 뒤 `gh api user`로 현재 로그인을 읽는다. 이미 `blackstarzck`이면 전역 계정을 바꾸지 않고 성공한다. 다른 계정이면 기본 호출은 `SWITCH_REQUIRED`와 `manualApprovalRequired: true`만 안전한 JSON으로 반환하며 `gh auth switch`를 실행하지 않는다. 첫 로그인 확인 자체가 실패하면 승인 없는 호출은 즉시 실패한다. 사용자가 원격 게시를 승인한 작업에서만 `--publish-approved`를 붙일 수 있고, 이 경우 첫 확인 실패도 저장된 소유자 계정으로 전환한 뒤 `gh api user`를 한 번만 다시 검증한다. 전환이나 재검증이 실패하면 중단한다. `--branch`를 함께 주면 성공 결과를 해당 task의 `OwnerAuthResultV1` sidecar로 남긴다.
+repository 단위 auth lock 안에서 필요한 계정으로 전환하고 `gh api user`와 repository permission을 확인한다. token이나 인증 원문은 저장·출력하지 않으며 작업 뒤 원래 활성 계정으로 복원한다. Black solo 작업은 `guestkeduall-design` 승인에 의존하지 않는다. 계정·permission 확인 실패는 Git 작업을 보존 상태로 중단한다.
 
-token·인증 명령의 stdout·stderr는 결과에 포함하지 않으며 각 하위 명령은 30초가 지나면 실패한다. 성공 결과의 `manualApprovalRequired: false`는 계정 확인의 중복 절차만 생략한다는 뜻이다. 필수 CI와 review 의견 처리는 그대로 의무이며 어떤 인증 경로도 이를 우회할 수 없다.
+### 보안 선행 조건
 
-보호 경로의 공동 CODEOWNER는 `blackstarzck`와 `guestkeduall-design`이다. 사용자가 publish·merge를 승인한 작업에서 `gh auth status`에 두 세션이 있고 `guestkeduall-design`의 대상 저장소 collaborator write 권한이 확인되면, 최종 head의 필수 CI가 모두 통과하고 미해결 review thread가 없는지 다시 확인한다. 그 뒤 PR 작성자가 아닌 계정으로 CODEOWNER 승인을 제출하고 `blackstarzck`으로 전환해 동일 head를 merge한다. PR head가 바뀌면 기존 승인을 재사용하지 않고 검사와 승인을 다시 확인한다. 어느 계정이나 권한이 없으면 자동 전환·승인·merge를 시도하지 않고 `BLOCKED`로 보고한다.
+현재 두 저장소의 Git 이력에는 `.scratch/**`, `.tmp/**`, `artifacts/**`, 임시 SQL·로그·스크립트·환경 파일·화면 캡처와 root 임의 산출물이 포함됐을 가능성이 확인됐다. 따라서 원격 반영 전에 특정 파일 하나가 아닌 전체 reachable history를 값 출력 없이 검사한다. 보고서는 경로, commit의 안전한 hash, 탐지 규칙만 기록하며 blob 값·token·원문 credential을 기록하지 않는다.
+
+credential 폐기·교체가 history rewrite보다 먼저다. Actions 산출물·cache, PR 참조, fork·clone, Vercel build·log 노출도 별도 사고 대응에서 조사한다. credential 교체, Git history rewrite·강제 push와 GitHub Support 요청은 각각 사용자 별도 승인 작업이며, 사고 처리 전 archive tag를 만들지 않는다. 이 선행 조건이 끝나기 전 publish·promotion은 차단한다.
+
+### Keduall 승격·DB·Vercel
+
+이 checkout에서 remote 이름 `collab`은 `https://github.com/keduall/topik-project-v13.git`의 고정 별칭이다. `collab/main`은 `keduall/topik-project-v13`의 `refs/heads/main`이며, Keduall 저장소를 직접 clone한 checkout에서 부르는 `origin/main`과 같은 ref다. 현재 checkout의 `origin/main`은 `blackstarzck/topik-project-v13`의 main이므로 두 저장소를 섞지 않는다. 에이전트는 아래 표현을 같은 production 대상으로 정규화하고, 어느 별칭을 뜻하는지 다시 질문하지 않는다.
+
+- `collab/main`
+- `keduall/topik-project-v13`의 `main`
+- Keduall 저장소 checkout의 `origin/main`
+
+사용자가 “운영에 반영해줘”라고 명시할 때만 다음 명령으로 승격을 시작·조회·재개한다.
+
+```bash
+pnpm release:start -- --repo <기준-checkout> --run-id <promotion-YYYYMMDD-source8> --vercel-project <project> --vercel-domain <domain>
+pnpm release:status -- --repo <기준-checkout> --run-id <run-id>
+pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-revision <revision> --expected-fingerprint <fingerprint> --event PROD_APPROVAL_GRANTED --event-at <ISO-8601> --approval <approval-fingerprint>
+```
+
+`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인한 뒤 `origin/main`과 `collab/main` 또는 `collab/stg`에서 SHA를 직접 읽고, 그 reachable history에 대한 보안 감사를 직접 실행한다. finding이 하나라도 있거나 ref를 읽지 못하면 승격 기록을 시작하지 않는다.
+
+공개 `release:resume`은 최초 2회에 필요한 사람의 최종 승인만 받는다. candidate·PR·DB·Vercel·cleanup 상태를 caller가 만든 JSON으로 제출해 상태를 전진시키는 경로는 `RELEASE_TRUSTED_EXECUTOR_REQUIRED`로 거부한다. 이 상태 전이는 고정 저장소·계정·permission·현재 ref/SHA와 trusted workflow 결과를 직접 확인하는 운영 executor만 호출할 수 있다. 해당 executor가 설치되기 전에는 승격이 안전하게 중단된 상태이며 수동 JSON으로 우회할 수 없다.
+
+1. Keduall `stg`에서 `chore/promote-<date>-<source-sha>` candidate를 만든다.
+2. 정확한 Black source SHA를 `--no-ff`로 병합하고 candidate parent가 현재 `stg`, Black source 순서인지 검사한다.
+3. candidate → `stg` PR을 `guestkeduall-design`으로 처리한다.
+4. `stg` Vercel Preview가 정확한 SHA이고 branch 전용 `topik-dev` 환경 범위인지 확인한다.
+5. DB gate를 통과한다.
+6. `stg` → `main` PR을 merge commit으로 처리한다.
+7. Vercel Production의 정확한 main SHA·target·alias·domain과 읽기 전용 smoke test를 확인한다.
+8. Production 성공 뒤 `stg`가 fast-forward 가능할 때만 `main`으로 동기화하고 candidate workspace를 정리한다. `stg`와 `main`은 삭제하지 않는다.
+
+squash, rebase, Keduall `main` 직접 push는 허용하지 않는다. `PromotionRunV1`은 Black source SHA·tree hash, Keduall stg 기준·candidate·stg·main SHA, migration manifest와 증거, 승인 mode·성공 횟수, Vercel deployment ID·commit SHA·alias, 중단·재개 상태를 닫힌 secret-safe schema로 저장한다.
+
+같은 계약 버전의 최초 2회 production 승격은 `stg`·DB 검사가 끝난 뒤 `AWAITING_PROD_APPROVAL`에서 Keduall `main` merge 직전 최종 확인을 한 번 받는다. 명시적인 push·merge 표현도 이 확인을 생략하거나 우회하지 않는다. 두 번 연속 production `READY`, 정확한 main SHA, production alias, smoke test, cleanup이 성공하면 이후 `AUTO`다. pipeline 계약, DB workflow·호환성, Vercel project·environment·domain, remote·branch·auth profile 변경 또는 배포 실패·rollback·보안 사고는 성공 횟수를 0으로 reset한다. destructive DB migration과 강제 Git 작업은 `AUTO`에서도 별도 승인 대상이다.
+
+production DB 자동 apply는 초기에 비활성이다. production project와 tracker, schema·RPC·RLS·grant fingerprint, migration SHA-256 manifest, backup/PITR, 고정 Supabase CLI/action, 변경된 과거 migration을 대체할 forward reconciliation이 준비된 뒤 trusted operations workflow만 적용할 수 있다. remote tracker는 manifest의 정확한 prefix여야 하고 과거 migration 수정·삭제·rename, destructive SQL·grant 회수·N-1/N 호환성 실패가 있으면 중단한다. production credential은 로컬 에이전트나 candidate PR에 전달하지 않는다.
+
+`stg`는 유료 custom environment에 의존하지 않는 일반 Vercel Preview branch이며 `topik-dev` 범위의 환경 key 존재만 확인한다. `main`은 Production을 자동 build한다. build 실패 시 기존 alias를 유지하고, alias 전환 뒤 smoke 실패 시 이전 `READY` deployment로 alias만 rollback하며 DB는 되돌리지 않는다.
 
 ### 파이프라인 소요 시간 측정
 
@@ -139,6 +195,8 @@ pnpm task:metrics -- --repo <기준-checkout-or-worktree> --branch feat/example-
 
 측정 record는 Git common directory의 `talkpik-task-lifecycle/v2/metrics/<task-id>/<span-id>.json`에 `TaskMetricSpanV1`로 저장한다. 허용 필드가 닫혀 있고 fingerprint, task·branch, phase·scope, 시작·종료 시각, duration, 상태·exit code, PID, budget만 포함한다. actor는 저장하지 않고 실행 시 task registry와만 대조한다. symlink·junction·reparse·경로 탈출·fingerprint 변조·중복 span과 동시 완료 경쟁은 거부한다. 측정 파일은 task 상태, cleanup 승인 fingerprint와 삭제 후보, CI 성공 기준의 일부가 아니다.
 
+검증 결과를 재사용하는 cache key는 정확한 `(head SHA, base SHA, workflow digest)`다. 세 값과 성공 결과가 모두 같을 때만 무거운 전체 검증을 재사용한다. Black PR에서 전체 검증은 한 번 수행하고, Keduall 승격은 동일 key의 성공 증거와 승격·DB·Vercel 전용 검증만 소비한다. 어느 값이든 바뀌면 cache miss다.
+
 GitHub Actions의 각 runner는 로컬 task registry를 공유하지 않으므로 job summary의 `service_time_seconds`를 별도로 남긴다. queue 시간은 runner 안에서 정확히 알 수 없어 GitHub run API에서 확인하며 추정값을 만들지 않는다.
 
 ### 종료 보고와 정리
@@ -157,23 +215,30 @@ pnpm task:sweep -- --repo <기준-checkout>
 
 두 명령의 목적은 다르다. `finish`는 일상적인 작업 마감 안내를 빠르게 만들고, `finalize`는 실제 삭제 승인값을 만들기 위한 깊은 정리 사전 검사다. `finalize`와 `cleanup`은 주요 단계별 실제 소요 시간을 `timings`로 함께 출력한다. 이 시간은 진단 정보일 뿐 승인 fingerprint나 registry schema에는 포함하지 않는다.
 
-수동 복구 경로에서는 `ready: true`인 후보 목록과 fingerprint를 사용자에게 보고하고, 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. 정상 병합 자동 경로는 별도의 사용자 승인값을 받지 않는다. `task:autocleanup`은 정식 ACTIVE v2 task 하나를, `task:sweep`은 최대 10개를 순차 검사해 병합·소유권·runtime·경로·HEAD/PR SHA가 모두 안전할 때만 같은 비강제 cleanup journal을 실행한다. GitHub가 초 단위로 주는 `mergedAt` 값은 동일한 UTC 시각의 밀리초 포함 형식으로 정규화해 기록하지만, 내부 registry가 받는 시간은 계속 밀리초까지 정확한 ISO 형식만 허용한다.
+수동 복구 경로에서는 `ready: true`인 legacy 후보 목록과 fingerprint를 사용자에게 보고하고, 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. 정상 병합된 managed v3 task는 별도의 사용자 승인값 없이 자동 정리한다. `task:autocleanup`은 특정 task 하나를, `task:sweep`은 최대 10개를 순차 검사해 병합·소유권·runtime·경로·HEAD/PR SHA가 모두 안전할 때만 비강제 cleanup journal을 실행한다.
 
-원격 task branch가 남아 있으면 다른 안전 조건을 먼저 통과시킨다. 그 뒤 저장된 GitHub 인증에서 `blackstarzck` 전환을 시도하고, origin의 GitHub 저장소 identity와 원격 ref가 merged PR head SHA와 정확히 같을 때만 해당 ref를 삭제한다. 실제 push는 `--force-with-lease=<remote-ref>:<expected-sha>`와 delete refspec을 함께 써서 서버가 expected SHA를 원자 비교한 경우에만 삭제한다. 이는 무조건 `--force`가 아니며, 사전 조회 뒤 ref가 이동하면 삭제가 실패하고 모든 로컬 항목을 보존한다. 삭제 직후 전체 snapshot을 다시 계산하며 조금이라도 달라지면 worktree와 로컬 branch는 보존한다. 인증·identity·SHA 확인 실패도 로컬 항목을 그대로 보존한다.
+| workspace | 병합 뒤 자동 정리 |
+| --- | --- |
+| `shared-slot` + `managed` | runtime 종료 → task 산출물 제거 → 최신 `origin/main`으로 detach → task branch 비강제 삭제. `.worktrees/shared-dev` 폴더는 유지 |
+| `isolated` + `managed` | task 산출물 → worktree → local branch → exact-SHA remote branch 순서로 비강제 제거 |
+| `host` / `adopted` | task 산출물과 claim만 해제하고 workspace·Git ref는 보존 |
+| Keduall promotion | Production 성공 뒤 candidate branch와 임시 checkout만 정리. `stg`·`main`은 절대 삭제하지 않음 |
 
-`origin/main` PR 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 `pnpm task:autocleanup -- --repo <기준-checkout> --branch <정확한-task-branch>`를 즉시 실행한다. 에이전트 밖에서 병합됐거나 즉시 실행이 끊긴 작업만 다음 `task:start`의 sweep이 따라잡는다.
+원격 task branch가 남아 있으면 repository profile에 맞는 계정으로 전환하고 remote identity와 ref가 merged PR head SHA와 정확히 같을 때만 `--force-with-lease=<remote-ref>:<expected-sha>`를 사용한 exact-SHA lease로 삭제한다. 이 옵션은 임의 SHA로 원격을 덮어쓰는 강제 push가 아니라, 원격 ref가 방금 검증한 SHA 그대로일 때만 삭제를 허용하는 TOCTOU 보호 장치다. 삭제 직후 전체 snapshot을 다시 계산하며 조금이라도 달라지면 worktree와 로컬 branch는 보존한다. 인증·identity·SHA 확인 실패도 로컬 항목을 그대로 보존한다.
 
-`task:start`은 새 worktree 생성을 성공으로 확정한 뒤 최신 worktree CLI를 숨김 일회성 프로세스로 실행해 sweep을 예약한다. daemon은 만들지 않으며 예약 실패는 시작 결과를 실패로 바꾸지 않는다. 오래된 기준 checkout CLI가 이 hook을 모르면 새 worktree에서 최신 CLI 경로를 확인한 뒤, 대상 밖의 안전한 기준 checkout에서 다음 명령을 한 번 실행한다.
+Black 또는 Keduall `main` 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 `task:autocleanup`을 즉시 실행한다. 에이전트 밖에서 병합됐거나 즉시 실행이 끊긴 작업은 다음 코드 작업의 `task:prepare`가 숨김 일회성 `task:sweep`을 실행해 따라잡는다. `task:start`도 이전 호출 경로와의 호환을 위해 같은 일회성 sweep을 실행한다. 질문·조사·리뷰에 쓰는 `task:prepare --intent read-only`는 네트워크나 sweep을 시작하지 않는다.
 
-```powershell
-node "<new-worktree>/scripts/ai-task.mjs" sweep --repo "<base-checkout>" --background true
+상시 프로세스, Windows Scheduled Task, 5분 주기 설치는 사용하지 않는다. 따라서 외부 병합만 일어나고 이후 코드 작업이나 수동 sweep이 전혀 없으면 자동 정리는 실행되지 않으며, 5분 내 정리를 보장하지 않는다. 즉시 정리가 필요하면 다음 명령을 기준 checkout에서 직접 실행한다.
+
+```bash
+pnpm task:sweep -- --repo <절대-기준-checkout>
 ```
 
-이 명령은 최신 CLI가 자기 자신을 숨김 일회성 프로세스로 다시 실행하도록 예약하고 즉시 반환한다. `--background`는 정확히 `true`만 허용하며 예약 자체가 실패하면 오류를 반환한다. 프로세스 작업 위치와 `--repo`는 기준 checkout이고, 실행할 코드만 새 worktree에 있으므로 최신 코드의 위치와 정리 프로세스가 서 있는 안전한 위치를 혼동하지 않는다.
+일회성 sweep은 실행 뒤 종료한다. 먼저 유효한 ACTIVE v2 후보를 최대 10개까지 v3 record로 복사하고 이미 같은 branch의 v3 record가 있으면 재사용한다. 복사할 수 없는 legacy record는 삭제하지 않고 blocker와 함께 보존한다. 그 뒤 v2와 v3 정리기를 연달아 실행하지 않고, v3 reconciliation 후 v3 sweep 하나만 실행한다. 따라서 계정 전환·복원, 최대 처리 수와 전체 실행 예산도 한 번만 적용된다. 병합 직후 직접 호출하는 `task:autocleanup`도 v3 record가 없는 v2 task를 먼저 v3로 복사한 뒤 같은 v3 인증·정리 경로를 다시 호출하며, 복사나 재호출이 불명확하면 구형 정리기로 우회하지 않고 보존한다.
 
-sweep은 저장소 단위 lock과 기존 task별 lock을 함께 사용하고 전체 10분에서 멈춘다. cooldown 확인용 preview에는 네트워크 상한 30초와 종료 기록 여유 5초를 함께 예약하므로 남은 시간이 35초 이하이면 새 preview를 시작하지 않는다. preview의 `fetch`, GitHub PR 조회, 원격 branch 조회는 각각 새 30초를 받지 않고 하나의 절대 deadline을 공유하며, 비동기 preview에도 남은 시간에서 기록 여유를 뺀 timeout을 적용한다. 각 후보는 현재 `scripts/ai-task.mjs autocleanup` child process로 실행하고, 전체 deadline의 마지막 5초는 sweep 보고서 기록에 남긴다. child는 자기 예산 안에서 다시 최대 5초를 process tree 종료 확인에 예약한다. 시간 초과가 나면 Windows에서는 정확한 root PID에 `taskkill /PID <pid> /T /F`를 `shell: false`로 실행하고, 그 명령의 성공과 root child의 `close`를 모두 확인한다. Windows가 아닌 환경에서는 child를 전용 process group으로 띄우고 그 group에만 종료 신호를 보낸 뒤 root `close`와 group 부재를 확인한다. 이 확인이 모두 끝난 뒤에만 해당 root PID와 UUID가 정확히 일치하는 일반 task operation lock을 원자 회수한다. 종료가 확인된 timeout은 task별 `AutoCleanupReportV1`에도 blocker와 15분 재시도 시각을 기록하되, 10분을 넘겨 보고서 lock을 기다리지는 않는다. process tree 종료를 확인하지 못하면 실행 중일 수 있는 child와 같은 task 파일을 경쟁해 쓰지 않고 `AutoCleanupSweepV1.runnerFailure`에 task·branch·blocker·재시도 시각·cleanup fingerprint만 기록한다. 이 경우 lock과 cleanup journal을 그대로 보존하고 이후 후보를 시작하지 않으며, 다음 sweep은 runner failure의 15분 cooldown을 이어받는다. runner failure sidecar 자체를 쓰지 못한 경우에는 sweep 시작 때 미리 기록한 최대 25분(`10분 실행 한도 + 15분 cooldown`)의 `holdUntil` lock을 남겨 다음 sweep 전체를 fail-closed한다. 원문 stdout·stderr는 오류나 sidecar에 넣지 않는다.
+v3 sweep은 repository auth lock 안에서 필요한 계정으로 전환해 `gh api user`와 permission을 확인한 뒤 원래 계정을 복원하고 token·인증 출력은 저장하지 않는다. keyring 접근이 불가능하면 `AUTH_UNAVAILABLE`로 보존한다. ACTIVE task가 없으면 인증이나 네트워크를 호출하지 않는다. 저장소 단위 lock과 task별 lock을 함께 사용하며 한 번에 최대 10개, 전체 실행 예산은 최대 10분, 같은 blocker는 15분 cooldown이다. 모든 Git·GitHub 명령은 남은 예산 안의 개별 timeout과 중단 신호를 받으며, 남은 예산이 없으면 새 후보를 시작하지 않는다.
 
-child는 대상 밖의 기준 checkout에서 `shell: false`, 숨김 창, stdin 차단, 제한된 출력 buffer로 실행되고 닫힌 report schema와 fingerprint만 받는다. 같은 blocker는 `AutoCleanupReportV1.retryAt`까지 15분 동안 미루지만 직접 `task:autocleanup` 호출은 cooldown을 적용하지 않는다. 일반적인 위험 task 하나가 보존·실패해도 다음 task와 새 작업 시작을 막지 않지만, process tree 종료를 확인하지 못한 경우에는 남아 있을 수 있는 하위 `git`·`gh`와 경쟁하지 않도록 해당 sweep의 다음 후보를 시작하지 않는다. 대상 worktree 내부에서 실행된 worker, legacy registry만 있는 작업, 비정식 경로는 정리하지 않는다.
+10분은 파이프라인이 제어하는 Git·GitHub 작업의 실행 예산이지 운영체제가 멈춘 파일시스템 호출까지 강제 종료한다는 보장은 아니다. 강제 종료가 cleanup journal을 손상시킬 수 있으므로 일회성 sweep 자체를 `taskkill`로 종료하지 않는다. 예상 밖의 오류나 시간 부족은 대상 task를 삭제하지 않고 `PRESERVED` 또는 `FAILED`로 남겨 다음 코드 작업의 sweep이나 수동 `task:sweep`에서 재검사한다. 일반적인 위험 task 하나가 보존·실패해도 다음 task와 새 작업 시작을 막지 않는다. 대상 worktree 내부에서 실행된 정리, v3로 안전하게 복사되지 않은 legacy record, 비정식 경로는 정리하지 않는다.
 
 승인 fingerprint는 disposable root의 내용 전체가 아니라 정확한 root 경로·종류·device·inode·생성 시각 identity를 묶는다. 따라서 `node_modules`, `.next`, task 임시 로그 안의 내용 변화만으로 승인이 만료되지는 않는다. 반대로 root가 삭제 후 다시 생성되거나 symlink·junction으로 바뀌거나 identity를 안전하게 얻지 못하면 `APPROVAL_INVALIDATED` 또는 경로 안전 오류로 멈춘다. `tsconfig.tsbuildinfo`는 정확한 파일 하나만 disposable 후보로 허용한다. ignored 탐색은 directory 단위로 접고, `.codex/work/<slug>` 이외의 다른 task 폴더나 임의 ignored root가 있으면 보존한다.
 
@@ -199,36 +264,33 @@ GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 �
 ## registry와 상태 전이
 
 ```text
-<git-common-dir>/talkpik-task-lifecycle/v2/
-├── tasks/<task-id>.json
-├── handoffs/<snapshot-id>.json
-├── handoff-contexts/<snapshot-id>.json
-├── start-recoveries/<task-id>.json
-├── finish-reports/<task-id>.json
-├── owner-auth/<task-id>.json
-├── metrics/<task-id>/<span-id>.json
-├── runtimes/<task-id>.json
-├── cleanups/<task-id>.json
-├── auto-cleanup/<task-id>.json
-├── auto-cleanup/<task-id>.lock (보고서 교체 중에만 존재)
-├── sweeps/latest.json
-└── sweep.lock (실행 중에만 존재)
+<git-common-dir>/talkpik-task-lifecycle/
+├── v2/                         기존 record·수동 cleanup 호환, 원본 불변
+├── v3/tasks/<task-id>.json     TaskRecordV3
+├── v3/runtimes/<task-id>.json  RuntimeSnapshotV1
+├── v3/claims/                  실행자·shared slot claim
+├── v3/migrations/              v2→v3 copy journal
+├── v3/cleanup/                 자동 정리 journal·report
+├── v3/sweeps/latest.json       repository sweep 요약
+└── releases/                   PromotionRunV1·승인 policy
 ```
 
-기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. 새 공개 sidecar는 `HandoffContextV1`, `StartRecoveryV1`, `FinishReportV1`, `OwnerAuthResultV1`, `TaskMetricSpanV1`, `AutoCleanupReportV1`, `AutoCleanupSweepV1`로 분리한다. 자동 정리 보고서는 결과(`CLEANED|PRESERVED|FAILED`), blocker, 재시도 시각, cleanup fingerprint와 단계별 소요 시간만 저장한다. `CLEANED`는 blocker와 재시도 시각이 없어야 하고, 나머지 결과는 blocker와 미래의 재시도 시각이 있어야 한다. 같은 task의 직접 실행과 sweep이 겹치면 짧은 보고서 전용 lock 아래에서 비교해 `CLEANED`를 최종 상태로 보존하고, 그 밖에는 더 늦게 끝난 유효 기록만 남긴다. 호출자에게는 저장된 최종 결과를 현재 trigger로 다시 fingerprint한 응답을 돌려주므로, direct가 먼저 정리한 상황도 sweep이 실패로 잘못 집계하지 않는다. 보고서 lock을 기다리는 동안에는 매 재시도와 획득 직후 parent directory identity·symlink 상태를 다시 확인한다. 정상 형식이고 PID가 종료된 lock은 exact identity로 회수하며, 비정상 형식은 최소 10분 지난 exact file만 원자 claim 뒤 복구한다. sweep 보고서는 검사·시도·정리·보존·실패·연기 건수와 실제 전체 시간을 저장하고, 종료를 확인하지 못한 worker가 하나 있으면 닫힌 `runnerFailure` 한 건을 함께 저장한다. 모든 record는 허용 필드만 받고 크기·문자열·배열·시간·경로·fingerprint를 검증하며 원자적으로 교체한다. 같은 task의 새 finish·owner-auth sidecar 시간은 task와 직전 sidecar보다 과거일 수 없다. unknown field, secret·token·원문 thread ID와 유사한 key, prototype 오염, symlink·경로 탈출은 거부한다. 예전 Codex 전용 registry는 `task:status`에서 선택적으로 읽는 legacy hint일 뿐, v2 상태나 삭제 권한의 근거가 아니다.
+`TaskRecordV3`는 repository profile·기준 SHA·선택적 task branch·workspace mode·ownership·현재 실행자·revision·runtime·artifact manifest·cleanup policy를 저장한다. 상태는 `ACTIVE → PR_OPEN → MERGED → CLEANED|RELEASED|PRESERVED`다. branch나 worktree 경로 자체를 task identity로 사용하지 않는다. 모든 record는 허용 필드만 받고 크기·시간·경로·fingerprint를 검증하며 secret·token·원문 thread/session ID, prototype 오염, symlink·reparse·경로 탈출을 거부한다.
+
+기존의 닫힌 `TaskRecordV2` 파일과 필드 의미는 바꾸지 않는다. v3 전환은 copy journal로 재개 가능하게 수행하고 v2 tombstone도 반영한다. 미등록 legacy worktree는 발견 목록에만 기록한다. 이름·경로가 그럴듯하다는 이유로 v3 소유권을 부여하거나 자동 정리하지 않는다.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> ACTIVE: task:start
-  ACTIVE --> HANDOFF_PENDING: handoff offer
-  HANDOFF_PENDING --> HANDOFF_PENDING: handoff refresh
-  HANDOFF_PENDING --> ACTIVE: handoff accept
-  ACTIVE --> CLEANING: 승인된 수동 cleanup 또는 안전한 자동 cleanup
-  CLEANING --> CLEANED: 모든 단계 재검증
-  CLEANING --> CLEANING: 부분 실패 journal 재개
+  [*] --> ACTIVE: code prepare/start
+  ACTIVE --> ACTIVE: handoff claim 전환
+  ACTIVE --> PR_OPEN: PR 확인
+  PR_OPEN --> MERGED: exact merge 증거
+  MERGED --> CLEANED: managed 비강제 정리
+  MERGED --> RELEASED: host/adopted claim 해제
+  MERGED --> PRESERVED: 위험·소유권 불명
 ```
 
-`task:finalize`는 상태를 바꾸지 않는다. cleanup 중 일부 단계 이후 실패하면 `CLEANING` journal, 후보별 `candidateProgress`, 완료 단계가 남는다. 이 필드는 기존 manifest와 호환되는 선택 필드지만 새 cleanup은 항상 기록한다. 값은 승인된 후보의 순서와 정확히 같은 prefix여야 하며 중복·미승인 후보를 허용하지 않는다. 이동 중인 후보는 선택 필드 `currentClaim`에 원래 경로, 고유 quarantine 경로와 승인 digest를 기록한다. 이를 통해 claim 기록 전후, 원자 이동 후, quarantine 삭제 후 중단을 같은 승인으로 재개한다. 원래 경로와 quarantine이 동시에 존재하거나 quarantine identity가 달라졌거나 새 미승인·ignored root가 생기면 두 객체를 모두 보존하고 중단한다.
+`task:finalize`는 상태를 바꾸지 않는다. legacy v2 cleanup 중 일부 단계 이후 실패하면 `CLEANING` journal, 후보별 `candidateProgress`, 완료 단계가 남는다. 이 필드는 기존 manifest와 호환되는 선택 필드이며 같은 승인으로만 재개한다. 원래 경로와 quarantine이 동시에 존재하거나 quarantine identity가 달라졌거나 새 미승인·ignored root가 생기면 두 객체를 모두 보존하고 중단한다.
 
 operation lock이 남아 있으면 다른 lifecycle 명령은 `TASK_OPERATION_IN_PROGRESS`로 실패한다. cleanup lock만 task ID, operation, PID, nonce, 승인 fingerprint, 생성 시각을 담은 닫힌 JSON record로 쓴다. 유효한 `CLEANING` journal의 task·branch·worktree·revision·state와 단계별 native Git 소유권이 현재 operation과 정확히 같고 record의 PID가 실행 중이 아닐 때만 stale cleanup lock 회수를 시도한다. 회수 대상은 고유 claim 경로로 먼저 원자 이동하고 이동된 identity와 내용을 재검증한 뒤에만 삭제한다. 그 사이 원래 경로에 새 lock이 생기거나 claim이 바뀌면 새 lock과 claim을 모두 보존한다. 정상 operation lock 해제도 같은 claim 절차를 쓴다. 회수 뒤에도 Git·PR·runtime·후보 identity 전체를 다시 확인한다. live PID, 기존 token 형식, malformed·unknown field, 다른 operation·task·승인, journal 없는 lock은 자동 제거하지 않는다.
 
@@ -272,9 +334,10 @@ CI가 검사하는 계약은 다음과 같다.
 1. trusted base 기반 UI·artifact diff 계약
 2. project structure와 agent skill 정책
 3. 기존 v1 report-only worktree lifecycle
-4. v2 task lifecycle와 cleanup contract
-5. typecheck, 전체 test, lint, build
-6. Windows에서 v1과 v2·cleanup lifecycle contract
+4. v2 호환과 v3 task lifecycle·cleanup contract
+5. security artifact audit와 PromotionRunV1 contract
+6. typecheck, 전체 test, lint, build
+7. Windows에서 v1·v2·v3·one-shot sweep cleanup lifecycle contract
 
 세 실행 경로의 결과는 후보 코드를 checkout하거나 package를 설치하지 않는 `CI required` 작업 하나로 모은다. 이 작업은 항상 실행되며 분류 작업과 선행 작업이 실패·취소되거나, 분류 output이 누락·변조되거나, 예상과 다르게 건너뛰어지면 실패한다.
 
@@ -328,7 +391,7 @@ ruleset은 다음 순서로만 전환한다.
 
 이 전환과 rollback은 필수 검사 공백이나 세 검사가 동시에 장기간 필수가 되는 중간 상태를 만들지 않는다. snapshot이 없거나 현재 payload가 사전 확인값과 다르면 `PUT`을 실행하지 않는다. workflow PR 자체는 GitHub ruleset을 수정하지 않으며, 외부 설정 변경은 사용자 승인과 실제 검사 관찰 뒤 별도로 수행한다.
 
-production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI target, merge, cleanup 대상이 아니다.
+Keduall production target은 일반 task lifecycle의 base가 아니다. 사용자가 명시한 승격 요청에서만 `PromotionRunV1`이 `collab/stg`와 `collab/main`을 추적하며, cleanup은 candidate branch·임시 checkout만 대상으로 삼고 `stg`·`main`은 보존한다.
 
 ## 실패 복구와 Git 승인 경계
 
@@ -346,4 +409,4 @@ production에 즉시 노출되는 `collab` remote는 이 pipeline의 fetch, CI t
 | 자동 정리 보존·실패 | `AutoCleanupReportV1`의 blocker와 retry 시각을 확인한다. 새 작업은 계속하며, 조건을 해소한 뒤 직접 autocleanup 또는 다음 sweep으로 재시도한다. |
 | sweep lock이 남음 | PID가 살아 있거나 형식·소유권이 불명확하거나 `holdUntil` 전이면 보존한다. 종료 PID이고 10분 이상 지났으며 `holdUntil`도 지난 정확한 sweep lock만 원자 claim 뒤 회수한다. |
 
-stage, commit, push, PR 생성, merge, 활성 ruleset 변경, head branch 자동 삭제, bootstrap worktree 제거는 각각 사용자 요청 또는 결과 보고 후 승인된 범위에서만 수행한다. `origin/main`은 PR과 활성 필수 검사를 거치며, `collab`은 사용자가 정확히 배포 의도까지 명시하고 별도 확인하기 전에는 건드리지 않는다.
+stage, commit, push, PR 생성, merge, 활성 ruleset 변경, head branch 자동 삭제, credential 교체와 history rewrite는 각각 사용자 요청 또는 결과 보고 후 승인된 범위에서만 수행한다. 이 checkout의 `origin/main`은 PR과 활성 필수 검사를 거친다. Keduall 승격 요청은 release orchestration을 시작할 권한이며, 최초 2회의 `AWAITING_PROD_APPROVAL` 확인, destructive DB migration 승인이나 강제 Git 작업 승인을 대신하지 않는다.

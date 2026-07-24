@@ -14,6 +14,16 @@ import {
   startTask,
 } from "./lib/ai-task-lifecycle-v2.mjs";
 import {
+  migrateTaskRecordV2,
+  prepareTask,
+  readTaskRecordV3ByBranch,
+  recordPartialStartV3,
+  reconcileDelegatedCleanupV3,
+  reconcileTaskRecordV3WithV2Task,
+  reconcileTaskRecordsV3WithV2,
+  runTaskCommandV3,
+} from "./lib/ai-task-lifecycle-v3.mjs";
+import {
   closeSync,
   existsSync,
   lstatSync,
@@ -29,14 +39,18 @@ import {
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
-  autoCleanupTask,
   cleanupTask,
+  enumerateAutoCleanupTasks,
   finalizeTask,
   registerTaskRuntime,
-  sweepTasks,
 } from "./lib/ai-task-cleanup.mjs";
+import {
+  autoCleanupTaskV3Adapter,
+  sweepTasksV3Adapter,
+} from "./lib/ai-task-v3-adapter.mjs";
 
 const COMMANDS = new Set([
+  "prepare",
   "start",
   "status",
   "handoff",
@@ -65,6 +79,8 @@ const VALUE_FLAGS = new Set([
   "action",
   "context",
   "background",
+  "intent",
+  "workspace",
 ]);
 
 function cliError(code) {
@@ -90,7 +106,20 @@ function parseArguments(argv) {
     values[name] = value;
   }
   if (!values.repo) throw cliError("TASK_REPOSITORY_REQUIRED");
-  if (command === "sweep") {
+  if (command === "prepare") {
+    if (Object.keys(values).some((name) =>
+      !new Set(["repo", "intent", "branch", "actor", "workspace", "now"]).has(name))) {
+      throw cliError("INVALID_TASK_ARGUMENTS");
+    }
+    if (!new Set(["read-only", "code"]).has(values.intent)) {
+      throw cliError("TASK_INTENT_REQUIRED");
+    }
+    if (values.intent === "read-only") {
+      if (values.branch || values.actor || values.workspace) throw cliError("INVALID_TASK_ARGUMENTS");
+    } else if (!values.branch || !values.actor) {
+      throw cliError("TASK_BRANCH_AND_ACTOR_REQUIRED");
+    }
+  } else if (command === "sweep") {
     if (Object.keys(values).some((name) => !new Set(["repo", "background"]).has(name)) ||
         (values.background !== undefined && values.background !== "true")) {
       throw cliError("INVALID_TASK_ARGUMENTS");
@@ -106,7 +135,11 @@ function parseArguments(argv) {
   return { command, values };
 }
 
-export function scheduleAutoCleanupSweep({ baseRepoPath, cliPath, spawnWorker = spawn }) {
+export function launchOneShotCleanupSweep({
+  baseRepoPath,
+  cliPath,
+  spawnWorker = spawn,
+}) {
   try {
     const child = spawnWorker(
       process.execPath,
@@ -119,11 +152,88 @@ export function scheduleAutoCleanupSweep({ baseRepoPath, cliPath, spawnWorker = 
         env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GH_PROMPT_DISABLED: "1" },
       },
     );
+    if (!child || typeof child.unref !== "function") return false;
+    child.once?.("error", () => {
+      // A detached best-effort catch-up failure must not crash task:prepare/start.
+    });
     child.unref();
     return true;
   } catch {
     return false;
   }
+}
+
+function safeMigrationBlocker(error) {
+  return typeof error?.code === "string" && /^[A-Z][A-Z0-9_]{1,127}$/u.test(error.code)
+    ? error.code
+    : "V2_COPY_FAILED";
+}
+
+function preservedV3Autocleanup(blocker) {
+  return {
+    schemaVersion: 3,
+    recordType: "TaskAutoCleanupAdapterResultV3",
+    result: "PRESERVED",
+    blocker,
+  };
+}
+
+export function copyV2SweepCandidates(
+  { repoPath, now },
+  {
+    enumerateV2Tasks = enumerateAutoCleanupTasks,
+    readV3ByBranch = readTaskRecordV3ByBranch,
+    migrateV2Task = migrateTaskRecordV2,
+  } = {},
+) {
+  const candidates = enumerateV2Tasks({ repoPath }).slice(0, 10);
+  const results = [];
+  let copied = 0;
+  let reused = 0;
+  let preserved = 0;
+  for (const candidate of candidates) {
+    try {
+      const existing = readV3ByBranch({ repoPath, branch: candidate.branch });
+      if (existing !== null) {
+        reused += 1;
+        results.push({
+          taskId: candidate.taskId,
+          branch: candidate.branch,
+          result: "REUSED",
+        });
+        continue;
+      }
+      const migration = migrateV2Task({
+        repoPath,
+        branch: candidate.branch,
+        now,
+      });
+      if (migration?.reused === true) reused += 1;
+      else copied += 1;
+      results.push({
+        taskId: candidate.taskId,
+        branch: candidate.branch,
+        result: migration?.reused === true ? "REUSED" : "COPIED",
+      });
+    } catch (error) {
+      preserved += 1;
+      results.push({
+        taskId: candidate.taskId,
+        branch: candidate.branch,
+        result: "PRESERVED",
+        blocker: safeMigrationBlocker(error),
+      });
+    }
+  }
+  return {
+    schemaVersion: 1,
+    recordType: "TaskRecordV2SweepCopyV1",
+    inspected: candidates.length,
+    copied,
+    reused,
+    preserved,
+    results,
+  };
 }
 
 function required(values, name) {
@@ -200,13 +310,40 @@ function readHandoffContextFile(repoPath, branch, contextPath) {
 export async function runTaskLifecycleCommand(
   { command, values },
   {
-    scheduleSweep = scheduleAutoCleanupSweep,
+    launchSweep = launchOneShotCleanupSweep,
     onStartSuccess = () => {},
     currentCliPath = path.resolve(import.meta.dirname, "ai-task.mjs"),
+    copyV2ForSweep = copyV2SweepCandidates,
+    migrateStartedTask = migrateTaskRecordV2,
+    recordStartRecovery = recordPartialStartV3,
+    runV3Autocleanup = autoCleanupTaskV3Adapter,
+    runV3Sweep = sweepTasksV3Adapter,
+    reconcileV3 = reconcileTaskRecordsV3WithV2,
   } = {},
 ) {
   const common = { repoPath: values.repo, branch: values.branch };
   const now = values.now ?? new Date().toISOString();
+  if (command === "prepare") {
+    const prepared = prepareTask({
+      repoPath: values.repo,
+      intent: values.intent,
+      branch: values.branch ?? null,
+      actor: values.actor ?? null,
+      workspace: values.workspace ?? "auto",
+      now,
+    });
+    if (values.intent === "code") {
+      try {
+        launchSweep({
+          baseRepoPath: path.resolve(values.repo),
+          cliPath: currentCliPath,
+        });
+      } catch {
+        // Catch-up cleanup is best-effort and never changes successful preparation.
+      }
+    }
+    return prepared;
+  }
   if (command === "start") {
     const started = startTask({
       ...common,
@@ -214,9 +351,27 @@ export async function runTaskLifecycleCommand(
       now,
       expectedBaseSha: values["base-sha"] ?? null,
     });
+    try {
+      migrateStartedTask({
+        repoPath: values.repo,
+        branch: values.branch,
+        now,
+      });
+    } catch {
+      const recovery = recordStartRecovery({
+        repoPath: values.repo,
+        v2Record: started,
+        now,
+      });
+      return {
+        ...started,
+        v3Status: "PARTIAL_START_PRESERVED",
+        v3Recovery: recovery,
+      };
+    }
     onStartSuccess(started);
     try {
-      scheduleSweep({
+      launchSweep({
         baseRepoPath: path.resolve(values.repo),
         cliPath: path.join(started.worktreePath, "scripts", "ai-task.mjs"),
       });
@@ -227,15 +382,144 @@ export async function runTaskLifecycleCommand(
   }
   if (command === "sweep" && values.background === "true") {
     const repoPath = path.resolve(values.repo);
-    if (!scheduleSweep({ baseRepoPath: repoPath, cliPath: currentCliPath })) {
-      throw cliError("TASK_SWEEP_SCHEDULE_FAILED");
+    if (!launchSweep({ baseRepoPath: repoPath, cliPath: currentCliPath })) {
+      throw cliError("TASK_SWEEP_LAUNCH_FAILED");
     }
-    return { status: "SCHEDULED", repoPath };
+    return { status: "LAUNCHED", repoPath };
   }
-  if (command === "sweep") return sweepTasks({ repoPath: values.repo, now });
+  if (command === "sweep") {
+    const v2Migration = copyV2ForSweep({
+      repoPath: values.repo,
+      now,
+    });
+    const v3Reconciliation = reconcileV3({
+      repoPath: values.repo,
+      now,
+    });
+    const v3 = await runV3Sweep({ repoPath: values.repo, now });
+    return {
+      schemaVersion: 3,
+      recordType: "TaskSweepCommandResultV3",
+      result: v3?.result ?? "FAILED",
+      v2Migration,
+      v3Reconciliation,
+      v3,
+    };
+  }
   if (command === "autocleanup") {
-    const trigger = process.env.TALKPIK_AUTOCLEANUP_TRIGGER === "SWEEP" ? "SWEEP" : "DIRECT";
-    return autoCleanupTask({ ...common, trigger, now });
+    const input = {
+      repoPath: values.repo,
+      branch: values.branch,
+      now,
+      trigger: process.env.TALKPIK_AUTOCLEANUP_TRIGGER === "SWEEP" ? "SWEEP" : "DIRECT",
+    };
+    const v3Result = await runV3Autocleanup(input);
+    if (v3Result?.handled === true) return v3Result.result;
+    if (v3Result?.handled !== false) return v3Result;
+    try {
+      migrateStartedTask({
+        repoPath: values.repo,
+        branch: values.branch,
+        now,
+      });
+    } catch (error) {
+      return preservedV3Autocleanup(safeMigrationBlocker(error));
+    }
+    const migratedResult = await runV3Autocleanup(input);
+    if (migratedResult?.handled === true) return migratedResult.result;
+    if (migratedResult?.handled !== false) return migratedResult;
+    return preservedV3Autocleanup("V3_AUTOCLEANUP_ROUTE_UNAVAILABLE");
+  }
+  if (new Set(["handoff", "resume", "finish"]).has(command)) {
+    let legacyTask = null;
+    try {
+      legacyTask = readTaskStatus(common)?.task ?? null;
+    } catch {
+      legacyTask = null;
+    }
+    if (legacyTask?.branch === values.branch) {
+      if (command === "finish") {
+        return createFinishReport({
+          ...common,
+          actor: required(values, "actor"),
+          now,
+        });
+      }
+      let result;
+      if (command === "resume") {
+        result = resumeTask({ ...common, actor: required(values, "actor"), now });
+      } else {
+        const action = required(values, "action");
+        if (action === "offer") {
+          result = offerTaskHandoff({
+            ...common,
+            actor: required(values, "actor"),
+            toActor: required(values, "to"),
+            context: readHandoffContextFile(
+              values.repo,
+              values.branch,
+              required(values, "context"),
+            ),
+            now,
+          });
+        } else if (action === "accept") {
+          if (values.to || values.context) {
+            throw cliError("TASK_HANDOFF_ACCEPT_ARGUMENTS_INVALID");
+          }
+          result = acceptTaskHandoff({
+            ...common,
+            actor: required(values, "actor"),
+            now,
+          });
+        } else if (action === "refresh") {
+          if (values.to) throw cliError("TASK_HANDOFF_REFRESH_ARGUMENTS_INVALID");
+          result = refreshTaskHandoff({
+            ...common,
+            actor: required(values, "actor"),
+            context: readHandoffContextFile(
+              values.repo,
+              values.branch,
+              required(values, "context"),
+            ),
+            now,
+          });
+        } else {
+          throw cliError("TASK_HANDOFF_ACTION_INVALID");
+        }
+      }
+      reconcileTaskRecordV3WithV2Task({
+        repoPath: values.repo,
+        branch: values.branch,
+        v2Task: result,
+        now,
+      });
+      return result;
+    }
+  }
+  let delegatedV3Task = null;
+  if (new Set([
+    "status",
+    "handoff",
+    "resume",
+    "runtime",
+    "finish",
+    "finalize",
+    "cleanup",
+  ]).has(command)) {
+    const v3 = runTaskCommandV3({
+      command,
+      repoPath: values.repo,
+      branch: values.branch,
+      actor: values.actor ?? null,
+      toActor: values.to ?? null,
+      action: values.action ?? null,
+      ports: integerList(values.ports, "PORTS"),
+      pids: integerList(values.pids, "PIDS"),
+      lockPaths: commaList(values.locks),
+      now,
+    });
+    if (v3.handled) return v3.result;
+    delegatedV3Task = v3.v3Task ?? null;
   }
   if (command === "status") {
     const status = readTaskStatus(common);
@@ -296,11 +580,35 @@ export async function runTaskLifecycleCommand(
     });
   }
   if (command === "finalize") return finalizeTask(common);
-  return cleanupTask({
-    ...common,
-    approval: required(values, "approval"),
-    now,
-  });
+  try {
+    const result = cleanupTask({
+      ...common,
+      approval: required(values, "approval"),
+      now,
+    });
+    if (delegatedV3Task !== null) {
+      return {
+        ...result,
+        v3Task: reconcileDelegatedCleanupV3({
+          repoPath: values.repo,
+          branch: values.branch,
+          v2Result: result,
+          now,
+        }),
+      };
+    }
+    return result;
+  } catch (error) {
+    if (delegatedV3Task !== null) {
+      reconcileDelegatedCleanupV3({
+        repoPath: values.repo,
+        branch: values.branch,
+        v2Result: null,
+        now,
+      });
+    }
+    throw error;
+  }
 }
 
 const BUDGETS = Object.freeze({
@@ -1176,7 +1484,7 @@ if (aiTaskIsMain) {
       if (command === "resume") {
         process.stderr.write("TASK_RESUME_DEPRECATED_USE_HANDOFF_ACCEPT\n");
       }
-      if (!new Set(["start", "metrics", "sweep", "autocleanup"]).has(command)) {
+      if (!new Set(["prepare", "start", "metrics", "sweep", "autocleanup"]).has(command)) {
         let status = null;
         try {
           status = readTaskStatus({ repoPath: values.repo, branch: values.branch });

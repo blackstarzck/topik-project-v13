@@ -16,6 +16,10 @@ const workflow = readFileSync(path.join(root, ".github", "workflows", "ci.yml"),
 const codeowners = readFileSync(path.join(root, ".github", "CODEOWNERS"), "utf8");
 const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const vitestConfig = readFileSync(path.join(root, "vitest.config.ts"), "utf8");
+const pipelineDocs = readFileSync(
+  path.join(root, "docs", "operations", "ai-development-pipeline.md"),
+  "utf8",
+);
 const lifecycleTestPaths = [
   "tests/scripts/worktree-lifecycle.test.mjs",
   "tests/scripts/report-worktree-lifecycle.test.mjs",
@@ -400,7 +404,7 @@ describe("CI trusted UI contract boundary", () => {
     );
     expect(workflow).toMatch(/\n\s*merge_group:\s*\n/u);
     expect(workflow).toMatch(/\n\s*push:\s*\n\s*branches:\s*\[main\]/u);
-    expect(workflow).not.toMatch(/collab/u);
+    expect(topLevelBlock(workflow, "on")).not.toMatch(/collab/u);
     expect(concurrencyPolicy(workflow)).toMatchObject({
       group: expect.stringContaining("github.event.pull_request.number"),
       "cancel-in-progress": "${{ github.event_name == 'pull_request' }}",
@@ -540,6 +544,19 @@ describe("CI trusted UI contract boundary", () => {
         baseFiles: { "scripts/ai-task.mjs": "before\n" },
         mutate: ({ write }) =>
           write("scripts/ai-task.mjs", "after\n"),
+        expected: {
+          run_app: "false",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "pipeline",
+        },
+      },
+      {
+        name: "pipeline one-shot sweep entrypoint",
+        baseFiles: { "scripts/lib/ai-task-sweep.mjs": "before\n" },
+        mutate: ({ write }) =>
+          write("scripts/lib/ai-task-sweep.mjs", "after\n"),
         expected: {
           run_app: "false",
           run_pipeline_contracts: "true",
@@ -1380,6 +1397,36 @@ describe("CI trusted UI contract boundary", () => {
         ),
       ),
     ).toBe(false);
+  });
+
+  it("runs the real security artifact audit for candidate and main refs", () => {
+    expect(packageJson.scripts["check:security-artifacts:ci"]).toBe(
+      "node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD,origin/main,collab/main",
+    );
+    expect(workflow.match(/name: Prepare security artifact audit refs/gu)).toHaveLength(2);
+    expect(workflow.match(
+      /run: node scripts\/security-artifact-audit\.mjs --repo \. --mode check --refs HEAD,origin\/main,collab\/main/gu,
+    )).toHaveLength(2);
+    expect(workflow.match(/normalize_github_remote\(\)/gu)).toHaveLength(2);
+    expect(workflow.match(
+      /normalize_github_remote "\$\(git remote get-url origin\)"\)/gu,
+    )).toHaveLength(2);
+    expect(workflow.match(
+      /normalize_github_remote "\$\(git remote get-url collab\)"\)/gu,
+    )).toHaveLength(2);
+    expect(workflow).toContain("https://github.com/blackstarzck/topik-project-v13");
+    expect(workflow).toContain("https://github.com/keduall/topik-project-v13");
+    expect(workflow).toContain(
+      "+refs/heads/main:refs/remotes/collab/main",
+    );
+  });
+
+  it("keeps task:prepare documentation on the public CLI contract", () => {
+    expect(pipelineDocs).toContain("task:prepare -- --repo <기준-checkout> --intent read-only");
+    expect(pipelineDocs).toContain(
+      "task:prepare -- --repo <기준-checkout> --intent code --branch feat/example-task --actor codex",
+    );
+    expect(pipelineDocs).not.toMatch(/task:prepare[^\n]*--mode/u);
   });
 
   it("uses only a base-owned minimal npm runtime before candidate install", () => {

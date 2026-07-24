@@ -1,4 +1,10 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +69,16 @@ const command = {
 function issueIds(skillName, content) {
   return validateSkillPolicy({ skillName, content }).map((issue) => issue.id);
 }
+
+const collabProtectionContractLines = [
+  "Canonical production target: collab/main is the local remote alias for https://github.com/keduall/topik-project-v13.git refs/heads/main; a Keduall clone calls the same ref origin/main.",
+  "A user request to promote to production starts release orchestration; it does not authorize an immediate collab/main update.",
+  "For each contract version, the first two successful production promotions pause once at AWAITING_PROD_APPROVAL before the main merge; later runs may use AUTO. An explicit production-mutation request does not bypass those first two confirmations.",
+  "Reset the two-confirmation policy after a pipeline contract, DB workflow or compatibility policy, Vercel project environment or domain, remote branch or auth profile change, or after a deployment failure, rollback, or security incident.",
+  "Before promotion, require a secret-safe security artifact audit, credential rotation, and the approved history response. Production DB automatic apply stays disabled until the baseline and trusted workflow gates pass.",
+  "Before mutation, validate that the collab remote URL matches https://github.com/keduall/topik-project-v13.git.",
+  "After a Keduall production mutation, verify that the Vercel production deployment for the exact resulting SHA reaches READY.",
+];
 
 describe("validateSkillPolicy", () => {
   test("requires plans and plan executors to preserve the current Git authority envelope", () => {
@@ -729,7 +745,8 @@ describe("validateSkillPolicy", () => {
     const pinnedPublish =
       `Only after the user selects the publish option and protected-branch checks pass.\n` +
       `Authority envelope: action=pr-create; target=blackstarzck/topik:main; status=granted.\n` +
-      `Protected target collab requires explicit deployment confirmation.\n${command.prCreate} --repo blackstarzck/topik --base main`;
+      `${command.prCreate} --repo blackstarzck/topik --base main\n` +
+      `${collabProtectionContractLines.join("\n")}`;
     expect(
       issueIds("finishing-a-development-branch", pinnedPublish),
     ).not.toContain("PUBLISH_AUTHORITY");
@@ -897,7 +914,25 @@ describe("validateSkillPolicy", () => {
         "finishing-a-development-branch",
         "Protected target collab requires explicit deployment confirmation from the project contract before push or PR.",
       ),
+    ).toContain("COLLAB_PROTECTION");
+
+    expect(
+      issueIds(
+        "finishing-a-development-branch",
+        collabProtectionContractLines.join("\n"),
+      ),
     ).not.toContain("COLLAB_PROTECTION");
+    for (const omittedIndex of collabProtectionContractLines.keys()) {
+      expect(
+        issueIds(
+          "finishing-a-development-branch",
+          collabProtectionContractLines
+            .filter((_, index) => index !== omittedIndex)
+            .join("\n"),
+        ),
+      ).toContain("COLLAB_PROTECTION");
+    }
+
     expect(
       issueIds(
         "finishing-a-development-branch",
@@ -974,6 +1009,62 @@ describe("validateSkillPolicy", () => {
         "BASELINE_DIRTY_PATHS WRITE_SCOPE TASK_DIFF_SCOPE overlap. For local-edit-only, the task-owned patch replaces the Git range section; do not use BASE_SHA or HEAD_SHA. Then review the entire working tree as well.",
       ),
     ).toContain("CUMULATIVE_DIFF_REVIEW");
+  });
+});
+
+describe("repository deployment contract", () => {
+  test("defines the Keduall promotion gate, first-two confirmations, and exact-SHA deployment result", () => {
+    const agents = readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
+    const pipeline = readFileSync(
+      path.join(repoRoot, "docs", "operations", "ai-development-pipeline.md"),
+      "utf8",
+    );
+
+    for (const content of [agents, pipeline]) {
+      expect(content).toMatch(
+        /`collab\/main`[\s\S]*`keduall\/topik-project-v13`[\s\S]*`origin\/main`/u,
+      );
+      expect(content).toMatch(/최초 2회[\s\S]*최종 확인/u);
+      expect(content).toMatch(
+        /push[\s\S]*merge[\s\S]*(?:승인|확인)[\s\S]*(?:생략|우회)[\s\S]*(?:않|없)/u,
+      );
+      expect(content).toMatch(
+        /https:\/\/github\.com\/keduall\/topik-project-v13\.git/u,
+      );
+      expect(content).toMatch(
+        /Vercel[\s\S]*production[\s\S]*SHA[\s\S]*`READY`/u,
+      );
+    }
+
+    expect(pipeline).toMatch(
+      /`AWAITING_PROD_APPROVAL`[\s\S]*`AUTO`/u,
+    );
+    expect(pipeline).toMatch(
+      /보안[\s\S]*credential[\s\S]*history rewrite[\s\S]*별도 승인/u,
+    );
+    expect(pipeline).toMatch(
+      /DB[\s\S]*자동 apply[\s\S]*비활성[\s\S]*trusted/u,
+    );
+  });
+
+  test("does not embed an executable collab production mutation as a default", () => {
+    const skill = readFileSync(
+      path.join(
+        repoRoot,
+        ".codex",
+        "skills",
+        "finishing-a-development-branch",
+        "SKILL.md",
+      ),
+      "utf8",
+    );
+
+    expect(skill).not.toMatch(
+      /(?:run|always|must)\s+git\s+push\s+collab\s+main/iu,
+    );
+    expect(skill).not.toMatch(
+      /(?:run|always|must)\s+gh\s+pr\s+merge[^\n]*\bcollab\b/iu,
+    );
   });
 });
 

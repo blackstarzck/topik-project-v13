@@ -27,6 +27,8 @@ pnpm task:metrics -- --repo <repo-or-worktree> --branch <task-branch>
 
 10초 이상 걸릴 것으로 예상되는 setup·test·typecheck·lint·build·review·CI·publish 명령은 `task:measure`로 감싼다. 명령이 끝난 뒤 `task:metrics`에서 명령 합계와 겹친 구간을 제외한 실제 측정 시간, 실패·미완료·예산 초과를 확인하고 작업 보고의 실측 근거로 사용한다. 명령 원문·인자·환경·출력은 저장되지 않으며, 측정 저장 실패나 예산 초과는 원래 검증 결과를 바꾸지 않는다. 자세한 phase·scope·budget 기준은 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다.
 
+무거운 전체 검증은 정확한 `(head SHA, base SHA, workflow digest)`가 모두 같고 이전 결과가 성공일 때만 재사용한다. 이 세 값과 성공 여부·소요시간은 caller가 제출하지 않는다. `validation:record --workflow pipeline-v3.1-black-pr-full`이 clean worktree의 Git 상태와 고정된 검증 정의를 직접 읽고 승인된 전체 검증을 실행해 산출한다. Black PR에서 전체 검증을 한 번 수행하고 Keduall 승격은 같은 key의 증거와 승격·DB·Vercel 전용 검증을 소비한다. 셋 중 하나라도 달라지거나 실패·미완료 결과면 다시 실행한다.
+
 ## UI 변경
 
 route, component, layout, theme, global style 또는 interaction을 바꾸면 다음 두 검증을 모두 수행한다.
@@ -69,7 +71,7 @@ pnpm test:supabase:local
 | 변경 | 최소 검증 |
 | --- | --- |
 | 문서·checker | 해당 contract test, dead-reference 검사, `git diff --check` |
-| task lifecycle·CI·산출물 정책 | `check:project-structure`, `check:artifact-hygiene`, v1·v2 lifecycle contract, CI trust boundary test |
+| task lifecycle·CI·산출물·보안 정책 | `check:project-structure`, `check:artifact-hygiene`, security artifact audit, v1·v2·v3 lifecycle, one-shot sweep·promotion contract, CI trust boundary test |
 | 순수 TypeScript 로직 | 관련 Vitest, lint, typecheck |
 | route·auth·middleware | 관련 unit/integration, scoped 또는 전체 e2e, build |
 | UI | 관련 test, lint, typecheck, Playwright CLI + MCP 직접 확인 |
@@ -77,7 +79,13 @@ pnpm test:supabase:local
 
 실패 시에는 실패 명령, 핵심 오류, 재현 조건과 남은 위험을 기록한다.
 
-자동 lifecycle cleanup 변경은 승인 없는 정상 병합 정리와 함께 dirty·runtime active·locked·detached·native owner·열린 PR·SHA 불일치 보존, `blackstarzck` 인증 성공·실패, 원격 삭제 뒤 상태 변경, 수동 approval journal 재개를 확인한다. 원격 ref 삭제는 exact SHA 조건부 lease 성공과 사전 확인 뒤 ref가 이동한 경쟁 상황의 보존을 실제 bare remote로 검증한다. sweep은 v2만 열거하고 legacy를 제외하는지, 동시 worker·stale lock·15분 cooldown·최대 10개·실행 중 후보를 포함한 10분 hard deadline을 dependency injection과 공용 Git fixture로 검증한다. 오래된 기준 CLI fallback은 최신 CLI의 `sweep --background true`가 실제 숨김 예약 경로를 호출하고 잘못된 boolean을 거부하는지 확인한다. 직접 실행과 sweep 보고가 엇갈려도 `CLEANED`가 오래된 보존·실패 기록으로 덮이지 않고 현재 sweep trigger로 성공 집계되는지, 결과별 blocker·재시도 시각 조합이 닫힌 schema를 지키는지도 검증한다. 보고서 lock 대기 중 parent를 junction으로 바꿔도 외부 경로에 쓰지 않는지, 오래된 malformed lock은 exact identity로만 회수하는지, 남은 시간이 35초 이하이면 cooldown preview를 시작하지 않는지도 확인한다. 종료가 확인된 timeout은 task 보고서에 기록되고, 종료 미확인 실패는 task 파일과 경쟁하지 않는 sweep runner failure에 기록되어 다음 sweep에서 같은 blocker를 15분 유예하는지도 확인한다. 이 runner failure 기록까지 실패하면 미리 기록한 `holdUntil` sweep lock이 남아 다음 sweep 전체를 막는지도 검증한다. Windows job에서는 대상 worktree 밖의 프로세스가 비강제 제거하는 흐름을 다시 실행한다.
+Lifecycle V3는 읽기 작업에서 Git 자원이 생기지 않는지, 작은 순차 작업이 `.worktrees/shared-dev`를 재사용하는지, 병렬·장기·위험 작업만 별도 worktree 선택을 요구하는지 검증한다. Codex↔Claude claim 전환·동시 수정 차단, v2→v3 copy journal, 미등록 legacy 발견-only, Windows 대소문자·reparse·경로 탈출도 포함한다.
+
+자동 cleanup은 Black·Keduall 외부 `main` 병합 감지, shared slot 유지·branch 정리, isolated 비강제 제거, host/adopted 보존, candidate 정리와 `stg`·`main` 보호를 검증한다. dirty·runtime active·locked·detached·unknown 파일·SHA·계정·소유권 불일치는 모두 `PRESERVED`여야 한다. 원격 ref 삭제는 exact-SHA lease와 TOCTOU 보존을 실제 bare remote로 확인한다.
+
+일회성 `task:sweep`은 유효한 v2 후보의 v3 copy·기존 v3 재사용·복사 실패 보존 뒤 v3 정리기만 한 번 실행하는지 검증한다. 직접 `task:autocleanup`을 호출한 v2-only task도 v3 copy 뒤 같은 계정 복원 경로로 재호출되고 legacy 정리기로 우회하지 않아야 한다. 두 GitHub 계정 전환과 원래 계정 복원, repository permission 실패, ACTIVE task가 없을 때 zero-network, 중복 worker·stale lock·최대 10개·10분 실행 예산, 하위 Git·GitHub 명령의 timeout 전달도 dependency injection으로 확인한다. 코드 작업의 `task:prepare`는 성공 뒤 sweep을 한 번 실행하고, 읽기 전용 prepare는 실행하지 않는다. 운영체제 예약 작업 설치와 파일시스템 호출을 강제 종료하는 watchdog은 파이프라인 범위가 아니다.
+
+`PromotionRunV1`은 exact-parent candidate, candidate→`stg`와 `stg`→`main` merge lineage, security audit SHA binding, migration drift·destructive SQL·N-1/N 호환성, 최초 2회 `AWAITING_PROD_APPROVAL`, 이후 `AUTO`, 계약·profile 변경과 실패·rollback·보안 사고 reset을 검증한다. Vercel은 Preview/Production target, 정확한 commit SHA·project·domain·alias, smoke 실패 시 alias-only rollback과 DB non-rollback을 확인한다. 로그·registry·보고서에 secret 값이 기록되지 않는지도 모든 fixture에서 검사한다.
 
 ## CI 변경 범위 분류
 

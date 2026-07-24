@@ -54,11 +54,11 @@
 
 1. **기준 확인**: 이 문서와 `README.md`를 읽고 요청에 필요한 최소 owner, source, tests만 확인한다.
 2. **영향도와 계획**: 제품·코드·데이터·UI·테스트·문서 영향을 나누고, 목적·범위·TODO·검증 방법을 정한다.
-3. **격리와 환경**: `한 task = 한 의미 있는 slug = 한 branch = 한 worktree`를 지킨다. 공용 `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finish`, `task:finalize`, `task:cleanup`, `task:autocleanup`, `task:sweep`, `task:measure`, `task:metrics` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 lifecycle workflow owner다. 기존 linked worktree가 있으면 중첩 생성하지 않는다. `task:start`은 새 worktree 생성을 먼저 끝낸 뒤 숨김 일회성 sweep을 예약하며, 예약 실패는 새 작업을 막지 않는다. 오래된 기준 checkout의 CLI로 시작했다면 새 worktree에서 최신 CLI 경로를 확인한 뒤 대상 밖의 안전한 기준 checkout에서 `node "<new-worktree>/scripts/ai-task.mjs" sweep --repo "<base-checkout>" --background true`를 한 번 실행한다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
+3. **격리와 환경**: 먼저 `task:prepare`로 요청을 분류한다. 질문·조사·리뷰는 현재 checkout에서 읽기만 하고 branch·worktree·registry를 만들지 않는다. 작은 순차 코드 작업은 task branch 하나와 `.worktrees/shared-dev` 공용 slot을 재사용한다. 기존 task를 이어갈 때는 Codex·Claude 구분 없이 같은 branch·workspace와 `TaskRecordV3` claim을 이어 쓴다. 병렬·장기·위험 작업만 사용자에게 `공용 작업 공간 / 별도 안전 폴더`를 선택받고, 별도 관리 worktree를 만든다. host/adopted workspace는 소유권을 가져오거나 폴더를 삭제하지 않는다. 공용 `task:prepare`, `task:start`, `task:status`, `task:handoff`, `task:resume`, `task:runtime`, `task:finish`, `task:finalize`, `task:cleanup`, `task:autocleanup`, `task:sweep`, `task:measure`, `task:metrics`, `task:owner-auth`, `release:start`, `release:status`, `release:resume`, `validation:record`, `validation:check`, `validation:status` 명령과 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)가 workflow owner다. 필요한 경우 `pnpm prepare:worktree-env --profile app` 또는 `--profile e2e`로 검증된 main checkout의 `.env.local`을 안전하게 준비한다. 기존 파일은 덮어쓰거나 합치지 않으며 값과 secret을 출력하지 않는다.
 4. **구현과 TDD**: 실패하는 관련 테스트를 먼저 만들거나 확인하고, 프로젝트 구조를 유지한 최소 변경으로 통과시킨다.
 5. **비판적 리뷰**: critic 관점에서 요구사항 누락, 회귀, 권한·secret·RLS, 실패 복구와 불필요한 확장을 확인한다. 가능하면 독립 에이전트 리뷰를 사용한다.
 6. **검증**: 영향 범위의 test, lint, typecheck, build를 실행한다. 10초 이상 걸릴 것으로 예상되는 setup·검증·review·CI 대기는 `task:measure`로 감싸고, 보고 전 `task:metrics`로 실제 소요 시간·중복 실행·예산 초과를 확인한다. 측정 실패와 예산 초과는 경고일 뿐 원래 명령의 성공·실패나 Git 안전 조건을 바꾸지 않는다. UI 변경은 Playwright CLI와 Playwright MCP 직접 브라우저 확인을 각각 별도 증거로 남긴다.
-7. **보고와 Git 승인**: 바뀐 내용, 검증 결과, 남은 위험과 Git 상태를 쉽게 설명한다. stage, commit, push, PR, merge는 사용자가 요청했거나 결과 보고 뒤 승인한 범위에서만 수행한다. `origin/main` PR 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 정확한 `--repo`와 `--branch`로 `task:autocleanup`을 즉시 실행한다. 다른 주체가 병합한 작업은 다음 `task:start`의 sweep이 따라잡는다.
+7. **보고와 Git 승인**: 바뀐 내용, 검증 결과, 남은 위험과 Git 상태를 쉽게 설명한다. stage, commit, push, PR, merge는 사용자가 요청했거나 결과 보고 뒤 승인한 범위에서만 수행한다. Black 또는 Keduall `main` 병합 뒤에는 관리 대상 workspace를 `task:autocleanup`으로 즉시 정리한다. 에이전트 밖에서 병합된 작업은 다음 코드 작업의 `task:prepare`가 일회성 `task:sweep`을 실행해 따라잡으며, 필요하면 사용자가 `task:sweep`을 직접 실행할 수 있다. 읽기 전용 `task:prepare`는 sweep을 실행하지 않는다. shared slot은 폴더를 유지하고 branch만 비강제로 정리하며, isolated는 관리 worktree와 branch를 비강제로 정리한다. host/adopted는 claim과 task 산출물만 해제하고 폴더를 보존한다. dirty·runtime 실행 중·unknown 파일·SHA·계정·소유권 불일치는 `PRESERVED`로 남긴다.
 
 작업 방식은 Superpowers만 사용한다. OMX와 gstack을 사용하지 않는다. UI 컴포넌트·페이지 styling 작업에는 프로젝트 로컬 `frontend-design`을 함께 사용하되, 이는 domain skill이며 `DESIGN.md`, 기존 Ant Design/theme 구조, Superpowers workflow보다 우선하지 않는다.
 
@@ -66,15 +66,23 @@
 
 - 수정 전 CWD, branch/detached 상태, tracked/untracked 변경, remote와 worktree 소유권을 확인한다.
 - 공유 기준 checkout에서 다른 task를 위해 `switch`, `checkout`, `reset`, `rebase`, `merge`하지 않는다.
-- 도구와 무관하게 branch는 `feat|fix|refactor|test|docs|chore|ci/<kebab-slug>` 형식만 쓴다. Codex와 Claude는 도구별 branch를 새로 만들지 않고 같은 task branch·worktree·v2 registry를 인수인계한다.
+- 도구와 무관하게 branch는 `feat|fix|refactor|test|docs|chore|ci/<kebab-slug>` 형식만 쓴다. Codex와 Claude는 도구별 branch·worktree를 새로 만들지 않고 같은 task branch·workspace·`TaskRecordV3`를 인수인계한다. 기존 v2 record는 변경하지 않고 v3로 복사하며, 미등록 legacy worktree는 발견 목록에만 남기고 자동 소유권이나 삭제 권한을 부여하지 않는다.
 - worktree는 포트, dev server, 로컬 DB, `.env.local`, test data를 격리하지 않는다. 병렬 runtime은 고유 loopback port와 분리된 test data를 사용한다.
 - 다른 사용자의 변경을 되돌리지 않는다. dirty·untracked·ignored-sensitive 파일이나 미게시 commit이 있으면 소유자를 확인하기 전 삭제하지 않는다.
 - 완료된 branch/worktree도 publish·merge·소유권·runtime 종료를 확인하기 전 삭제하지 않는다. 강제 정리는 하지 않는다.
-- 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only다. 병합이 확인된 정식 v2 task는 `task:autocleanup` 또는 다음 `task:start`의 일회성 `task:sweep`이 승인 입력 없이 동일한 안전 조건을 재검증해 비강제 정리한다. 위험 조건이 있으면 삭제하지 않고 기록하며 새 작업을 막지 않는다. `task:cleanup --approval`은 자동 경로가 보존한 task를 사람이 진단·복구할 때 쓰는 호환 경로로 유지한다.
+- 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only다. 병합과 소유권이 증명된 managed v3 task는 `task:autocleanup` 또는 `task:sweep`이 승인 입력 없이 비강제 정리한다. `task:cleanup --approval`은 legacy·수동 복구 호환 경로로 유지한다. 강제 삭제는 제공하지 않으며 `stg`와 `main`은 절대 정리 대상이 아니다.
 
-`origin/main`은 PR과 필수 검사를 거쳐 반영한다. `blackstarzck`와 실제 협업자 `guestkeduall-design`은 보호 경로의 공동 CODEOWNER다. 사용자가 publish·merge를 승인한 작업에서 두 `gh` 세션과 collaborator write 권한이 모두 확인되면, 필수 검사 통과·미해결 review thread 없음·최종 push 이후라는 조건 아래 PR 작성자가 아닌 계정으로 CODEOWNER 승인을 제출하고 `blackstarzck`으로 전환해 merge까지 계속한다. self-review, 필수 검사 우회, stale approval 재사용은 금지하며 계정 또는 권한 확인에 실패하면 중단한다.
+Black 개발 저장소 `origin`은 `blackstarzck/topik-project-v13`이며 `blackstarzck` 계정으로 관리한다. `origin/main`은 PR과 필수 검사를 거쳐 반영한다. solo 작업에 `guestkeduall-design` 승인을 강제하지 않는다. 실제 협업자가 작성한 PR은 저장소의 활성 CODEOWNERS·ruleset을 그대로 따르며 self-review, 필수 검사 우회, stale approval 재사용은 금지한다.
 
-`collab` remote의 `main`은 Vercel production에 즉시 노출된다. 사용자가 정확히 `collab`과 배포 의도를 명시하지 않으면 merge, rebase, push 또는 PR target으로 사용하지 않는다. 명시된 경우에도 변경 범위, 검증, secret 점검과 즉시 노출 위험을 먼저 보고하고 별도 확인을 받는다.
+이 checkout에서 `collab`은 `https://github.com/keduall/topik-project-v13.git`의 고정 remote 별칭이다. `collab/main`은 `keduall/topik-project-v13`의 `refs/heads/main`이며, Keduall 저장소를 직접 clone한 checkout에서는 같은 ref를 `origin/main`이라고 부른다. 반면 이 checkout에서 별도 한정 없는 `origin/main`은 `blackstarzck/topik-project-v13`을 뜻한다. 이 대응은 확정된 계약이므로 어느 별칭을 뜻하는지 다시 질문하지 않는다.
+
+Keduall 운영 저장소 `collab`은 `guestkeduall-design` 계정으로 관리한다. 사용자가 “운영에 반영해줘” 또는 같은 뜻의 명시적 승격 요청을 해야만 Black `main`의 정확한 SHA를 Keduall의 장기 `stg` branch로 승격하는 `PromotionRunV1`을 시작한다. `stg`는 `topik-dev`를 쓰는 Vercel Preview에서 검증하고 DB gate를 통과한 뒤 `stg` → `main` PR로 production을 반영한다. squash·rebase·Keduall `main` 직접 push는 허용하지 않는다.
+
+같은 pipeline 계약 버전의 최초 2회 production 승격은 `stg`·DB 검사가 끝난 뒤 Keduall `main` merge 직전에 최종 확인을 한 번 받는다. 그 두 번이 production `READY`, 정확한 main SHA, production alias, smoke test, cleanup까지 연속 성공한 뒤에만 `AUTO`로 전환한다. 사용자가 push 또는 merge라고 표현해도 최초 2회 최종 확인을 생략하거나 우회하지 않는다. pipeline 계약, DB workflow·호환성 정책, Vercel project·environment·domain, remote·branch·인증 profile이 바뀌거나 배포 실패·rollback·보안 사고가 발생하면 성공 횟수를 0으로 되돌린다. destructive DB migration과 강제 Git 작업은 자동 mode에서도 별도 승인이 필요하다.
+
+원격 반영의 선행 조건은 두 저장소 전체 Git 이력의 임시 산출물에 대한 secret-safe 보안 감사, 관련 credential 폐기·교체, 승인된 노출 대응이다. 경로·commit·탐지 규칙·안전한 hash만 기록하고 secret 값은 읽거나 출력하지 않는다. credential 교체, Git history rewrite와 GitHub Support 요청은 각각 별도 승인 작업이다. 이 선행 조건이 충족되지 않으면 publish·promotion을 중단한다.
+
+production DB 자동 apply는 migration 기준선, tracker prefix, schema·RPC·RLS·grant fingerprint, backup/PITR, 고정 tool version, forward reconciliation과 N-1/N 호환성 검증이 준비될 때까지 비활성이다. production credential은 로컬 에이전트나 PR에 전달하지 않고 trusted operations workflow만 정확한 SHA와 digest를 적용한다. Keduall `main` merge 뒤에는 정확한 결과 SHA의 Vercel Production 배포가 `READY`이고 production alias·domain·읽기 전용 smoke test가 맞는지 확인한다. smoke 실패 시 이전 `READY` deployment로 alias만 rollback하며 DB는 되돌리지 않는다.
 
 ## 구현 경계
 
