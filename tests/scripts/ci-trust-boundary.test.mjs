@@ -1340,6 +1340,34 @@ describe("CI trusted UI contract boundary", () => {
     expect(workflow).toContain("ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN");
   });
 
+  it("gates trusted artifact updates on an externally approved exact head", () => {
+    expect(workflow).toContain(
+      "vars.ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA",
+    );
+    expect(workflow).toContain(
+      "ARTIFACT_HYGIENE_EVENT_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}",
+    );
+    expect(workflow).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_EXTERNAL_APPROVAL_REQUIRED",
+    );
+    expect(workflow).toContain("ARTIFACT_TRUSTED_UPDATE_BASE_NOT_CONTAINED");
+    expect(workflow).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_NOT_CONTAINED",
+    );
+    expect(workflow).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_SURFACE_INVALID",
+    );
+    expect(workflow).toContain("ARTIFACT_TRUSTED_UPDATE_SURFACE_MISMATCH");
+    expect(workflow).toContain(
+      'ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA="${approved_head}"',
+    );
+    expect(workflow).toContain(
+      '--candidate-head-sha "${candidate_head}"',
+    );
+    expect(workflow).toContain("--allow-trusted-update");
+    expect(workflow).toContain("--allow-bootstrap");
+  });
+
   it("keeps lifecycle coverage in Windows and the Linux full test suite", () => {
     expect(workflow.match(/run: pnpm check:worktree-lifecycle/gu)).toHaveLength(
       1,
