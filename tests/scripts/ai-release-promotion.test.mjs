@@ -3,6 +3,7 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -28,7 +29,9 @@ function digest(value) {
 }
 
 function tempRoot() {
-  const root = mkdtempSync(path.join(tmpdir(), "ai-release-promotion-"));
+  const root = realpathSync.native(
+    mkdtempSync(path.join(tmpdir(), "ai-release-promotion-")),
+  );
   roots.push(root);
   return root;
 }
