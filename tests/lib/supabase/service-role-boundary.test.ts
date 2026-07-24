@@ -23,6 +23,7 @@ const ALLOWED_PRIVILEGED_ENV_READERS = [
 const ALLOWED_PRIVILEGED_IMPORTERS = [
   "src/app/api/export/pdf/print/route.ts",
   "src/app/api/export/pdf/route.ts",
+  "src/app/api/system-reports/route.ts",
   "src/app/api/writing/evaluation-status/route.ts",
   "src/lib/writing/server-actions.ts",
 ].sort();
@@ -456,7 +457,7 @@ describe("Supabase service-role module boundary", () => {
     expect(existsSync(resolve(ROOT, PRIVILEGED_MODULE))).toBe(true);
   });
 
-  it("allows the privileged helper only in the four audited system entrypoints", () => {
+  it("allows the privileged helper only in the five audited system entrypoints", () => {
     const importers = listSourceFiles()
       .filter(
         (relativePath) =>

@@ -5,10 +5,8 @@ import {
   validateSystemReportRequest,
   type SystemReportResponse,
 } from "@/lib/system-reports";
-import {
-  createSupabaseServerClient,
-  createSupabaseServiceRoleClient,
-} from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role.server";
 
 const REFERENCE_CODE_PATTERN = /^SR-[0-9A-F]{16}$/;
 

@@ -5,6 +5,7 @@ const OPEN_LAUNCHER_LABEL =
   /^(도움 요청 및 의견 보내기|Get help or send feedback|Nhận trợ giúp hoặc gửi góp ý)$/;
 const CLOSE_LAUNCHER_LABEL =
   /^(도움 요청 닫기|Close help request|Đóng yêu cầu trợ giúp)$/;
+const PUBLIC_READ_ONLY = process.env.PLAYWRIGHT_PUBLIC_READ_ONLY === "1";
 
 async function openReport(page: Page) {
   const launcher = page.getByTestId("system-report-launcher");
@@ -296,6 +297,10 @@ for (const { name, viewport } of [
   test(`@authenticated launcher and complete panel stay above the real fixed action bar on ${name}`, async ({
     page,
   }) => {
+    test.skip(
+      PUBLIC_READ_ONLY,
+      "Authenticated fixed-action-bar coverage requires the local Supabase stack.",
+    );
     await page.setViewportSize(viewport);
     await page.goto("/practice/next", { waitUntil: "networkidle" });
     await expect(page).toHaveURL((url) => url.pathname === "/practice/next");
