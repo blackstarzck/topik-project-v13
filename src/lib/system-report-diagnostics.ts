@@ -1,9 +1,10 @@
-import type {
-  SystemReportBrowser,
-  SystemReportDeviceType,
-  SystemReportDiagnostics,
-  SystemReportLocale,
-  SystemReportOperatingSystem,
+import {
+  SYSTEM_REPORT_LOCALES,
+  type SystemReportBrowser,
+  type SystemReportDeviceType,
+  type SystemReportDiagnostics,
+  type SystemReportLocale,
+  type SystemReportOperatingSystem,
 } from "@/lib/system-reports";
 
 const POSTGRES_INTEGER_MAX = 2_147_483_647;
@@ -59,7 +60,9 @@ function safePathname(pathname: string): string {
 }
 
 function safeLocale(locale: string): SystemReportLocale {
-  return locale === "en" || locale === "vi" ? locale : "ko";
+  return SYSTEM_REPORT_LOCALES.includes(locale as SystemReportLocale)
+    ? (locale as SystemReportLocale)
+    : "ko";
 }
 
 /**

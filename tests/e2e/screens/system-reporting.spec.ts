@@ -138,7 +138,7 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   await expect(popover).toBeHidden();
   await expect(launcher).toHaveAttribute("aria-label", OPEN_LAUNCHER_LABEL);
   await expect(launcher).toHaveAttribute("aria-expanded", "false");
-  await expect(page.locator(".ant-tooltip")).toHaveCount(0);
+  await expect(page.getByRole("tooltip")).toHaveText(OPEN_LAUNCHER_LABEL);
   await expect
     .poll(async () =>
       page.evaluate(() => ({
@@ -154,6 +154,7 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
       documentOverflow: 0,
     });
   await launcher.click();
+  await expect(page.getByRole("tooltip")).toBeHidden();
   await page.getByTestId("system-report-title").fill("다시 열어도 유지할 제목");
   await launcher.click();
   await launcher.click();
@@ -302,7 +303,7 @@ for (const { name, viewport } of [
       "Authenticated fixed-action-bar coverage requires the local Supabase stack.",
     );
     await page.setViewportSize(viewport);
-    await page.goto("/practice/next", { waitUntil: "networkidle" });
+    await page.goto("/practice/next");
     await expect(page).toHaveURL((url) => url.pathname === "/practice/next");
 
     const fixedBar = page.getByTestId("next-selection-bar");

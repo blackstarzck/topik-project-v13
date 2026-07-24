@@ -141,6 +141,20 @@ describe("SystemReportLauncher visibility", () => {
     },
   );
 
+  it("shows the localized launcher hint to pointer users while closed", async () => {
+    renderWithIntl(<SystemReportLauncher />);
+
+    fireEvent.mouseEnter(
+      screen.getByRole("button", {
+        name: koMessages.systemReport.launcherAria,
+      }),
+    );
+
+    expect((await screen.findByRole("tooltip")).textContent).toContain(
+      koMessages.systemReport.launcherTooltip,
+    );
+  });
+
   it("keeps the launcher visible as the only close control and preserves a draft", () => {
     renderWithIntl(<SystemReportLauncher />);
     openPanel();

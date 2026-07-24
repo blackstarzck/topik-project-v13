@@ -134,11 +134,8 @@ export function validateSystemReportRequest(
     ]) ||
     !isOneOf(input.category, SYSTEM_REPORT_CATEGORIES) ||
     typeof input.email !== "string" ||
-    input.email.length > SYSTEM_REPORT_MAX_EMAIL_LENGTH ||
     typeof input.title !== "string" ||
-    input.title.length > SYSTEM_REPORT_MAX_TITLE_LENGTH ||
     typeof input.message !== "string" ||
-    input.message.length > SYSTEM_REPORT_MAX_MESSAGE_LENGTH ||
     !isRecord(input.context) ||
     !hasExactKeys(input.context, [
       "pathname",
@@ -159,6 +156,9 @@ export function validateSystemReportRequest(
   const context = input.context;
 
   if (
+    email.length > SYSTEM_REPORT_MAX_EMAIL_LENGTH ||
+    title.length > SYSTEM_REPORT_MAX_TITLE_LENGTH ||
+    message.length > SYSTEM_REPORT_MAX_MESSAGE_LENGTH ||
     !EMAIL_PATTERN.test(email) ||
     title.length === 0 ||
     message.length === 0 ||
@@ -238,10 +238,6 @@ export async function parseSystemReportRequestBody(
   }
 }
 
-function firstHeaderValue(value: string | null): string | null {
-  return value?.split(",")[0]?.trim() || null;
-}
-
 export function isSameOriginSystemReportRequest(request: Request): boolean {
   if (request.headers.get("sec-fetch-site") !== "same-origin") return false;
 
@@ -250,20 +246,7 @@ export function isSameOriginSystemReportRequest(request: Request): boolean {
 
   try {
     const requestUrl = new URL(request.url);
-    const forwardedProto =
-      firstHeaderValue(request.headers.get("x-forwarded-proto")) ??
-      requestUrl.protocol.replace(":", "");
-    const expectedOrigins = new Set([requestUrl.origin]);
-
-    for (const candidateHost of [
-      request.headers.get("x-forwarded-host"),
-      request.headers.get("host"),
-    ]) {
-      const host = firstHeaderValue(candidateHost);
-      if (host) expectedOrigins.add(`${forwardedProto}://${host}`);
-    }
-
-    return expectedOrigins.has(new URL(origin).origin);
+    return new URL(origin).origin === requestUrl.origin;
   } catch {
     return false;
   }

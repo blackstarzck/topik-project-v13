@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   SYSTEM_REPORT_MAX_BODY_BYTES,
+  SYSTEM_REPORT_MAX_EMAIL_LENGTH,
+  SYSTEM_REPORT_MAX_MESSAGE_LENGTH,
+  SYSTEM_REPORT_MAX_TITLE_LENGTH,
+  isSameOriginSystemReportRequest,
   parseSystemReportRequestBody,
   validateSystemReportRequest,
 } from "@/lib/system-reports";
@@ -34,6 +38,31 @@ describe("system report validation", () => {
     expect(result).toEqual({
       ok: true,
       value: validReport,
+    });
+  });
+
+  it("applies field length limits after trimming surrounding whitespace", () => {
+    const email = `${"a".repeat(
+      SYSTEM_REPORT_MAX_EMAIL_LENGTH - "@example.com".length,
+    )}@example.com`;
+    const title = "t".repeat(SYSTEM_REPORT_MAX_TITLE_LENGTH);
+    const message = "m".repeat(SYSTEM_REPORT_MAX_MESSAGE_LENGTH);
+
+    expect(
+      validateSystemReportRequest({
+        ...validReport,
+        email: ` ${email} `,
+        title: ` ${title} `,
+        message: ` ${message} `,
+      }),
+    ).toEqual({
+      ok: true,
+      value: {
+        ...validReport,
+        email,
+        title,
+        message,
+      },
     });
   });
 
@@ -159,6 +188,24 @@ describe("system report validation", () => {
     ],
   ])("rejects non-allowlisted privacy field: %s", (_name, value) => {
     expect(validateSystemReportRequest(value)).toEqual({ ok: false });
+  });
+});
+
+describe("system report same-origin enforcement", () => {
+  it("does not widen the accepted origin from forwarded headers", () => {
+    const request = new Request(
+      "https://internal.example/api/system-reports",
+      {
+        headers: {
+          origin: "https://public.example",
+          "sec-fetch-site": "same-origin",
+          "x-forwarded-host": "public.example",
+          "x-forwarded-proto": "https",
+        },
+      },
+    );
+
+    expect(isSameOriginSystemReportRequest(request)).toBe(false);
   });
 });
 
