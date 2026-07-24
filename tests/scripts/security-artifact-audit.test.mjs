@@ -147,10 +147,19 @@ function createRepository({
   return { fixtureRoot, repoPath };
 }
 
-function runCli(repoPath, mode, refs = "origin/main,collab/main") {
+function runCli(
+  repoPath,
+  mode,
+  refs = "origin/main,collab/main",
+  baselineRef = null,
+) {
+  const args = [cliPath, "--repo", repoPath, "--mode", mode, "--refs", refs];
+  if (baselineRef !== null) {
+    args.push("--baseline-ref", baselineRef);
+  }
   return run(
     process.execPath,
-    [cliPath, "--repo", repoPath, "--mode", mode, "--refs", refs],
+    args,
     { cwd: path.resolve(".") },
   );
 }
@@ -475,6 +484,106 @@ describe("security artifact audit policy", () => {
 });
 
 describe("security artifact audit CLI", () => {
+  it("passes baseline check when a PR adds no risky artifact changes", () => {
+    const fixture = createRepository();
+    write(fixture.repoPath, "docs/clean-change.md", "clean change\n");
+    git(fixture.repoPath, "add", "docs/clean-change.md");
+    commit(fixture.repoPath, "-m", "add clean change");
+
+    const result = runCli(
+      fixture.repoPath,
+      "check",
+      "HEAD",
+      "origin/main",
+    );
+    const report = JSON.parse(result.stdout);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(report.recordType).toBe("SecurityArtifactDiffAuditV1");
+    expect(report.baseline.ref).toBe("origin/main");
+    expect(report.refs).toEqual(["HEAD"]);
+    expect(report.findings).toEqual([]);
+    expect(report.summary.findingCount).toBe(0);
+  });
+
+  it("fails baseline check when a PR adds or modifies a risky artifact", () => {
+    const fixture = createRepository();
+    write(fixture.repoPath, "ROOT.LOG", "changed risky artifact\n");
+    write(fixture.repoPath, ".scratch/new-session.json", canarySecret);
+    git(fixture.repoPath, "add", "--all");
+    commit(fixture.repoPath, "-m", "change risky artifacts");
+
+    const result = runCli(
+      fixture.repoPath,
+      "check",
+      "HEAD",
+      "origin/main",
+    );
+    const report = JSON.parse(result.stderr);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(report.recordType).toBe("SecurityArtifactDiffAuditV1");
+    expect(report.findings).toEqual([
+      expect.objectContaining({
+        ref: "HEAD",
+        path: ".ScRaTcH/new-session.json",
+        rule: "TRACKED_SCRATCH_PATH",
+      }),
+      expect.objectContaining({
+        ref: "HEAD",
+        path: "ROOT.LOG",
+        rule: "ROOT_TEMP_FILE",
+      }),
+    ]);
+    expect(`${result.stdout}${result.stderr}`).not.toContain(canarySecret);
+  });
+
+  it("allows a pure deletion but catches a risky artifact added then deleted", () => {
+    const fixture = createRepository();
+    unlinkSync(path.join(fixture.repoPath, "capture.PNG"));
+    git(fixture.repoPath, "add", "--all");
+    commit(fixture.repoPath, "-m", "delete legacy capture");
+
+    const deletionResult = runCli(
+      fixture.repoPath,
+      "check",
+      "HEAD",
+      "origin/main",
+    );
+
+    expect(deletionResult.status).toBe(0);
+    expect(JSON.parse(deletionResult.stdout).findings).toEqual([]);
+
+    write(fixture.repoPath, ".tmp/transient.log", canarySecret);
+    git(fixture.repoPath, "add", "--all");
+    commit(fixture.repoPath, "-m", "add transient risky artifact");
+    unlinkSync(path.join(fixture.repoPath, ".tmp", "transient.log"));
+    git(fixture.repoPath, "add", "--all");
+    commit(fixture.repoPath, "-m", "delete transient risky artifact");
+
+    const historyResult = runCli(
+      fixture.repoPath,
+      "check",
+      "HEAD",
+      "origin/main",
+    );
+    const historyReport = JSON.parse(historyResult.stderr);
+
+    expect(historyResult.status).toBe(1);
+    expect(historyReport.findings).toEqual([
+      expect.objectContaining({
+        ref: "HEAD",
+        path: ".TmP/transient.log",
+        rule: "TRACKED_TMP_PATH",
+      }),
+    ]);
+    expect(`${historyResult.stdout}${historyResult.stderr}`).not.toContain(
+      canarySecret,
+    );
+  });
+
   it("prints JSON and exits zero in report mode even when findings exist", () => {
     const fixture = createRepository();
 

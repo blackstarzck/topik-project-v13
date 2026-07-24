@@ -329,6 +329,8 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 먼저 전
 
 문서만 바뀌어도 Linux `verify` 작업 자체는 실행하고 신뢰 경계 검사를 통과해야 한다. dependency 설치와 app 검증만 생략한다. pipeline-only 변경은 dependency를 설치한 뒤 관련 contract를 집중 실행한다. app 전체 검증의 `pnpm test`가 lifecycle contract도 포함하므로 같은 Linux contract를 별도로 중복 실행하지 않는다.
 
+Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`의 도달 가능한 전체 이력을 감사한다.
+
 CI가 검사하는 계약은 다음과 같다.
 
 1. trusted base 기반 UI·artifact diff 계약

@@ -306,6 +306,207 @@ function resolveRef(commandRunner, repoPath, ref) {
   return resolved;
 }
 
+function assertAncestor(commandRunner, repoPath, ancestor, descendant) {
+  let result;
+  try {
+    result = commandRunner(
+      "git",
+      ["merge-base", "--is-ancestor", ancestor, descendant],
+      commandOptions(repoPath),
+    );
+  } catch {
+    throw auditError("BASELINE_RELATION_INVALID");
+  }
+  if (result?.status !== 0 || result.error || result.signal) {
+    throw auditError("BASELINE_RELATION_INVALID");
+  }
+}
+
+function commitList(buffer) {
+  const decoded = decodeUtf8(buffer, "HISTORY_LOOKUP_FAILED").trim();
+  if (decoded.length === 0) return [];
+  const commits = decoded.split(/\r?\n/u);
+  if (
+    commits.some(
+      (commit) => !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/iu.test(commit),
+    )
+  ) {
+    throw auditError("HISTORY_LOOKUP_FAILED");
+  }
+  return commits;
+}
+
+function firstParent(buffer, commit) {
+  const decoded = decodeUtf8(buffer, "HISTORY_LOOKUP_FAILED").trim();
+  const commits = decoded.split(/\s+/u);
+  if (
+    commits.length < 2 ||
+    commits[0] !== commit ||
+    commits.some(
+      (entry) => !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/iu.test(entry),
+    )
+  ) {
+    throw auditError("HISTORY_LOOKUP_FAILED");
+  }
+  return commits[1];
+}
+
+export function auditSecurityArtifactChanges({
+  baselineRef,
+  evidenceAllowlist = DEFAULT_EVIDENCE_ALLOWLIST,
+  repoPath,
+  refs,
+  rootImageAllowlist = DEFAULT_ROOT_IMAGE_ALLOWLIST,
+  commandRunner = executeSecurityArtifactCommand,
+} = {}) {
+  const repositoryRoot = assertRepositoryPath(repoPath);
+  const auditedRefs = validateRefs(refs);
+  const validatedBaselineRef = validateRefs([baselineRef])[0];
+  if (auditedRefs.includes(validatedBaselineRef)) {
+    throw auditError("REF_INVALID");
+  }
+  const allowedEvidence = validateEvidenceAllowlist(evidenceAllowlist);
+  const allowedRootImages = validateRootImageAllowlist(rootImageAllowlist);
+  assertRepositoryRoot(commandRunner, repositoryRoot);
+
+  const resolvedBaseline = resolveRef(
+    commandRunner,
+    repositoryRoot,
+    validatedBaselineRef,
+  );
+  const snapshots = [];
+  const candidates = [];
+  let scannedPathCount = 0;
+
+  for (const ref of auditedRefs) {
+    const resolvedRef = resolveRef(commandRunner, repositoryRoot, ref);
+    assertAncestor(
+      commandRunner,
+      repositoryRoot,
+      resolvedBaseline,
+      resolvedRef,
+    );
+    snapshots.push({
+      ref,
+      commitHash: sha256(resolvedRef),
+    });
+    const commits = commitList(
+      runGit(
+        commandRunner,
+        repositoryRoot,
+        ["rev-list", resolvedRef, `^${resolvedBaseline}`],
+        "HISTORY_LOOKUP_FAILED",
+      ),
+    );
+    const evidenceByPath = new Map();
+
+    for (const commit of commits) {
+      const parent = firstParent(
+        runGit(
+          commandRunner,
+          repositoryRoot,
+          ["rev-list", "--parents", "-n", "1", commit],
+          "HISTORY_LOOKUP_FAILED",
+        ),
+        commit,
+      );
+      const changedPaths = treePaths(
+        runGit(
+          commandRunner,
+          repositoryRoot,
+          [
+            "diff",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--ignore-submodules=none",
+            parent,
+            commit,
+            "--",
+          ],
+          "HISTORY_LOOKUP_FAILED",
+        ),
+      );
+      scannedPathCount += changedPaths.length;
+      if (changedPaths.length === 0) continue;
+      const tipInventory = new Set(
+        treePaths(
+          runGit(
+            commandRunner,
+            repositoryRoot,
+            ["ls-tree", "-r", "-z", "--name-only", commit],
+            "HISTORY_LOOKUP_FAILED",
+          ),
+        ),
+      );
+      for (const relativePath of changedPaths) {
+        if (!tipInventory.has(relativePath)) continue;
+        const rule = matchingRule(
+          relativePath,
+          allowedRootImages,
+          allowedEvidence,
+        );
+        if (rule === null) continue;
+        const key = `${relativePath}\0${rule}`;
+        const evidence = evidenceByPath.get(key) ?? {
+          path: relativePath,
+          rule,
+          commitHashes: new Set(),
+        };
+        evidence.commitHashes.add(sha256(commit));
+        evidenceByPath.set(key, evidence);
+      }
+    }
+
+    for (const evidence of evidenceByPath.values()) {
+      const commitHashes = [...evidence.commitHashes].sort(compareText);
+      candidates.push({
+        ref,
+        path: evidence.path,
+        rule: evidence.rule,
+        historyCommitCount: commitHashes.length,
+        commitHashes,
+      });
+    }
+  }
+
+  const findings = candidates
+    .map((candidate) => ({
+      ...candidate,
+      pathHash: sha256(candidate.path),
+    }))
+    .sort((left, right) =>
+      compareText(
+        `${left.ref}\0${left.path}\0${left.rule}`,
+        `${right.ref}\0${right.path}\0${right.rule}`,
+      ),
+    );
+  const payload = {
+    schemaVersion: 1,
+    recordType: "SecurityArtifactDiffAuditV1",
+    baseline: {
+      ref: validatedBaselineRef,
+      commitHash: sha256(resolvedBaseline),
+    },
+    refs: auditedRefs,
+    snapshots: snapshots.sort((left, right) =>
+      compareText(left.ref, right.ref),
+    ),
+    findings,
+    summary: {
+      refCount: auditedRefs.length,
+      scannedPathCount,
+      findingCount: findings.length,
+    },
+  };
+  return {
+    ...payload,
+    fingerprint: sha256(JSON.stringify(payload)),
+  };
+}
+
 export function auditSecurityArtifacts({
   evidenceAllowlist = DEFAULT_EVIDENCE_ALLOWLIST,
   repoPath,

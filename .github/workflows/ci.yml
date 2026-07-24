@@ -359,23 +359,13 @@ jobs:
           [[ "$(normalize_github_remote "$(git remote get-url origin)")" == "https://github.com/blackstarzck/topik-project-v13" ]] || {
             echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH" >&2; exit 3;
           }
-          if git remote get-url collab >/dev/null 2>&1; then
-            [[ "$(normalize_github_remote "$(git remote get-url collab)")" == "https://github.com/keduall/topik-project-v13" ]] || {
-              echo "SECURITY_AUDIT_COLLAB_IDENTITY_MISMATCH" >&2; exit 3;
-            }
-          else
-            git remote add collab https://github.com/keduall/topik-project-v13.git
-          fi
           git fetch --no-tags --prune origin \
             '+refs/heads/main:refs/remotes/origin/main'
-          git fetch --no-tags --prune collab \
-            '+refs/heads/main:refs/remotes/collab/main'
           git cat-file -e 'HEAD^{commit}'
           git cat-file -e 'refs/remotes/origin/main^{commit}'
-          git cat-file -e 'refs/remotes/collab/main^{commit}'
 
       - name: Check security artifacts in reachable publish history
-        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD,origin/main,collab/main
+        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
 
       - name: Check UI contract diff baseline (trusted)
         env:
@@ -716,23 +706,13 @@ jobs:
           [[ "$(normalize_github_remote "$(git remote get-url origin)")" == "https://github.com/blackstarzck/topik-project-v13" ]] || {
             echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH" >&2; exit 3;
           }
-          if git remote get-url collab >/dev/null 2>&1; then
-            [[ "$(normalize_github_remote "$(git remote get-url collab)")" == "https://github.com/keduall/topik-project-v13" ]] || {
-              echo "SECURITY_AUDIT_COLLAB_IDENTITY_MISMATCH" >&2; exit 3;
-            }
-          else
-            git remote add collab https://github.com/keduall/topik-project-v13.git
-          fi
           git fetch --no-tags --prune origin \
             '+refs/heads/main:refs/remotes/origin/main'
-          git fetch --no-tags --prune collab \
-            '+refs/heads/main:refs/remotes/collab/main'
           git cat-file -e 'HEAD^{commit}'
           git cat-file -e 'refs/remotes/origin/main^{commit}'
-          git cat-file -e 'refs/remotes/collab/main^{commit}'
 
       - name: Check security artifacts in reachable publish history
-        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD,origin/main,collab/main
+        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
 
       - name: Check project structure
         run: node scripts/check-project-structure.mjs

@@ -2,9 +2,13 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { auditSecurityArtifacts } from "./lib/security-artifact-audit.mjs";
+import {
+  auditSecurityArtifactChanges,
+  auditSecurityArtifacts,
+} from "./lib/security-artifact-audit.mjs";
 
 const SAFE_ERROR_CODES = new Set([
+  "BASELINE_RELATION_INVALID",
   "CLI_ARGUMENT_INVALID",
   "EVIDENCE_ALLOWLIST_INVALID",
   "HISTORY_LOOKUP_FAILED",
@@ -31,6 +35,7 @@ function cliError(code) {
 
 function parseArguments(argv) {
   const options = {
+    baselineRef: null,
     mode: null,
     refs: null,
     repoPath: null,
@@ -38,7 +43,8 @@ function parseArguments(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     let field;
-    if (argument === "--mode") field = "mode";
+    if (argument === "--baseline-ref") field = "baselineRef";
+    else if (argument === "--mode") field = "mode";
     else if (argument === "--refs") field = "refs";
     else if (argument === "--repo") field = "repoPath";
     else throw cliError("CLI_ARGUMENT_INVALID");
@@ -52,7 +58,8 @@ function parseArguments(argv) {
   if (
     !new Set(["check", "report"]).has(mode) ||
     typeof options.repoPath !== "string" ||
-    options.repoPath.length === 0
+    options.repoPath.length === 0 ||
+    (options.baselineRef !== null && options.refs === null)
   ) {
     throw cliError("CLI_ARGUMENT_INVALID");
   }
@@ -60,7 +67,12 @@ function parseArguments(argv) {
     options.refs === null
       ? undefined
       : options.refs.split(",").map((entry) => entry.trim());
-  return { mode, refs, repoPath: options.repoPath };
+  return {
+    baselineRef: options.baselineRef,
+    mode,
+    refs,
+    repoPath: options.repoPath,
+  };
 }
 
 function errorRecord(code) {
@@ -79,13 +91,19 @@ function safeErrorCode(error) {
 
 export function runSecurityArtifactAuditCli({
   audit = auditSecurityArtifacts,
+  auditChanges = auditSecurityArtifactChanges,
   argv = process.argv.slice(2),
   writeStderr = (value) => process.stderr.write(value),
   writeStdout = (value) => process.stdout.write(value),
 } = {}) {
   try {
     const options = parseArguments(argv);
-    const report = audit({
+    const auditFunction =
+      options.baselineRef === null ? audit : auditChanges;
+    const report = auditFunction({
+      ...(options.baselineRef === null
+        ? {}
+        : { baselineRef: options.baselineRef }),
       repoPath: options.repoPath,
       ...(options.refs === undefined ? {} : { refs: options.refs }),
     });

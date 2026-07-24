@@ -23,7 +23,7 @@
     "check:artifact-hygiene": "node scripts/check-artifact-hygiene.mjs --mode check",
     "report:security-artifacts": "node scripts/security-artifact-audit.mjs --repo . --mode report",
     "check:security-artifacts": "node scripts/security-artifact-audit.mjs --repo . --mode check",
-    "check:security-artifacts:ci": "node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD,origin/main,collab/main",
+    "check:security-artifacts:ci": "node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main",
     "report:ui-contract": "node scripts/check-ui-contract.mjs --mode report",
     "check:ui-contract": "node scripts/check-ui-contract.mjs --mode diff-block",
     "check:worktree-lifecycle": "vitest run tests/scripts/worktree-lifecycle.test.mjs tests/scripts/report-worktree-lifecycle.test.mjs --maxWorkers=1",

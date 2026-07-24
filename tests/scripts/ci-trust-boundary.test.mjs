@@ -1399,25 +1399,25 @@ describe("CI trusted UI contract boundary", () => {
     ).toBe(false);
   });
 
-  it("runs the real security artifact audit for candidate and main refs", () => {
+  it("blocks new Black PR findings and leaves full collab history to promotion", () => {
     expect(packageJson.scripts["check:security-artifacts:ci"]).toBe(
-      "node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD,origin/main,collab/main",
+      "node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main",
     );
     expect(workflow.match(/name: Prepare security artifact audit refs/gu)).toHaveLength(2);
     expect(workflow.match(
-      /run: node scripts\/security-artifact-audit\.mjs --repo \. --mode check --refs HEAD,origin\/main,collab\/main/gu,
+      /run: node scripts\/security-artifact-audit\.mjs --repo \. --mode check --refs HEAD --baseline-ref origin\/main/gu,
     )).toHaveLength(2);
     expect(workflow.match(/normalize_github_remote\(\)/gu)).toHaveLength(2);
     expect(workflow.match(
       /normalize_github_remote "\$\(git remote get-url origin\)"\)/gu,
     )).toHaveLength(2);
-    expect(workflow.match(
-      /normalize_github_remote "\$\(git remote get-url collab\)"\)/gu,
-    )).toHaveLength(2);
     expect(workflow).toContain("https://github.com/blackstarzck/topik-project-v13");
-    expect(workflow).toContain("https://github.com/keduall/topik-project-v13");
-    expect(workflow).toContain(
-      "+refs/heads/main:refs/remotes/collab/main",
+    expect(workflow).not.toContain(
+      "git remote add collab https://github.com/keduall/topik-project-v13.git",
+    );
+    expect(workflow).not.toContain("+refs/heads/main:refs/remotes/collab/main");
+    expect(pipelineDocs).toContain(
+      "Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`의 도달 가능한 전체 이력을 감사한다.",
     );
   });
 
