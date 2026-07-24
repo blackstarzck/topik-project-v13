@@ -210,7 +210,7 @@ test.describe("writing composer mode", () => {
 
     const problemIds = {} as Record<WritingComposerQuestionNo, string>;
 
-    for (const questionNo of [53, 54] as const) {
+    for (const questionNo of [51, 52, 53, 54] as const) {
       const { data, error } = await client.rpc(
         "get_available_writing_questions",
         {
@@ -245,11 +245,7 @@ test.describe("writing composer mode", () => {
         supabaseOrigin,
       };
       const runtime = collectRuntimeFailures(page, origins);
-      await installSupabaseRestMutationGuard(
-        page,
-        origins,
-        runtime.failures,
-      );
+      await installSupabaseRestMutationGuard(page, origins, runtime.failures);
       const problemId = canonicalProblemIds[writingCase.questionNo];
       const route = `${writingCase.route}?problem=${encodeURIComponent(problemId)}&fresh=1`;
 
@@ -313,4 +309,152 @@ test.describe("writing composer mode", () => {
       expect(runtime.failures).toEqual([]);
     });
   }
+
+  test("Q51 keeps only the character count above the answer field", async ({
+    page,
+    baseURL,
+  }) => {
+    const configuredAppUrl = baseURL ?? process.env.E2E_BASE_URL;
+    if (!configuredAppUrl) {
+      throw new Error(
+        "writing composer mode e2e requires Playwright baseURL or E2E_BASE_URL.",
+      );
+    }
+    const origins = {
+      appOrigin: new URL(configuredAppUrl).origin,
+      supabaseOrigin,
+    };
+    const runtime = collectRuntimeFailures(page, origins);
+    await installSupabaseRestMutationGuard(page, origins, runtime.failures);
+
+    const response = await page.goto(
+      `/writing/short-answer-writing-51?problem=${encodeURIComponent(canonicalProblemIds[51])}&fresh=1`,
+      { waitUntil: "domcontentloaded" },
+    );
+    expect(response?.status()).toBeLessThan(400);
+
+    const workspace = page.locator(".writing-workspace--q51");
+    await expect(workspace).toBeVisible();
+    const tabs = workspace.getByRole("tab");
+    await expect(tabs).toHaveCount(2);
+    const answerHead = workspace.locator(".writing-answer-card__head");
+    await expect(answerHead).toContainText(/0\s*\/\s*\d+/u);
+    await expect(answerHead.locator(".ant-typography-strong")).toHaveCount(0);
+    await expect(workspace.locator(".writing-answer-card__hint")).toHaveCount(
+      0,
+    );
+
+    await tabs.nth(1).click();
+    await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
+    await expect(answerHead).toContainText(/0\s*\/\s*\d+/u);
+    await expect(answerHead.locator(".ant-typography-strong")).toHaveCount(0);
+
+    await runtime.waitForSettled();
+    expect(runtime.failures).toEqual([]);
+  });
+
+  test("Q52 uses blank-specific guidance without generic connector examples", async ({
+    page,
+    baseURL,
+  }) => {
+    const configuredAppUrl = baseURL ?? process.env.E2E_BASE_URL;
+    if (!configuredAppUrl) {
+      throw new Error(
+        "writing composer mode e2e requires Playwright baseURL or E2E_BASE_URL.",
+      );
+    }
+    const origins = {
+      appOrigin: new URL(configuredAppUrl).origin,
+      supabaseOrigin,
+    };
+    const runtime = collectRuntimeFailures(page, origins);
+    await installSupabaseRestMutationGuard(page, origins, runtime.failures);
+
+    const response = await page.goto(
+      `/writing/answer-writing-52?problem=${encodeURIComponent(canonicalProblemIds[52])}&fresh=1`,
+      { waitUntil: "domcontentloaded" },
+    );
+    expect(response?.status()).toBeLessThan(400);
+
+    const workspace = page.locator(".writing-workspace--q52");
+    await expect(workspace).toBeVisible();
+    await runtime.waitForSettled();
+    for (const genericExpression of [
+      "이에 따라",
+      "반면에",
+      "또한",
+      "예를 들어",
+      "결과적으로",
+    ]) {
+      await expect(
+        workspace.getByText(genericExpression, { exact: true }),
+      ).toHaveCount(0);
+    }
+
+    const tabs = workspace.getByRole("tab");
+    await expect(tabs).toHaveCount(2);
+    const answerHead = workspace.locator(".writing-answer-card__head");
+    await expect(answerHead).toContainText(/0\s*\/\s*160/u);
+    await expect(answerHead.locator(".ant-typography-strong")).toHaveCount(0);
+    await expect(workspace.locator(".writing-answer-card__hint")).toHaveCount(
+      0,
+    );
+    await tabs.nth(1).click();
+    await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
+    await expect(answerHead).toContainText(/0\s*\/\s*160/u);
+    await expect(answerHead.locator(".ant-typography-strong")).toHaveCount(0);
+
+    await runtime.waitForSettled();
+    expect(runtime.failures).toEqual([]);
+  });
+
+  test("Q54 keeps the canonical prompt and its three tasks in one problem card", async ({
+    page,
+    baseURL,
+  }) => {
+    const configuredAppUrl = baseURL ?? process.env.E2E_BASE_URL;
+    if (!configuredAppUrl) {
+      throw new Error(
+        "writing composer mode e2e requires Playwright baseURL or E2E_BASE_URL.",
+      );
+    }
+    const origins = {
+      appOrigin: new URL(configuredAppUrl).origin,
+      supabaseOrigin,
+    };
+    const runtime = collectRuntimeFailures(page, origins);
+    await installSupabaseRestMutationGuard(page, origins, runtime.failures);
+
+    const response = await page.goto(
+      `/writing/essay-writing-54?problem=${encodeURIComponent(canonicalProblemIds[54])}&fresh=1`,
+      { waitUntil: "domcontentloaded" },
+    );
+    expect(response?.status()).toBeLessThan(400);
+
+    const prompt = page.locator(".writing-question-prompt").first();
+    await expect(prompt).toBeVisible();
+    await expect(prompt).not.toContainText("1)");
+    await expect(prompt).not.toContainText("2)");
+    await expect(prompt).not.toContainText("3)");
+    const promptCard = prompt.locator(
+      "xpath=ancestor::*[contains(concat(' ', normalize-space(@class), ' '), ' ant-card ')][1]",
+    );
+    const questions = promptCard.locator("ol.writing-question-task-list > li");
+    await expect(questions).toHaveCount(3);
+    await expect(questions.nth(0)).not.toBeEmpty();
+    await expect(questions.nth(1)).not.toBeEmpty();
+    await expect(questions.nth(2)).not.toBeEmpty();
+    await expect(promptCard.locator("ol.writing-question-task-list")).toHaveCSS(
+      "list-style-type",
+      "decimal",
+    );
+    await expect(promptCard.getByText("주제", { exact: true })).toHaveCount(0);
+    await expect(promptCard.getByText("배경", { exact: true })).toHaveCount(0);
+    await expect(
+      promptCard.getByText("필수 포함 조건", { exact: true }),
+    ).toHaveCount(0);
+
+    await runtime.waitForSettled();
+    expect(runtime.failures).toEqual([]);
+  });
 });

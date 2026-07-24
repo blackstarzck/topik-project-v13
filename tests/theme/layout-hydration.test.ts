@@ -62,7 +62,7 @@ vi.mock("../../src/app/providers", () => ({
 }));
 
 import { cookies } from "next/headers";
-import RootLayout from "../../src/app/layout";
+import RootLayout, { metadata } from "../../src/app/layout";
 
 type AnyElement = React.ReactElement<Record<string, unknown>>;
 
@@ -102,6 +102,7 @@ describe("RootLayout hydration consistency", () => {
     const colorScheme = htmlStyle.colorScheme as string;
     const bgContainer = htmlStyle["--app-color-bg-container"] as string;
     const lang = element.props.lang as string;
+    const translate = element.props.translate as string | undefined;
 
     // Navigate: <html> → <body> → <NextIntlClientProvider> →
     // <AntdRegistry> → <AppProviders>
@@ -128,6 +129,7 @@ describe("RootLayout hydration consistency", () => {
       bgContainer,
       initialAppearance,
       lang,
+      translate,
       intlLocale,
       intlMessages,
       intlTimeZone,
@@ -178,6 +180,25 @@ describe("RootLayout hydration consistency", () => {
 
     expect(lang).toBe("ko");
     expect(intlLocale).toBe("ko");
+  });
+
+  test.each(["ko", "en", "vi"] as const)(
+    "resolved locale %s keeps html, provider, and browser-translation control aligned",
+    async (locale) => {
+      resolveLocaleMock.mockResolvedValue(locale);
+      const { lang, translate, intlLocale } =
+        await getLayoutAndProviderProps(undefined);
+
+      expect(lang).toBe(locale);
+      expect(intlLocale).toBe(locale);
+      expect(translate).toBe("no");
+    },
+  );
+
+  test("metadata disables Chromium page translation", () => {
+    expect(metadata.other).toEqual(
+      expect.objectContaining({ google: "notranslate" }),
+    );
   });
 
   test("NextIntlClientProvider receives messages and the canonical time zone", async () => {

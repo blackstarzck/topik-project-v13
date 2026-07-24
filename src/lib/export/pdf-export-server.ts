@@ -5,9 +5,14 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 
 import type { SupabaseServerClient } from "../supabase/server";
+import { normalizeWritingProblem } from "../writing/problem-normalizer";
 import { getFeedbackBundle, getSubmission } from "../writing/server";
 import { PDF_EXPORT_ERROR_CODES } from "./pdf-export-errors";
-import type { PdfExportItem, PdfSubmissionItem } from "./pdf-document";
+import type {
+  PdfExportItem,
+  PdfProblemContext,
+  PdfSubmissionItem,
+} from "./pdf-document";
 import { PDF_EXPORT_MAX_ITEMS, type PdfExportRequest } from "./pdf-options";
 
 dayjs.extend(utc);
@@ -199,12 +204,101 @@ function formatDate(value: string): string {
   return parsed.isValid() ? parsed.format("YYYY-MM-DD") : value;
 }
 
-function getSnapshotTitle(snapshot: unknown): string | null {
+function snapshotRecord(snapshot: unknown): Record<string, unknown> | null {
   if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
     return null;
   }
-  const title = (snapshot as Record<string, unknown>).title;
-  return typeof title === "string" && title.trim().length > 0 ? title : null;
+  return snapshot as Record<string, unknown>;
+}
+
+function snapshotString(
+  snapshot: Record<string, unknown>,
+  key: string,
+): string {
+  const value = snapshot[key];
+  return typeof value === "string" ? value : "";
+}
+
+function projectProblemContext(
+  snapshot: unknown,
+  problemId: string,
+  questionNo: number,
+): PdfProblemContext {
+  const source = snapshotRecord(snapshot);
+  if (!source || ![51, 52, 53, 54].includes(questionNo)) {
+    return { kind: "unavailable", questionNo };
+  }
+
+  const normalized = normalizeWritingProblem({
+    id: problemId,
+    canonicalQuestionId: snapshotString(source, "question_id") || null,
+    canonicalImportId: snapshotString(source, "canonical_import_id") || null,
+    payloadHash: snapshotString(source, "payload_hash") || null,
+    title: snapshotString(source, "title"),
+    prompt: snapshotString(source, "prompt"),
+    questionNo: questionNo as 51 | 52 | 53 | 54,
+    materials: source.materials ?? {},
+    tags: Array.isArray(source.tags)
+      ? source.tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
+    lifecycleStatus: "active",
+  });
+
+  if (normalized.kind === "q51" || normalized.kind === "q52") {
+    return {
+      kind: normalized.kind,
+      title: normalized.title,
+      prompt: normalized.prompt,
+      blankedPrompt: normalized.blankedPrompt,
+      blanks: normalized.blanks.map((blank) => ({
+        label: blank.label,
+        role: blank.role,
+        functionLabel: blank.functionLabel,
+        answerType: blank.answerType,
+      })),
+    };
+  }
+
+  if (normalized.kind === "q53") {
+    return {
+      kind: "q53",
+      title: normalized.title,
+      prompt: normalized.prompt,
+      writingTasks: normalized.writingTasks,
+      materialCards: normalized.materialCards.map((card) =>
+        card.kind === "chart"
+          ? {
+              id: card.id,
+              kind: "chart" as const,
+              title: card.title,
+              subtitle: card.subtitle,
+              chart: {
+                title: card.chart.title,
+                unit: card.chart.unit,
+                yearRange: card.chart.yearRange,
+                series: card.chart.series,
+              },
+            }
+          : {
+              id: card.id,
+              kind: "reference" as const,
+              title: card.title,
+              subtitle: card.subtitle,
+              rows: card.rows,
+            },
+      ),
+    };
+  }
+
+  return {
+    kind: "q54",
+    title: normalized.title,
+    prompt: normalized.prompt,
+    topicTitle: normalized.topicTitle,
+    topicDefinition: normalized.topicDefinition,
+    background: normalized.background,
+    requiredQuestions: normalized.requiredQuestions,
+  };
 }
 
 async function loadSubmissionItem(
@@ -225,20 +319,13 @@ async function loadSubmissionItem(
     );
   }
 
-  // Canonical submissions pin the learner-visible title in the immutable safe
-  // snapshot. Legacy-unversioned submissions use the owner-scoped retained
-  // mirror history repository, never the current canonical catalog.
-  let problemTitle = getSnapshotTitle(submission.question_snapshot);
-  if (!problemTitle) {
-    const { data: historyRows, error: historyError } = await supabase.rpc(
-      "get_writing_submission_history_context",
-      { p_submission_ids: [submission.id] },
-    );
-    if (historyError) {
-      throw new Error(`PDF submission history: ${historyError.message}`);
-    }
-    problemTitle = historyRows?.[0]?.title ?? null;
-  }
+  const pinnedSnapshot =
+    submission.question_snapshot ?? submission.legacy_cutover_snapshot;
+  const problemContext = projectProblemContext(
+    pinnedSnapshot,
+    submission.problem_id,
+    submission.question_no,
+  );
 
   const bundle = includeFeedback
     ? await getFeedbackBundle(submissionId, factory)
@@ -248,7 +335,7 @@ async function loadSubmissionItem(
     kind: "submission",
     problemId: submission.problem_id,
     questionNo: submission.question_no,
-    problemTitle,
+    problemContext,
     submittedAt: formatDate(submission.submitted_at),
     answerText: submission.answer_text,
     charCount: submission.char_count,

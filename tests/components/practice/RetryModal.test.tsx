@@ -268,7 +268,7 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
 
     expect(
       screen.getByTestId("retry-modal-compact-summary").textContent,
-    ).toContain(koMessages.practice.retry.statusFailed);
+    ).toContain(koMessages.practice.retry.statusSubmittedRecentFailure);
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -278,5 +278,71 @@ describe("RetryModal (Phase 7-D Task 5 route fix)", () => {
 
     expect(onClose).toHaveBeenCalled();
     expect(pushMock).toHaveBeenCalledWith("/writing/feedback/short/sub-9");
+  });
+
+  it("labels a failed-only attempt as requiring resubmission", () => {
+    const onClose = vi.fn();
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={onClose}
+        problemId="p-1"
+        questionNo={51}
+        hasAttempt
+        hasSubmission={false}
+        submissionId="sub-failed"
+        feedbackStatus="failed"
+      />,
+    );
+
+    expect(
+      screen.getByTestId("retry-modal-compact-summary").textContent,
+    ).toContain(koMessages.practice.retry.statusFailed);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: koMessages.practice.retry.viewFailedStatus,
+      }),
+    );
+
+    expect(onClose).toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/writing/feedback/short/sub-failed");
+  });
+
+  it("labels pending and analyzing attempts as analysis in progress", () => {
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-1"
+        questionNo={51}
+        hasAttempt
+        hasSubmission={false}
+        submissionId="sub-pending"
+        feedbackStatus="pending"
+      />,
+    );
+
+    expect(
+      screen.getByTestId("retry-modal-compact-summary").textContent,
+    ).toContain(koMessages.practice.retry.statusAnalyzing);
+
+    cleanup();
+    renderWithIntl(
+      <RetryModal
+        open
+        onClose={vi.fn()}
+        problemId="p-1"
+        questionNo={51}
+        hasAttempt
+        hasSubmission={false}
+        submissionId="sub-analyzing"
+        feedbackStatus="analyzing"
+      />,
+    );
+
+    expect(
+      screen.getByTestId("retry-modal-compact-summary").textContent,
+    ).toContain(koMessages.practice.retry.statusAnalyzing);
   });
 });

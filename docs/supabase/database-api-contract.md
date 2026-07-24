@@ -45,16 +45,18 @@
 
 ## Dashboard/growth KPI source
 
-- 제출 횟수는 `writing_submissions.submitted_at`을 기준으로 계산한다.
-- `writing_submission_metrics`는 확정 제출의 파생 지표를 보관한다.
+- 사용자에게 보이는 제출 완료 횟수는 `writing_submissions.feedback_status = 'complete'`이고 연결된 `writing_feedback.status = 'complete'`인 기록만 `writing_submissions.submitted_at` 기준으로 계산한다. pending·analyzing·failed 기록은 시도 이력으로 보존하지만 사용자 완료 횟수에는 포함하지 않는다.
+- 운영 제출 시도 수는 `writing_submission_intents`를 기준으로 계산하고 accepted·materialized·failed·ambiguous를 분리한다. 사용자 완료 횟수와 운영 시도 수를 같은 지표로 사용하지 않는다.
+- `writing_submission_metrics`는 분석과 피드백까지 완료된 제출의 파생 지표를 보관한다.
 - 연속 학습일은 `study_events`를 Asia/Seoul 날짜로 해석해 계산한다.
-- 실제 함수 본문과 authenticated 실행 권한은 `20260709120000_dashboard_kpi_writing_source.sql`이 정본이다.
+- 현재 완료 정의를 반영한 함수 본문과 authenticated 실행 권한은 `20260722120000_writing_completion_and_pdf_outcomes.sql`이 정본이다.
 
 ## Canonical 쓰기 문항과 사용자 기록
 
 - 사용자가 현재 풀 쓰기 문항의 유일한 본문 원천은 admin 소유 `topik_writing_51_questions`~`topik_writing_54_questions`와 `topik_writing_question_source_map`이다. v13은 `get_available_writing_questions`의 learner-safe projection을 요청 시 직접 읽으며 `public.problems`의 쓰기 mirror로 fallback하지 않는다.
 - 쓰기 `problem_id`는 `md5(question_id)::uuid`로 결정되고 `private.problem_identities`가 사용자 기록의 FK anchor를 맡는다. registry에는 본문·정답·rubric·raw payload를 저장하지 않는다. `legacy_problem_id`는 과거 ETL provenance이며 신규 사용자 식별자로 사용하지 않는다.
 - current-content는 canonical catalog를 사용하고, 과거 제출·피드백·비교·PDF는 각 draft/submission의 `question_snapshot` 또는 `legacy_cutover_snapshot`을 사용한다. 과거 기록을 현재 canonical 본문으로 추정해 덮어쓰거나 일반 목록이 과거 snapshot으로 fallback하지 않는다.
+- `list_user_problems`의 `writing_submission_count`와 `solve_state = submitted`는 분석·피드백 완료 기록만 기준으로 한다. 전체 materialized submission 수는 `writing_submission_attempt_count`로 분리하며, 초안 또는 pending·analyzing·failed 기록만 있으면 `solve_state = attempted`다.
 - 초안과 신규 제출 문맥은 `canonical_question_id`, `canonical_import_id`, `canonical_payload_hash`, learner-safe snapshot을 함께 고정한다. 같은 ID의 canonical payload가 바뀌면 기존 초안을 덮어쓰지 않고 superseded 처리 후 사용자가 현재 버전으로 답안을 복사하도록 한다.
 - `20260714140000_writing_problem_identity_registry_cutover.sql`이 확인된 쓰기 FK를 registry로 이관하고 기존 기록 snapshot을 백필한 뒤 `public.problems`의 쓰기 행을 제거한다. `sync-writing-problems`, legacy/shadow read mode, reconciliation과 rollback sync entrypoint는 최종 current-content 계약에 없다.
 - `20260714141000_writing_submission_outbox.sql`은 외부 호출 전에 불변 intent를 저장하고 한 요청만 claim한다. 명확한 성공은 외부 호출을 반복하지 않고 local submission으로 materialize하며, 처리 여부가 불명확한 timeout은 `ambiguous`로 격리한다. 내부 UUID와 provider의 text ID는 수명·형식·FK 책임이 달라 별도 필드로 보존한다.
@@ -101,6 +103,12 @@ respond_institution_invitation(p_invitation_id uuid, p_accept boolean) -> jsonb
 - `generated-exports`는 private bucket이다. authenticated 사용자는 `exports/{user_id}/...` 자기 경로를 select/delete할 수 있고, email 확인을 마치면 같은 경로에 직접 insert할 수도 있다. owner update policy는 없다. 앱의 정상 생성 흐름은 server 경로를 사용하지만, SQL 권한 자체가 browser의 자기 경로 insert를 금지하는 것은 아니다.
 
 bucket 공개 여부, MIME/size, path 정책은 Storage migration이 정본이다. service role을 browser upload 편의용으로 사용하지 않는다.
+
+## PDF 생성 운영 기록
+
+- `export_files`는 인증되고 형식이 검증된 PDF 생성 요청을 `queued | ready | failed`로 보존한다. 실패 시에는 허용된 `failure_code`와 `failed_at`만 기록하고 원본 예외, 답안, provider 응답을 저장하지 않는다.
+- server render의 기술 성공률은 종료된 기술 결과 중 `ready / (ready + technical_failed)`로 계산한다. queued, quota 거절, 인증·형식 거절은 기술 성공률 분모에서 제외한다.
+- `options.source = browser_print`의 ready는 브라우저 인쇄 화면에 전달할 자료 준비 성공을 의미하며 사용자가 실제 파일로 저장했다는 증거가 아니다. server render 결과와 별도로 집계한다.
 
 ## 보존과 정리
 

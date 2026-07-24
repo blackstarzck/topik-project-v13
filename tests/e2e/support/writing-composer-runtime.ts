@@ -1,4 +1,4 @@
-export type WritingComposerQuestionNo = 53 | 54;
+export type WritingComposerQuestionNo = 51 | 52 | 53 | 54;
 
 export type WritingComposerRuntimeOrigins = {
   appOrigin: string;
@@ -89,9 +89,7 @@ export function shouldCollectRuntimeConsoleError(
   locationUrl: string,
   origins: WritingComposerRuntimeOrigins,
 ): boolean {
-  return (
-    locationUrl.trim() === "" || isTrackedRuntimeUrl(locationUrl, origins)
-  );
+  return locationUrl.trim() === "" || isTrackedRuntimeUrl(locationUrl, origins);
 }
 
 export function classifySupabaseRestRequest(

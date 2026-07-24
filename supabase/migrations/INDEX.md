@@ -275,3 +275,9 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 87 | `12:00:00` | [`20260718120000_auth_gate_exact_consent_snapshots.sql`](./20260718120000_auth_gate_exact_consent_snapshots.sql) | Adds snapshot-aware `complete_auth_gate` overloads that lock the official legal-document set, compare the exact displayed `{id, version}` array inside the transaction, and insert only the captured missing rows. Restores the email-confirmed guard, rejects ambiguous/incomplete official sets, grants only the new JSONB signatures to `authenticated`, and revokes `PUBLIC`/`anon`/`authenticated` access from the unsafe boolean-only 4/7/9-argument overloads. Forward-only; remote apply and production evidence remain topik-ai operations work. |
+
+## 2026-07-22 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 88 | `12:00:00` | [`20260722120000_writing_completion_and_pdf_outcomes.sql`](./20260722120000_writing_completion_and_pdf_outcomes.sql) | Defines learner completion as a submission and linked feedback both reaching `complete`, separates materialized attempt counts from completed counts in `list_user_problems`, aligns dashboard KPI counts, and adds sanitized terminal `failure_code`/`failed_at` fields to the PDF export ledger. Forward-only; v13 does not apply it remotely. |

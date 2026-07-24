@@ -22,6 +22,8 @@ export const requiredOwnerPaths = [
   "docs/operations/cross-repo-recovery-boundary.md",
   "docs/operations/environment-and-agent-safety.md",
   "docs/operations/topik-ai-operations-handoff.md",
+  "docs/operations/topik-ai-notification-migration-order-handoff.md",
+  "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
   "docs/swagger-api/",
   "docs/supabase/README.md",
   "docs/supabase/database-api-contract.md",
@@ -50,6 +52,8 @@ const operationsAllowlist = new Map([
   ["cross-repo-recovery-boundary.md", "file"],
   ["environment-and-agent-safety.md", "file"],
   ["topik-ai-operations-handoff.md", "file"],
+  ["topik-ai-notification-migration-order-handoff.md", "file"],
+  ["topik-ai-writing-pdf-metrics-handoff.md", "file"],
 ]);
 const activeDirectoryRoots = [
   ".github",

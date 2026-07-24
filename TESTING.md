@@ -42,6 +42,8 @@ MCP 확인에는 고유 loopback port, isolated browser session, desktop/mobile 
 
 `.codex/work/` 아래의 임시 spec·config·결과는 진단 자료일 뿐 최종 합격 증거가 아니다. merge-ready 증거는 repository의 `playwright.config.ts`와 `tests/e2e/`에 포함된 test로 재현되어야 한다.
 
+DB 변경이 필요 없는 공개 화면은 app profile의 승인된 원격 읽기 대상과 고유 loopback runtime을 사용해 `PLAYWRIGHT_PUBLIC_READ_ONLY=1`로 실행할 수 있다. 이 모드는 `landing-locales.spec.ts`와 `screens-public.spec.ts`만 모바일·데스크톱에서 선택하며 인증 setup과 DB 변경 suite를 구성하지 않는다.
+
 최종 승인된 screenshot 같은 저장 증거는 `docs/qa/reports/<date>-<slug>/`에 두고 `artifact-manifest.json`에 경로·목적·SHA-256을 등록한다. 그 밖의 중간 산출물은 `.codex/work/<slug>/`에서만 관리한다. 자세한 기준은 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다.
 
 ## Supabase local integration

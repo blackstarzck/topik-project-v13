@@ -929,6 +929,8 @@ export interface Database {
           storage_path: string;
           options: Json | null;
           status: "queued" | "ready" | "failed";
+          failure_code: string | null;
+          failed_at: string | null;
           created_at: string;
           ready_at: string | null;
         };
@@ -940,6 +942,8 @@ export interface Database {
           storage_path: string;
           options?: Json | null;
           status?: "queued" | "ready" | "failed";
+          failure_code?: string | null;
+          failed_at?: string | null;
           created_at?: string;
           ready_at?: string | null;
         };
@@ -951,6 +955,8 @@ export interface Database {
           storage_path?: string;
           options?: Json | null;
           status?: "queued" | "ready" | "failed";
+          failure_code?: string | null;
+          failed_at?: string | null;
           created_at?: string;
           ready_at?: string | null;
         };
@@ -1914,6 +1920,7 @@ export interface Database {
           has_draft: boolean;
           draft_status: string | null;
           writing_submission_count: number;
+          writing_submission_attempt_count: number;
           latest_submission_id: string | null;
           latest_submission_at: string | null;
           writing_feedback_status: string | null;
