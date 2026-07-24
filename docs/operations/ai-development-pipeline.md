@@ -249,6 +249,8 @@ report는 위반을 보여주고, check는 위반이 있으면 실패한다. CI�
 
 최초 bootstrap CI의 외부 저장소 변수는 승인된 PR 후보 head SHA에 정확히 고정한다. GitHub는 PR 검사를 위해 후보 head와 base를 합친 임시 commit을 만들 수 있는데, 이를 합성 merge commit이라 한다. checkout의 `HEAD`가 이 합성 commit이면 후보 head와 raw SHA가 다른 것이 정상이므로 둘의 직접 일치는 의도적으로 요구하지 않는다. 대신 runner는 승인된 후보 commit이 `HEAD`에 포함되고, trusted runner·checker·policy·library·공용 validator 다섯 파일이 후보와 `HEAD`에서 모두 동일한 일반 blob일 때만 허용한다. 후보가 새 commit으로 바뀌면 이전 승인 SHA는 자동으로 효력을 잃는다. trusted surface가 `origin/main`에 설치된 뒤 다섯 파일 변경은 일반 PR에서 차단하며, 별도의 소유자 승인과 2단계 반영 절차로만 갱신한다.
 
+trusted surface 갱신의 1단계 PR은 `.github/workflows/ci.yml`, CI 계약 테스트와 이 문서만 바꿔 정확한 head SHA 외부 승인 게이트를 먼저 설치한다. 이 PR은 기존 다섯 파일을 건드리지 않으므로 현재 base-owned runner로 검증한다. 2단계 PR은 최종 push 뒤 raw head SHA를 저장소 변수 `ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA`에 고정한다. CI는 승인 SHA가 현재 PR 후보와 정확히 같고 base의 자손이며 합성 `HEAD`에 포함되는지, 후보의 다섯 파일이 일반 blob인지, 후보 이후 합성 `HEAD`에서 mode와 blob이 바뀌지 않았는지 확인한 뒤에만 후보 runner의 `--allow-trusted-update` 경로를 실행한다. 이후 push는 승인을 무효화하므로 새 SHA로 다시 승인해야 한다. PR, merge queue와 merge 직후 `main push`가 끝나면 변수는 제거하거나 다음 승인 SHA로 교체한다.
+
 같은 검증은 최초 설치 PR의 `merge_group`과 merge 직후 `main push`에도 한 번 적용한다. 이때 event base에는 trusted 파일이 하나도 없어야 하고 base와 승인 후보가 현재 GitHub event `HEAD`의 조상이어야 하며, 승인 후보 이후 trusted 다섯 파일의 mode와 blob이 바뀌지 않아야 한다. merge 뒤 다음 push부터는 base에 설치된 trusted runner를 사용하므로 이 one-time 경로는 닫힌다.
 
 bootstrap target은 `origin/main`으로 고정한다. `pull_request.base.ref`는 정확히 `main`, `merge_group.base_ref`는 정확히 `refs/heads/main`이어야 하며, push workflow도 `branches: [main]`만 받는다. 다른 target은 승인 SHA가 같아도 실패한다.
