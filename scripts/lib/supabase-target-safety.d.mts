@@ -45,3 +45,6 @@ export function assertLoopbackRuntimeTarget(value?: string): string;
 export function resolveStandardPlaywrightSafety(
   env: SupabaseSafetyEnvironment,
 ): { baseUrl: string; testIgnore: string[] };
+export function resolvePublicPlaywrightSafety(
+  env: SupabaseSafetyEnvironment,
+): { baseUrl: string; testIgnore: string[] };

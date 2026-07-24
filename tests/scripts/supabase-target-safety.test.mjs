@@ -11,6 +11,7 @@ import {
   assertPublicRemoteReadTarget,
   hasPrivilegedEnvironment,
   parseSupabaseTarget,
+  resolvePublicPlaywrightSafety,
   resolveStandardPlaywrightSafety,
 } from "../../scripts/lib/supabase-target-safety.mjs";
 import * as targetSafety from "../../scripts/lib/supabase-target-safety.mjs";
@@ -574,5 +575,34 @@ describe("standard Playwright safety contract", () => {
         localPrivilegedEnvironment({ NEXT_PUBLIC_SUPABASE_URL: DEV_URL }),
       ),
     ).toThrow(/local privileged mutation is not approved/i);
+  });
+});
+
+describe("public read-only Playwright safety contract", () => {
+  it("accepts an approved remote read target with a loopback app runtime", () => {
+    expect(
+      resolvePublicPlaywrightSafety(
+        publicEnvironment({ E2E_BASE_URL: "http://127.0.0.1:4173" }),
+      ),
+    ).toEqual({
+      baseUrl: "http://127.0.0.1:4173",
+      testIgnore: STANDARD_PLAYWRIGHT_TEST_IGNORE,
+    });
+  });
+
+  it("rejects privileged credentials", () => {
+    expect(() =>
+      resolvePublicPlaywrightSafety(
+        publicEnvironment({ SUPABASE_SERVICE_ROLE_KEY: "not-allowed" }),
+      ),
+    ).toThrow(/public remote access forbids privileged credentials/i);
+  });
+
+  it("rejects a non-loopback app runtime", () => {
+    expect(() =>
+      resolvePublicPlaywrightSafety(
+        publicEnvironment({ E2E_BASE_URL: "https://preview.example.test" }),
+      ),
+    ).toThrow(/playwright runtime is not approved/i);
   });
 });

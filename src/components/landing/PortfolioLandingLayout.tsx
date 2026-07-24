@@ -250,23 +250,24 @@ function useLandingMotion() {
 }
 
 function LearningLoopSection({ primary, primaryLabel }: LandingLayoutCta) {
+  const t = useTranslations("landing.portfolio");
   const loops = [
     [
-      "대시보드",
-      "목표 등급, 시험일까지 남은 시간, 주간 학습 상태를 한눈에 확인합니다.",
-      "dashboard preview",
+      t("loopDashboardTitle"),
+      t("loopDashboardDescription"),
+      t("loopDashboardPreview"),
       "/assets/landing/landing-loop-dashboard.png",
     ],
     [
-      "AI 피드백",
-      "TOPIK 쓰기 51~54번 답안을 점수, 총평, 단계별 첨삭으로 확인합니다.",
-      "feedback preview",
+      t("loopFeedbackTitle"),
+      t("loopFeedbackDescription"),
+      t("loopFeedbackPreview"),
       "/assets/landing/landing-loop-feedback.png",
     ],
     [
-      "성장 리포트",
-      "이전 답안과 비교해 점수 변화와 약점 영역을 확인합니다.",
-      "report preview",
+      t("loopReportTitle"),
+      t("loopReportDescription"),
+      t("loopReportPreview"),
       "/assets/landing/landing-loop-report.png",
     ],
   ];
@@ -279,7 +280,7 @@ function LearningLoopSection({ primary, primaryLabel }: LandingLayoutCta) {
     >
       <div className="landing-layout-wrap">
         <div data-landing-heading>
-          <Eyebrow>Learning Loop</Eyebrow>
+          <Eyebrow>{t("learningLoopEyebrow")}</Eyebrow>
         </div>
         <div className="landing-layout-work-grid">
           {loops.map(([name, description, label, imageSrc]) => (
@@ -301,7 +302,7 @@ function LearningLoopSection({ primary, primaryLabel }: LandingLayoutCta) {
         </div>
         <div className="landing-layout-center">
           <a className="landing-layout-pill" href={primary?.href ?? "/sign-up"}>
-            {primary ? primaryLabel : "무료로 시작하기"}
+            {primary ? primaryLabel : t("freeStart")}
             <ArrowRight aria-hidden="true" />
           </a>
         </div>
@@ -311,22 +312,11 @@ function LearningLoopSection({ primary, primaryLabel }: LandingLayoutCta) {
 }
 
 function CoreValueSection() {
+  const t = useTranslations("landing.portfolio");
   const values = [
-    [
-      "01",
-      "대시보드로 현황 파악",
-      "목표 급수, 남은 시험일, 학습 시간, 푼 문제 수, 출석 일수를 모아 다음 행동을 보여줍니다.",
-    ],
-    [
-      "02",
-      "부족한 영역 바로 연습",
-      "추천 학습과 약점 기반 추천으로 읽기, 듣기, 쓰기 문제 후보를 빠르게 찾습니다.",
-    ],
-    [
-      "03",
-      "쓰기 답안 AI 첨삭",
-      "TOPIK 쓰기 51~54번 답안을 작성하고 총평, 구조 분석, 상세 첨삭을 확인합니다.",
-    ],
+    ["01", t("coreOneTitle"), t("coreOneDescription")],
+    ["02", t("coreTwoTitle"), t("coreTwoDescription")],
+    ["03", t("coreThreeTitle"), t("coreThreeDescription")],
   ];
 
   return (
@@ -337,11 +327,11 @@ function CoreValueSection() {
     >
       <div className="landing-layout-wrap">
         <div className="landing-layout-heading" data-landing-heading>
-          <Eyebrow>Core Value</Eyebrow>
+          <Eyebrow>{t("coreValueEyebrow")}</Eyebrow>
           <h2>
-            학습 현황부터
+            {t("coreTitleLineOne")}
             <br />
-            피드백까지 <span>하나의 흐름</span>
+            {t("coreTitleLineTwo")} <span>{t("coreTitleAccent")}</span>
           </h2>
         </div>
         <div className="landing-layout-service-grid">
@@ -384,31 +374,12 @@ function LearnerGoalsSection({
 }: {
   prefersReducedMotion: boolean;
 }) {
+  const t = useTranslations("landing.portfolio");
   const goals = [
-    [
-      "G1",
-      "D-30, 오늘 할 일은?\n목표 급수까지 남은 거리를 한눈에 보고 싶어요.",
-      "TOPIK II 4급 목표 학습자",
-      "학습 현황 확인",
-    ],
-    [
-      "G2",
-      "점수만 보고 끝내기엔 아쉬워요.\n어떤 문장을 어떻게 고칠지 바로 알고 싶습니다.",
-      "쓰기 첨삭이 필요한 학습자",
-      "AI 피드백",
-    ],
-    [
-      "G3",
-      "전에 틀린 표현, 또 틀리고 싶지 않아요.\n피드백을 모아두고 반복해서 확인할래요.",
-      "반복 복습이 필요한 학습자",
-      "오답과 피드백 복습",
-    ],
-    [
-      "G4",
-      "시험 전엔 시간이 제일 부족하니까,\n내 약점에 맞는 문제부터 바로 풀고 싶습니다!",
-      "시험 전 집중 학습자",
-      "약점 기반 추천",
-    ],
+    ["G1", t("goalOneQuote"), t("goalOneName"), t("goalOneRole")],
+    ["G2", t("goalTwoQuote"), t("goalTwoName"), t("goalTwoRole")],
+    ["G3", t("goalThreeQuote"), t("goalThreeName"), t("goalThreeRole")],
+    ["G4", t("goalFourQuote"), t("goalFourName"), t("goalFourRole")],
   ];
 
   return (
@@ -421,9 +392,9 @@ function LearnerGoalsSection({
           className="landing-layout-heading landing-layout-heading--center"
           data-landing-heading
         >
-          <Eyebrow center>Learner Goals</Eyebrow>
+          <Eyebrow center>{t("learnerGoalsEyebrow")}</Eyebrow>
           <h2>
-            TOPIK 학습자가 <span>원하는 것</span>
+            {t("goalsTitleBase")} <span>{t("goalsTitleAccent")}</span>
           </h2>
         </div>
         <Swiper
@@ -479,11 +450,12 @@ function LearnerGoalsSection({
 }
 
 function LearningDataSection() {
+  const t = useTranslations("landing.portfolio");
   const dataPoints = [
-    ["학습 시간", "주간 학습량"],
-    ["푼 문제", "연습 누적"],
-    ["출석 일수", "학습 지속성"],
-    ["목표 급수", "시험 준비 기준"],
+    [t("dataOneValue"), t("dataOneLabel")],
+    [t("dataTwoValue"), t("dataTwoLabel")],
+    [t("dataThreeValue"), t("dataThreeLabel")],
+    [t("dataFourValue"), t("dataFourLabel")],
   ];
 
   return (
@@ -491,16 +463,13 @@ function LearningDataSection() {
       <div className="landing-layout-wrap">
         <div className="landing-layout-stats-row">
           <div data-landing-heading>
-            <Eyebrow>Learning Data</Eyebrow>
+            <Eyebrow>{t("learningDataEyebrow")}</Eyebrow>
             <h2>
-              다음 행동을 정하는
+              {t("dataTitleLineOne")}
               <br />
-              <span>학습 지표</span>
+              <span>{t("dataTitleAccent")}</span>
             </h2>
-            <p>
-              PRD 기준으로 학습 시간, 문제 수, 출석, 목표 급수, 시험일까지 남은
-              시간을 대시보드와 성장 흐름에서 활용합니다.
-            </p>
+            <p>{t("dataDescription")}</p>
           </div>
           <div className="landing-layout-stats-grid">
             {dataPoints.map(([value, label]) => (
@@ -521,29 +490,27 @@ function LearningDataSection() {
 }
 
 function FeaturesSection() {
+  const t = useTranslations("landing");
   const features = [
     {
-      title: "AI 첨삭",
-      description:
-        "51~54번 답안을 기준별 점수와 문장 단위 코멘트로 확인합니다.",
+      title: t("features.correctionTitle"),
+      description: t("features.correctionDescription"),
       icon: <MessageSquareText aria-hidden="true" />,
     },
     {
-      title: "실전 문제",
-      description:
-        "목표 급수와 유형에 맞춘 문제로 시험 흐름에 맞게 연습합니다.",
+      title: t("features.practiceTitle"),
+      description: t("features.practiceDescription"),
       icon: <PanelsTopLeft aria-hidden="true" />,
       tall: true,
     },
     {
-      title: "성장 리포트",
-      description: "이전 답안과 점수 변화를 비교해 약점 영역을 좁힙니다.",
+      title: t("features.reportTitle"),
+      description: t("features.reportDescription"),
       icon: <LayoutDashboard aria-hidden="true" />,
     },
     {
-      title: "라이브러리",
-      description:
-        "저장한 문제, 제출 답안, 비교 리포트를 다시 찾아 복습합니다.",
+      title: t("features.libraryTitle"),
+      description: t("features.libraryDescription"),
       icon: <BookOpenText aria-hidden="true" />,
     },
   ];
@@ -556,9 +523,10 @@ function FeaturesSection() {
     >
       <div className="landing-layout-wrap">
         <div className="landing-layout-heading" data-landing-heading>
-          <Eyebrow>MVP Features</Eyebrow>
+          <Eyebrow>{t("portfolio.featuresEyebrow")}</Eyebrow>
           <h2>
-            먼저 검증할 <span>핵심 기능</span>
+            {t("portfolio.featuresTitleBase")}{" "}
+            <span>{t("portfolio.featuresTitleAccent")}</span>
           </h2>
         </div>
         <div className="landing-layout-feature-grid">
@@ -585,22 +553,11 @@ function FeaturesSection() {
 }
 
 function FutureScopeSection() {
+  const t = useTranslations("landing.portfolio");
   const futureItems = [
-    [
-      "단어장",
-      "Future scope",
-      "독립 화면은 아직 route inventory에 없으며, 우선 내 서재 하위 기능으로 다룹니다.",
-    ],
-    [
-      "모의고사",
-      "Future scope",
-      "실전 시험과 결과 화면은 별도 IA와 route가 추가된 뒤 구현합니다.",
-    ],
-    [
-      "게시판",
-      "Future scope",
-      "공지와 이벤트 상세 화면은 현재 제품 맥락에 남기고 후속 범위로 관리합니다.",
-    ],
+    [t("futureOneTitle"), t("futureStatus"), t("futureOneDescription")],
+    [t("futureTwoTitle"), t("futureStatus"), t("futureTwoDescription")],
+    [t("futureThreeTitle"), t("futureStatus"), t("futureThreeDescription")],
   ];
 
   return (
@@ -611,9 +568,9 @@ function FutureScopeSection() {
     >
       <div className="landing-layout-wrap">
         <div className="landing-layout-heading" data-landing-heading>
-          <Eyebrow>Future Scope</Eyebrow>
+          <Eyebrow>{t("futureScopeEyebrow")}</Eyebrow>
           <h2>
-            지금은 약속하지 않는 <span>후순위 범위</span>
+            {t("futureTitleBase")} <span>{t("futureTitleAccent")}</span>
           </h2>
         </div>
         <div className="landing-layout-blog-grid">
@@ -628,7 +585,7 @@ function FutureScopeSection() {
               key={title}
             >
               <VisualLabel
-                label={`${title} preview`}
+                label={`${title} ${t("previewLabel")}`}
                 imageSrc={FUTURE_SCOPE_IMAGE_SRCS[index]}
               />
               <span>{status}</span>
@@ -643,27 +600,12 @@ function FutureScopeSection() {
 }
 
 function ProcessSection() {
+  const t = useTranslations("landing.portfolio");
   const steps = [
-    [
-      "01.",
-      "가입과 목표 설정",
-      "제품 랜딩에서 가입하거나 로그인하고, 첫 진입 사용자는 학습 목표를 설정합니다.",
-    ],
-    [
-      "02.",
-      "추천 학습 시작",
-      "홈 대시보드에서 추천 학습이나 약점 기반 추천으로 들어가 풀 문제를 선택합니다.",
-    ],
-    [
-      "03.",
-      "쓰기 답안 작성",
-      "TOPIK 쓰기 51~54번 유형에 맞춰 답안을 작성하고 제출 확인을 거칩니다.",
-    ],
-    [
-      "04.",
-      "피드백과 복습",
-      "AI 분석 후 피드백을 확인하고, 비교 리포트나 다음 문제 추천으로 이어갑니다.",
-    ],
+    ["01.", t("processOneTitle"), t("processOneDescription")],
+    ["02.", t("processTwoTitle"), t("processTwoDescription")],
+    ["03.", t("processThreeTitle"), t("processThreeDescription")],
+    ["04.", t("processFourTitle"), t("processFourDescription")],
   ];
 
   return (
@@ -671,11 +613,11 @@ function ProcessSection() {
       <div className="landing-layout-wrap">
         <div className="landing-layout-process-row">
           <div className="landing-layout-process-head" data-landing-heading>
-            <Eyebrow>User Flow</Eyebrow>
+            <Eyebrow>{t("processEyebrow")}</Eyebrow>
             <h2>
-              매일 이어지는
+              {t("processTitleLineOne")}
               <br />
-              <span>TOPIK 학습 루틴</span>
+              <span>{t("processTitleAccent")}</span>
             </h2>
           </div>
           <div className="landing-layout-step-list">
@@ -701,26 +643,42 @@ function ProcessSection() {
 }
 
 function PathSection({ primary, primaryLabel }: LandingLayoutCta) {
+  const t = useTranslations("landing.portfolio");
   const paths = [
     [
-      "처음 시작",
-      "도토리 토픽 학습을 처음 시작하는 사용자를 위한 공개 진입 흐름입니다.",
-      "회원가입",
-      ["이메일 인증", "학습 목표 설정", "홈 대시보드 이동", "무료 시작 CTA"],
+      t("pathOneName"),
+      t("pathOneDescription"),
+      t("pathOneMarker"),
+      [
+        t("pathOneItemOne"),
+        t("pathOneItemTwo"),
+        t("pathOneItemThree"),
+        t("pathOneItemFour"),
+      ],
       "/sign-up",
     ],
     [
-      "이어 학습",
-      "이미 계정이 있는 사용자가 기존 학습 흐름으로 돌아가는 경로입니다.",
-      "로그인",
-      ["세션 확인", "대시보드 복귀", "이어하기 카드", "저장 기록 확인"],
+      t("pathTwoName"),
+      t("pathTwoDescription"),
+      t("pathTwoMarker"),
+      [
+        t("pathTwoItemOne"),
+        t("pathTwoItemTwo"),
+        t("pathTwoItemThree"),
+        t("pathTwoItemFour"),
+      ],
       "/login",
     ],
     [
-      "쓰기 집중",
-      "쓰기 첨삭과 보관함을 중심으로 실력을 개선하는 핵심 사용 흐름입니다.",
+      t("pathThreeName"),
+      t("pathThreeDescription"),
       "51–54",
-      ["문제 유형 선택", "자동 저장 상태", "AI 분석", "다시 풀기"],
+      [
+        t("pathThreeItemOne"),
+        t("pathThreeItemTwo"),
+        t("pathThreeItemThree"),
+        t("pathThreeItemFour"),
+      ],
       "/sign-up",
     ],
   ];
@@ -735,9 +693,9 @@ function PathSection({ primary, primaryLabel }: LandingLayoutCta) {
           className="landing-layout-heading landing-layout-heading--center"
           data-landing-heading
         >
-          <Eyebrow center>Entry Paths</Eyebrow>
+          <Eyebrow center>{t("pathsEyebrow")}</Eyebrow>
           <h2>
-            사용자가 바로 이해하는 <span>시작 경로</span>
+            {t("pathsTitleBase")} <span>{t("pathsTitleAccent")}</span>
           </h2>
         </div>
         <div className="landing-layout-path-grid">
@@ -774,7 +732,7 @@ function PathSection({ primary, primaryLabel }: LandingLayoutCta) {
                 className="landing-layout-dark-button"
                 href={primary?.href ?? (href as string)}
               >
-                {primary ? primaryLabel : "시작하기"}
+                {primary ? primaryLabel : t("start")}
               </a>
             </article>
           ))}
@@ -795,14 +753,11 @@ function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
             className="landing-layout-footer__cta"
             href={primary?.href ?? "/sign-up"}
           >
-            도토리 토픽
+            {t("portfolio.brandName")}
             <ArrowRight aria-hidden="true" strokeWidth={3.5} />
           </a>
         </h2>
-        <p>
-          TOPIK 목표 등급을 정하고, 추천 문제를 풀고, 쓰기 답안 피드백까지
-          하나의 학습 흐름으로 이어가세요.
-        </p>
+        <p>{t("portfolio.footerDescription")}</p>
         <div className="landing-layout-footer__bottom">
           <span className="landing-layout-footer__brandline">
             <BrandLogo height={34} />
@@ -812,12 +767,12 @@ function ProductFooter({ primary, primaryLabel }: LandingLayoutCta) {
               <a href={primary.href}>{primaryLabel}</a>
             ) : (
               <>
-                <a href="/sign-up">시작하기</a>
+                <a href="/sign-up">{t("portfolio.start")}</a>
                 <a href="/login">{t("ctaLogin")}</a>
               </>
             )}
-            <a href="/terms">이용약관</a>
-            <a href="/privacy">개인정보처리방침</a>
+            <a href="/terms">{t("sections.footerLegalTerms")}</a>
+            <a href="/privacy">{t("sections.footerLegalPrivacy")}</a>
           </nav>
         </div>
       </div>
