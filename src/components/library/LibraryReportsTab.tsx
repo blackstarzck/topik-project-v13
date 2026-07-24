@@ -16,6 +16,7 @@ import { matchesLibrarySearch } from "./library-tab-url";
 const { Text, Paragraph } = Typography;
 
 type Props = {
+  userId: string;
   initialItems: LibraryReportView[];
   searchTerm?: string;
   onResetSearch?: () => void;
@@ -30,6 +31,7 @@ function formatDate(iso: string): string {
 }
 
 export function LibraryReportsTab({
+  userId,
   initialItems,
   searchTerm = "",
   onResetSearch,
@@ -37,7 +39,7 @@ export function LibraryReportsTab({
   const t = useTranslations("library.reports");
   const errorT = useTranslations("shared.error");
   const tCount = useTranslations("library.submissions");
-  const query = useLibraryItems("reports");
+  const query = useLibraryItems(userId, "reports");
   const [page, setPage] = useState(1);
   const allItems: LibraryReportView[] = (query.data ?? initialItems).filter(
     isReport,
@@ -104,6 +106,7 @@ export function LibraryReportsTab({
       <div data-testid="library-item-list" className="flex w-full flex-col">
         {pageItems.map((item) => (
           <LibraryItemRow
+            userId={userId}
             key={item.item_id}
             itemId={item.item_id}
             tab="reports"

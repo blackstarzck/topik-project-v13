@@ -68,7 +68,9 @@ function expectHeroDifficultyUsesIconsaxIcon() {
 
 describe("RecommendationsView", () => {
   it("uses the requested Iconsax icons for question type tabs and cards", () => {
-    const { container } = renderWithIntl(<RecommendationsView />);
+    const { container } = renderWithIntl(
+      <RecommendationsView userId="user-1" />,
+    );
 
     const expectedIconNames = [
       "DirectboxNotif",
@@ -94,7 +96,7 @@ describe("RecommendationsView", () => {
   });
 
   it("does not show a recommendation badge in the type tabs", () => {
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     const tabs = screen
       .getByText(koMessages.practice.recommendations.typeButtonLabel51)
@@ -112,7 +114,7 @@ describe("RecommendationsView", () => {
     // DB-empty (run: null, items: []) is the beforeEach default. The page must
     // NOT dress this up as a personalized result: no "대표 추천" hero, no
     // "이렇게 추천했어요" analysis panel, no default weakness tags.
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     expect(
       screen.getByText(koMessages.practice.recommendations.emptyDescription),
@@ -184,7 +186,7 @@ describe("RecommendationsView", () => {
       refetch: vi.fn(),
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     // Hero + honest computed summary + reason-code copy resolved to locale text.
     expect(
@@ -258,9 +260,9 @@ describe("RecommendationsView", () => {
       refetch: vi.fn(),
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
-    expect(mocks.useRecommendationBundle).toHaveBeenCalledWith(52);
+    expect(mocks.useRecommendationBundle).toHaveBeenCalledWith("user-1", 52);
     expect(
       screen.queryByText(
         koMessages.practice.recommendations.fallbackHeroTitle.replace(
@@ -313,7 +315,7 @@ describe("RecommendationsView", () => {
       refetch: vi.fn(),
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     expect(screen.getByText("도서관 출입증 신청 방법 문의")).toBeTruthy();
     expect(
@@ -348,7 +350,7 @@ describe("RecommendationsView", () => {
       refetch,
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     expect(
       screen.getByText(koMessages.practice.recommendations.loadErrorTitle),
@@ -381,7 +383,7 @@ describe("RecommendationsView", () => {
       refetch,
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     const retry = screen.getByRole("button", {
       name: koMessages.practice.recommendations.retry,
@@ -400,7 +402,7 @@ describe("RecommendationsView", () => {
       refetch: vi.fn(),
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     expect(screen.getByTestId("recommendation-reason-skeleton")).toBeTruthy();
     expect(screen.getByTestId("recommendation-results-skeleton")).toBeTruthy();
@@ -418,7 +420,7 @@ describe("RecommendationsView", () => {
   });
 
   it("navigates to the selected type when a tab is clicked", () => {
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     fireEvent.click(
       screen.getByText(koMessages.practice.recommendations.typeButtonLabel52),
@@ -440,7 +442,9 @@ describe("RecommendationsView", () => {
       error: null,
     });
 
-    const { container } = renderWithIntl(<RecommendationsView />);
+    const { container } = renderWithIntl(
+      <RecommendationsView userId="user-1" />,
+    );
 
     expect(container.querySelector('a[href^="/writing/"]')).toBeNull();
     expect(
@@ -459,7 +463,9 @@ describe("RecommendationsView", () => {
       error: null,
     });
 
-    const { container } = renderWithIntl(<RecommendationsView />);
+    const { container } = renderWithIntl(
+      <RecommendationsView userId="user-1" />,
+    );
 
     expect(container.querySelector('a[href^="/writing/"]')).toBeNull();
     expect(
@@ -507,7 +513,7 @@ describe("RecommendationsView", () => {
         ?.getAttribute("data-animation-key");
 
     mocks.useRecommendationBundle.mockReturnValue(bundleFor(51));
-    const noType = renderWithIntl(<RecommendationsView />);
+    const noType = renderWithIntl(<RecommendationsView userId="user-1" />);
     const reasonCard = screen
       .getByText(koMessages.practice.recommendations.reasonSummaryTitle)
       .closest("section");
@@ -519,7 +525,7 @@ describe("RecommendationsView", () => {
 
     mocks.searchParams = "type=52";
     mocks.useRecommendationBundle.mockReturnValue(bundleFor(52));
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
     expect(reasonKey()).toBe("52-ready");
   });
 
@@ -532,7 +538,7 @@ describe("RecommendationsView", () => {
       refetch: vi.fn(),
     });
 
-    renderWithIntl(<RecommendationsView />);
+    renderWithIntl(<RecommendationsView userId="user-1" />);
 
     const section = screen
       .getByText(koMessages.practice.recommendations.reasonSummaryTitle)

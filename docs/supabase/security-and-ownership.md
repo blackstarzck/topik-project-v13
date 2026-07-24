@@ -14,6 +14,9 @@
 - profile, goal, attempt, draft, submission, feedback, recommendation, library, event, export, notification과 quota usage 같은 user-owned row는 `auth.uid()`에 연결된 본인 범위로 제한한다.
 - 이 사용자 전용 범위는 소유자 일치만으로 충분하지 않다. 호출자의 profile이 `active`일 때만 허용하며, 탈퇴 전에 발급된 JWT가 아직 만료되지 않았어도 `deleted` 상태가 된 즉시 읽기와 쓰기를 모두 거부한다.
 - UPDATE는 기존 row 소유 조건과 변경 후 소유 조건을 모두 지켜야 한다. 사용자가 `user_id`, role, status처럼 권한을 바꾸는 필드로 row를 탈취할 수 없어야 한다.
+- RLS의 행 소유권 검사와 별도로 column privilege를 최소화한다. `library_items`는 `tags`, `recommendation_items`는 `status`, `export_files`는 `storage_path/status/ready_at`만 authenticated UPDATE를 허용한다. 이 제한은 대상 FK, export source, 추천 근거·순위의 재지정을 막는다.
+- `review_set_created` 이벤트는 SECURITY INVOKER trigger가 같은 사용자의 보관함 항목만 허용한다. 이 검사는 service-role 우회 함수가 아니며 일반 사용자 요청은 JWT와 기존 RLS 문맥을 그대로 사용한다.
+- 사용자별 client cache key에 인증된 사용자 ID를 포함하지만 이는 cache 분리용이다. 권한 판단에 client가 전달한 ID를 신뢰하지 않고 JWT와 RLS를 계속 사용한다.
 - 공개 콘텐츠 읽기는 publish/review/visibility, 만료와 기관 노출 조건을 함께 만족해야 한다. `problems`와 그 DB 자산 행은 탈퇴 후에도 published+public 범위만 읽을 수 있고, 본인 비공개·AI 생성 문제 조회와 모든 쓰기는 active profile이 있어야 한다.
 - 기관 데이터는 membership/manager predicate와 배정 관계를 통해 제한한다.
 

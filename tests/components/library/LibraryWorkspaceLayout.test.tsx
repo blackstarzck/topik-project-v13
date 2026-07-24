@@ -32,6 +32,7 @@ describe("LibraryWorkspace layout", () => {
   it("keeps the right stats rail full-height and sticky on desktop", () => {
     renderWithIntl(
       <LibraryWorkspace
+        userId="user-1"
         activeTab="submissions"
         initialItems={[]}
         stats={{

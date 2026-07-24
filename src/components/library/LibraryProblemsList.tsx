@@ -58,6 +58,7 @@ import { matchesLibrarySearch } from "./library-tab-url";
 const EMPTY_ENRICHMENT: ReadonlyMap<string, SubmissionEnrichment> = new Map();
 
 type Props = {
+  userId: string;
   initialSubmissions: LibrarySubmissionView[];
   initialProblems: LibraryProblemView[];
   initialDrafts: LibraryDraftView[];
@@ -77,6 +78,7 @@ function isProblem(item: LibraryItemView): item is LibraryProblemView {
 }
 
 export function LibraryProblemsList({
+  userId,
   initialSubmissions,
   initialProblems,
   initialDrafts,
@@ -86,8 +88,8 @@ export function LibraryProblemsList({
     "library.submissions",
   ) as LibraryListTranslate;
   const tSaved = useTranslations("library.saved") as LibraryListTranslate;
-  const submissionQuery = useLibraryItems("submissions");
-  const problemQuery = useLibraryItems("problems");
+  const submissionQuery = useLibraryItems(userId, "submissions");
+  const problemQuery = useLibraryItems(userId, "problems");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [enrichResult, setEnrichResult] = useState<EnrichmentResult | null>(
@@ -400,13 +402,20 @@ export function LibraryProblemsList({
                     >
                       {entry.kind === "submission" ? (
                         <LibraryProblemsSubmissionRow
+                          userId={userId}
                           item={entry.item}
                           meta={enrich.get(entry.item.id)}
                         />
                       ) : entry.kind === "problem" ? (
-                        <LibraryProblemsProblemRow item={entry.item} />
+                        <LibraryProblemsProblemRow
+                          userId={userId}
+                          item={entry.item}
+                        />
                       ) : (
-                        <LibraryProblemsDraftRow item={entry.item} />
+                        <LibraryProblemsDraftRow
+                          userId={userId}
+                          item={entry.item}
+                        />
                       )}
                     </div>
                   ))}

@@ -212,7 +212,7 @@ function RecommendationResultsSkeleton() {
   );
 }
 
-export function RecommendationsView() {
+export function RecommendationsView({ userId }: { userId: string }) {
   const t = useTranslations("practice.recommendations");
   const router = useRouter();
   const params = useSearchParams();
@@ -227,7 +227,7 @@ export function RecommendationsView() {
     return isValidQuestionNo(parsed) ? parsed : null;
   }, [params]);
 
-  const bundle = useRecommendationBundle(active);
+  const bundle = useRecommendationBundle(userId, active);
   const writingAvailability = useWritingAvailability();
   const lockedTypes =
     writingAvailability.data?.lockedTypes ?? new Set<QuestionNo>(QUESTION_NOS);

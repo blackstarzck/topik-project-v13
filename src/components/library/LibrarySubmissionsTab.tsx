@@ -31,6 +31,7 @@ const { RangePicker } = DatePicker;
 type StatusFilter = "all" | "complete" | "analyzing" | "pending" | "failed";
 
 type Props = {
+  userId: string;
   initialItems: LibrarySubmissionView[];
   searchTerm?: string;
   onResetSearch?: () => void;
@@ -83,6 +84,7 @@ function isAnalysisFailedStatus(
  *    parent actions stay empty until a selection surface returns.
  */
 export function LibrarySubmissionsTab({
+  userId,
   initialItems,
   searchTerm = "",
   onResetSearch,
@@ -90,7 +92,7 @@ export function LibrarySubmissionsTab({
 }: Props) {
   const t = useTranslations("library.submissions");
   const errorT = useTranslations("shared.error");
-  const query = useLibraryItems("submissions");
+  const query = useLibraryItems(userId, "submissions");
   // Memoize so the reference is stable across renders. Recomputing `.filter`
   // inline produced a NEW array every render → the `filtered` useMemo (which
   // depends on `allItems`) and the parent-clear useEffect re-ran every render,
@@ -274,6 +276,7 @@ export function LibrarySubmissionsTab({
               const title = submissionTitle(item, fallbackTitle);
               return (
                 <LibraryItemRow
+                  userId={userId}
                   key={item.item_id}
                   itemId={item.item_id}
                   tab="submissions"

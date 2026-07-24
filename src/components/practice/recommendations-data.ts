@@ -96,13 +96,19 @@ export function fetchRecommendationBundle(
   return withTimeout(queryRecommendationBundle(questionNo), timeoutMs);
 }
 
-export function recommendationBundleKey(questionNo: QuestionNo | null) {
-  return ["recommendation-bundle", questionNo ?? "all"] as const;
+export function recommendationBundleKey(
+  userId: string,
+  questionNo: QuestionNo | null,
+) {
+  return ["recommendation-bundle", userId, questionNo ?? "all"] as const;
 }
 
-export function useRecommendationBundle(questionNo: QuestionNo | null) {
+export function useRecommendationBundle(
+  userId: string,
+  questionNo: QuestionNo | null,
+) {
   return useQuery({
-    queryKey: recommendationBundleKey(questionNo),
+    queryKey: recommendationBundleKey(userId, questionNo),
     queryFn: () => fetchRecommendationBundle(questionNo),
     retry: false,
   });

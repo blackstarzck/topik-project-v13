@@ -187,7 +187,7 @@ export function ProblemListView({ userId }: Props) {
     [filter, sort, page, userId],
   );
   const list = useUserProblemsRpc(rpcParams);
-  const savedProblems = useLibraryItems("problems");
+  const savedProblems = useLibraryItems(userId, "problems");
   const retry = useSingleFlightAction(() => list.refetch());
 
   const total = list.data?.total ?? 0;

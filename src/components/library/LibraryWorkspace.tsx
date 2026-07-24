@@ -18,12 +18,18 @@ import { PdfExportModal, type ExportSelectionItem } from "./PdfExportModal";
 import { createReviewSet } from "./review-set-data";
 
 type Props = {
+  userId: string;
   activeTab: LibraryTab;
   initialItems: LibraryItemView[];
   stats: LibraryStats;
 };
 
-export function LibraryWorkspace({ activeTab, initialItems, stats }: Props) {
+export function LibraryWorkspace({
+  userId,
+  activeTab,
+  initialItems,
+  stats,
+}: Props) {
   const t = useTranslations("library.tabs");
   const router = useRouter();
   const { message } = App.useApp();
@@ -60,6 +66,7 @@ export function LibraryWorkspace({ activeTab, initialItems, stats }: Props) {
           className="flex min-h-0"
         >
           <LibraryTabs
+            userId={userId}
             activeTab={activeTab}
             initialItems={initialItems}
             onSelectionChange={setSelection}

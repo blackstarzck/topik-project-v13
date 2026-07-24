@@ -40,6 +40,7 @@ export default async function LibraryProblemsPage() {
         </div>
       </header>
       <LibraryProblemsWorkspace
+        userId={user.id}
         initialSubmissions={data.initialSubmissions}
         initialProblems={data.initialProblems}
         initialDrafts={data.initialDrafts}
