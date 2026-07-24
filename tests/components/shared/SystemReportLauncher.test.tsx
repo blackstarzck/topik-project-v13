@@ -141,25 +141,69 @@ describe("SystemReportLauncher visibility", () => {
     },
   );
 
-  it("hides the launcher while the panel is open and restores focus after close", async () => {
+  it("keeps the launcher visible as the only close control and preserves a draft", () => {
     renderWithIntl(<SystemReportLauncher />);
     openPanel();
+
+    const closeLauncher = screen.getByRole("button", {
+      name: koMessages.systemReport.close,
+    });
+    expect(closeLauncher).toBeTruthy();
+    expect(closeLauncher.getAttribute("aria-expanded")).toBe("true");
+    expect(closeLauncher.getAttribute("aria-controls")).toBe(
+      "system-report-panel",
+    );
+    expect(document.getElementById("system-report-panel")).toBeTruthy();
+    expect(document.querySelector(".ant-modal-close")).toBeNull();
+    expect(screen.queryByTestId("system-report-cancel")).toBeNull();
+    expect(screen.queryByTestId("system-report-discard")).toBeNull();
+
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: koMessages.systemReport.reportTitle.label,
+      }),
+      { target: { value: "계속 작성할 제목" } },
+    );
+    fireEvent.click(closeLauncher);
     expect(
-      screen.queryByRole("button", {
+      screen.getByRole("button", {
         name: koMessages.systemReport.launcherAria,
       }),
-    ).toBeNull();
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", {
+          name: koMessages.systemReport.launcherAria,
+        })
+        .getAttribute("aria-expanded"),
+    ).toBe("false");
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: koMessages.systemReport.cancel,
+        name: koMessages.systemReport.launcherAria,
       }),
     );
+    expect(
+      (
+        screen.getByRole("textbox", {
+          name: koMessages.systemReport.reportTitle.label,
+        }) as HTMLInputElement
+      ).value,
+    ).toBe("계속 작성할 제목");
+  });
 
-    const launcher = await screen.findByRole("button", {
-      name: koMessages.systemReport.launcherAria,
-    });
-    await waitFor(() => expect(document.activeElement).toBe(launcher));
+  it("does not close from Escape or render a blocking background", () => {
+    renderWithIntl(<SystemReportLauncher />);
+    openPanel();
+
+    fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+
+    expect(
+      screen.getByRole("dialog", { name: koMessages.systemReport.title }),
+    ).toBeTruthy();
+    expect(
+      document.querySelector(".app-system-report-modal .ant-modal-mask"),
+    ).toBeNull();
   });
 });
 
@@ -382,7 +426,12 @@ describe("SystemReportLauncher form", () => {
       name: koMessages.systemReport.sending,
     }) as HTMLButtonElement;
     expect(pendingButton.disabled).toBe(true);
+    const closeLauncher = screen.getByRole("button", {
+      name: koMessages.systemReport.close,
+    }) as HTMLButtonElement;
+    expect(closeLauncher.disabled).toBe(true);
     fireEvent.click(pendingButton);
+    fireEvent.click(closeLauncher);
     fireEvent.keyDown(screen.getByRole("dialog"), {
       key: "Escape",
       code: "Escape",
@@ -401,100 +450,7 @@ describe("SystemReportLauncher form", () => {
     expect(await screen.findByText("SR-0123456789ABCDEF")).toBeTruthy();
   });
 
-  it("asks before discarding dirty values and resets after confirmation", async () => {
-    renderWithIntl(<SystemReportLauncher />);
-    openPanel();
-    fireEvent.change(
-      screen.getByRole("textbox", {
-        name: koMessages.systemReport.reportTitle.label,
-      }),
-      { target: { value: "버릴 제목" } },
-    );
-
-    fireEvent.click(
-      screen.getByRole("button", { name: koMessages.systemReport.cancel }),
-    );
-    const confirm = await screen.findByRole("dialog", {
-      name: koMessages.systemReport.discard.title,
-    });
-    const keepWriting = within(confirm)
-      .getAllByRole("button", {
-        name: koMessages.systemReport.discard.cancel,
-      })
-      .find((button) => !button.classList.contains("ant-modal-close"));
-    expect(keepWriting).toBeTruthy();
-    await waitFor(() => expect(document.activeElement).toBe(keepWriting));
-    expect(
-      confirm.querySelector(".ant-modal-close")?.getAttribute("aria-label"),
-    ).toBe(koMessages.systemReport.discard.cancel);
-
-    fireEvent.click(
-      within(confirm).getByRole("button", {
-        name: koMessages.systemReport.discard.confirm,
-      }),
-    );
-
-    await screen.findByRole("button", {
-      name: koMessages.systemReport.launcherAria,
-    });
-    openPanel();
-    expect(
-      (
-        screen.getByRole("textbox", {
-          name: koMessages.systemReport.reportTitle.label,
-        }) as HTMLInputElement
-      ).value,
-    ).toBe("");
-  });
-
-  it.each(["button", "escape", "mask", "close"] as const)(
-    "restores form focus after leaving discard confirmation with %s",
-    async (exitPath) => {
-      renderWithIntl(<SystemReportLauncher />);
-      openPanel();
-      fireEvent.change(
-        screen.getByRole("textbox", {
-          name: koMessages.systemReport.reportTitle.label,
-        }),
-        { target: { value: "계속 작성할 제목" } },
-      );
-      fireEvent.click(screen.getByTestId("system-report-cancel"));
-
-      const confirm = await screen.findByRole("dialog", {
-        name: koMessages.systemReport.discard.title,
-      });
-      const keepWriting = within(confirm)
-        .getAllByRole("button", {
-          name: koMessages.systemReport.discard.cancel,
-        })
-        .find((button) => !button.classList.contains("ant-modal-close"));
-      expect(keepWriting).toBeTruthy();
-      await waitFor(() => expect(document.activeElement).toBe(keepWriting));
-
-      if (exitPath === "button") {
-        fireEvent.click(keepWriting as HTMLElement);
-      } else if (exitPath === "escape") {
-        fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
-      } else if (exitPath === "mask") {
-        const modalWrap = confirm.closest(".ant-modal-wrap");
-        expect(modalWrap).toBeTruthy();
-        fireEvent.mouseDown(modalWrap as HTMLElement);
-        fireEvent.click(modalWrap as HTMLElement);
-      } else {
-        const closeButton = confirm.querySelector(".ant-modal-close");
-        expect(closeButton).toBeTruthy();
-        fireEvent.click(closeButton as HTMLElement);
-      }
-
-      await screen.findByRole("dialog", {
-        name: koMessages.systemReport.title,
-      });
-      const formCancel = screen.getByTestId("system-report-cancel");
-      await waitFor(() => expect(document.activeElement).toBe(formCancel));
-    },
-  );
-
-  it("shows a receipt until explicit close and starts fresh next time", async () => {
+  it("shows a receipt until the floating button closes it and starts fresh next time", async () => {
     fetchMock.mockResolvedValue(okResponse());
     renderWithIntl(<SystemReportLauncher />);
     openPanel();
@@ -509,10 +465,13 @@ describe("SystemReportLauncher form", () => {
     await waitFor(() => expect(document.activeElement).toBe(successTitle));
     expect(screen.getByText("SR-0123456789ABCDEF")).toBeTruthy();
     expect(screen.getByText(koMessages.systemReport.success.time)).toBeTruthy();
+    expect(
+      within(screen.getByTestId("system-report-success")).queryByRole("button"),
+    ).toBeNull();
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: koMessages.systemReport.success.close,
+        name: koMessages.systemReport.close,
       }),
     );
     await screen.findByRole("button", {
@@ -543,8 +502,11 @@ describe("system report locale catalogs", () => {
     expect(keys(enMessages.systemReport).sort()).toEqual(koKeys);
     expect(keys(viMessages.systemReport).sort()).toEqual(koKeys);
     expect(koKeys).toContain("diagnosticsDisclosure");
-    expect(koKeys).toContain("discard.confirm");
+    expect(koKeys).toContain("close");
     expect(koKeys).toContain("success.reference");
+    expect(koKeys).not.toContain("cancel");
+    expect(koKeys).not.toContain("discard.confirm");
+    expect(koKeys).not.toContain("success.close");
 
     for (const catalog of [koMessages, enMessages, viMessages]) {
       expect(

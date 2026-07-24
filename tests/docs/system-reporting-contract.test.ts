@@ -26,6 +26,9 @@ describe("system reporting product and operations contract", () => {
     expect(prd).toContain("query·hash");
     expect(prd).toContain("IP·referrer·원본 User-Agent");
     expect(prd).toContain("입력값을 유지");
+    expect(prd).toContain("페이지 스크롤과 화면 전환");
+    expect(prd).toContain("플로팅 버튼으로만");
+    expect(prd).toContain("작성 중인 입력값과 오류 상태");
     expect(prd).toContain("외부 이메일·메신저 알림");
     expect(prd).toContain("관리자 처리 화면");
   });
