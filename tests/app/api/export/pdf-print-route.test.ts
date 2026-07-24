@@ -23,6 +23,8 @@ const helpers = vi.hoisted(() => {
     claimPdfExportQuotaMock: vi.fn(),
     commitPdfExportQuotaMock: vi.fn(),
     fetchProfileStatusMock: vi.fn(),
+    exportInsertMock: vi.fn(),
+    exportUpdateMock: vi.fn(),
     fromMock: vi.fn(),
     getPdfExportProblemIdsMock: vi.fn((items: Array<{ problemId: string }>) =>
       items.map((item) => item.problemId),
@@ -116,20 +118,22 @@ describe("POST /api/export/pdf/print", () => {
     });
     helpers.commitPdfExportQuotaMock.mockResolvedValue(undefined);
     helpers.releasePdfExportQuotaMock.mockResolvedValue(undefined);
+    helpers.exportInsertMock.mockReturnValue({
+      select: vi.fn(() => ({
+        single: vi.fn().mockResolvedValue({
+          data: { id: "00000000-0000-0000-0000-000000000222" },
+          error: null,
+        }),
+      })),
+    });
+    helpers.exportUpdateMock.mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
     helpers.fromMock.mockImplementation((table: string) => {
       if (table === "export_files") {
         return {
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({
-                data: { id: "00000000-0000-0000-0000-000000000222" },
-                error: null,
-              }),
-            })),
-          })),
-          update: vi.fn(() => ({
-            eq: vi.fn().mockResolvedValue({ error: null }),
-          })),
+          insert: helpers.exportInsertMock,
+          update: helpers.exportUpdateMock,
         };
       }
 
@@ -139,7 +143,7 @@ describe("POST /api/export/pdf/print", () => {
     });
   });
 
-  it("creates a browser-print export only after quota is claimed", async () => {
+  it("creates a queued browser-print export and marks handoff ready", async () => {
     const response = await postPrintPdf();
 
     expect(response.status).toBe(200);
@@ -157,9 +161,19 @@ describe("POST /api/export/pdf/print", () => {
       ["usage-1"],
       "00000000-0000-0000-0000-000000000222",
     );
+    expect(helpers.exportInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "queued" }),
+    );
+    expect(helpers.exportUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "ready",
+        failure_code: null,
+        failed_at: null,
+      }),
+    );
   });
 
-  it("returns quota metadata without creating a browser-print row", async () => {
+  it("records quota rejection separately from technical browser-print failures", async () => {
     helpers.claimPdfExportQuotaMock.mockRejectedValueOnce(
       new helpers.PdfExportRequestError(
         429,
@@ -184,10 +198,19 @@ describe("POST /api/export/pdf/print", () => {
       used: 3,
       remaining: 0,
     });
-    expect(helpers.fromMock).not.toHaveBeenCalled();
+    expect(helpers.exportInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "queued" }),
+    );
+    expect(helpers.exportUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "failed",
+        failure_code: "quota_exceeded",
+        failed_at: expect.any(String),
+      }),
+    );
   });
 
-  it("releases reserved quota when browser-print export row creation fails", async () => {
+  it("does not reserve quota when the initial browser-print ledger insert fails", async () => {
     helpers.fromMock.mockImplementationOnce((table: string) => {
       if (table !== "export_files") return { insert: vi.fn() };
       return {
@@ -209,12 +232,8 @@ describe("POST /api/export/pdf/print", () => {
 
     expect(response.status).toBe(500);
     expect(helpers.commitPdfExportQuotaMock).not.toHaveBeenCalled();
-    expect(helpers.releasePdfExportQuotaMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "user-1",
-      ["usage-1"],
-      "browser_print_failed",
-    );
+    expect(helpers.claimPdfExportQuotaMock).not.toHaveBeenCalled();
+    expect(helpers.releasePdfExportQuotaMock).not.toHaveBeenCalled();
   });
 
   it("releases reserved quota when browser-print quota commit fails", async () => {

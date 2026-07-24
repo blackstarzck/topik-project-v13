@@ -226,6 +226,23 @@ describe("DimensionCardGrid (i18n chrome)", () => {
     expect(screen.getByText("이 항목은 분석에 실패했어요.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "다시 분석하기" })).toBeTruthy();
   });
+
+  it("shows a long dimension summary in full without a line clamp", () => {
+    const longSummary =
+      "문법과 어휘 선택의 근거부터 문장 연결 방식과 다음 연습 방법까지 사용자가 확인해야 하는 정보를 끝까지 보여 주는 긴 피드백입니다.";
+
+    renderWithIntl(
+      <DimensionCardGrid
+        rows={[dim({ dimension: "grammar", summary: longSummary })]}
+        maxCards={1}
+      />,
+    );
+
+    const summary = screen.getByText(longSummary);
+    expect(summary.className).not.toMatch(/\bline-clamp-\d+\b/);
+    expect(summary.className).not.toContain("truncate");
+    expect(summary.getAttribute("style") ?? "").not.toContain("line-clamp");
+  });
 });
 
 describe("SentenceFeedbackList (i18n chrome)", () => {
@@ -443,6 +460,24 @@ describe("DetailedFeedbackPanel (i18n chrome)", () => {
     expect(screen.getByText("문법")).toBeTruthy();
     expect(screen.queryByText("논리")).toBeNull();
     expect(screen.queryByText("구조")).toBeNull();
+  });
+
+  it("shows detailed feedback in full without ellipsis or an expand action", () => {
+    const longSummary =
+      "이 상세 피드백은 사용자가 문법 문제의 원인과 수정 방향, 다음 연습 방법을 한 번에 확인할 수 있도록 마지막 문장까지 기본 상태에서 모두 보여 줍니다.";
+
+    renderWithIntl(
+      <DetailedFeedbackPanel
+        dimensions={[
+          dim({ dimension: "grammar", score: 70, summary: longSummary }),
+        ]}
+      />,
+    );
+
+    const summary = screen.getByText(longSummary);
+    expect(summary.className).not.toContain("ant-typography-ellipsis");
+    expect(summary.getAttribute("style") ?? "").not.toContain("line-clamp");
+    expect(screen.queryByText("더보기")).toBeNull();
   });
 });
 

@@ -196,9 +196,10 @@ describe("PDF export quota", () => {
     });
   });
 
-  it("renders a canonical submission title from its pinned safe snapshot", async () => {
+  it("builds canonical PDF problem context from its pinned safe snapshot", async () => {
     vi.mocked(getSubmission).mockResolvedValueOnce({
       ...failedSubmission(),
+      question_no: 54,
       feedback_status: "complete",
       question_snapshot: {
         question_id: "topik-writing-54-0001",
@@ -206,7 +207,7 @@ describe("PDF export quota", () => {
         payload_hash: "hash-321",
         item_number: 54,
         title: "제출 시점 제목",
-        prompt: "제출 시점 문제",
+        prompt: "제출 시점 문제 지문",
         tags: [],
         materials: {},
       },
@@ -224,30 +225,39 @@ describe("PDF export quota", () => {
     ).resolves.toMatchObject([
       {
         kind: "submission",
-        problemTitle: "제출 시점 제목",
+        problemContext: {
+          kind: "q54",
+          title: "제출 시점 제목",
+          prompt: "제출 시점 문제 지문",
+        },
       },
     ]);
     expect(from).not.toHaveBeenCalled();
   });
 
-  it("renders a legacy-unversioned title through the owner-scoped history repository", async () => {
+  it("builds legacy PDF problem context only from legacy_cutover_snapshot", async () => {
     vi.mocked(getSubmission).mockResolvedValueOnce({
       ...failedSubmission(),
       id: "sub-legacy",
       feedback_status: "complete",
       question_snapshot: null,
-    } as never);
-    const rpc = vi.fn(async () => ({
-      data: [
-        {
-          submission_id: "sub-legacy",
-          problem_id: "problem-1",
-          question_no: 51,
-          title: "보존된 미러 제목",
+      legacy_cutover_snapshot: {
+        snapshot_source: "legacy_cutover",
+        problem_id: "problem-1",
+        item_number: 51,
+        title: "보존된 미러 제목",
+        prompt: "문장 (ㄱ) 그리고 (ㄴ)",
+        tags: [],
+        materials: {
+          blank_1_role: "도입",
+          blank_1_function: "상황 설명",
+          blank_1_answer_type: "한 문장",
         },
-      ],
-      error: null,
-    }));
+      },
+    } as never);
+    const rpc = vi.fn(() => {
+      throw new Error("legacy snapshot must not query history or catalog");
+    });
 
     await expect(
       resolvePdfExportItems({ rpc } as never, {
@@ -258,11 +268,103 @@ describe("PDF export quota", () => {
     ).resolves.toMatchObject([
       {
         kind: "submission",
-        problemTitle: "보존된 미러 제목",
+        problemContext: {
+          kind: "q51",
+          title: "보존된 미러 제목",
+          prompt: "문장 (ㄱ) 그리고 (ㄴ)",
+          blankedPrompt: "문장 (ㄱ) 그리고 (ㄴ)",
+          blanks: expect.arrayContaining([
+            expect.objectContaining({
+              role: "도입",
+              functionLabel: "상황 설명",
+              answerType: "한 문장",
+            }),
+          ]),
+        },
       },
     ]);
-    expect(rpc).toHaveBeenCalledWith("get_writing_submission_history_context", {
-      p_submission_ids: ["sub-legacy"],
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("uses an explicit unavailable context when both snapshots are missing", async () => {
+    vi.mocked(getSubmission).mockResolvedValueOnce({
+      ...failedSubmission(),
+      id: "sub-without-snapshot",
+      feedback_status: "complete",
+      question_snapshot: null,
+      legacy_cutover_snapshot: null,
+    } as never);
+    const rpc = vi.fn(() => {
+      throw new Error("missing snapshots must not query current data");
+    });
+
+    await expect(
+      resolvePdfExportItems({ rpc } as never, {
+        sourceType: "submission",
+        sourceId: "sub-without-snapshot",
+        options: { ...exportOptions, includeFeedback: false },
+      }),
+    ).resolves.toMatchObject([
+      {
+        kind: "submission",
+        problemContext: { kind: "unavailable", questionNo: 51 },
+      },
+    ]);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("projects q53 chart data into a print-safe problem context", async () => {
+    vi.mocked(getSubmission).mockResolvedValueOnce({
+      ...failedSubmission(),
+      id: "sub-q53",
+      question_no: 53,
+      feedback_status: "complete",
+      question_snapshot: {
+        item_number: 53,
+        title: "온라인 학습 이용률",
+        prompt:
+          "1) 이용률의 변화를 설명하십시오.\n2) 집단별 차이를 비교하십시오.",
+        tags: [],
+        materials: {
+          charts: {
+            chart_a: {
+              title: "연도별 이용률",
+              chart_type: "bar",
+              unit: "%",
+              year_range: [2024, 2025],
+              series: [{ label: "전체", values: [40, 55] }],
+            },
+          },
+        },
+      },
+    } as never);
+
+    const [item] = await resolvePdfExportItems({} as never, {
+      sourceType: "submission",
+      sourceId: "sub-q53",
+      options: { ...exportOptions, includeFeedback: false },
+    });
+
+    expect(item).toMatchObject({
+      kind: "submission",
+      problemContext: {
+        kind: "q53",
+        title: "온라인 학습 이용률",
+        writingTasks: [
+          "이용률의 변화를 설명하십시오.",
+          "집단별 차이를 비교하십시오.",
+        ],
+        materialCards: [
+          {
+            kind: "chart",
+            chart: {
+              title: "연도별 이용률",
+              unit: "%",
+              series: [{ label: "전체", values: [40, 55] }],
+            },
+          },
+        ],
+      },
     });
   });
 });

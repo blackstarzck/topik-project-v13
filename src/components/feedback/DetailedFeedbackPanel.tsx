@@ -22,7 +22,7 @@ type Props = {
 
 /**
  * E-02 상세 피드백 패널 (description region 3).
- * 제약: 평가 항목 5개 이하, 각 항목 본문 2줄 우선.
+ * 제약: 평가 항목 5개 이하, 각 항목 본문은 줄 수 제한 없이 전체 노출.
  * 예외: 보여줄 세부 항목이 없으면 패널을 숨긴다.
  */
 export function DetailedFeedbackPanel({ dimensions }: Props) {
@@ -59,12 +59,7 @@ export function DetailedFeedbackPanel({ dimensions }: Props) {
               strokeColor={token.colorText}
             />
           ) : null}
-          {/* 각 항목 본문 2줄 우선 (description region 3 제약). */}
-          <Paragraph
-            type="secondary"
-            className="mb-0"
-            ellipsis={{ rows: 2, expandable: true, symbol: t("expandSymbol") }}
-          >
+          <Paragraph type="secondary" className="mb-0">
             {row?.summary ?? t("itemSummaryFallback")}
           </Paragraph>
         </div>

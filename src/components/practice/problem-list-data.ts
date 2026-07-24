@@ -45,6 +45,8 @@ export type UserProblemRow = {
   latestSubmissionId: string | null;
   latestSubmissionAt: string | null;
   feedbackStatus: FeedbackStatus | null;
+  completedSubmissionCount: number;
+  submissionAttemptCount: number;
   /** 이전 점수: 본인 최신 제출의 writing_feedback.score_total. 없으면 null. */
   previousScore: number | null;
   lifecycleStatus: "active" | "inactive" | "expired";
@@ -75,6 +77,7 @@ type RpcRow = {
   has_draft?: boolean | null;
   draft_status?: string | null;
   writing_submission_count?: number | null;
+  writing_submission_attempt_count?: number | null;
   latest_submission_id?: string | null;
   latest_submission_at?: string | null;
   writing_feedback_status?: string | null;
@@ -215,6 +218,9 @@ export async function fetchUserProblemsRpc(
       latestSubmissionId: r.latest_submission_id ?? null,
       latestSubmissionAt: r.latest_submission_at ?? null,
       feedbackStatus: toFeedbackStatus(r.writing_feedback_status),
+      completedSubmissionCount: r.writing_submission_count ?? 0,
+      submissionAttemptCount:
+        r.writing_submission_attempt_count ?? r.writing_submission_count ?? 0,
       previousScore: null,
       lifecycleStatus: toLifecycleStatus(r.lifecycle_status),
       lifecycleReason: r.lifecycle_reason ?? null,
