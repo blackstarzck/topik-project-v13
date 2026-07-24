@@ -18,6 +18,7 @@ import { matchesLibrarySearch } from "./library-tab-url";
 const { Text } = Typography;
 
 type Props = {
+  userId: string;
   initialItems: LibraryExportView[];
   searchTerm?: string;
   onResetSearch?: () => void;
@@ -183,6 +184,7 @@ function DownloadButton({ item }: { item: LibraryExportView }) {
 }
 
 export function LibraryExportsTab({
+  userId,
   initialItems,
   searchTerm = "",
   onResetSearch,
@@ -190,7 +192,7 @@ export function LibraryExportsTab({
   const t = useTranslations("library.exports");
   const tCount = useTranslations("library.submissions");
   const errorT = useTranslations("shared.error");
-  const query = useLibraryItems("exports");
+  const query = useLibraryItems(userId, "exports");
   const [page, setPage] = useState(1);
   const allItems: LibraryExportView[] = (query.data ?? initialItems).filter(
     isExport,
@@ -268,6 +270,7 @@ export function LibraryExportsTab({
           const isPrint = isBrowserPrintExport(item);
           return (
             <LibraryItemRow
+              userId={userId}
               key={item.item_id}
               itemId={item.item_id}
               tab="exports"

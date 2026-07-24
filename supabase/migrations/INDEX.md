@@ -287,3 +287,9 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 89 | `23:45:27` | [`20260723234527_consent_account_deletion_rls.sql`](./20260723234527_consent_account_deletion_rls.sql) | Makes `complete_auth_gate()` the only `user_consents` writer; adds active-profile restrictive policies to private user rows and quota reset targets; preserves published-public problem/asset reads while closing private catalog paths; guards seven authenticated `SECURITY DEFINER` user-data RPCs while preserving the active-user library list contract, and revokes the stale legacy submit RPC; makes profile lifecycle columns RPC-only through column privileges plus trigger context; adds `get_my_account_state()`; and makes `avatars` private with active-owner Storage policies shared by avatars and generated exports. Forward-only; remote apply is handled by the separate operations procedure, not v13. |
+
+## 2026-07-24 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 90 | `12:00:00` | [`20260724120000_user_data_reference_integrity.sql`](./20260724120000_user_data_reference_integrity.sql) | Keeps learner CRUD on publishable key + user JWT + owner RLS while narrowing authenticated UPDATE to the app's current state columns, preserving explicit system-job privileges, and adding an invoker trigger that rejects malformed, duplicate, or foreign `review_set_created` library item IDs. `problem-assets` remains unchanged for a separate private/signed-URL cross-app plan. |

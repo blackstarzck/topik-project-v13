@@ -36,9 +36,11 @@ import {
 const { Paragraph, Text } = Typography;
 
 export function LibraryProblemsSubmissionRow({
+  userId,
   item,
   meta,
 }: {
+  userId: string;
   item: LibrarySubmissionView;
   meta: SubmissionEnrichment | undefined;
 }) {
@@ -55,6 +57,7 @@ export function LibraryProblemsSubmissionRow({
 
   return (
     <LibraryItemRow
+      userId={userId}
       itemId={item.item_id}
       showDeleteAction={false}
       tab="submissions"
@@ -114,8 +117,10 @@ export function LibraryProblemsSubmissionRow({
 }
 
 export function LibraryProblemsProblemRow({
+  userId,
   item,
 }: {
+  userId: string;
   item: LibraryProblemView;
 }) {
   const t = useTranslations("library.problemsList") as LibraryListTranslate;
@@ -126,6 +131,7 @@ export function LibraryProblemsProblemRow({
 
   return (
     <LibraryItemRow
+      userId={userId}
       className={unavailable ? "opacity-40" : undefined}
       itemId={item.item_id}
       showDeleteAction={false}
@@ -209,7 +215,13 @@ export function LibraryProblemsRetryAction({
   );
 }
 
-export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
+export function LibraryProblemsDraftRow({
+  userId,
+  item,
+}: {
+  userId: string;
+  item: LibraryDraftView;
+}) {
   const t = useTranslations("library.problemsList") as LibraryListTranslate;
   const tSubmissions = useTranslations(
     "library.submissions",
@@ -221,6 +233,7 @@ export function LibraryProblemsDraftRow({ item }: { item: LibraryDraftView }) {
 
   return (
     <LibraryItemRow
+      userId={userId}
       itemId={item.item_id}
       showDeleteAction={false}
       tab="drafts"

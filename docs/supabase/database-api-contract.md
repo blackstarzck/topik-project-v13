@@ -22,6 +22,9 @@
 
 - local config는 `public`과 `graphql_public`을 노출 schema로 설정한다.
 - table/view/function이 schema에 존재하는 것만으로 사용자 권한을 가정하지 않는다. role별 grants와 RLS/policy를 migration에서 함께 확인한다.
+- `20260724120000_user_data_reference_integrity.sql` 이후 일반 사용자 CRUD는 publishable key + 사용자 JWT + RLS 계약을 유지한다. authenticated UPDATE grant는 `library_items.tags`, `recommendation_items.status`, `export_files.storage_path/status/ready_at`에만 열려 있고 `user_id`, 대상 FK, source, 추천 근거·순위는 일반 사용자가 변경할 수 없다.
+- `study_events.event_type = 'review_set_created'`이면 ordinary SECURITY INVOKER trigger가 `payload.item_ids`를 UUID 배열로 검증하고, 비어 있지 않음·중복 없음·`payload.count` 일치·모든 `library_items.user_id = study_events.user_id`를 확인한다. 다른 event type에는 이 payload 검사를 적용하지 않는다.
+- 사용자 ID를 포함한 React Query key는 브라우저 cache namespace 계약이다. 사용자 ID 자체는 권한 증명이 아니며 Data API 요청의 JWT와 DB RLS가 최종 권한을 결정한다.
 - browser client는 publishable key와 사용자 session으로 접근하고, user-owned row는 본인 범위로 제한한다.
 - 사용자 CRUD 인증은 사용자 JWT가 담당하고 RLS 또는 owner 검증 RPC가 범위를 제한한다. service-role key는 사용자 CRUD 인증을 대신하지 않으며, 별도 server-only 모듈을 통해 제한된 시스템 작업에서만 사용한다.
 - TypeScript 타입은 DB의 파생 산출물이며 migration보다 앞서지 않는다.

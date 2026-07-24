@@ -68,6 +68,7 @@ describe("LibraryProblemsWorkspace", () => {
   it("renders only the mixed learning list without the library stats panel", () => {
     render(
       <LibraryProblemsWorkspace
+        userId="user-1"
         initialSubmissions={[submission]}
         initialProblems={[problem]}
         initialDrafts={[draft]}

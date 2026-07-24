@@ -20,7 +20,7 @@ afterEach(() => {
 
 describe("LibraryExportsTab layout", () => {
   it("centers the empty export state inside a fill-height tab body", () => {
-    renderWithIntl(<LibraryExportsTab initialItems={[]} />);
+    renderWithIntl(<LibraryExportsTab userId="user-1" initialItems={[]} />);
 
     const tabBody = screen.getByTestId("library-tab-body");
     const emptyState = screen.getByTestId("library-empty-state");

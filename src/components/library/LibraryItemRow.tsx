@@ -15,6 +15,7 @@ import {
 type LibraryRowTab = LibraryTab | "drafts";
 
 type Props = {
+  userId: string;
   children: ReactNode;
   className?: string;
   itemId: string;
@@ -49,6 +50,7 @@ function recordLibraryDeleteFailure() {
  * against accidental loss and invalidate the active tab's query key.
  */
 export function LibraryItemRow({
+  userId,
   children,
   className,
   itemId,
@@ -59,7 +61,7 @@ export function LibraryItemRow({
 }: Props) {
   const t = useTranslations("library.item");
   const { message } = App.useApp();
-  const deleteItem = useDeleteLibraryItem();
+  const deleteItem = useDeleteLibraryItem(userId);
 
   function handleDelete() {
     if (tab === "drafts") return;

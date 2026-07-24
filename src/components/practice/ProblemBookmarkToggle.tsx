@@ -29,8 +29,8 @@ export function ProblemBookmarkToggle({
 }: Props) {
   const t = useTranslations("practice.problems");
   const { message } = App.useApp();
-  const save = useSaveLibraryItem();
-  const remove = useDeleteProblemLibraryItem();
+  const save = useSaveLibraryItem(userId);
+  const remove = useDeleteProblemLibraryItem(userId);
   const [savedOverride, setSavedOverride] = useState<{
     problemId: string;
     value: boolean;

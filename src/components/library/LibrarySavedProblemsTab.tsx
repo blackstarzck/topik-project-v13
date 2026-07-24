@@ -16,6 +16,7 @@ import { matchesLibrarySearch } from "./library-tab-url";
 const { Text } = Typography;
 
 type Props = {
+  userId: string;
   initialItems: LibraryProblemView[];
   searchTerm?: string;
   onResetSearch?: () => void;
@@ -26,6 +27,7 @@ function isProblem(item: LibraryItemView): item is LibraryProblemView {
 }
 
 export function LibrarySavedProblemsTab({
+  userId,
   initialItems,
   searchTerm = "",
   onResetSearch,
@@ -33,7 +35,7 @@ export function LibrarySavedProblemsTab({
   const t = useTranslations("library.saved");
   const errorT = useTranslations("shared.error");
   const tCount = useTranslations("library.submissions");
-  const query = useLibraryItems("problems");
+  const query = useLibraryItems(userId, "problems");
   const [page, setPage] = useState(1);
   const allItems: LibraryProblemView[] = (query.data ?? initialItems).filter(
     isProblem,
@@ -99,6 +101,7 @@ export function LibrarySavedProblemsTab({
 
           return (
             <LibraryItemRow
+              userId={userId}
               key={item.item_id}
               className={unavailable ? "opacity-40" : undefined}
               itemId={item.item_id}

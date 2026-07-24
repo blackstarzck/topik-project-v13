@@ -195,6 +195,9 @@ Future 항목은 제품 방향이지 현재 제공 약속이 아니다. 사용�
 - 필수 동의 기록은 화면이 전달한 값의 직접 저장이 아니라 가입 완료 전용 DB 작업이 공식 문서 집합을 다시 검증한 뒤 같은 transaction에서만 남긴다.
 - 탈퇴는 사용자 접근을 즉시 막는 소프트 삭제와 30일 복구 유예를 기본 제품 약속으로 한다. 탈퇴 전에 발급된 로그인 토큰이 남아 있어도 사용자 전용 데이터와 비공개 파일에는 접근할 수 없어야 한다. 실제 영구 삭제·보존 정책은 운영 소유 절차와 migration 계약을 따른다.
 - 탈퇴 요청 POST는 배포에 설정된 공식 사이트 주소를 기준으로 같은 출처 요청만 허용한다. 브라우저가 전달한 `Host`·proxy 전달 헤더는 신뢰 기준으로 사용하지 않으며, 개발·테스트에서만 loopback 요청 주소를 추가 허용한다.
+- 일반 사용자의 보관함, 추천 상태, export 상태, 학습 이벤트 CRUD는 publishable key와 사용자 JWT를 전달하고 RLS로 본인 행을 제한하는 구조를 유지한다. `library_items`는 `tags`, `recommendation_items`는 `status`, `export_files`는 `storage_path`, `status`, `ready_at`만 일반 사용자가 수정할 수 있으며 대상 참조와 소유자 열은 바꿀 수 없다.
+- `review_set_created` 학습 이벤트는 선택한 보관함 항목이 모두 이벤트 소유자의 항목이고, UUID 배열이 비어 있지 않으며 중복이 없고 `count`와 실제 개수가 일치할 때만 기록한다.
+- 사용자별 React Query cache는 인증된 사용자 ID를 주소에 포함한다. 이 ID는 cache 분리용일 뿐 권한 근거가 아니며, 실제 읽기·쓰기는 계속 JWT와 RLS가 판단한다.
 
 세부 데이터 계약은 `docs/supabase/`, 실제 DB 동작은 `supabase/migrations/*.sql`을 따른다.
 

@@ -9,12 +9,14 @@ import type {
 import { LibraryProblemsList } from "./LibraryProblemsList";
 
 type Props = {
+  userId: string;
   initialSubmissions: LibrarySubmissionView[];
   initialProblems: LibraryProblemView[];
   initialDrafts: LibraryDraftView[];
 };
 
 export function LibraryProblemsWorkspace({
+  userId,
   initialSubmissions,
   initialProblems,
   initialDrafts,
@@ -29,6 +31,7 @@ export function LibraryProblemsWorkspace({
         className="flex min-h-0 w-full"
       >
         <LibraryProblemsList
+          userId={userId}
           initialSubmissions={initialSubmissions}
           initialProblems={initialProblems}
           initialDrafts={initialDrafts}

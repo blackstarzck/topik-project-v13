@@ -15,6 +15,7 @@ import type { ExportSelectionItem } from "./PdfExportModal";
 import { buildLibraryTabUrl, isLibraryTab } from "./library-tab-url";
 
 type Props = {
+  userId: string;
   activeTab: LibraryTab;
   initialItems: LibraryItemView[];
   onSelectionChange?: (items: ExportSelectionItem[]) => void;
@@ -46,6 +47,7 @@ function pickExports(items: LibraryItemView[]) {
 }
 
 export function LibraryTabs({
+  userId,
   activeTab,
   initialItems,
   onSelectionChange,
@@ -107,6 +109,7 @@ export function LibraryTabs({
   const activeContent = {
     submissions: (
       <LibrarySubmissionsTab
+        userId={userId}
         initialItems={submissionsInitial}
         searchTerm={searchTerm}
         onResetSearch={() => setSearchTerm("")}
@@ -115,6 +118,7 @@ export function LibraryTabs({
     ),
     reports: (
       <LibraryReportsTab
+        userId={userId}
         initialItems={reportsInitial}
         searchTerm={searchTerm}
         onResetSearch={() => setSearchTerm("")}
@@ -122,6 +126,7 @@ export function LibraryTabs({
     ),
     problems: (
       <LibrarySavedProblemsTab
+        userId={userId}
         initialItems={problemsInitial}
         searchTerm={searchTerm}
         onResetSearch={() => setSearchTerm("")}
@@ -129,6 +134,7 @@ export function LibraryTabs({
     ),
     exports: (
       <LibraryExportsTab
+        userId={userId}
         initialItems={exportsInitial}
         searchTerm={searchTerm}
         onResetSearch={() => setSearchTerm("")}

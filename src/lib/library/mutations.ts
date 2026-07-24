@@ -127,13 +127,13 @@ function tabsForItemType(itemType: LibraryItemRow["item_type"]): LibraryTab[] {
   return ["submissions", "reports", "problems", "exports"];
 }
 
-export function useSaveLibraryItem() {
+export function useSaveLibraryItem(userId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: LibraryItemInsert) => saveLibraryItem(input),
     onSuccess: (row) => {
       for (const tab of tabsForItemType(row.item_type)) {
-        qc.invalidateQueries({ queryKey: libraryItemsKey(tab) });
+        qc.invalidateQueries({ queryKey: libraryItemsKey(userId, tab) });
       }
     },
   });
@@ -145,24 +145,28 @@ export type DeleteLibraryItemInput = {
   tab: LibraryTab;
 };
 
-export function useDeleteLibraryItem() {
+export function useDeleteLibraryItem(userId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ itemId }: DeleteLibraryItemInput) =>
       deleteLibraryItem(itemId),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: libraryItemsKey(variables.tab) });
+      qc.invalidateQueries({
+        queryKey: libraryItemsKey(userId, variables.tab),
+      });
     },
   });
 }
 
-export function useDeleteProblemLibraryItem() {
+export function useDeleteProblemLibraryItem(userId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: DeleteProblemLibraryItemInput) =>
       deleteProblemLibraryItem(input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: libraryItemsKey("problems") });
+      qc.invalidateQueries({
+        queryKey: libraryItemsKey(userId, "problems"),
+      });
     },
   });
 }
@@ -173,13 +177,15 @@ export type UpdateItemTagsInput = {
   tab: LibraryTab;
 };
 
-export function useUpdateItemTags() {
+export function useUpdateItemTags(userId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ itemId, tags }: UpdateItemTagsInput) =>
       updateItemTags(itemId, tags),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: libraryItemsKey(variables.tab) });
+      qc.invalidateQueries({
+        queryKey: libraryItemsKey(userId, variables.tab),
+      });
     },
   });
 }

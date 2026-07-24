@@ -38,7 +38,7 @@ export function SaveToLibraryButton({
 }: Props) {
   const t = useTranslations("feedback.actions.save");
   const { notification } = App.useApp();
-  const save = useSaveLibraryItem();
+  const save = useSaveLibraryItem(userId);
   const [saved, setSaved] = useState(initiallySaved);
 
   if (permissionLocked) {
