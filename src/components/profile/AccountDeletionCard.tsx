@@ -1,12 +1,17 @@
 "use client";
 
 import { App, Button, Input, Typography } from "antd";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { AppCard } from "@/components/shared/AppCard";
 import { AppModal } from "@/components/shared/AppModal";
+import { asLocale, DEFAULT_LOCALE } from "@/i18n/locales";
+import {
+  ACCOUNT_DELETION_CONFIRMATION_FIELD,
+  ACCOUNT_DELETION_CONFIRMATION_TEXT,
+} from "@/lib/auth/account-deletion";
 import { APP_ROUTES } from "@/lib/routes";
 import { clearClientRecoveryForAccountDeletion } from "@/lib/writing/client-recovery-cleanup";
 
@@ -19,6 +24,7 @@ const { Text, Title } = Typography;
  */
 export function AccountDeletionCard({ userId }: { userId: string }) {
   const t = useTranslations("settings.account");
+  const locale = asLocale(useLocale()) ?? DEFAULT_LOCALE;
   const { message } = App.useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -29,8 +35,8 @@ export function AccountDeletionCard({ userId }: { userId: string }) {
   const [serverDeletionConfirmed, setServerDeletionConfirmed] = useState(false);
   const errorShownRef = useRef(false);
 
-  const keyword = t("dangerZone.confirmKeyword");
-  const canSubmit = confirmText.trim() === keyword;
+  const keyword = ACCOUNT_DELETION_CONFIRMATION_TEXT[locale];
+  const canSubmit = confirmText === keyword;
 
   // 과거 full-page 요청 실패 redirect도 넓은 범주의 안내로 처리한다.
   useEffect(() => {
@@ -141,6 +147,7 @@ export function AccountDeletionCard({ userId }: { userId: string }) {
               {t("dangerZone.modal.confirmInstruction", { keyword })}
             </Text>
             <Input
+              name={ACCOUNT_DELETION_CONFIRMATION_FIELD}
               value={confirmText}
               onChange={(event) => setConfirmText(event.target.value)}
               placeholder={t("dangerZone.modal.confirmPlaceholder", {

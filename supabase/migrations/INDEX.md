@@ -281,3 +281,9 @@
 | # | timestamp | file | scope |
 | ---:| --- | --- | --- |
 | 88 | `12:00:00` | [`20260722120000_writing_completion_and_pdf_outcomes.sql`](./20260722120000_writing_completion_and_pdf_outcomes.sql) | Defines learner completion as a submission and linked feedback both reaching `complete`, separates materialized attempt counts from completed counts in `list_user_problems`, aligns dashboard KPI counts, and adds sanitized terminal `failure_code`/`failed_at` fields to the PDF export ledger. Forward-only; v13 does not apply it remotely. |
+
+## 2026-07-23 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 89 | `23:45:27` | [`20260723234527_consent_account_deletion_rls.sql`](./20260723234527_consent_account_deletion_rls.sql) | Makes `complete_auth_gate()` the only `user_consents` writer; adds active-profile restrictive policies to private user rows and quota reset targets; preserves published-public problem/asset reads while closing private catalog paths; guards seven authenticated `SECURITY DEFINER` user-data RPCs while preserving the active-user library list contract, and revokes the stale legacy submit RPC; makes profile lifecycle columns RPC-only through column privileges plus trigger context; adds `get_my_account_state()`; and makes `avatars` private with active-owner Storage policies shared by avatars and generated exports. Forward-only; remote apply is handled by the separate operations procedure, not v13. |

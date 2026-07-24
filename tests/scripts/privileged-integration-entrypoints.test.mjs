@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ENTRYPOINTS = [
+  "tests/integration/account-deletion-rpc.test.ts",
   "tests/integration/auth-completion-gate-rpc.test.ts",
   "tests/integration/institution-writing-exposure.test.ts",
   "tests/integration/pdf-export-quota-rpc.test.ts",

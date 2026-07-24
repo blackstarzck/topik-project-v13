@@ -54,7 +54,7 @@ describe("GET /api/writing/evaluation-status", () => {
       data: { session: { access_token: "learner-token" } },
     });
     helpers.fromMock.mockImplementation((table: string) => {
-      // 새 status 게이트: fetchProfileStatus(supabase, userId) 는 profiles 를 조회한다.
+      // 상태 게이트는 호출자 본인만 반환하는 최소 상태 RPC를 사용한다.
       if (table === "profiles") {
         return {
           select: () => ({
@@ -82,7 +82,11 @@ describe("GET /api/writing/evaluation-status", () => {
         }),
       };
     });
-    helpers.rpcMock.mockResolvedValue({ data: "complete", error: null });
+    helpers.rpcMock.mockImplementation(async (name: string) =>
+      name === "get_my_account_state"
+        ? { data: "active", error: null }
+        : { data: "complete", error: null },
+    );
     helpers.serviceRpcMock.mockResolvedValue({ data: "complete", error: null });
     helpers.createServiceClientMock.mockReturnValue({
       rpc: helpers.serviceRpcMock,

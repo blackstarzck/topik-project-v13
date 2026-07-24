@@ -5,43 +5,67 @@ import {
   deleteTalkpikAccountProfile,
   getTalkpikApiBaseUrl,
 } from "@/lib/talkpik-api/account";
+import {
+  ACCOUNT_DELETION_CONFIRMATION_FIELD,
+  isValidAccountDeletionConfirmation,
+} from "@/lib/auth/account-deletion";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function firstHeaderValue(value: string | null): string | null {
-  return value?.split(",")[0]?.trim() || null;
+function normalizeHttpOrigin(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.origin
+      : null;
+  } catch {
+    return null;
+  }
 }
 
-function requestProto(request: NextRequest): string {
+function isLoopbackOrigin(origin: string): boolean {
+  const hostname = new URL(origin).hostname;
   return (
-    firstHeaderValue(request.headers.get("x-forwarded-proto")) ??
-    new URL(request.url).protocol.replace(":", "")
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]"
   );
 }
 
-function requestPublicOrigin(request: NextRequest): string {
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      return new URL(origin).origin;
-    } catch {
-      // Fall through to host-based origin construction.
+function configuredSiteOrigin(): string | null {
+  return normalizeHttpOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+}
+
+function trustedRequestOrigins(request: NextRequest): Set<string> {
+  const origins = new Set<string>();
+  const configured = configuredSiteOrigin();
+  if (configured) origins.add(configured);
+
+  if (process.env.NODE_ENV !== "production") {
+    const requestOrigin = normalizeHttpOrigin(request.url);
+    if (requestOrigin && isLoopbackOrigin(requestOrigin)) {
+      origins.add(requestOrigin);
     }
   }
 
-  const host =
-    firstHeaderValue(request.headers.get("x-forwarded-host")) ??
-    firstHeaderValue(request.headers.get("host"));
-  if (host) {
-    return `${requestProto(request)}://${host}`;
-  }
-
-  return new URL(request.url).origin;
+  return origins;
 }
 
 function redirectUrl(request: NextRequest, path: string) {
-  return new URL(path, requestPublicOrigin(request));
+  const configured = configuredSiteOrigin();
+  const requestOrigin = normalizeHttpOrigin(request.url);
+  const baseOrigin =
+    configured ??
+    (process.env.NODE_ENV !== "production" &&
+    requestOrigin &&
+    isLoopbackOrigin(requestOrigin)
+      ? requestOrigin
+      : null);
+
+  if (!baseOrigin) {
+    throw new Error("Trusted site origin is not configured");
+  }
+  return new URL(path, baseOrigin);
 }
 
 function isSameOriginPost(request: NextRequest): boolean {
@@ -49,22 +73,10 @@ function isSameOriginPost(request: NextRequest): boolean {
   if (secFetchSite === "cross-site") return false;
 
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  if (!origin || origin === "null") return false;
 
   try {
-    const expectedOrigins = new Set([new URL(request.url).origin]);
-    const forwardedProto = requestProto(request);
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const host = request.headers.get("host");
-
-    for (const candidateHost of [forwardedHost, host]) {
-      const firstHost = firstHeaderValue(candidateHost);
-      if (firstHost) {
-        expectedOrigins.add(`${forwardedProto}://${firstHost}`);
-      }
-    }
-
-    return expectedOrigins.has(new URL(origin).origin);
+    return trustedRequestOrigins(request).has(new URL(origin).origin);
   } catch {
     return false;
   }
@@ -116,6 +128,17 @@ function logAccountDeletionFailure(
 export async function POST(request: NextRequest) {
   if (!isSameOriginPost(request)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  let confirmation: FormDataEntryValue | null;
+  try {
+    const formData = await request.formData();
+    confirmation = formData.get(ACCOUNT_DELETION_CONFIRMATION_FIELD);
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+  if (!isValidAccountDeletionConfirmation(confirmation)) {
+    return NextResponse.json({ ok: false }, { status: 400 });
   }
 
   const supabase = await createSupabaseServerClient();

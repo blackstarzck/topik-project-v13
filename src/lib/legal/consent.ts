@@ -5,12 +5,11 @@ import {
   createSupabaseServerClient,
   type SupabaseServerClient,
 } from "@/lib/supabase/server";
-import type { Tables, TablesInsert } from "@/lib/supabase/types";
+import type { Tables } from "@/lib/supabase/types";
 
 type ClientFactory = () => Promise<SupabaseServerClient>;
 
 export type LegalLocale = Tables<"profiles">["ui_locale"];
-export type ConsentSource = TablesInsert<"user_consents">["source"];
 
 export type RequiredConsentDocument = Pick<
   Tables<"legal_documents">,
@@ -245,29 +244,6 @@ export async function getMissingRequiredConsentDocuments(
 
   const acceptedIds = new Set((data ?? []).map((row) => row.document_id));
   return requiredDocuments.filter((doc) => !acceptedIds.has(doc.id));
-}
-
-export async function recordRequiredConsents(
-  userId: string,
-  documents: RequiredConsentDocument[],
-  source: ConsentSource = "signup",
-  createClient: ClientFactory = createSupabaseServerClient,
-): Promise<void> {
-  if (documents.length === 0) return;
-
-  const supabase = await createClient();
-  const rows: TablesInsert<"user_consents">[] = documents.map((doc) => ({
-    user_id: userId,
-    document_id: doc.id,
-    doc_type: doc.doc_type,
-    version: doc.version,
-    source,
-  }));
-  const { error } = await supabase.from("user_consents").insert(rows);
-
-  if (error) {
-    throw new Error(`Failed to record user consents: ${error.message}`);
-  }
 }
 
 function readUserDisplayName(user: User): string | null {
