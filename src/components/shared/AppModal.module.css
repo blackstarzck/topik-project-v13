@@ -38,6 +38,24 @@
   transform-origin: bottom right !important;
 }
 
+.nonBlocking :global(.ant-modal-wrap) {
+  pointer-events: none;
+}
+
+.nonBlocking :global(.ant-modal) {
+  pointer-events: auto;
+}
+
+.nonBlocking :global(.ant-modal-container),
+.nonBlocking :global(.ant-modal-content) {
+  scrollbar-width: none;
+}
+
+.nonBlocking :global(.ant-modal-container::-webkit-scrollbar),
+.nonBlocking :global(.ant-modal-content::-webkit-scrollbar) {
+  display: none;
+}
+
 @media (max-width: 767.98px) {
   .bottomRight :global(.ant-modal-wrap) {
     align-items: flex-end;

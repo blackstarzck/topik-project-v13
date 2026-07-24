@@ -2787,23 +2787,15 @@
     },
     "diagnosticsDisclosure": "We attach the current path and a coarse browser and device environment. Reports are stored until manual deletion, with no fixed retention period.",
     "sending": "Sending",
-    "cancel": "Cancel",
     "send": "Send",
     "retry": "Send again",
     "errorTitle": "We could not send your request",
     "errorDescription": "Please try sending it again shortly.",
-    "discard": {
-      "title": "Discard this request?",
-      "body": "Closing now will remove everything you entered.",
-      "cancel": "Keep writing",
-      "confirm": "Discard"
-    },
     "success": {
       "title": "Your request was sent",
       "body": "Keep these receipt details for reference.",
       "reference": "Reference",
-      "time": "Created",
-      "close": "Close"
+      "time": "Created"
     }
   },
   "shared": {

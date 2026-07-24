@@ -1,12 +1,22 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 
 const REPORT_ROUTE = "**/api/system-reports";
+const OPEN_LAUNCHER_LABEL =
+  /^(도움 요청 및 의견 보내기|Get help or send feedback|Nhận trợ giúp hoặc gửi góp ý)$/;
+const CLOSE_LAUNCHER_LABEL =
+  /^(도움 요청 닫기|Close help request|Đóng yêu cầu trợ giúp)$/;
 
 async function openReport(page: Page) {
   const launcher = page.getByTestId("system-report-launcher");
   await expect(launcher).toBeVisible();
   await launcher.click();
-  await expect(launcher).toBeHidden();
+  await expect(launcher).toBeVisible();
+  await expect(launcher).toHaveAttribute("aria-label", CLOSE_LAUNCHER_LABEL);
+  await expect(launcher).toHaveAttribute(
+    "aria-controls",
+    "system-report-panel",
+  );
+  await expect(launcher).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByTestId("system-report-form")).toBeVisible();
 }
 
@@ -60,8 +70,36 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
 
   await openReport(page);
   const modal = page.locator(".app-system-report-modal .ant-modal");
+  const modalWrap = page.locator(".app-system-report-modal .ant-modal-wrap");
   const modalBox = await modal.boundingBox();
   expect(modalBox).not.toBeNull();
+  await expect(
+    page.locator(".app-system-report-modal .ant-modal-mask"),
+  ).toHaveCount(0);
+  await expect(modal).toHaveAttribute("aria-modal", "false");
+  await expect(modal.locator(".ant-modal-close")).toHaveCount(0);
+  await expect(page.getByTestId("system-report-cancel")).toHaveCount(0);
+  expect(
+    await modalWrap.evaluate(
+      (element) => getComputedStyle(element).pointerEvents,
+    ),
+  ).toBe("none");
+  expect(
+    await modal.evaluate((element) => getComputedStyle(element).pointerEvents),
+  ).toBe("auto");
+  expect(
+    await page
+      .locator(".app-system-report-modal .ant-modal-container")
+      .evaluate((element) => getComputedStyle(element).scrollbarWidth),
+  ).toBe("none");
+  expect(await page.evaluate(() => document.body.style.overflow)).not.toBe(
+    "hidden",
+  );
+  await page.mouse.move(8, 240);
+  await page.mouse.wheel(0, 360);
+  await expect
+    .poll(async () => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(0);
   expect(modalBox?.width ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
     (viewport?.width ?? 0) - 32,
   );
@@ -74,9 +112,45 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
     ),
   ).toBeLessThanOrEqual(1);
 
-  await page.getByTestId("system-report-cancel").click();
-  await expect(launcher).toBeVisible();
-  await expect(launcher).toBeFocused();
+  await launcher.click();
+  await expect(modal).toBeHidden();
+  await expect(launcher).toHaveAttribute("aria-label", OPEN_LAUNCHER_LABEL);
+  await expect(launcher).toHaveAttribute("aria-expanded", "false");
+  await launcher.click();
+  await page.getByTestId("system-report-title").fill("다시 열어도 유지할 제목");
+  await launcher.click();
+  await launcher.click();
+  await expect(page.getByTestId("system-report-title")).toHaveValue(
+    "다시 열어도 유지할 제목",
+  );
+
+  await page.goto("/");
+  const landingLoginLink = page.locator('header a[href="/login"]');
+  await expect(landingLoginLink).toHaveCount(1);
+  await landingLoginLink.click();
+  await expect(page).toHaveURL((url) => url.pathname === "/login");
+  await expect(page.locator(".signup-prompt-layout--login")).toBeVisible();
+
+  await openReport(page);
+  await page
+    .getByTestId("system-report-title")
+    .fill("실제 화면 전환 후에도 유지할 제목");
+
+  await page.goBack();
+  await expect(page).toHaveURL((url) => url.pathname === "/");
+  await expect(page.locator(".landing-layout-motion-root")).toBeVisible();
+  await expect(page.getByTestId("system-report-launcher")).toHaveCount(0);
+
+  await page.goForward();
+  await expect(page).toHaveURL((url) => url.pathname === "/login");
+  await expect(page.locator(".signup-prompt-layout--login")).toBeVisible();
+  await expect(page.getByTestId("system-report-launcher")).toHaveAttribute(
+    "aria-label",
+    CLOSE_LAUNCHER_LABEL,
+  );
+  await expect(page.getByTestId("system-report-title")).toHaveValue(
+    "실제 화면 전환 후에도 유지할 제목",
+  );
 });
 
 test("intercepted failure keeps values and reuses the idempotency key", async ({
@@ -170,8 +244,10 @@ test("intercepted success receives only coarse diagnostics and resets on close",
   expect(JSON.stringify(submittedBody)).not.toContain("e2e-secret");
   expect(JSON.stringify(submittedBody)).not.toContain("Mozilla");
 
-  await page.getByTestId("system-report-success").getByRole("button").click();
-  await expect(page.getByTestId("system-report-launcher")).toBeVisible();
+  await expect(
+    page.getByTestId("system-report-success").getByRole("button"),
+  ).toHaveCount(0);
+  await page.getByTestId("system-report-launcher").click();
   await openReport(page);
   await expect(page.getByTestId("system-report-title")).toHaveValue("");
   await expect(page.getByTestId("system-report-message")).toHaveValue("");
@@ -213,38 +289,43 @@ for (const { name, viewport } of [
 
     await launcher.click();
     const modal = page.locator(".app-system-report-modal .ant-modal");
-    const close = modal.locator(".ant-modal-close");
     await expect(modal).toBeVisible();
-    await expect(close).toBeVisible();
+    await expect(modal.locator(".ant-modal-close")).toHaveCount(0);
+    await expect(launcher).toHaveAttribute("aria-label", CLOSE_LAUNCHER_LABEL);
     await expect
       .poll(async () => {
         const currentFixedBarBox = await fixedBar.boundingBox();
         const currentModalBox = await modal.boundingBox();
-        const currentCloseBox = await close.boundingBox();
-        if (!currentFixedBarBox || !currentModalBox || !currentCloseBox) {
+        const currentLauncherBox = await launcher.boundingBox();
+        if (!currentFixedBarBox || !currentModalBox || !currentLauncherBox) {
           return false;
         }
         return (
           currentModalBox.y >= 8 &&
           currentFixedBarBox.y - (currentModalBox.y + currentModalBox.height) >=
             8 &&
-          currentCloseBox.y >= 0 &&
-          currentCloseBox.y + currentCloseBox.height <= viewport.height
+          currentLauncherBox.y - (currentModalBox.y + currentModalBox.height) >=
+            8 &&
+          currentLauncherBox.y + currentLauncherBox.height <= viewport.height
         );
       })
       .toBe(true);
 
     const modalBox = await modal.boundingBox();
-    const closeBox = await close.boundingBox();
+    const closeLauncherBox = await launcher.boundingBox();
     expect(modalBox).not.toBeNull();
     expect(modalBox?.y ?? -1).toBeGreaterThanOrEqual(8);
     expect(
       (modalBox?.y ?? Number.POSITIVE_INFINITY) + (modalBox?.height ?? 0),
     ).toBeLessThan((fixedBarBox?.y ?? 0) - 8);
-    expect(closeBox).not.toBeNull();
-    expect(closeBox?.y ?? -1).toBeGreaterThanOrEqual(0);
-    expect((closeBox?.y ?? 0) + (closeBox?.height ?? 0)).toBeLessThanOrEqual(
-      viewport.height,
-    );
+    expect(closeLauncherBox).not.toBeNull();
+    expect(
+      (closeLauncherBox?.y ?? Number.NEGATIVE_INFINITY) -
+        ((modalBox?.y ?? Number.POSITIVE_INFINITY) + (modalBox?.height ?? 0)),
+    ).toBeGreaterThanOrEqual(8);
+    expect(closeLauncherBox?.y ?? -1).toBeGreaterThanOrEqual(0);
+    expect(
+      (closeLauncherBox?.y ?? 0) + (closeLauncherBox?.height ?? 0),
+    ).toBeLessThanOrEqual(viewport.height);
   });
 }

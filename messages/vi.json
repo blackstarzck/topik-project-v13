@@ -2787,23 +2787,15 @@
     },
     "diagnosticsDisclosure": "Chúng tôi đính kèm đường dẫn hiện tại cùng thông tin khái quát về trình duyệt và thiết bị. Báo cáo được lưu cho đến khi xóa thủ công và không có thời hạn lưu cố định.",
     "sending": "Đang gửi",
-    "cancel": "Hủy",
     "send": "Gửi",
     "retry": "Gửi lại",
     "errorTitle": "Không thể gửi yêu cầu",
     "errorDescription": "Vui lòng thử gửi lại sau ít phút.",
-    "discard": {
-      "title": "Bỏ nội dung đã nhập?",
-      "body": "Nếu đóng bây giờ, toàn bộ nội dung bạn nhập sẽ bị xóa.",
-      "cancel": "Tiếp tục viết",
-      "confirm": "Bỏ nội dung"
-    },
     "success": {
       "title": "Đã gửi yêu cầu",
       "body": "Hãy lưu thông tin tiếp nhận này để tham khảo.",
       "reference": "Mã tiếp nhận",
-      "time": "Thời gian tiếp nhận",
-      "close": "Đóng"
+      "time": "Thời gian tiếp nhận"
     }
   },
   "shared": {

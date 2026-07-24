@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { AppModal } from "@/components/shared/AppModal";
-import { LifeBuoy } from "@/components/shared/AppIcons";
+import { LifeBuoy, X } from "@/components/shared/AppIcons";
 import { collectSystemReportDiagnostics } from "@/lib/system-report-diagnostics";
 import {
   SYSTEM_REPORT_MAX_EMAIL_LENGTH,
@@ -64,22 +64,11 @@ export function SystemReportLauncher() {
   const format = useFormatter();
   const pathname = usePathname();
   const [form] = Form.useForm<ReportFormValues>();
-  const launcherRef = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
-  const discardKeepButtonRef = useRef<HTMLAnchorElement | HTMLButtonElement>(
-    null,
-  );
-  const formCancelButtonRef = useRef<HTMLAnchorElement | HTMLButtonElement>(
-    null,
-  );
   const successTitleRef = useRef<HTMLElement>(null);
-  const restoreFocusRef = useRef(false);
-  const restoreFormFocusRef = useRef(false);
-  const dirtyRef = useRef(false);
   const emailManuallyEditedRef = useRef(false);
   const idempotencyKeyRef = useRef<string | null>(null);
 
   const [open, setOpen] = useState(false);
-  const [discardOpen, setDiscardOpen] = useState(false);
   const [submissionState, setSubmissionState] =
     useState<SubmissionState>("idle");
   const [receipt, setReceipt] = useState<SystemReportResponse | null>(null);
@@ -117,61 +106,25 @@ export function SystemReportLauncher() {
   }, [form, open, succeeded]);
 
   useEffect(() => {
-    if (open || !restoreFocusRef.current) return;
-    restoreFocusRef.current = false;
-    launcherRef.current?.focus();
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    if (discardOpen) {
-      discardKeepButtonRef.current?.focus();
-    } else if (restoreFormFocusRef.current) {
-      restoreFormFocusRef.current = false;
-      formCancelButtonRef.current?.focus();
-    } else if (succeeded) {
+    if (open && succeeded) {
       successTitleRef.current?.focus();
     }
-  }, [discardOpen, open, succeeded]);
+  }, [open, succeeded]);
 
   function resetReport() {
     form.resetFields();
-    dirtyRef.current = false;
     emailManuallyEditedRef.current = false;
     idempotencyKeyRef.current = null;
-    setDiscardOpen(false);
     setSubmissionState("idle");
     setReceipt(null);
   }
 
-  function closeAndReset() {
-    resetReport();
-    restoreFocusRef.current = true;
-    setOpen(false);
-  }
-
-  function requestClose() {
+  function togglePanel() {
     if (submitting) return;
-    if (succeeded) {
-      closeAndReset();
-      return;
+    if (open && succeeded) {
+      resetReport();
     }
-    const values = form.getFieldsValue();
-    const hasManualInput =
-      emailManuallyEditedRef.current ||
-      values.category !== "bug" ||
-      Boolean(values.title) ||
-      Boolean(values.message);
-    if (dirtyRef.current || form.isFieldsTouched() || hasManualInput) {
-      setDiscardOpen(true);
-      return;
-    }
-    closeAndReset();
-  }
-
-  function returnToForm() {
-    restoreFormFocusRef.current = true;
-    setDiscardOpen(false);
+    setOpen((current) => !current);
   }
 
   async function submitReport(values: ReportFormValues) {
@@ -211,7 +164,6 @@ export function SystemReportLauncher() {
 
       setReceipt(payload);
       setSubmissionState("success");
-      dirtyRef.current = false;
     } catch {
       setSubmissionState("failure");
     }
@@ -221,58 +173,37 @@ export function SystemReportLauncher() {
 
   return (
     <>
-      {!open ? (
-        <FloatButton
-          ref={launcherRef}
-          className={mergeClassNames(
-            "app-system-report-launcher",
-            styles.launcher,
-          )}
-          type="primary"
-          icon={<LifeBuoy aria-hidden="true" />}
-          tooltip={t("launcherTooltip")}
-          aria-label={t("launcherAria")}
-          onClick={() => setOpen(true)}
-          data-testid="system-report-launcher"
-        />
-      ) : null}
+      <FloatButton
+        className={mergeClassNames(
+          "app-system-report-launcher",
+          styles.launcher,
+        )}
+        type="primary"
+        icon={open ? <X aria-hidden="true" /> : <LifeBuoy aria-hidden="true" />}
+        tooltip={open ? t("close") : t("launcherTooltip")}
+        aria-label={open ? t("close") : t("launcherAria")}
+        aria-controls="system-report-panel"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        disabled={submitting}
+        onClick={togglePanel}
+        data-testid="system-report-launcher"
+      />
 
       <AppModal
         open={open}
         placement="bottom-right"
         rootClassName="app-system-report-modal"
-        title={discardOpen ? t("discard.title") : t("title")}
+        nonBlocking
+        title={t("title")}
         width={440}
         footer={null}
-        onCancel={discardOpen ? returnToForm : requestClose}
-        closable={
-          submitting
-            ? false
-            : {
-                "aria-label": discardOpen ? t("discard.cancel") : t("close"),
-              }
-        }
-        keyboard={!submitting}
-        mask={{ closable: !submitting }}
-        destroyOnHidden
+        closable={false}
+        keyboard={false}
       >
-        {discardOpen ? (
+        {succeeded ? (
           <section
-            className="app-system-report-discard"
-            data-testid="system-report-discard"
-          >
-            <Paragraph>{t("discard.body")}</Paragraph>
-            <div className="app-modal-footer-actions">
-              <Button ref={discardKeepButtonRef} onClick={returnToForm}>
-                {t("discard.cancel")}
-              </Button>
-              <Button type="primary" danger onClick={closeAndReset}>
-                {t("discard.confirm")}
-              </Button>
-            </div>
-          </section>
-        ) : succeeded ? (
-          <section
+            id="system-report-panel"
             className={mergeClassNames(
               "app-system-report-success",
               styles.success,
@@ -321,12 +252,10 @@ export function SystemReportLauncher() {
                 </dd>
               </div>
             </dl>
-            <Button type="primary" block onClick={closeAndReset}>
-              {t("success.close")}
-            </Button>
           </section>
         ) : (
           <div
+            id="system-report-panel"
             className={mergeClassNames("app-system-report-panel", styles.panel)}
             data-testid="system-report-form"
           >
@@ -351,7 +280,6 @@ export function SystemReportLauncher() {
               requiredMark
               disabled={submitting}
               onValuesChange={(changedValues) => {
-                dirtyRef.current = true;
                 if (submissionState === "failure") {
                   idempotencyKeyRef.current = null;
                   setSubmissionState("idle");
@@ -372,9 +300,6 @@ export function SystemReportLauncher() {
                 <Segmented
                   block
                   aria-label={t("category.label")}
-                  onChange={() => {
-                    dirtyRef.current = true;
-                  }}
                   options={[
                     { label: t("category.bug"), value: "bug" },
                     { label: t("category.question"), value: "question" },
@@ -411,7 +336,6 @@ export function SystemReportLauncher() {
                   placeholder={t("email.placeholder")}
                   onChange={() => {
                     emailManuallyEditedRef.current = true;
-                    dirtyRef.current = true;
                   }}
                 />
               </Form.Item>
@@ -440,9 +364,6 @@ export function SystemReportLauncher() {
                   maxLength={SYSTEM_REPORT_MAX_TITLE_LENGTH}
                   showCount
                   placeholder={t("reportTitle.placeholder")}
-                  onChange={() => {
-                    dirtyRef.current = true;
-                  }}
                 />
               </Form.Item>
 
@@ -471,9 +392,6 @@ export function SystemReportLauncher() {
                   maxLength={SYSTEM_REPORT_MAX_MESSAGE_LENGTH}
                   showCount
                   placeholder={t("message.placeholder")}
-                  onChange={() => {
-                    dirtyRef.current = true;
-                  }}
                 />
               </Form.Item>
 
@@ -489,17 +407,9 @@ export function SystemReportLauncher() {
 
               <div className="app-modal-footer-actions">
                 <Button
-                  ref={formCancelButtonRef}
-                  data-testid="system-report-cancel"
-                  htmlType="button"
-                  onClick={requestClose}
-                  disabled={submitting}
-                >
-                  {t("cancel")}
-                </Button>
-                <Button
                   data-testid="system-report-submit"
                   type="primary"
+                  block
                   htmlType="submit"
                   loading={submitting}
                   disabled={submitting}
