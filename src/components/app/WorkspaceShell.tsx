@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -15,7 +14,7 @@ import {
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import { avatarPublicUrl } from "@/components/profile/avatar-upload";
+import { avatarSignedUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
 import { APP_ROUTES } from "@/lib/routes";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -128,13 +127,19 @@ export function WorkspaceShell({
       : cleanDisplayName && cleanDisplayName !== profileName
         ? cleanDisplayName
         : null;
-  const avatarUrl = useMemo(() => {
-    if (!avatarPath) return null;
-    try {
-      return avatarPublicUrl(avatarPath);
-    } catch {
-      return null;
-    }
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void avatarSignedUrl(avatarPath)
+      .then((url) => {
+        if (!cancelled) setAvatarUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setAvatarUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [avatarPath]);
   const avatarInitial = profileName?.charAt(0).toUpperCase() ?? "?";
   const profileActions: ProfileAction[] = [

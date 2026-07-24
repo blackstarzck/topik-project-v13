@@ -6,7 +6,6 @@ import {
   getMissingRequiredConsentDocuments,
   getRequiredConsentDocuments,
   LegalDocumentsUnavailableError,
-  recordRequiredConsents,
   type RequiredConsentDocument,
 } from "../../../src/lib/legal/consent";
 
@@ -30,7 +29,6 @@ function makeClient(db: {
   legalDocuments?: Row[];
   userConsents?: Row[];
   profile?: Row | null;
-  inserts?: Row[][];
   updates?: Row[];
 }) {
   return {
@@ -65,10 +63,6 @@ function makeClient(db: {
             db.profile = { ...db.profile, ...nextPatch };
           }
           return query;
-        },
-        insert(rows: Row[]) {
-          db.inserts?.push(rows);
-          return Promise.resolve({ data: null, error: null });
         },
         maybeSingle() {
           if (table === "profiles") {
@@ -291,38 +285,6 @@ describe("legal consent helpers", () => {
     );
 
     expect(missing.map((doc) => doc.id)).toEqual(["terms-2"]);
-  });
-
-  it("records consent rows for provided documents", async () => {
-    const inserts: Row[][] = [];
-    const client = makeClient({ inserts });
-
-    await recordRequiredConsents(
-      "user-1",
-      [termsDoc, privacyDoc],
-      "signup",
-      async () =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        client as any,
-    );
-
-    expect(inserts).toHaveLength(1);
-    expect(inserts[0]).toMatchObject([
-      {
-        user_id: "user-1",
-        document_id: "terms-1",
-        doc_type: "terms",
-        version: "v1",
-        source: "signup",
-      },
-      {
-        user_id: "user-1",
-        document_id: "privacy-1",
-        doc_type: "privacy",
-        version: "v1",
-        source: "signup",
-      },
-    ]);
   });
 
   it("backfills blank display_name from OAuth metadata and a random nickname", async () => {

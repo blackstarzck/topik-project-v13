@@ -5,20 +5,20 @@
  *
  * Bucket policy (20260520121300_storage_policies.sql):
  *   - path convention: avatars/{user_id}/{file}
- *   - owner insert/update/delete to own folder; public read.
+ *   - owner select/insert/update/delete to own folder; private bucket.
  *   - bucket limit 5MB, mime png/jpeg/webp.
  *
  * We enforce 5MB + jpg/png client-side (spec says jpg/png; webp is also bucket-
  * allowed but the spec lists jpg/png, so we accept the two documented types).
- * `avatar_path` on profiles stores the object path so the public URL can be
- * derived anywhere. This is a REAL upload — Supabase Storage is wired here, not
- * an external provider stub.
+ * `avatar_path` on profiles stores the object path. The browser resolves it
+ * through a short-lived signed URL under the current user's Storage RLS.
  */
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 export const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png"] as const;
+export const AVATAR_SIGNED_URL_TTL_SECONDS = 5 * 60;
 
 // i18n: 이 모듈은 컴포넌트가 아니라 useTranslations를 쓸 수 없다(wave-2/3 key-expose
 // 패턴). 사용자에게 보이는 메시지는 profile.avatar.* 카탈로그 키로 노출하고, 렌더
@@ -69,7 +69,6 @@ function extensionFor(file: File): "png" | "jpg" {
 
 export type AvatarUploadResult = {
   path: string;
-  publicUrl: string;
 };
 
 export function isOwnAvatarPath(userId: string, path: string | null): boolean {
@@ -78,7 +77,8 @@ export function isOwnAvatarPath(userId: string, path: string | null): boolean {
 
 /**
  * Upload a (square-cropped) avatar blob to avatars/{userId}/avatar-<ts>.<ext>,
- * persist the path to profiles.avatar_path, and return the public URL.
+ * persist the path to profiles.avatar_path, and return the stored path.
+ * The rendering consumer resolves that path through `avatarSignedUrl`.
  */
 export async function uploadAvatar(
   userId: string,
@@ -95,22 +95,25 @@ export async function uploadAvatar(
     });
   if (uploadError) throw new Error(uploadError.message);
 
-  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-
   const { error: profileError } = await supabase
     .from("profiles")
     .update({ avatar_path: path })
     .eq("id", userId);
   if (profileError) throw new Error(profileError.message);
 
-  return { path, publicUrl: urlData.publicUrl };
+  return { path };
 }
 
-export function avatarPublicUrl(path: string | null): string | null {
+export async function avatarSignedUrl(
+  path: string | null | undefined,
+): Promise<string | null> {
   if (!path) return null;
   const supabase = createSupabaseBrowserClient();
-  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-  return data.publicUrl;
+  const { data, error } = await supabase.storage
+    .from("avatars")
+    .createSignedUrl(path, AVATAR_SIGNED_URL_TTL_SECONDS);
+  if (error) throw new Error(error.message);
+  return data.signedUrl;
 }
 
 export async function removeAvatar(

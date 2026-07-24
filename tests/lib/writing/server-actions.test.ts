@@ -536,10 +536,11 @@ describe("createComparisonReportAction", () => {
         user: { id: "user-1" },
       },
     });
-    helpers.rpcMock.mockResolvedValue({
-      data: "report-id",
-      error: null,
-    });
+    helpers.rpcMock.mockImplementation(async (name: string) =>
+      name === "get_my_account_state"
+        ? { data: "active", error: null }
+        : { data: "report-id", error: null },
+    );
   });
 
   it("uses the latest previous complete submission when previous_id is omitted", async () => {
@@ -622,7 +623,10 @@ describe("createComparisonReportAction", () => {
       }),
     ).rejects.toThrow("same problem_id");
 
-    expect(helpers.rpcMock).not.toHaveBeenCalled();
+    expect(helpers.rpcMock).not.toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.anything(),
+    );
   });
 
   it("prefers parent_submission_id over the latest previous complete submission", async () => {

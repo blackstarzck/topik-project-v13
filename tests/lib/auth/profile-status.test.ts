@@ -2,25 +2,34 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   fetchProfileStatus,
+  getCurrentAccountState,
   isActiveStatus,
 } from "../../../src/lib/auth/profile";
 import type { SupabaseServerClient } from "../../../src/lib/supabase/server";
 
-// Builds a supabase stub whose profiles.select(...).eq(...).maybeSingle()
-// resolves to the given payload, mirroring fetchProfileStatus' query chain.
-function clientReturning(payload: {
-  data: { status: string } | null;
-  error?: unknown;
-}) {
-  const maybeSingle = vi.fn().mockResolvedValue(payload);
-  const eq = vi.fn(() => ({ maybeSingle }));
-  const select = vi.fn(() => ({ eq }));
-  const from = vi.fn(() => ({ select }));
+// Builds a Supabase stub whose minimal get_my_account_state RPC resolves to
+// the given payload, mirroring fetchProfileStatus' fail-closed contract.
+function clientReturning(payload: { data: string | null; error?: unknown }) {
+  const rpc = vi.fn().mockResolvedValue(payload);
   return {
-    stub: { from } as unknown as SupabaseServerClient,
-    from,
-    select,
-    eq,
+    stub: { rpc } as unknown as SupabaseServerClient,
+    rpc,
+  };
+}
+
+function currentAccountClient(payload: {
+  user: { id: string } | null;
+  state: string | null;
+}) {
+  const getUser = vi.fn().mockResolvedValue({
+    data: { user: payload.user },
+    error: null,
+  });
+  const rpc = vi.fn().mockResolvedValue({ data: payload.state, error: null });
+  return {
+    stub: { auth: { getUser }, rpc } as unknown as SupabaseServerClient,
+    getUser,
+    rpc,
   };
 }
 
@@ -36,13 +45,9 @@ describe("isActiveStatus", () => {
 
 describe("fetchProfileStatus", () => {
   it("returns the row status when visible", async () => {
-    const { stub, from, select, eq } = clientReturning({
-      data: { status: "deleted" },
-    });
+    const { stub, rpc } = clientReturning({ data: "deleted" });
     await expect(fetchProfileStatus(stub, "user-1")).resolves.toBe("deleted");
-    expect(from).toHaveBeenCalledWith("profiles");
-    expect(select).toHaveBeenCalledWith("status");
-    expect(eq).toHaveBeenCalledWith("id", "user-1");
+    expect(rpc).toHaveBeenCalledWith("get_my_account_state");
   });
 
   it("returns null when the row is not visible (RLS/unauthenticated)", async () => {
@@ -59,13 +64,39 @@ describe("fetchProfileStatus", () => {
   });
 
   it("composes with isActiveStatus to gate inactive accounts", async () => {
-    const active = clientReturning({ data: { status: "active" } });
-    const blocked = clientReturning({ data: { status: "blocked" } });
+    const active = clientReturning({ data: "active" });
+    const blocked = clientReturning({ data: "blocked" });
     expect(isActiveStatus(await fetchProfileStatus(active.stub, "u"))).toBe(
       true,
     );
     expect(isActiveStatus(await fetchProfileStatus(blocked.stub, "u"))).toBe(
       false,
     );
+  });
+});
+
+describe("getCurrentAccountState", () => {
+  it("returns the authenticated user and minimal RPC status", async () => {
+    const client = currentAccountClient({
+      user: { id: "user-1" },
+      state: "deleted",
+    });
+
+    await expect(
+      getCurrentAccountState(async () => client.stub),
+    ).resolves.toEqual({
+      user: { id: "user-1" },
+      status: "deleted",
+    });
+    expect(client.rpc).toHaveBeenCalledWith("get_my_account_state");
+  });
+
+  it("returns null without calling the state RPC when unauthenticated", async () => {
+    const client = currentAccountClient({ user: null, state: null });
+
+    await expect(
+      getCurrentAccountState(async () => client.stub),
+    ).resolves.toBeNull();
+    expect(client.rpc).not.toHaveBeenCalled();
   });
 });

@@ -29,13 +29,18 @@ vi.mock("@/lib/supabase/server", () => ({
 import { NextRequest } from "next/server";
 
 import { GET, POST } from "../../../src/app/auth/account-delete/route";
+import { ACCOUNT_DELETION_CONFIRMATION_TEXT } from "../../../src/lib/auth/account-deletion";
 
 function postRequest(
   headers: HeadersInit = {},
   url = "http://localhost/auth/account-delete",
+  confirmation: string | null = ACCOUNT_DELETION_CONFIRMATION_TEXT.ko,
 ) {
+  const body = new URLSearchParams();
+  if (confirmation !== null) body.set("confirmation", confirmation);
   return new NextRequest(url, {
     method: "POST",
+    body,
     headers: {
       origin: "http://localhost",
       "sec-fetch-site": "same-origin",
@@ -49,6 +54,7 @@ describe("/auth/account-delete route handler", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost");
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     helpers.getTalkpikApiBaseUrl.mockReturnValue("https://api.example.test");
     helpers.getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
@@ -62,6 +68,7 @@ describe("/auth/account-delete route handler", () => {
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    vi.unstubAllEnvs();
   });
 
   it("rejects cross-site POST requests before reading session state", async () => {
@@ -79,7 +86,75 @@ describe("/auth/account-delete route handler", () => {
     expect(helpers.rpc).not.toHaveBeenCalled();
   });
 
+  it("rejects POST requests without an Origin header", async () => {
+    const res = await POST(
+      postRequest({
+        origin: "",
+        "sec-fetch-site": "none",
+      }),
+    );
+
+    expect(res.status).toBe(403);
+    expect(helpers.getUser).not.toHaveBeenCalled();
+    expect(helpers.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a null Origin header", async () => {
+    const res = await POST(postRequest({ origin: "null" }));
+
+    expect(res.status).toBe(403);
+    expect(helpers.getUser).not.toHaveBeenCalled();
+    expect(helpers.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty POST before reading session state", async () => {
+    const res = await POST(postRequest({}, undefined, null));
+
+    expect(res.status).toBe(400);
+    expect(helpers.getUser).not.toHaveBeenCalled();
+    expect(helpers.deleteTalkpikAccountProfile).not.toHaveBeenCalled();
+    expect(helpers.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a POST whose server-side confirmation does not match", async () => {
+    const res = await POST(postRequest({}, undefined, "delete"));
+
+    expect(res.status).toBe(400);
+    expect(helpers.getUser).not.toHaveBeenCalled();
+    expect(helpers.deleteTalkpikAccountProfile).not.toHaveBeenCalled();
+    expect(helpers.rpc).not.toHaveBeenCalled();
+  });
+
+  it.each(Object.values(ACCOUNT_DELETION_CONFIRMATION_TEXT))(
+    "accepts the approved confirmation value %s",
+    async (confirmation) => {
+      const res = await POST(
+        postRequest({ accept: "application/json" }, undefined, confirmation),
+      );
+
+      expect(res.status).toBe(200);
+      expect(helpers.rpc).toHaveBeenCalledWith("request_account_deletion");
+    },
+  );
+
+  it.each([
+    ` ${ACCOUNT_DELETION_CONFIRMATION_TEXT.ko}`,
+    `${ACCOUNT_DELETION_CONFIRMATION_TEXT.en} `,
+    "delete",
+    "Xoa",
+  ])(
+    "rejects non-exact confirmation value %s before reading session state",
+    async (confirmation) => {
+      const res = await POST(postRequest({}, undefined, confirmation));
+
+      expect(res.status).toBe(400);
+      expect(helpers.getUser).not.toHaveBeenCalled();
+      expect(helpers.rpc).not.toHaveBeenCalled();
+    },
+  );
+
   it("accepts same-origin browser POSTs when the public host differs from the internal request URL", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://127.0.0.1:3010");
     const res = await POST(
       postRequest(
         {
@@ -93,6 +168,51 @@ describe("/auth/account-delete route handler", () => {
     expect(res.status).toBe(303);
     expect(helpers.deleteTalkpikAccountProfile).toHaveBeenCalledOnce();
     expect(helpers.rpc).toHaveBeenCalledWith("request_account_deletion");
+  });
+
+  it("never trusts forwarded or Host headers as the account-deletion origin", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://app.example.test");
+
+    const res = await POST(
+      postRequest(
+        {
+          host: "evil.example",
+          "x-forwarded-host": "evil.example",
+          "x-forwarded-proto": "https",
+          origin: "https://evil.example",
+          "sec-fetch-site": "same-origin",
+        },
+        "http://localhost:3000/auth/account-delete",
+      ),
+    );
+
+    expect(res.status).toBe(403);
+    expect(helpers.getUser).not.toHaveBeenCalled();
+    expect(helpers.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a foreign Origin even when Sec-Fetch-Site is missing", async () => {
+    const res = await POST(
+      postRequest({
+        origin: "https://evil.example",
+        "sec-fetch-site": "",
+      }),
+    );
+
+    expect(res.status).toBe(403);
+    expect(helpers.getUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects a foreign Origin even when Sec-Fetch-Site says same-origin", async () => {
+    const res = await POST(
+      postRequest({
+        origin: "https://evil.example",
+        "sec-fetch-site": "same-origin",
+      }),
+    );
+
+    expect(res.status).toBe(403);
+    expect(helpers.getUser).not.toHaveBeenCalled();
   });
 
   it("redirects to /login when unauthenticated", async () => {
@@ -190,6 +310,7 @@ describe("/auth/account-delete route handler", () => {
   });
 
   it("keeps error redirects on the public browser origin", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://127.0.0.1:3010");
     helpers.deleteTalkpikAccountProfile.mockRejectedValue(
       new Error("external failed"),
     );

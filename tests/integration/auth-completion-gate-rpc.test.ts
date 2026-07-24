@@ -143,6 +143,26 @@ describe.skipIf(!ENABLED)("auth completion gate RPC integration", () => {
     expect(consents?.every((row) => row.source === "signup")).toBe(true);
   });
 
+  it("rejects direct authenticated consent inserts", async () => {
+    const consentDocuments = await publishOfficialDocumentSet();
+    const user = await createSignedInUser({
+      displayName: "Direct Consent User",
+      nationalityCountryCode: "KR",
+    });
+    const document = consentDocuments[0];
+    if (!document) throw new Error("required consent document missing");
+
+    const { error } = await user.supabase.from("user_consents").insert({
+      user_id: user.userId,
+      document_id: document.id,
+      doc_type: "privacy",
+      version: document.version,
+      source: "signup",
+    });
+
+    expect(error).toBeTruthy();
+  });
+
   it("rolls back profile changes when required consent is not accepted", async () => {
     const consentDocuments = await publishOfficialDocumentSet();
     const user = await createSignedInUser({ nationalityCountryCode: "KR" });

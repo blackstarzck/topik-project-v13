@@ -7,6 +7,7 @@ const redirectMock = vi.fn((url: string) => {
   throw new Error(`NEXT_REDIRECT:${url}`);
 });
 const getSessionAndProfileMock = vi.fn();
+const getCurrentAccountStateMock = vi.fn();
 const getAuthCompletionStatusForSessionMock = vi.fn();
 const workspaceShellMock = vi.hoisted(() => vi.fn());
 
@@ -22,6 +23,7 @@ vi.mock("@/components/app/WorkspaceShell", () => ({
 }));
 
 vi.mock("@/lib/auth/profile", () => ({
+  getCurrentAccountState: () => getCurrentAccountStateMock(),
   getSessionAndProfile: () => getSessionAndProfileMock(),
   isActiveStatus: (status: string | null | undefined) => status === "active",
 }));
@@ -62,6 +64,11 @@ describe("(workspace) layout auth completion guard", () => {
     redirectMock.mockClear();
     workspaceShellMock.mockClear();
     getSessionAndProfileMock.mockReset();
+    getCurrentAccountStateMock.mockReset();
+    getCurrentAccountStateMock.mockResolvedValue({
+      user: session.user,
+      status: "active",
+    });
     getAuthCompletionStatusForSessionMock.mockReset();
     getAuthCompletionStatusForSessionMock.mockResolvedValue("ready");
   });
@@ -71,6 +78,7 @@ describe("(workspace) layout auth completion guard", () => {
   });
 
   it("redirects anonymous users to login", async () => {
+    getCurrentAccountStateMock.mockResolvedValue(null);
     getSessionAndProfileMock.mockResolvedValue(null);
 
     await expect(renderLayout()).rejects.toThrow("NEXT_REDIRECT:/login");
@@ -79,9 +87,9 @@ describe("(workspace) layout auth completion guard", () => {
   });
 
   it("redirects withdrawn (deleted) accounts to the account-inactive clear route", async () => {
-    getSessionAndProfileMock.mockResolvedValue({
-      ...session,
-      profile: { ...session.profile, status: "deleted" },
+    getCurrentAccountStateMock.mockResolvedValue({
+      user: session.user,
+      status: "deleted",
     });
 
     await expect(renderLayout()).rejects.toThrow(
@@ -89,13 +97,14 @@ describe("(workspace) layout auth completion guard", () => {
     );
 
     // status 게이트는 consent 검사보다 먼저 차단해야 한다.
+    expect(getSessionAndProfileMock).not.toHaveBeenCalled();
     expect(getAuthCompletionStatusForSessionMock).not.toHaveBeenCalled();
   });
 
   it("redirects blocked accounts to the account-inactive clear route", async () => {
-    getSessionAndProfileMock.mockResolvedValue({
-      ...session,
-      profile: { ...session.profile, status: "blocked" },
+    getCurrentAccountStateMock.mockResolvedValue({
+      user: session.user,
+      status: "blocked",
     });
 
     await expect(renderLayout()).rejects.toThrow(

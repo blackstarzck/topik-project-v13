@@ -32,6 +32,7 @@
 - 외부 분석 결과 수신과 feedback retry는 기존 제출 관계를 보존하고 중복 요청을 식별한다.
 - 기관 초대 수락, 가입 완료, nickname 확인처럼 경쟁 가능성이 있는 변경은 DB constraint와 RPC 검증을 함께 사용한다.
 - PDF 생성은 distinct 문제 단위로 quota를 reserve하고 성공 시 commit, 실패 시 release한다. 저장 파일 재다운로드는 새 usage가 아니다.
+- quota usage뿐 아니라 사용자에게 materialize된 quota reset header/target 조회도 active profile 전용이다. 탈퇴 JWT는 reset 이력을 읽을 수 없고 quota 예약 RPC도 진입 단계에서 거부된다.
 
 정확한 RPC 이름, argument, return shape와 권한은 해당 migration 및 호출 source/tests를 확인한다.
 
@@ -40,6 +41,7 @@
 - `20260718120000_auth_gate_exact_consent_snapshots.sql` 이후 가입 완료 RPC는 화면에 표시한 동의 문서의 `{id, version}` 배열을 `p_consent_documents jsonb`로 반드시 받는다.
 - RPC는 같은 transaction에서 공식·published·required 문서 집합을 고정하고 locale 완전 집합 또는 `ko` fallback을 결정한다. 최신 효력 시각이 같은 문서가 있거나 terms/privacy 완전 집합이 아니면 profile과 동의 기록을 모두 남기지 않는다.
 - 현재 아직 동의하지 않은 문서 집합을 ID 순서로 한 번 캡처한 뒤 전달된 배열과 정확히 같을 때만 그 캡처를 `user_consents`에 기록한다. 화면 표시 뒤 새 버전이 published되면 이전 배열은 `auth_completion_stale: consent_documents`로 실패한다.
+- authenticated 사용자는 `user_consents`에 직접 INSERT할 수 없다. table grant와 RLS policy가 모두 직접 쓰기를 막으며, `complete_auth_gate()`만 위 검증을 마친 transaction에서 동의 ledger를 기록한다.
 - 앱이 사용하는 공개 signature는 8-argument 또는 locale seed를 포함한 10-argument overload이며, 둘 다 boolean 다음에 `p_consent_documents jsonb`를 둔다. 이전 4/7/9-argument boolean-only signature는 `PUBLIC`, `anon`, `authenticated` 실행 권한을 모두 회수한다.
 - 이 migration 파일과 파생 TypeScript 타입이 v13 정본이지만, dev·production 적용과 role별 catalog evidence는 topik-ai 운영 절차가 소유한다. v13 작업면에서는 원격 apply를 실행하지 않는다.
 
@@ -98,11 +100,11 @@ respond_institution_invitation(p_invitation_id uuid, p_accept boolean) -> jsonb
 
 ## Storage
 
-- `avatars`는 public bucket이다. anon/authenticated는 bucket 안의 object를 읽을 수 있고, email-confirmed authenticated 사용자는 자기 `{user_id}/...` 경로에 insert/update할 수 있다. 자기 경로 delete는 별도 email-confirmed 조건 없이 허용된다.
+- `avatars`는 private bucket이다. profile에는 object path만 저장하고 앱은 active authenticated 본인의 SELECT policy를 거쳐 최대 5분짜리 signed URL을 만든다. active·email-confirmed 사용자는 자기 `{user_id}/...` 경로에 insert/update할 수 있고, active 사용자는 자기 경로를 delete할 수 있다.
 - `problem-assets`는 public bucket이며 현재 anon/authenticated SELECT policy는 `bucket_id = 'problem-assets'`만 검사한다. Storage 계층 자체는 문제의 publish/visibility를 검사하지 않으므로 object path를 아는 사용자는 파일을 읽을 수 있다. authenticated 관리 쓰기는 `private.is_admin(auth.uid())` 조건을 따른다.
-- `generated-exports`는 private bucket이다. authenticated 사용자는 `exports/{user_id}/...` 자기 경로를 select/delete할 수 있고, email 확인을 마치면 같은 경로에 직접 insert할 수도 있다. owner update policy는 없다. 앱의 정상 생성 흐름은 server 경로를 사용하지만, SQL 권한 자체가 browser의 자기 경로 insert를 금지하는 것은 아니다.
+- `generated-exports`는 private bucket이다. active authenticated 사용자는 `exports/{user_id}/...` 자기 경로를 select/delete할 수 있고, email 확인을 마치면 같은 경로에 직접 insert할 수도 있다. owner update policy는 없다. 앱의 정상 생성 흐름은 server 경로를 사용하지만, SQL 권한 자체가 browser의 자기 경로 insert를 금지하는 것은 아니다.
 
-bucket 공개 여부, MIME/size, path 정책은 Storage migration이 정본이다. service role을 browser upload 편의용으로 사용하지 않는다.
+`deleted` profile은 기존 JWT가 남아 있어도 두 private bucket의 object SELECT/INSERT/DELETE와 signed URL 발급을 할 수 없다. 이미 발급된 avatar signed URL은 최대 5분 동안 유효할 수 있다. bucket 공개 여부, MIME/size, path 정책은 Storage migration이 정본이다. service role을 browser upload 편의용으로 사용하지 않는다.
 
 ## PDF 생성 운영 기록
 
@@ -115,4 +117,6 @@ bucket 공개 여부, MIME/size, path 정책은 Storage migration이 정본이�
 - user-independent seed만 `supabase/seed.sql`에 두고, user-owned test fixture는 테스트가 만들고 정리한다.
 - 제출·피드백·audit처럼 기록 의미가 있는 데이터는 일반 UI에서 임의 hard delete하지 않는다.
 - 미인증 가입 정리는 private function과 cron 계약을 따르며 최소 retention floor를 지킨다.
-- 탈퇴 사용자는 soft-delete 상태와 복구 유예를 먼저 적용한다. 영구 삭제·Storage 파기 여부는 별도 운영 절차와 후속 migration이 정한다.
+- 탈퇴 사용자는 `request_account_deletion()`으로만 soft-delete 상태와 복구 유예를 적용한다. 일반 profile UPDATE로 `status`나 `deleted_at`을 바꿀 수 없다. `get_my_account_state()`는 로그인 경계에 호출자 본인의 최소 상태만 제공한다. 영구 삭제·Storage 파기 여부는 별도 운영 절차와 후속 migration이 정한다.
+- `problems`/`problem_assets` DB 조회는 공개 published 문제 범위와 호출자-private 범위를 분리한다. 탈퇴 JWT에도 전자는 유지하지만 private·AI-generated 행과 INSERT/UPDATE/DELETE는 active profile이 없으면 거부한다.
+- RLS를 우회하는 사용자 데이터 RPC 7개는 공통 active-account assertion을 가장 먼저 실행한다. `list_user_library_problem_items()`는 활성 사용자의 현재 서재 읽기 계약과 10열 반환 형식을 유지한다. runtime 의존성이 제거된 `submit_writing_with_feedback(jsonb,jsonb,jsonb,jsonb)`만 authenticated/PUBLIC 실행 표면에서 제외한다.

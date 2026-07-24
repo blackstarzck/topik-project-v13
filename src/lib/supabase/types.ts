@@ -1864,6 +1864,10 @@ export interface Database {
           streak_days: number;
         }[];
       };
+      get_my_account_state: {
+        Args: Record<string, never>;
+        Returns: "active" | "blocked" | "deleted" | null;
+      };
       list_user_library_problem_items: {
         Args: Record<string, never>;
         Returns: {
