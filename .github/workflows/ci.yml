@@ -423,6 +423,8 @@ jobs:
           ARTIFACT_HYGIENE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
           ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: ${{ vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}
           ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || vars.ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA }}
+          ARTIFACT_HYGIENE_EVENT_CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA: ${{ vars.ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA }}
           ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA: ${{ github.sha }}
           ARTIFACT_HYGIENE_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
           ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF: ${{ github.event.merge_group.base_ref }}
@@ -458,39 +460,81 @@ jobs:
             "config/artifact-hygiene-policy.json"
           )
           if git cat-file -e "${ARTIFACT_HYGIENE_BASE_SHA}:scripts/run-trusted-artifact-hygiene.mjs" 2>/dev/null; then
-            trusted_root="$(mktemp -d "${RUNNER_TEMP}/artifact-hygiene.XXXXXXXX")"
-            trap 'rm -rf "${trusted_root}"' EXIT
-            trusted_real="$(realpath "${trusted_root}")"
-            runner_temp_real="$(realpath "${RUNNER_TEMP}")"
-            workspace_real="$(realpath "${GITHUB_WORKSPACE}")"
-            case "${trusted_real}/" in
-              "${runner_temp_real}/"*) ;;
-              *) echo "ARTIFACT_TRUSTED_ROOT_OUTSIDE_RUNNER_TEMP" >&2; exit 2 ;;
-            esac
-            case "${trusted_real}/" in
-              "${workspace_real}/"*) echo "ARTIFACT_TRUSTED_ROOT_INSIDE_WORKSPACE" >&2; exit 2 ;;
-            esac
-
-            materialize_artifact_base_file() {
-              local repo_path="$1"
-              local destination="${trusted_root}/${repo_path}"
-              local mode
-              mode="$(git ls-tree "${ARTIFACT_HYGIENE_BASE_SHA}" -- "${repo_path}" | awk '{print $1}')"
-              case "${mode}" in
-                100644|100755) ;;
-                *) echo "ARTIFACT_TRUSTED_BASE_FILE_MODE_INVALID:${repo_path}" >&2; exit 2 ;;
+            if git diff --quiet "${ARTIFACT_HYGIENE_BASE_SHA}" HEAD -- "${trusted_paths[@]}"; then
+              trusted_root="$(mktemp -d "${RUNNER_TEMP}/artifact-hygiene.XXXXXXXX")"
+              trap 'rm -rf "${trusted_root}"' EXIT
+              trusted_real="$(realpath "${trusted_root}")"
+              runner_temp_real="$(realpath "${RUNNER_TEMP}")"
+              workspace_real="$(realpath "${GITHUB_WORKSPACE}")"
+              case "${trusted_real}/" in
+                "${runner_temp_real}/"*) ;;
+                *) echo "ARTIFACT_TRUSTED_ROOT_OUTSIDE_RUNNER_TEMP" >&2; exit 2 ;;
               esac
-              mkdir -p "$(dirname "${destination}")"
-              git show "${ARTIFACT_HYGIENE_BASE_SHA}:${repo_path}" > "${destination}"
-              test -f "${destination}" && test ! -L "${destination}"
-            }
+              case "${trusted_real}/" in
+                "${workspace_real}/"*) echo "ARTIFACT_TRUSTED_ROOT_INSIDE_WORKSPACE" >&2; exit 2 ;;
+              esac
 
-            for repo_path in "${trusted_paths[@]}"; do
-              materialize_artifact_base_file "${repo_path}"
-            done
-            env -u NODE_OPTIONS -u NODE_PATH node "${trusted_root}/scripts/run-trusted-artifact-hygiene.mjs" \
-              --workspace "${GITHUB_WORKSPACE}" \
-              --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}"
+              materialize_artifact_base_file() {
+                local repo_path="$1"
+                local destination="${trusted_root}/${repo_path}"
+                local mode
+                mode="$(git ls-tree "${ARTIFACT_HYGIENE_BASE_SHA}" -- "${repo_path}" | awk '{print $1}')"
+                case "${mode}" in
+                  100644|100755) ;;
+                  *) echo "ARTIFACT_TRUSTED_BASE_FILE_MODE_INVALID:${repo_path}" >&2; exit 2 ;;
+                esac
+                mkdir -p "$(dirname "${destination}")"
+                git show "${ARTIFACT_HYGIENE_BASE_SHA}:${repo_path}" > "${destination}"
+                test -f "${destination}" && test ! -L "${destination}"
+              }
+
+              for repo_path in "${trusted_paths[@]}"; do
+                materialize_artifact_base_file "${repo_path}"
+              done
+              env -u NODE_OPTIONS -u NODE_PATH node "${trusted_root}/scripts/run-trusted-artifact-hygiene.mjs" \
+                --workspace "${GITHUB_WORKSPACE}" \
+                --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}"
+            else
+              approved_head="${ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA:-}"
+              candidate_head="${ARTIFACT_HYGIENE_EVENT_CANDIDATE_HEAD_SHA:-${approved_head}}"
+              if ! [[ "${approved_head}" =~ ^[0-9a-f]{40}$ ]] || \
+                 [[ "${approved_head}" != "${candidate_head}" ]]; then
+                echo "ARTIFACT_TRUSTED_UPDATE_EXTERNAL_APPROVAL_REQUIRED" >&2
+                exit 2
+              fi
+              git cat-file -e "${candidate_head}^{commit}"
+              if ! git merge-base --is-ancestor "${ARTIFACT_HYGIENE_BASE_SHA}" "${candidate_head}"; then
+                echo "ARTIFACT_TRUSTED_UPDATE_BASE_NOT_CONTAINED" >&2
+                exit 2
+              fi
+              if ! git merge-base --is-ancestor "${candidate_head}" HEAD; then
+                echo "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_NOT_CONTAINED" >&2
+                exit 2
+              fi
+              for repo_path in "${trusted_paths[@]}"; do
+                candidate_mode="$(git ls-tree "${candidate_head}" -- "${repo_path}" | awk '{print $1}')"
+                case "${candidate_mode}" in
+                  100644|100755) ;;
+                  *) echo "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_SURFACE_INVALID" >&2; exit 2 ;;
+                esac
+              done
+              if ! git diff --quiet "${candidate_head}" HEAD -- "${trusted_paths[@]}"; then
+                echo "ARTIFACT_TRUSTED_UPDATE_SURFACE_MISMATCH" >&2
+                exit 2
+              fi
+              workspace_head_sha="$(git rev-parse --verify HEAD^{commit})"
+              if [[ "${workspace_head_sha}" != "${ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA}" ]]; then
+                echo "ARTIFACT_TRUSTED_UPDATE_WORKSPACE_HEAD_MISMATCH" >&2
+                exit 2
+              fi
+              env -u NODE_OPTIONS -u NODE_PATH \
+                ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA="${approved_head}" \
+                node scripts/run-trusted-artifact-hygiene.mjs \
+                --workspace "${GITHUB_WORKSPACE}" \
+                --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}" \
+                --candidate-head-sha "${candidate_head}" \
+                --allow-trusted-update
+            fi
           else
             # 최초 설치 PR과 그 merge-group/main push만 허용한다.
             if ! git merge-base --is-ancestor "${ARTIFACT_HYGIENE_BASE_SHA}" HEAD; then
