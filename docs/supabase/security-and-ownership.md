@@ -3,9 +3,10 @@
 ## Auth gate
 
 - public 인증 화면은 session이 없어도 동작하며 user-owned table 접근을 전제로 하지 않는다.
-- callback의 `next`는 앱 내부 상대 경로로 sanitize한다. token과 provider raw error는 사용자 화면과 redirect URL에 노출하지 않는다. callback server log도 provider `error_description`과 Supabase 원본 오류를 남기지 않고 canonical stage만 기록한다.
+- callback의 `next`는 앱 내부 상대 경로로 sanitize한다. token과 provider raw error는 사용자 화면과 redirect URL에 노출하지 않는다. legacy implicit-flow fragment는 값을 캡처한 직후 session 교환보다 먼저 주소와 history에서 전체 제거한다. StrictMode effect 재실행도 같은 fragment 처리 작업에 다시 연결하며 session 교환을 반복하지 않는다. 동기식 history 정리가 실패하면 fragment를 읽거나 교환하지 않고 fragment가 없는 현재 pathname+search로 전체 navigation을 시작한다. session 교환이 reject되면 원본 오류를 기록하지 않고 canonical unknown 오류 화면으로 복구한다. callback server log도 provider `error_description`과 Supabase 원본 오류를 남기지 않고 canonical stage만 기록한다.
 - email 확인, 필수 동의와 profile 완료 gate는 server와 DB 계약을 함께 확인한다.
-- browser에는 publishable key만 허용한다. secret/service-role key는 server-only다.
+- browser에는 publishable key만 허용한다. 일반 사용자 CRUD는 JWT와 RLS/RPC 소유권 검증으로 실행한다. secret/service-role key는 사용자 인증 수단이 아니며 명시적 server-only 시스템 작업에만 허용한다.
+- `/auth/account-inactive`는 query의 상태 힌트를 신뢰하지 않는다. 같은 request-bound client로 현재 JWT 사용자와 `get_my_account_state()` 결과를 확인하고, 실제 `blocked`/`deleted`일 때만 local sign-out한다. `active`는 dashboard로 돌려보내고, 확정된 미인증 사용자만 login으로 보낸다. 인증·상태 확인·local sign-out 오류와 unknown 상태는 session mutation 없이 public `/auth/error?reason=unknown`으로 보내 auth-entry redirect loop를 막는다. RPC가 존재하지 않는다는 `PGRST202`에만 같은 JWT/RLS client의 본인 `profiles(id, status)` 조회를 임시 호환 경로로 사용하고, owner id와 `active`/`blocked`/`deleted` allowlist를 다시 검증한다.
 
 ## RLS와 소유권
 
@@ -26,6 +27,7 @@
 - 사용자 전용 데이터를 다루는 공개 `SECURITY DEFINER` RPC는 진입 시 active profile을 다시 확인한다. 현재 대상은 dashboard KPI, 제출 이력 문맥, 오래된 초안 교체, 비교 리포트 생성, PDF quota 예약, nickname 중복 확인, 서재 문제 목록이다. 제거된 canonical 쓰기 경로에 의존하는 구형 제출 RPC는 authenticated 실행 권한을 회수한다.
 - private schema function과 cron은 browser callable API로 간주하지 않는다.
 - admin RPC와 audit 구조가 migration에 남아 있어도 v13 user app은 admin UI나 운영 권한을 소유하지 않는다.
+- `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_ACCESS_TOKEN` 직접 접근은 공용 service-role helper로 제한한다. 현재 notification worker와 unsubscribe route의 두 직접 접근은 별도 notification 소유권 정리 전까지의 명시적 임시 예외이며, 후속 notification task가 shared server-only helper로 옮긴 뒤 allowlist에서 제거한다.
 - canonical 쓰기 RPC는 학습자에게 제목·지문·자료와 버전 식별자처럼 허용된 필드만 반환한다. 정답·모범답안·rubric·scoring·raw payload는 browser 응답과 learner-safe snapshot에 포함하지 않는다.
 - `private.problem_identities`와 submission intent/outbox, reconciliation·evidence RPC는 browser가 직접 읽거나 조작하는 표면이 아니다. authenticated 사용자는 owner 검증을 거친 공개 RPC만 호출하고, 상태 전환·운영 대사는 service role에 한정한다.
 - snapshot CHECK가 호출하는 금지-key 판별 helper는 immutable하고 table을 읽지 않는 순수 함수다. `authenticated`와 `service_role`에 실행 권한을 주되 `anon`과 `PUBLIC`에는 주지 않는다.
@@ -35,6 +37,7 @@
 
 - 탈퇴 요청은 사용자 접근을 막는 soft delete와 30일 복구 유예를 기본으로 한다.
 - 탈퇴 HTTP POST의 신뢰 출처는 production의 `NEXT_PUBLIC_SITE_URL`이다. `Host`, `X-Forwarded-Host`, `X-Forwarded-Proto`는 출처 판정과 redirect 기준으로 사용하지 않으며, development/test만 현재 loopback request URL을 추가 허용한다.
+- `get_my_account_state()`는 현재 JWT 소유자의 lifecycle 상태만 반환하는 최소 RPC다. 함수·grant의 정본은 P0 보안 migration `20260723234527_consent_account_deletion_rls.sql`이다. 결합 후에는 RPC를 우선 사용하며, 결합 전 단독 배포에서는 `PGRST202`일 때만 현재 JWT/RLS가 허용하는 본인 profile 상태 조회로 호환한다. 다른 RPC 오류에는 fallback하지 않는다.
 - 미인증 계정 cleanup은 확인 상태와 retention floor를 검사하고 private/cron 경계에서 실행한다.
 - 사용자 알림 읽음 상태·설정·마케팅 동의 테이블인 `user_notifications`, `user_marketing_consent`는 v13이 소유한다. dispatch, email transport, retry, marketing gate, pg_cron과 admin 대상 생성은 topik-ai `admin_schema_migrations` 소유 private/server 운영 경계다. v13의 과거 파이프라인 migration은 독립 clean replay를 위한 no-op이며 topik-ai 운영 테이블을 정적으로 참조하지 않는다. replay guard는 이관 marker와 고정된 notice-only `DO` 본문만 허용하고, 그 밖의 실행 SQL은 종류와 관계없이 거부한다.
 - marketing 전달은 저장된 consent가 있는 경우에만 가능하며, provider가 준비되지 않은 상태를 성공 발송으로 기록하지 않는다.

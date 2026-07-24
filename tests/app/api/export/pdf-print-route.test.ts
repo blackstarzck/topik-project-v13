@@ -62,6 +62,9 @@ vi.mock("@/lib/supabase/server", () => ({
       auth: { getUser: helpers.getUserMock },
       from: helpers.fromMock,
     }),
+}));
+
+vi.mock("@/lib/supabase/service-role.server", () => ({
   createSupabaseServiceRoleClient: () => ({
     rpc: vi.fn(),
   }),

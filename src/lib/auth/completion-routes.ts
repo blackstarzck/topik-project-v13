@@ -20,7 +20,8 @@ export const POST_AUTH_LOGIN_PATH = `${APP_ROUTES.authPostAuth}?intent=login`;
 export const POST_AUTH_SIGN_UP_PATH = `${APP_ROUTES.authPostAuth}?intent=sign-up`;
 
 // 회원 탈퇴/차단 계정 게이트: 비활성(status<>'active') 세션을 만나면 이 GET
-// route handler로 보내 세션 쿠키를 정리한 뒤 /login?reason=... 로 보낸다.
+// route handler로 보낸다. route가 JWT owner의 최소 DB 상태를 재검증한 뒤에만
+// 세션 쿠키를 정리한다. query status는 권한 근거가 아닌 이동 힌트다.
 // (서버 컴포넌트 layout 은 쿠키를 못 지우므로 route handler 가 필요하다.)
 export const ACCOUNT_INACTIVE_PATH = APP_ROUTES.authAccountInactive;
 export const LEARNING_GOAL_PATH = APP_ROUTES.onboardingLearningGoal;

@@ -22,6 +22,9 @@ vi.mock("@/lib/supabase/server", () => ({
       from: helpers.fromMock,
       rpc: helpers.rpcMock,
     }),
+}));
+
+vi.mock("@/lib/supabase/service-role.server", () => ({
   createSupabaseServiceRoleClient: helpers.createServiceClientMock,
 }));
 

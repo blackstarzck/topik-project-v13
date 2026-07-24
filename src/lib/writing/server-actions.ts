@@ -6,10 +6,8 @@ import { redirect } from "next/navigation";
 import { asLocale, DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
 import { ACCOUNT_INACTIVE_PATH } from "../auth/completion-routes";
 import { fetchProfileStatus, isActiveStatus } from "../auth/profile";
-import {
-  createSupabaseServerClient,
-  createSupabaseServiceRoleClient,
-} from "../supabase/server";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role.server";
+import { createSupabaseServerClient } from "../supabase/server";
 import type { Json, Tables } from "../supabase/types";
 import {
   ExternalEvaluationApiError,
