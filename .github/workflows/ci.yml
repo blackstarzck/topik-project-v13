@@ -257,15 +257,20 @@ jobs:
             case "${repo_path}" in
               AGENTS.md|docs/operations/ai-development-pipeline.md|\
               .codex/skills/*|.claude/*|\
-              scripts/ai-task.mjs|scripts/check-github-owner-auth.mjs|\
+              scripts/ai-task.mjs|scripts/ai-release.mjs|scripts/ai-pipeline-*.mjs|\
+              scripts/ai-validation-evidence.mjs|scripts/security-artifact-audit.mjs|\
+              scripts/check-github-owner-auth.mjs|\
               scripts/report-worktree-lifecycle.mjs|\
               scripts/check-artifact-hygiene.mjs|\
               scripts/report-artifact-hygiene.mjs|\
               scripts/run-trusted-artifact-hygiene.mjs|\
-              scripts/lib/ai-task-*.mjs|scripts/lib/task-lifecycle-*.mjs|\
+              scripts/lib/ai-task-*.mjs|scripts/lib/ai-release-*.mjs|\
+              scripts/lib/ai-pipeline-*.mjs|scripts/lib/ai-validation-*.mjs|\
+              scripts/lib/security-artifact-*.mjs|scripts/lib/task-lifecycle-*.mjs|\
               scripts/lib/worktree-lifecycle.mjs|scripts/lib/github-owner-auth.mjs|\
               scripts/lib/artifact-*.mjs|\
-              tests/scripts/ai-task-*.test.mjs|\
+              tests/scripts/ai-task-*.test.mjs|tests/scripts/ai-pipeline-*.test.mjs|\
+              tests/scripts/ai-release-*.test.mjs|tests/scripts/ai-validation-*.test.mjs|\
               tests/scripts/*worktree-lifecycle.test.mjs|\
               tests/scripts/*artifact*.test.mjs|\
               tests/scripts/github-owner-auth.test.mjs|\
@@ -342,6 +347,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+
+      - name: Prepare security artifact audit refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          normalize_github_remote() {
+            local remote_url="$1"
+            printf '%s\n' "${remote_url%.git}"
+          }
+          [[ "$(normalize_github_remote "$(git remote get-url origin)")" == "https://github.com/blackstarzck/topik-project-v13" ]] || {
+            echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH" >&2; exit 3;
+          }
+          git fetch --no-tags --prune origin \
+            '+refs/heads/main:refs/remotes/origin/main'
+          git cat-file -e 'HEAD^{commit}'
+          git cat-file -e 'refs/remotes/origin/main^{commit}'
+
+      - name: Check security artifacts in reachable publish history
+        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
 
       - name: Check UI contract diff baseline (trusted)
         env:
@@ -555,6 +579,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check project structure
+        env:
+          PROJECT_STRUCTURE_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
         run: node scripts/check-project-structure.mjs
 
       - name: Check agent skill policy
@@ -590,9 +616,16 @@ jobs:
           tests/scripts/ai-task-cleanup.test.mjs
           tests/scripts/ai-task-metrics.test.mjs
           tests/scripts/ai-task-measure-cli.test.mjs
+          tests/scripts/ai-task-lifecycle-v3.test.mjs
+          tests/scripts/ai-task-lifecycle-v3-autocleanup.test.mjs
+          tests/scripts/ai-task-v3-adapter.test.mjs
+          tests/scripts/ai-task-sweep.test.mjs
+          tests/scripts/ai-release-promotion.test.mjs
+          tests/scripts/security-artifact-audit.test.mjs
+          tests/scripts/ai-validation-evidence.test.mjs
           tests/scripts/artifact-hygiene.test.mjs
           tests/scripts/github-owner-auth.test.mjs
-          --maxWorkers=1
+          --maxWorkers=2
 
       - name: Typecheck
         if: needs.classify-changes.outputs.run_app == 'true'
@@ -663,7 +696,7 @@ jobs:
       - name: Check report-only worktree lifecycle
         run: pnpm check:worktree-lifecycle
 
-      - name: Check task lifecycle v2 and cleanup contract
+      - name: Check task lifecycle v2/v3, one-shot sweep, and release contracts
         run: pnpm check:task-lifecycle
 
       - name: Summarize CI timing
@@ -705,6 +738,53 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+
+      - name: Check artifact hygiene diff baseline (trusted)
+        env:
+          ARTIFACT_HYGIENE_BASE_SHA: ${{ github.event.before }}
+          ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA: ${{ vars.ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          trusted_paths=(
+            "scripts/run-trusted-artifact-hygiene.mjs"
+            "scripts/check-artifact-hygiene.mjs"
+            "scripts/lib/artifact-hygiene.mjs"
+            "scripts/lib/artifact-manifest-v2.mjs"
+            "config/artifact-hygiene-policy.json"
+          )
+          if git diff --quiet "${ARTIFACT_HYGIENE_BASE_SHA}" HEAD -- "${trusted_paths[@]}"; then
+            node scripts/run-trusted-artifact-hygiene.mjs \
+              --workspace "${GITHUB_WORKSPACE}" \
+              --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}"
+          else
+            approved_head="${ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA:-}"
+            ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA="${approved_head}" \
+              node scripts/run-trusted-artifact-hygiene.mjs \
+              --workspace "${GITHUB_WORKSPACE}" \
+              --base-sha "${ARTIFACT_HYGIENE_BASE_SHA}" \
+              --candidate-head-sha "${approved_head}" \
+              --allow-trusted-update
+          fi
+
+      - name: Prepare security artifact audit refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          normalize_github_remote() {
+            local remote_url="$1"
+            printf '%s\n' "${remote_url%.git}"
+          }
+          [[ "$(normalize_github_remote "$(git remote get-url origin)")" == "https://github.com/blackstarzck/topik-project-v13" ]] || {
+            echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH" >&2; exit 3;
+          }
+          git fetch --no-tags --prune origin \
+            '+refs/heads/main:refs/remotes/origin/main'
+          git cat-file -e 'HEAD^{commit}'
+          git cat-file -e 'refs/remotes/origin/main^{commit}'
+
+      - name: Check security artifacts in reachable publish history
+        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
 
       - name: Check project structure
         run: node scripts/check-project-structure.mjs

@@ -187,6 +187,7 @@ function getMergedTemplate() {
   const root = mkdtempSync(path.join(tmpdir(), "talkpik-cleanup-template-"));
   const remote = path.join(root, "remote.git");
   const seed = path.join(root, "seed");
+  const base = path.join(root, "base");
   execFileSync("git", ["init", "--bare", remote]);
   execFileSync("git", ["init", "-b", "main", seed]);
   git(seed, ["config", "user.email", "test@example.com"]);
@@ -211,7 +212,18 @@ function getMergedTemplate() {
   const mergeCommitOid = git(seed, ["rev-parse", "HEAD"]);
   git(seed, ["remote", "add", "origin", remote]);
   git(seed, ["push", "-u", "origin", "main"]);
-  mergedTemplate = { root, remote, headSha, mergeCommitOid };
+  execFileSync("git", [
+    "clone",
+    "--config",
+    "user.email=test@example.com",
+    "--config",
+    "user.name=Cleanup Test",
+    "--branch",
+    "main",
+    remote,
+    base,
+  ]);
+  mergedTemplate = { root, remote, base, headSha, mergeCommitOid };
   return mergedTemplate;
 }
 
@@ -221,14 +233,8 @@ function cloneMergedTemplate() {
   const remote = path.join(root, "remote.git");
   const base = path.join(root, "base");
   cpSync(template.remote, remote, { recursive: true, errorOnExist: true });
-  execFileSync("git", [
-    "clone",
-    "--config", "user.email=test@example.com",
-    "--config", "user.name=Cleanup Test",
-    "--branch", "main",
-    remote,
-    base,
-  ]);
+  cpSync(template.base, base, { recursive: true, errorOnExist: true });
+  git(base, ["remote", "set-url", "origin", remote]);
   return { root, remote, seed: base, base, headSha: template.headSha, mergeCommitOid: template.mergeCommitOid };
 }
 

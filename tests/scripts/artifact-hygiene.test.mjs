@@ -148,6 +148,101 @@ function runBootstrap({ approvedHead, baseSha, candidateHead, rootDir }) {
   );
 }
 
+function createTrustedUpdateRepository({
+  approveNewScript = true,
+  invalidTrustedPath,
+  omittedTrustedPath,
+} = {}) {
+  const rootDir = mkdtempSync(path.join(tmpdir(), "artifact-trusted-update-"));
+  temporaryRoots.push(rootDir);
+  git(rootDir, "init", "--initial-branch=main");
+  git(rootDir, "config", "user.email", "test@example.com");
+  git(rootDir, "config", "user.name", "Test User");
+  write(rootDir, ".gitignore", ".codex/work/\n");
+  write(rootDir, "package.json", "{}\n");
+  for (const relativePath of TRUSTED_ARTIFACT_PATHS) {
+    const content =
+      relativePath === "config/artifact-hygiene-policy.json"
+        ? `${JSON.stringify(defaultPolicy(), null, 2)}\n`
+        : readFileSync(relativePath);
+    write(rootDir, relativePath, content);
+  }
+  git(rootDir, "add", ".");
+  git(rootDir, "commit", "-m", "trusted checker baseline");
+  const baseSha = git(rootDir, "rev-parse", "HEAD");
+
+  git(rootDir, "switch", "-c", "candidate");
+  write(
+    rootDir,
+    "config/artifact-hygiene-policy.json",
+    `${JSON.stringify(
+      defaultPolicy({
+        approvedProductionPaths: approveNewScript
+          ? ["scripts/new-production-check.mjs"]
+          : [],
+      }),
+      null,
+      2,
+    )}\n`,
+  );
+  write(
+    rootDir,
+    "scripts/new-production-check.mjs",
+    "export const enabled = true;\n",
+  );
+  git(rootDir, "add", ".");
+  if (omittedTrustedPath) {
+    rmSync(path.join(rootDir, ...omittedTrustedPath.split("/")));
+    git(rootDir, "add", "--all");
+  }
+  if (invalidTrustedPath) {
+    const blob = git(rootDir, "hash-object", invalidTrustedPath);
+    git(
+      rootDir,
+      "update-index",
+      "--add",
+      "--cacheinfo",
+      "120000",
+      blob,
+      invalidTrustedPath,
+    );
+  }
+  git(rootDir, "commit", "-m", "update trusted artifact policy");
+  const candidateHead = git(rootDir, "rev-parse", "HEAD");
+  return { baseSha, candidateHead, rootDir };
+}
+
+function runTrustedUpdate({
+  approvedHead,
+  baseSha,
+  candidateHead,
+  rootDir,
+}) {
+  return spawnSync(
+    process.execPath,
+    [
+      path.join(rootDir, "scripts", "run-trusted-artifact-hygiene.mjs"),
+      "--workspace",
+      rootDir,
+      "--base-sha",
+      baseSha,
+      "--candidate-head-sha",
+      candidateHead,
+      "--allow-trusted-update",
+    ],
+    {
+      cwd: rootDir,
+      encoding: "utf8",
+      windowsHide: true,
+      env: {
+        ...process.env,
+        ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA:
+          approvedHead ?? "",
+      },
+    },
+  );
+}
+
 function checkoutSyntheticMerge(rootDir, baseSha, candidateHead) {
   git(rootDir, "switch", "-c", "synthetic-merge", baseSha);
   git(rootDir, "merge", "--no-ff", candidateHead, "-m", "synthetic PR merge");
@@ -554,6 +649,152 @@ describe("artifact hygiene path safety", () => {
 });
 
 describe("artifact hygiene package contract", () => {
+  it("accepts an exact approved trusted update inside a synthetic merge", () => {
+    const fixture = createTrustedUpdateRepository();
+    checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
+    );
+
+    const result = runTrustedUpdate({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["mismatched", "f".repeat(40)],
+  ])("rejects %s trusted update approval", (_label, approvedHead) => {
+    const fixture = createTrustedUpdateRepository();
+    checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
+    );
+
+    const result = runTrustedUpdate({ ...fixture, approvedHead });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_EXTERNAL_APPROVAL_REQUIRED",
+    );
+    expect(result.stderr).not.toContain(fixture.candidateHead);
+  });
+
+  it("rejects a trusted update whose base is not an ancestor", () => {
+    const fixture = createTrustedUpdateRepository();
+    const baseTree = git(
+      fixture.rootDir,
+      "rev-parse",
+      `${fixture.baseSha}^{tree}`,
+    );
+    const unrelatedBase = git(
+      fixture.rootDir,
+      "commit-tree",
+      baseTree,
+      "-m",
+      "unrelated trusted base",
+    );
+
+    const result = runTrustedUpdate({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+      baseSha: unrelatedBase,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_BASE_NOT_CONTAINED",
+    );
+  });
+
+  it("rejects a trusted update candidate outside workspace HEAD", () => {
+    const fixture = createTrustedUpdateRepository();
+    git(fixture.rootDir, "switch", "-c", "alternate", fixture.baseSha);
+    write(fixture.rootDir, "src/alternate.ts", "export const alternate = true;\n");
+    git(fixture.rootDir, "add", ".");
+    git(fixture.rootDir, "commit", "-m", "alternate head");
+
+    const result = runTrustedUpdate({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_NOT_CONTAINED",
+    );
+  });
+
+  it.each([
+    [
+      "missing",
+      { omittedTrustedPath: "scripts/check-artifact-hygiene.mjs" },
+    ],
+    [
+      "symbolic",
+      { invalidTrustedPath: "scripts/check-artifact-hygiene.mjs" },
+    ],
+  ])("rejects a %s trusted update surface", (_label, fixtureOptions) => {
+    const fixture = createTrustedUpdateRepository(fixtureOptions);
+
+    const result = runTrustedUpdate({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_CANDIDATE_SURFACE_INVALID",
+    );
+  });
+
+  it("rejects a trusted file changed after the approved update", () => {
+    const fixture = createTrustedUpdateRepository();
+    checkoutSyntheticMerge(
+      fixture.rootDir,
+      fixture.baseSha,
+      fixture.candidateHead,
+    );
+    write(
+      fixture.rootDir,
+      "config/artifact-hygiene-policy.json",
+      `${JSON.stringify(defaultPolicy({ rootAllowlist: ["tampered"] }))}\n`,
+    );
+    git(fixture.rootDir, "add", "config/artifact-hygiene-policy.json");
+    git(fixture.rootDir, "commit", "-m", "tamper after approval");
+
+    const result = runTrustedUpdate({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain(
+      "ARTIFACT_TRUSTED_UPDATE_SURFACE_MISMATCH",
+    );
+  });
+
+  it("returns the candidate policy violation status after approval", () => {
+    const fixture = createTrustedUpdateRepository({
+      approveNewScript: false,
+    });
+
+    const result = runTrustedUpdate({
+      ...fixture,
+      approvedHead: fixture.candidateHead,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("PRODUCTION_PATH_NOT_APPROVED");
+    expect(result.stderr).not.toContain(fixture.candidateHead);
+  });
+
   it("accepts an approved candidate inside a synthetic merge checkout", () => {
     const fixture = createBootstrapRepository({
       trustedPathContents: {

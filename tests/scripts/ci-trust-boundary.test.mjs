@@ -16,6 +16,10 @@ const workflow = readFileSync(path.join(root, ".github", "workflows", "ci.yml"),
 const codeowners = readFileSync(path.join(root, ".github", "CODEOWNERS"), "utf8");
 const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const vitestConfig = readFileSync(path.join(root, "vitest.config.ts"), "utf8");
+const pipelineDocs = readFileSync(
+  path.join(root, "docs", "operations", "ai-development-pipeline.md"),
+  "utf8",
+);
 const lifecycleTestPaths = [
   "tests/scripts/worktree-lifecycle.test.mjs",
   "tests/scripts/report-worktree-lifecycle.test.mjs",
@@ -400,7 +404,7 @@ describe("CI trusted UI contract boundary", () => {
     );
     expect(workflow).toMatch(/\n\s*merge_group:\s*\n/u);
     expect(workflow).toMatch(/\n\s*push:\s*\n\s*branches:\s*\[main\]/u);
-    expect(workflow).not.toMatch(/collab/u);
+    expect(topLevelBlock(workflow, "on")).not.toMatch(/collab/u);
     expect(concurrencyPolicy(workflow)).toMatchObject({
       group: expect.stringContaining("github.event.pull_request.number"),
       "cancel-in-progress": "${{ github.event_name == 'pull_request' }}",
@@ -540,6 +544,19 @@ describe("CI trusted UI contract boundary", () => {
         baseFiles: { "scripts/ai-task.mjs": "before\n" },
         mutate: ({ write }) =>
           write("scripts/ai-task.mjs", "after\n"),
+        expected: {
+          run_app: "false",
+          run_pipeline_contracts: "true",
+          run_windows_lifecycle: "true",
+          changed_count: "1",
+          classification: "pipeline",
+        },
+      },
+      {
+        name: "pipeline one-shot sweep entrypoint",
+        baseFiles: { "scripts/lib/ai-task-sweep.mjs": "before\n" },
+        mutate: ({ write }) =>
+          write("scripts/lib/ai-task-sweep.mjs", "after\n"),
         expected: {
           run_app: "false",
           run_pipeline_contracts: "true",
@@ -1341,6 +1358,13 @@ describe("CI trusted UI contract boundary", () => {
   });
 
   it("gates trusted artifact updates on an externally approved exact head", () => {
+    expect(
+      workflow.match(/name: Check artifact hygiene diff baseline \(trusted\)/gu),
+    ).toHaveLength(2);
+    expect(jobBlock("main-integrity")).toContain(
+      "ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA",
+    );
+    expect(jobBlock("main-integrity")).toContain("--allow-trusted-update");
     expect(workflow).toContain(
       "vars.ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA",
     );
@@ -1408,6 +1432,36 @@ describe("CI trusted UI contract boundary", () => {
         ),
       ),
     ).toBe(false);
+  });
+
+  it("blocks new Black PR findings and leaves full collab history to promotion", () => {
+    expect(packageJson.scripts["check:security-artifacts:ci"]).toBe(
+      "node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main",
+    );
+    expect(workflow.match(/name: Prepare security artifact audit refs/gu)).toHaveLength(2);
+    expect(workflow.match(
+      /run: node scripts\/security-artifact-audit\.mjs --repo \. --mode check --refs HEAD --baseline-ref origin\/main/gu,
+    )).toHaveLength(2);
+    expect(workflow.match(/normalize_github_remote\(\)/gu)).toHaveLength(2);
+    expect(workflow.match(
+      /normalize_github_remote "\$\(git remote get-url origin\)"\)/gu,
+    )).toHaveLength(2);
+    expect(workflow).toContain("https://github.com/blackstarzck/topik-project-v13");
+    expect(workflow).not.toContain(
+      "git remote add collab https://github.com/keduall/topik-project-v13.git",
+    );
+    expect(workflow).not.toContain("+refs/heads/main:refs/remotes/collab/main");
+    expect(pipelineDocs).toContain(
+      "Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`의 도달 가능한 전체 이력을 감사한다.",
+    );
+  });
+
+  it("keeps task:prepare documentation on the public CLI contract", () => {
+    expect(pipelineDocs).toContain("task:prepare -- --repo <기준-checkout> --intent read-only");
+    expect(pipelineDocs).toContain(
+      "task:prepare -- --repo <기준-checkout> --intent code --branch feat/example-task --actor codex",
+    );
+    expect(pipelineDocs).not.toMatch(/task:prepare[^\n]*--mode/u);
   });
 
   it("uses only a base-owned minimal npm runtime before candidate install", () => {
