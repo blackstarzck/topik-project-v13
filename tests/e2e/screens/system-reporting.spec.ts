@@ -137,7 +137,7 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
   await expect(popover).toBeHidden();
   await expect(launcher).toHaveAttribute("aria-label", OPEN_LAUNCHER_LABEL);
   await expect(launcher).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByRole("tooltip")).toHaveText(OPEN_LAUNCHER_LABEL);
+  await expect(page.locator(".ant-tooltip")).toHaveText(OPEN_LAUNCHER_LABEL);
   await expect
     .poll(async () =>
       page.evaluate(() => ({
@@ -153,7 +153,7 @@ test("launcher is absent only on landing and opens a responsive panel", async ({
       documentOverflow: 0,
     });
   await launcher.click();
-  await expect(page.getByRole("tooltip")).toBeHidden();
+  await expect(page.locator(".ant-tooltip")).toBeHidden();
   await page.getByTestId("system-report-title").fill("다시 열어도 유지할 제목");
   await launcher.click();
   await launcher.click();
