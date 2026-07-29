@@ -33,7 +33,7 @@ const AUTO_CLEANUP_REPORT_LOCK_STALE_MS = 10 * 60 * 1000;
 const PROTECTED_BRANCHES = new Set(["main", "master", "develop", "production", "staging"]);
 const DISPOSABLE_ROOTS = Object.freeze([
   "node_modules", ".next", "build", "dist", "out", "coverage", ".cache", ".turbo", ".vercel", ".env.local",
-  "tsconfig.tsbuildinfo",
+  "tsconfig.tsbuildinfo", "test-results", "playwright-report", ".playwright", ".vitest", ".eslintcache",
 ]);
 const RUNTIME_KEYS = new Set([
   "schemaVersion",
