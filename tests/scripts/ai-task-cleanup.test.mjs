@@ -60,7 +60,7 @@ function makeRepository() {
   git(seed, ["config", "user.name", "Cleanup Test"]);
   writeFileSync(
     path.join(seed, ".gitignore"),
-    ".codex/\nnode_modules/\n.next/\nbuild/\ndist/\nout/\ncoverage/\n.cache/\n.env.local\ntsconfig.tsbuildinfo\n",
+    ".codex/\nnode_modules/\n.next/\nbuild/\ndist/\nout/\ncoverage/\n.cache/\n.env.local\ntsconfig.tsbuildinfo\ntest-results/\nplaywright-report/\n.playwright/\n.vitest/\n.eslintcache\n",
   );
   writeFileSync(path.join(seed, "README.md"), "baseline\n");
   mkdirSync(path.join(seed, ".codex", "skills"), { recursive: true });
@@ -194,7 +194,7 @@ function getMergedTemplate() {
   git(seed, ["config", "user.name", "Cleanup Template"]);
   writeFileSync(
     path.join(seed, ".gitignore"),
-    ".codex/\nnode_modules/\n.next/\nbuild/\ndist/\nout/\ncoverage/\n.cache/\n.env.local\ntsconfig.tsbuildinfo\n",
+    ".codex/\nnode_modules/\n.next/\nbuild/\ndist/\nout/\ncoverage/\n.cache/\n.env.local\ntsconfig.tsbuildinfo\ntest-results/\nplaywright-report/\n.playwright/\n.vitest/\n.eslintcache\n",
   );
   writeFileSync(path.join(seed, "README.md"), "baseline\n");
   mkdirSync(path.join(seed, ".codex", "skills"), { recursive: true });
@@ -481,6 +481,36 @@ describe("task:finalize report-only gate", () => {
 
     expect(report.ready).toBe(true);
     expect(report.candidates).toContain(`disposable:${buildInfo}`);
+  });
+
+  // 파이프라인이 요구하는 검증(Playwright·vitest·lint)이 만드는 재생성 가능한 산출물 때문에
+  // 그 검증을 통과한 task가 정리되지 못하는 상태를 만들지 않는다. 임의의 ignored root는 계속 보존한다.
+  it("treats Playwright and vitest artifact roots as disposable", async () => {
+    const context = mergeReady();
+    const artifactRoots = ["test-results", "playwright-report", ".playwright", ".vitest"];
+    for (const relative of artifactRoots) {
+      const root = path.join(context.started.worktreePath, relative);
+      mkdirSync(root, { recursive: true });
+      writeFileSync(path.join(root, "run.json"), "{}\n");
+    }
+
+    const report = await serviceFor(context).finalizeTask({ repoPath: context.base, branch: context.started.branch });
+
+    expect(report.blockers).not.toContain("WORKTREE_IGNORED_CONTENT");
+    for (const relative of artifactRoots) {
+      expect(report.candidates).toContain(`disposable:${path.join(context.started.worktreePath, relative)}`);
+    }
+  });
+
+  it("treats the eslint cache file as disposable", async () => {
+    const context = mergeReady();
+    const cacheFile = path.join(context.started.worktreePath, ".eslintcache");
+    writeFileSync(cacheFile, "cache\n");
+
+    const report = await serviceFor(context).finalizeTask({ repoPath: context.base, branch: context.started.branch });
+
+    expect(report.blockers).not.toContain("WORKTREE_IGNORED_CONTENT");
+    expect(report.candidates).toContain(`disposable:${cacheFile}`);
   });
 
   it("blocks a directory at the exact tsconfig build info path", async () => {
