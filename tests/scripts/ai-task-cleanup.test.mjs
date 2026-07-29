@@ -483,6 +483,8 @@ describe("task:finalize report-only gate", () => {
     expect(report.candidates).toContain(`disposable:${buildInfo}`);
   });
 
+  // 파이프라인이 요구하는 검증(Playwright·vitest·lint)이 만드는 재생성 가능한 산출물 때문에
+  // 그 검증을 통과한 task가 정리되지 못하는 상태를 만들지 않는다. 임의의 ignored root는 계속 보존한다.
   it("treats Playwright and vitest artifact roots as disposable", async () => {
     const context = mergeReady();
     const artifactRoots = ["test-results", "playwright-report", ".playwright", ".vitest"];

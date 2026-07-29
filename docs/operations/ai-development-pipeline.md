@@ -240,7 +240,7 @@ v3 sweep은 repository auth lock 안에서 필요한 계정으로 전환해 `gh 
 
 10분은 파이프라인이 제어하는 Git·GitHub 작업의 실행 예산이지 운영체제가 멈춘 파일시스템 호출까지 강제 종료한다는 보장은 아니다. 강제 종료가 cleanup journal을 손상시킬 수 있으므로 일회성 sweep 자체를 `taskkill`로 종료하지 않는다. 예상 밖의 오류나 시간 부족은 대상 task를 삭제하지 않고 `PRESERVED` 또는 `FAILED`로 남겨 다음 코드 작업의 sweep이나 수동 `task:sweep`에서 재검사한다. 일반적인 위험 task 하나가 보존·실패해도 다음 task와 새 작업 시작을 막지 않는다. 대상 worktree 내부에서 실행된 정리, v3로 안전하게 복사되지 않은 legacy record, 비정식 경로는 정리하지 않는다.
 
-승인 fingerprint는 disposable root의 내용 전체가 아니라 정확한 root 경로·종류·device·inode·생성 시각 identity를 묶는다. 따라서 `node_modules`, `.next`, task 임시 로그 안의 내용 변화만으로 승인이 만료되지는 않는다. 반대로 root가 삭제 후 다시 생성되거나 symlink·junction으로 바뀌거나 identity를 안전하게 얻지 못하면 `APPROVAL_INVALIDATED` 또는 경로 안전 오류로 멈춘다. `tsconfig.tsbuildinfo`는 정확한 파일 하나만 disposable 후보로 허용한다. 검증이 만드는 재생성 가능한 산출물도 같은 disposable 후보다. 여기에는 `test-results`, `playwright-report`, `.playwright`, `.vitest`와 `.eslintcache`가 들어간다. 파이프라인이 요구하는 검증을 실행한 결과 때문에 그 검증을 통과한 task가 정리되지 못하는 상태를 만들지 않는다. ignored 탐색은 directory 단위로 접고, `.codex/work/<slug>` 이외의 다른 task 폴더나 임의 ignored root가 있으면 보존한다.
+승인 fingerprint는 disposable root의 내용 전체가 아니라 정확한 root 경로·종류·device·inode·생성 시각 identity를 묶는다. 따라서 `node_modules`, `.next`, task 임시 로그 안의 내용 변화만으로 승인이 만료되지는 않는다. 반대로 root가 삭제 후 다시 생성되거나 symlink·junction으로 바뀌거나 identity를 안전하게 얻지 못하면 `APPROVAL_INVALIDATED` 또는 경로 안전 오류로 멈춘다. `tsconfig.tsbuildinfo`는 정확한 파일 하나만 disposable 후보로 허용한다. ignored 탐색은 directory 단위로 접고, `.codex/work/<slug>` 이외의 다른 task 폴더나 임의 ignored root가 있으면 보존한다.
 
 정리 순서는 다음과 같다.
 
