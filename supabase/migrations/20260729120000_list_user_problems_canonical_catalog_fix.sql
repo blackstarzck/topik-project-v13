@@ -339,9 +339,7 @@ grant execute on function public.list_user_problems(jsonb, text, integer, intege
   to authenticated;
 
 comment on function public.list_user_problems(jsonb, text, integer, integer) is
-
-
-create or replace function public.get_dashboard_kpi()
+  'Learner problem list. writing_submission_count means fully analyzed completion; writing_submission_attempt_count means all materialized submission rows.';
 
 -- 적용 직후 라이브 카탈로그 상태를 단정한다. 문자열 검사가 아니라 pg_get_functiondef
 -- 결과를 읽으므로, 실패 시 이 트랜잭션 전체가 롤백된다.
