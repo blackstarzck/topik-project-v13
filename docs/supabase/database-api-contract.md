@@ -85,7 +85,7 @@ Data API의 직접 table 접근은 허용하지 않는다. 쓰기는 고정된 `
 - 운영 제출 시도 수는 `writing_submission_intents`를 기준으로 계산하고 accepted·materialized·failed·ambiguous를 분리한다. 사용자 완료 횟수와 운영 시도 수를 같은 지표로 사용하지 않는다.
 - `writing_submission_metrics`는 분석과 피드백까지 완료된 제출의 파생 지표를 보관한다.
 - 연속 학습일은 `study_events`를 Asia/Seoul 날짜로 해석해 계산한다.
-- 현재 완료 정의를 반영한 함수 본문과 authenticated 실행 권한은 `20260722120000_writing_completion_and_pdf_outcomes.sql`이 정본이다.
+- 완료 정의와 authenticated 실행 권한은 `20260722120000_writing_completion_and_pdf_outcomes.sql`이 정본이다. 단 `list_user_problems`의 **함수 본문 정본은 `20260729120000_list_user_problems_canonical_catalog_fix.sql`** 이다 — `20260722120000`은 cutover 이전 정의를 베이스로 작성되어 `20260714140000`이 제거한 private helper를 참조하므로, 그 catalog CTE를 post-cutover 형태로 교정한 뒤가 현재 계약이다. 두 마이그레이션은 같은 트랜잭션에서 적용한다.
 
 ## Canonical 쓰기 문항과 사용자 기록
 
