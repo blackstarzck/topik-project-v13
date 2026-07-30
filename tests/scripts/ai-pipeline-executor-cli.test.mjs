@@ -253,13 +253,144 @@ describe("promotion executor CLI arguments", () => {
     );
   });
 
-  it("keeps next, run, and probe-vercel unimplemented in this step", async () => {
+  it("keeps next and run unimplemented in this step", async () => {
     const { runExecutorCli } = await import("../../scripts/ai-pipeline-executor.mjs");
-    for (const command of ["next", "run", "probe-vercel"]) {
-      expect(() =>
+    for (const command of ["next", "run"]) {
+      await expect(
         runExecutorCli([command, "--repo", "C:\\repo", "--run-id", RUN_ID]),
-      ).toThrowError("EXECUTOR_STEP_NOT_IMPLEMENTED");
+      ).rejects.toThrowError("EXECUTOR_STEP_NOT_IMPLEMENTED");
     }
+  });
+
+  it("accepts --branch only for probe-vercel", async () => {
+    const { parseExecutorArguments } = await import("../../scripts/ai-pipeline-executor.mjs");
+
+    expect(
+      parseExecutorArguments([
+        "probe-vercel",
+        "--repo",
+        "C:\\repo",
+        "--run-id",
+        RUN_ID,
+        "--branch",
+        "stg",
+      ]),
+    ).toEqual({
+      command: "probe-vercel",
+      values: { repo: "C:\\repo", "run-id": RUN_ID, branch: "stg" },
+    });
+    for (const command of ["status", "next", "run"]) {
+      expect(() =>
+        parseExecutorArguments([command, "--repo", "C:\\repo", "--run-id", RUN_ID, "--branch", "stg"]),
+      ).toThrowError("INVALID_EXECUTOR_ARGUMENTS");
+    }
+  });
+});
+
+describe("promotion executor Vercel probe", () => {
+  function probeRecorder() {
+    const calls = [];
+    const body = (url) => {
+      if (url.pathname === "/v6/deployments" && url.searchParams.get("target") === "preview") {
+        return {
+          deployments: [
+            {
+              uid: "dpl_preview_001",
+              state: "READY",
+              target: "preview",
+              meta: { githubCommitSha: SHA.stgMerged, githubCommitRef: "stg" },
+            },
+          ],
+        };
+      }
+      if (url.pathname === "/v9/projects/topik-project-v13/env") {
+        return {
+          envs: [
+            { key: "NEXT_PUBLIC_SUPABASE_URL", target: ["preview"], gitBranch: null },
+          ],
+        };
+      }
+      if (url.pathname === "/v4/aliases/talkpik.example.com") {
+        return { deployment: { id: "dpl_production_001" } };
+      }
+      return null;
+    };
+    return {
+      calls,
+      implementation(target, init = {}) {
+        const url = new URL(String(target));
+        calls.push({ url, method: init.method ?? "GET", init });
+        const payload = body(url);
+        return Promise.resolve(
+          payload === null
+            ? { status: 404, ok: false, json: () => Promise.resolve({}) }
+            : { status: 200, ok: true, json: () => Promise.resolve(payload) },
+        );
+      },
+    };
+  }
+
+  it("reports the recorded preview deployment, environment scope, and alias without writing", async () => {
+    const { runProbeVercel } = await import("../../scripts/ai-pipeline-executor.mjs");
+    const { repository, runFile } = await fixtureRepository();
+    const before = readFileSync(runFile, "utf8");
+    const recorded = probeRecorder();
+
+    const probe = await runProbeVercel(
+      { repo: repository, "run-id": RUN_ID },
+      {
+        env: { VERCEL_TOKEN: "probe-token", VERCEL_TEAM_ID: "team_probe" },
+        localAppData: path.join(temporaryRoot(), "missing-local-app-data"),
+        fetchImplementation: recorded.implementation,
+        baseUrl: "https://api.vercel.test",
+      },
+    );
+
+    expect(probe).toEqual({
+      schemaVersion: 1,
+      recordType: "PromotionVercelProbeV1",
+      runId: RUN_ID,
+      state: "AWAITING_PROD_APPROVAL",
+      readOnly: true,
+      credentialSource: "env",
+      project: "topik-project-v13",
+      domain: "talkpik.example.com",
+      branch: "stg",
+      preview: {
+        deploymentId: "dpl_preview_001",
+        state: "READY",
+        target: "preview",
+        branch: "stg",
+      },
+      previewEnvironment: { environmentScope: "topik-dev" },
+      production: null,
+      alias: { deploymentId: "dpl_production_001" },
+    });
+    expect(recorded.calls.map((call) => call.method)).toEqual(["GET", "GET", "GET"]);
+    for (const call of recorded.calls) {
+      expect(call.init.body).toBeUndefined();
+      expect(call.url.searchParams.get("teamId")).toBe("team_probe");
+    }
+    expect(readFileSync(runFile, "utf8")).toBe(before);
+    expect(JSON.stringify(probe)).not.toContain("probe-token");
+  });
+
+  it("reports VERCEL_TOKEN_MISSING when no access credential is prepared", async () => {
+    const { runProbeVercel } = await import("../../scripts/ai-pipeline-executor.mjs");
+    const { repository } = await fixtureRepository();
+
+    await expect(
+      runProbeVercel(
+        { repo: repository, "run-id": RUN_ID },
+        {
+          env: {},
+          localAppData: path.join(temporaryRoot(), "missing-local-app-data"),
+          fetchImplementation: () => {
+            throw new Error("must not reach the network");
+          },
+        },
+      ),
+    ).rejects.toThrowError("VERCEL_TOKEN_MISSING");
   });
 });
 

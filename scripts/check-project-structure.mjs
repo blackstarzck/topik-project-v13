@@ -143,6 +143,7 @@ const pipelineContractImplementationPaths = Object.freeze([
   "scripts/lib/ai-release-executor.mjs",
   "scripts/lib/ai-release-git.mjs",
   "scripts/lib/ai-release-promotion.mjs",
+  "scripts/lib/ai-release-vercel.mjs",
   "scripts/lib/ai-task-sweep.mjs",
   "scripts/lib/ai-task-lifecycle-v3.mjs",
   "scripts/lib/ai-task-v3-adapter.mjs",

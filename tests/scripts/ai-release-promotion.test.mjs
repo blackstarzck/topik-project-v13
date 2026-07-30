@@ -682,6 +682,7 @@ describe("registry and CLI contract", () => {
       "tests/scripts/ai-release-baseline-audit.test.mjs",
       "tests/scripts/ai-release-executor.test.mjs",
       "tests/scripts/ai-release-git.test.mjs",
+      "tests/scripts/ai-release-vercel.test.mjs",
       "tests/scripts/ai-pipeline-executor-cli.test.mjs",
       "tests/scripts/security-artifact-audit.test.mjs",
       "tests/scripts/ai-validation-evidence.test.mjs",

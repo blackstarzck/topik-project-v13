@@ -171,7 +171,7 @@ pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-rev
 pnpm release:exec -- status --repo <기준-checkout> --run-id <run-id>
 pnpm release:exec -- next --repo <기준-checkout> --run-id <run-id>
 pnpm release:exec -- run --repo <기준-checkout> --run-id <run-id>
-pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id>
+pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id> [--branch stg]
 ```
 
 | 하위 명령 | 용도 | 현재 상태 |
@@ -179,7 +179,9 @@ pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id>
 | `status` | 기록을 읽어 다음 단계, 필요한 계정, 사전 점검 차단 사유, 사람 승인 명령을 보고한다. 아무 것도 쓰지 않는다 | 동작 |
 | `next` | 다음 단계 하나에 필요한 관측 항목과 실행 계획만 보여준다 | 미구현(`EXECUTOR_STEP_NOT_IMPLEMENTED`) |
 | `run` | 다음 단계 하나를 실제로 수행하고 검증된 증거로 상태를 전진시킨다 | 미구현(`EXECUTOR_STEP_NOT_IMPLEMENTED`) |
-| `probe-vercel` | Vercel Preview·Production 배포 상태를 읽기 전용으로 확인한다 | 미구현(`EXECUTOR_STEP_NOT_IMPLEMENTED`) |
+| `probe-vercel` | 기록에 적힌 project·domain으로 Preview·Production 배포와 Preview 환경 범위를 읽기 전용으로 확인한다 | 동작 |
+
+`probe-vercel`은 읽기만 한다. 배포를 만들지 않고 alias를 바꾸지 않으며 승격 기록도 고치지 않는다. `--branch`는 Preview 환경 범위를 확인할 branch이며 기본값은 `stg`다. 이 인자는 `probe-vercel`에만 허용하고 다른 하위 명령에 붙이면 `INVALID_EXECUTOR_ARGUMENTS`로 거부한다. 접근 자격이 준비되지 않았으면 결과를 꾸미지 않고 `VERCEL_TOKEN_MISSING`을 그대로 보고해 준비가 필요한 상태를 드러낸다.
 
 `status`는 읽기 전용이다. registry lock을 만들지 않고 승격 기록도 고치지 않는다. 고아로 남은 registry lock을 찾으면 `PROMOTION_REGISTRY_LOCKED`로 보고만 하고 지우지 않는다. 기록에 적힌 Keduall `stg` 기준이 현재 `collab/stg`와 다르면 `PROMOTION_BASE_MOVED`, 저장소 identity가 다르면 `REPOSITORY_IDENTITY_MISMATCH`로 차단한다. 실패는 대문자 코드 하나로만 보고하며 공급자 원문·명령 출력은 담지 않는다.
 
@@ -218,7 +220,8 @@ executor가 Git과 GitHub를 만지는 경로는 `scripts/lib/ai-release-git.mjs
 | --- | --- | --- |
 | Git 어댑터 | remote 갱신, 정확한 SHA 조회, 병합 parent 실측, candidate 병합, branch push, 조상 관계 확인, candidate branch 삭제 | `--force`·`-f`·`--force-with-lease`·`--force-if-includes`와 `+`로 시작하는 refspec, `--squash`·`--rebase`·`--hard` |
 | GitHub 어댑터 | 열린 PR 탐지, PR 생성, PR 상태 조회, PR 병합 | `gh auth` 하위 명령 전체, `--squash`·`--rebase`·`--admin` |
-| 관측값 사상 함수 | candidate·`stg` PR·`stg` ready·`main` PR·`main` merge·정리·사전 점검 관측값을 조립기가 요구하는 모양으로 만든다 | 측정하지 않은 값, SHA 형식이 아닌 값, boolean이 아닌 판정 |
+| Vercel 어댑터 | 정확한 commit의 배포 조회, `READY` 대기, alias 대상 조회, alias 재지정, 이전 `READY` production 조회, Preview 환경 범위 확인 | `assignAlias` 외 모든 경로의 쓰기 동작, 응답 원문 보관, 환경 변수 값 요청 |
+| 관측값 사상 함수 | candidate·`stg` PR·`stg` ready·`main` PR·`main` merge·정리·사전 점검·Preview·Production·rollback 관측값을 조립기가 요구하는 모양으로 만든다 | 측정하지 않은 값, SHA 형식이 아닌 값, boolean이 아닌 판정 |
 
 - candidate 병합은 고유한 임시 worktree에서 `--no-ff`로만 수행하고, 결과 SHA와 parent를 다시 읽어 `stg` 기준·Black source 순서를 확인한다. 충돌이면 병합을 중단하고 `EXECUTOR_CANDIDATE_MERGE_CONFLICT`로 보고한다. 성공·실패 모두 임시 worktree 정리를 시도하며, 정리가 실패하면 조용히 넘기지 않고 `cleanupFailed`로 결과에 드러낸다. 강제 삭제는 하지 않는다.
 - branch push는 force 계열 인자를 쓰지 않고, push 뒤 원격 ref를 다시 읽어 기대한 SHA와 같은지 확인한다. 다르면 `EXECUTOR_PUSH_VERIFY_FAILED`로 중단한다.
@@ -226,6 +229,29 @@ executor가 Git과 GitHub를 만지는 경로는 `scripts/lib/ai-release-git.mjs
 - 원격 branch 삭제는 `chore/promote-<날짜>-<source8>` 형식의 candidate branch만 허용한다. `stg`, `main`, `master`, `develop`, `production`, `staging`은 `EXECUTOR_PROTECTED_BRANCH`로 거부한다.
 - 어댑터는 계정을 스스로 바꾸지 않고 현재 로그인 계정을 그대로 쓴다. 계정 고정은 호출자가 repository 단위 auth lock 안에서 감싸며, `blackstarzck` 계정으로 Keduall 저장소에 접근하는 조합은 `collabSource` profile로만 승인한다.
 - 모든 자식 프로세스는 shell 없이, 유한 timeout과 제한된 출력 buffer로 실행한다. 실패는 대문자 코드 하나로만 보고하고 자식 프로세스의 출력 원문은 오류·반환값·기록에 담지 않는다.
+
+executor가 Vercel을 조회하는 경로는 `scripts/lib/ai-release-vercel.mjs` 어댑터 하나로 모은다. 이 어댑터도 상태 기록을 직접 고치지 않고 관측값만 돌려주며, 상태 전이는 그 관측값을 `scripts/lib/ai-release-executor.mjs`의 조립기에 넣어야만 만들어진다.
+
+- 배포 조회, `READY` 대기, alias 대상 조회, 이전 `READY` production 조회, Preview 환경 범위 확인은 모두 읽기 전용이다. 유일한 쓰기 동작은 smoke 실패 뒤 이전 `READY` deployment로 alias만 되돌리는 alias 재지정이며, 재지정 뒤 alias 대상을 다시 읽어 기대한 deployment와 같은지 확인한다. 다르면 `VERCEL_ALIAS_MISMATCH`로 중단한다. 어떤 경우에도 DB는 되돌리지 않으므로 rollback 관측값의 DB 변경 여부는 항상 거짓 상수다.
+- Preview 환경 범위 확인은 환경 변수의 이름과 적용 범위만 조회하고 값은 요청하지 않는다. `stg`는 유료 custom environment 없이 branch Preview로 동작하므로 `topik-dev` 범위의 환경 key 존재만 확인한다.
+- production 읽기 전용 smoke test는 `GET`만 보내고 응답 본문을 보관하지 않으며 상태 코드만 비교한다. redirect는 따라가지 않는다. smoke 실행 경로에는 인증 헤더를 붙일 인자 자체가 없어 코드 수준에서 인증된 요청을 만들 수 없다.
+- 응답은 곧바로 닫힌 모양으로 사상하고 원문을 보관하지 않는다. 실패는 `VERCEL_TOKEN_MISSING`, `VERCEL_API_UNAVAILABLE`, `VERCEL_DEPLOYMENT_NOT_FOUND`, `VERCEL_NOT_READY`, `VERCEL_ALIAS_MISMATCH` 같은 대문자 코드 하나로만 보고하고 공급자 응답 본문·헤더 원문은 오류·반환값·기록·로그에 담지 않는다.
+
+##### Vercel 접근 자격 준비
+
+배포 조회에 필요한 접근 자격은 저장소 밖 로컬 경로에만 둔다.
+
+| 항목 | 값 |
+| --- | --- |
+| 파일 경로 | `%LOCALAPPDATA%\TalkpikPipeline\credentials\vercel.env` |
+| 허용 key | `VERCEL_TOKEN`, `VERCEL_TEAM_ID` 두 개뿐 |
+| 파일이 없을 때 | 환경 변수 `VERCEL_TOKEN`(필요하면 `VERCEL_TEAM_ID`)을 대신 쓴다 |
+| 둘 다 없을 때 | `VERCEL_TOKEN_MISSING`으로 중단한다 |
+
+- 허용 key 두 개 외의 key가 파일에 하나라도 있으면 조용히 무시하지 않고 `EXECUTOR_VERCEL_CREDENTIAL_INVALID`로 거부한다. 같은 key를 두 번 적거나 `KEY=값` 형태가 아닌 줄이 있으면 같은 코드로 거부한다.
+- 파일은 일반 파일이어야 한다. 파일 자체나 상위 폴더 중 하나라도 symbolic link·reparse point를 거치면 `EXECUTOR_VERCEL_CREDENTIAL_INVALID`로 거부한다.
+- 값을 돌려주는 API는 만들지 않는다. 읽은 값은 봉인된 객체 안에 갇히고, 밖으로는 요청 헤더 하나와 team 식별자·자격 출처(`file` 또는 `env`)만 나간다. 직렬화·문자열화·검사 출력은 모두 재정의해 값이 어디에도 나타나지 않는다. 그래서 자격 값은 오류 메시지, stack, 보고서, 로그, 명령 출력에 절대 나오지 않는다.
+- 이 파일은 저장소 안에 두지 않으며 에이전트가 값을 읽어 출력하거나 문서화하지 않는다. production credential은 이 경로로도 로컬 에이전트에 전달하지 않는다.
 
 같은 계약 버전의 최초 2회 production 승격은 `stg`·DB 검사가 끝난 뒤 `AWAITING_PROD_APPROVAL`에서 Keduall `main` merge 직전 최종 확인을 한 번 받는다. 명시적인 push·merge 표현도 이 확인을 생략하거나 우회하지 않는다. 두 번 연속 production `READY`, 정확한 main SHA, production alias, smoke test, cleanup이 성공하면 이후 `AUTO`다. pipeline 계약, DB workflow·호환성, Vercel project·environment·domain, remote·branch·auth profile 변경 또는 배포 실패·rollback·보안 사고는 성공 횟수를 0으로 reset한다. destructive DB migration과 강제 Git 작업은 `AUTO`에서도 별도 승인 대상이다.
 

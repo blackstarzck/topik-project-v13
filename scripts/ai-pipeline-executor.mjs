@@ -18,9 +18,20 @@ import {
   evaluatePreflight,
   planNextStep,
 } from "./lib/ai-release-executor.mjs";
+import {
+  createVercelAdapter,
+  createVercelCredentialProvider,
+} from "./lib/ai-release-vercel.mjs";
 
 const COMMANDS = new Set(["status", "next", "run", "probe-vercel"]);
-const VALUE_FLAGS = new Set(["repo", "run-id"]);
+const VALUE_FLAGS = new Set(["repo", "run-id", "branch"]);
+const COMMAND_VALUE_FLAGS = new Map([
+  ["status", new Set(["repo", "run-id"])],
+  ["next", new Set(["repo", "run-id"])],
+  ["run", new Set(["repo", "run-id"])],
+  ["probe-vercel", new Set(["repo", "run-id", "branch"])],
+]);
+const DEFAULT_PREVIEW_BRANCH = "stg";
 const CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
 
 function executorError(code) {
@@ -39,7 +50,11 @@ export function parseExecutorArguments(argv) {
       throw executorError("INVALID_EXECUTOR_ARGUMENTS");
     }
     const name = flag.slice(2);
-    if (!VALUE_FLAGS.has(name) || Object.hasOwn(values, name)) {
+    if (
+      !VALUE_FLAGS.has(name) ||
+      !COMMAND_VALUE_FLAGS.get(command).has(name) ||
+      Object.hasOwn(values, name)
+    ) {
       throw executorError("INVALID_EXECUTOR_ARGUMENTS");
     }
     values[name] = value;
@@ -169,15 +184,66 @@ function runStatus(values, { now = new Date().toISOString() } = {}) {
   };
 }
 
-export function runExecutorCli(argv, options = {}) {
+export async function runProbeVercel(values, options = {}) {
+  const repository = safeRepository(values.repo);
+  const gitCommonDir = resolveGitCommonDir({ repoPath: repository });
+  const record = readPromotionRun({ gitCommonDir, runId: values["run-id"] });
+  const branch = values.branch ?? DEFAULT_PREVIEW_BRANCH;
+  const credentialProvider = createVercelCredentialProvider({
+    localAppData: options.localAppData ?? process.env.LOCALAPPDATA,
+    env: options.env ?? process.env,
+  });
+  const vercel = createVercelAdapter({
+    credentialProvider,
+    fetchImplementation: options.fetchImplementation ?? globalThis.fetch,
+    ...(options.baseUrl === undefined ? {} : { baseUrl: options.baseUrl }),
+  });
+  const project = record.vercel.project;
+  const domain = record.vercel.domain;
+  const previewSha = record.target.stgSha;
+  const productionSha = record.target.mainSha;
+
+  return {
+    schemaVersion: 1,
+    recordType: "PromotionVercelProbeV1",
+    runId: record.runId,
+    state: record.state,
+    readOnly: true,
+    credentialSource: credentialProvider.source(),
+    project,
+    domain,
+    branch,
+    preview:
+      previewSha === null
+        ? null
+        : await vercel.findDeploymentByCommit({
+            projectId: project,
+            commitSha: previewSha,
+            target: "preview",
+          }),
+    previewEnvironment: await vercel.verifyPreviewEnvironmentScope({ projectId: project, branch }),
+    production:
+      productionSha === null
+        ? null
+        : await vercel.findDeploymentByCommit({
+            projectId: project,
+            commitSha: productionSha,
+            target: "production",
+          }),
+    alias: await vercel.getAliasTarget({ domain }),
+  };
+}
+
+export async function runExecutorCli(argv, options = {}) {
   const { command, values } = parseExecutorArguments(argv);
   if (command === "status") return runStatus(values, options);
+  if (command === "probe-vercel") return runProbeVercel(values, options);
   throw executorError("EXECUTOR_STEP_NOT_IMPLEMENTED");
 }
 
-export function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2)) {
   try {
-    const result = runExecutorCli(argv);
+    const result = await runExecutorCli(argv);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     return 0;
   } catch (error) {
@@ -191,5 +257,5 @@ export function main(argv = process.argv.slice(2)) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  process.exitCode = main();
+  process.exitCode = await main();
 }
