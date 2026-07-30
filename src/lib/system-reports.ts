@@ -244,9 +244,21 @@ export function isSameOriginSystemReportRequest(request: Request): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return false;
 
+  // `Host` is the authority the browser actually addressed, and is the only
+  // trustworthy comparison target here. `request.url` must NOT be used: the
+  // Next server pins its hostname to the server's own origin and ignores
+  // `Host`, so comparing against it rejected genuinely same-origin submissions
+  // from every other hostname — 127.0.0.1 or a LAN IP in development, and any
+  // proxied host in production. `x-forwarded-*` stays ignored so a forwarded
+  // header still cannot widen the accepted origin.
+  const host = request.headers.get("host");
+  if (!host) return false;
+
   try {
-    const requestUrl = new URL(request.url);
-    return new URL(origin).origin === requestUrl.origin;
+    // Scheme is intentionally not compared: `Host` carries none. A scheme
+    // change is a different origin, so the `same-origin` Sec-Fetch-Site
+    // requirement above already rejects it.
+    return new URL(origin).host === host.trim().toLowerCase();
   } catch {
     return false;
   }

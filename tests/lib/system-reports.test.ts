@@ -192,6 +192,16 @@ describe("system report validation", () => {
 });
 
 describe("system report same-origin enforcement", () => {
+  function originRequest(
+    headers: Record<string, string>,
+    url = "http://localhost:3001/api/system-reports",
+  ) {
+    return new Request(url, {
+      method: "POST",
+      headers: { "sec-fetch-site": "same-origin", ...headers },
+    });
+  }
+
   it("does not widen the accepted origin from forwarded headers", () => {
     const request = new Request(
       "https://internal.example/api/system-reports",
@@ -207,6 +217,70 @@ describe("system report same-origin enforcement", () => {
 
     expect(isSameOriginSystemReportRequest(request)).toBe(false);
   });
+
+  // Regression: the browser-addressed host is authoritative, NOT `request.url`.
+  // Next pins `request.url`'s hostname to the server's own origin and ignores
+  // `Host`, so comparing against it rejected every client that reached the app
+  // under any other hostname (127.0.0.1 / LAN IP in dev, a proxied host in
+  // production) even though those requests are genuinely same-origin.
+  it.each([
+    ["loopback IP while request.url says localhost", "127.0.0.1:3001"],
+    ["a LAN IP used for device testing", "192.168.1.50:3001"],
+    ["a proxied production host", "www.dotoretopik.com"],
+  ])("accepts a same-origin request from %s", (_name, host) => {
+    const request = originRequest({
+      host,
+      origin: `http://${host}`,
+    });
+
+    expect(isSameOriginSystemReportRequest(request)).toBe(true);
+  });
+
+  it("accepts an https origin whose host matches the addressed host", () => {
+    const request = originRequest({
+      host: "www.dotoretopik.com",
+      origin: "https://www.dotoretopik.com",
+    });
+
+    expect(isSameOriginSystemReportRequest(request)).toBe(true);
+  });
+
+  it.each([
+    [
+      "the origin host differs from the addressed host",
+      { host: "www.dotoretopik.com", origin: "https://evil.example" },
+    ],
+    [
+      "a sibling subdomain forges the origin",
+      { host: "www.dotoretopik.com", origin: "https://evil.dotoretopik.com" },
+    ],
+    [
+      "the port differs from the addressed port",
+      { host: "localhost:3001", origin: "http://localhost:4000" },
+    ],
+    ["the origin header is absent", { host: "localhost:3001" }],
+    ["the origin header is opaque", { host: "localhost:3001", origin: "null" }],
+    [
+      "the origin header is not a URL",
+      { host: "localhost:3001", origin: "not-a-url" },
+    ],
+    ["the host header is absent", { origin: "http://localhost:3001" }],
+  ])("rejects a request where %s", (_name, headers) => {
+    expect(isSameOriginSystemReportRequest(originRequest(headers))).toBe(false);
+  });
+
+  it.each([["cross-site"], ["same-site"], ["none"]])(
+    "rejects sec-fetch-site: %s even when origin matches the host",
+    (secFetchSite) => {
+      const request = originRequest({
+        "sec-fetch-site": secFetchSite,
+        host: "localhost:3001",
+        origin: "http://localhost:3001",
+      });
+
+      expect(isSameOriginSystemReportRequest(request)).toBe(false);
+    },
+  );
 });
 
 describe("system report request body parsing", () => {
