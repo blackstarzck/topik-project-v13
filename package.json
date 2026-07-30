@@ -43,7 +43,7 @@
     "check:task-lifecycle:sweep": "vitest run tests/scripts/ai-task-sweep.test.mjs --maxWorkers=2",
     "check:task-lifecycle:release": "vitest run tests/scripts/ai-release-promotion.test.mjs --maxWorkers=2",
     "check:task-lifecycle:baseline-audit": "vitest run tests/scripts/ai-release-baseline-audit.test.mjs --maxWorkers=2",
-    "check:task-lifecycle:executor": "vitest run tests/scripts/ai-release-executor.test.mjs tests/scripts/ai-pipeline-executor-cli.test.mjs --maxWorkers=2",
+    "check:task-lifecycle:executor": "vitest run tests/scripts/ai-release-executor.test.mjs tests/scripts/ai-release-git.test.mjs tests/scripts/ai-pipeline-executor-cli.test.mjs --maxWorkers=2",
     "check:task-lifecycle:security": "vitest run tests/scripts/security-artifact-audit.test.mjs --maxWorkers=2",
     "check:task-lifecycle:validation": "vitest run tests/scripts/ai-validation-evidence.test.mjs --maxWorkers=2",
     "report:worktree-lifecycle": "node scripts/report-worktree-lifecycle.mjs",

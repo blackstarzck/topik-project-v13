@@ -24,6 +24,11 @@ export const PIPELINE_REPOSITORY_PROFILES = Object.freeze({
     owner: "keduall",
     repository: "topik-project-v13",
   }),
+  collabSource: Object.freeze({
+    authLogin: "blackstarzck",
+    owner: "keduall",
+    repository: "topik-project-v13",
+  }),
 });
 
 const DEFAULT_STALE_LEASE_MS = 15 * 60_000;

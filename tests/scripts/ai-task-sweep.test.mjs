@@ -61,6 +61,11 @@ describe("repository authentication for one-shot task sweep", () => {
         owner: "keduall",
         repository: "topik-project-v13",
       },
+      collabSource: {
+        authLogin: "blackstarzck",
+        owner: "keduall",
+        repository: "topik-project-v13",
+      },
     });
   });
 

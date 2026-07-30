@@ -212,6 +212,21 @@ executor는 단계를 계정이 필요한 하위 작업으로 쪼개 계정을 �
 
 squash, rebase, Keduall `main` 직접 push는 허용하지 않는다. `PromotionRunV1`은 Black source SHA·tree hash, Keduall stg 기준·candidate·stg·main SHA, migration manifest와 증거, 승인 mode·성공 횟수, Vercel deployment ID·commit SHA·alias, 중단·재개 상태를 닫힌 secret-safe schema로 저장한다.
 
+executor가 Git과 GitHub를 만지는 경로는 `scripts/lib/ai-release-git.mjs` 어댑터 계층 하나로 모은다. 어댑터는 상태 기록을 직접 고치지 않고, 실제로 관측한 값만 돌려준다. 상태 전이는 그 관측값을 `scripts/lib/ai-release-executor.mjs`의 조립기에 넣어야만 만들어진다.
+
+| 어댑터 | 하는 일 | 코드 수준에서 막는 것 |
+| --- | --- | --- |
+| Git 어댑터 | remote 갱신, 정확한 SHA 조회, 병합 parent 실측, candidate 병합, branch push, 조상 관계 확인, candidate branch 삭제 | `--force`·`-f`·`--force-with-lease`·`--force-if-includes`와 `+`로 시작하는 refspec, `--squash`·`--rebase`·`--hard` |
+| GitHub 어댑터 | 열린 PR 탐지, PR 생성, PR 상태 조회, PR 병합 | `gh auth` 하위 명령 전체, `--squash`·`--rebase`·`--admin` |
+| 관측값 사상 함수 | candidate·`stg` PR·`stg` ready·`main` PR·`main` merge·정리·사전 점검 관측값을 조립기가 요구하는 모양으로 만든다 | 측정하지 않은 값, SHA 형식이 아닌 값, boolean이 아닌 판정 |
+
+- candidate 병합은 고유한 임시 worktree에서 `--no-ff`로만 수행하고, 결과 SHA와 parent를 다시 읽어 `stg` 기준·Black source 순서를 확인한다. 충돌이면 병합을 중단하고 `EXECUTOR_CANDIDATE_MERGE_CONFLICT`로 보고한다. 성공·실패 모두 임시 worktree 정리를 시도하며, 정리가 실패하면 조용히 넘기지 않고 `cleanupFailed`로 결과에 드러낸다. 강제 삭제는 하지 않는다.
+- branch push는 force 계열 인자를 쓰지 않고, push 뒤 원격 ref를 다시 읽어 기대한 SHA와 같은지 확인한다. 다르면 `EXECUTOR_PUSH_VERIFY_FAILED`로 중단한다.
+- PR 병합은 병합 커밋 방식과 기대 head commit 고정을 함께 요구한다. squash 병합은 병합 커밋의 조상 관계를 끊어 이후 `stg` 동기화와 자동 정리 판정을 망치므로 허용하지 않는다.
+- 원격 branch 삭제는 `chore/promote-<날짜>-<source8>` 형식의 candidate branch만 허용한다. `stg`, `main`, `master`, `develop`, `production`, `staging`은 `EXECUTOR_PROTECTED_BRANCH`로 거부한다.
+- 어댑터는 계정을 스스로 바꾸지 않고 현재 로그인 계정을 그대로 쓴다. 계정 고정은 호출자가 repository 단위 auth lock 안에서 감싸며, `blackstarzck` 계정으로 Keduall 저장소에 접근하는 조합은 `collabSource` profile로만 승인한다.
+- 모든 자식 프로세스는 shell 없이, 유한 timeout과 제한된 출력 buffer로 실행한다. 실패는 대문자 코드 하나로만 보고하고 자식 프로세스의 출력 원문은 오류·반환값·기록에 담지 않는다.
+
 같은 계약 버전의 최초 2회 production 승격은 `stg`·DB 검사가 끝난 뒤 `AWAITING_PROD_APPROVAL`에서 Keduall `main` merge 직전 최종 확인을 한 번 받는다. 명시적인 push·merge 표현도 이 확인을 생략하거나 우회하지 않는다. 두 번 연속 production `READY`, 정확한 main SHA, production alias, smoke test, cleanup이 성공하면 이후 `AUTO`다. pipeline 계약, DB workflow·호환성, Vercel project·environment·domain, remote·branch·auth profile 변경 또는 배포 실패·rollback·보안 사고는 성공 횟수를 0으로 reset한다. destructive DB migration과 강제 Git 작업은 `AUTO`에서도 별도 승인 대상이다.
 
 production DB 자동 apply는 초기에 비활성이다. production project와 tracker, schema·RPC·RLS·grant fingerprint, migration SHA-256 manifest, backup/PITR, 고정 Supabase CLI/action, 변경된 과거 migration을 대체할 forward reconciliation이 준비된 뒤 trusted operations workflow만 적용할 수 있다. remote tracker는 manifest의 정확한 prefix여야 하고 과거 migration 수정·삭제·rename, destructive SQL·grant 회수·N-1/N 호환성 실패가 있으면 중단한다. production credential은 로컬 에이전트나 candidate PR에 전달하지 않는다.
