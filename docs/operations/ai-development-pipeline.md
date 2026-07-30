@@ -148,9 +148,134 @@ pnpm release:status -- --repo <기준-checkout> --run-id <run-id>
 pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-revision <revision> --expected-fingerprint <fingerprint> --event PROD_APPROVAL_GRANTED --event-at <ISO-8601> --approval <approval-fingerprint>
 ```
 
-`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인한 뒤 `origin/main`과 `collab/main` 또는 `collab/stg`에서 SHA를 직접 읽고, 그 reachable history에 대한 보안 감사를 직접 실행한다. finding이 하나라도 있거나 ref를 읽지 못하면 승격 기록을 시작하지 않는다.
+`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인한 뒤 `origin/main`과 `collab/main` 또는 `collab/stg`에서 SHA를 직접 읽고, 승인된 기준점 이후의 차분에 대한 보안 감사를 직접 실행한다. finding이 하나라도 있거나 ref를 읽지 못하면 승격 기록을 시작하지 않는다.
+
+#### 기준점 차분 보안 감사
+
+보안 감사의 기준점과 승인된 예외는 `config/security-audit-baseline.json`에만 둔다. 이 파일은 승인된 기준점 commit SHA, 승인 시각, 감사 대상 ref 목록과 `(경로, 규칙)` 예외 인벤토리를 닫힌 schema로 담고 전체 내용의 SHA-256 fingerprint를 함께 저장한다.
+
+- 기준점 이전의 오래된 이력은 검토를 마친 예외 인벤토리로 통과시킨다. 이미 정리할 수 없는 과거 산출물 때문에 승격이 영구히 막히는 상태를 없애는 것이 목적이다.
+- 기준점 이후 새로 추가되거나 수정된 산출물의 finding은 그대로 차단한다. finding이 하나라도 있으면 `SECURITY_INCIDENT_BLOCKED`이며 이 조건은 완화하지 않는다.
+- 예외는 경로 하나에 규칙 하나씩 정확히 대응한다. 같은 경로가 나중에 다른 규칙을 위반하면 계속 차단된다. 경로만으로 모든 규칙을 면제하는 통짜 예외는 제공하지 않는다.
+- 기준점이나 예외를 바꾸려면 `config/security-audit-baseline.json`을 고쳐야 하고, `/config/`는 CODEOWNERS가 보호하므로 소유자 리뷰를 거친다. `release:start`에는 기준점·예외를 지정하는 명령 인자가 없어 caller가 감사 범위를 우회할 수 없다.
+- 이 파일이 없거나 schema·fingerprint가 깨졌으면 `SECURITY_BASELINE_CONFIG_INVALID`로 즉시 중단한다. 전체 이력 감사로 조용히 되돌아가지 않는다.
+- 감사 기록은 `SecurityArtifactDiffAuditV1`이며 기준점 SHA의 안전한 hash를 담는다. `release:start`가 읽은 승인 기준점과 이 hash가 다르면 `SECURITY_AUDIT_BASELINE_MISMATCH`, 기준점 정보 없이 차분 기록을 제출하면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부한다. hash뿐 아니라 기록에 적힌 기준점 이름 자체도 승인 기준점에 묶는다. 이름이 승인 기준점 SHA와 다르거나 호출자가 넘긴 기대 이름과 다르면 hash가 맞아도 같은 `SECURITY_AUDIT_BASELINE_MISMATCH`로 거부하므로, 이름과 hash가 서로 다른 기준점을 가리키는 모순된 기록은 통과하지 못한다.
+- 경로 예외는 Git이 저장한 대소문자까지 정확히 같아야 적용된다. 예외에 적힌 이름과 글자 대소문자만 다른 파일은 서로 다른 파일이므로 예외로 통과시키지 않고 계속 차단한다. 대소문자만 다른 두 경로를 함께 승인하려면 예외를 각각 등록한다.
+- 승인 시각이 정해진 형식의 시각 값이 아니면 다른 오류로 새지 않고 `SECURITY_BASELINE_CONFIG_INVALID`로 거부한다.
+- 새 승격 기록을 만드는 경로는 차분 감사 기록만 받는다. 기준점 없는 전체 이력 감사 기록을 넣으면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부하므로 기준점 검증이 통째로 생략되는 조합이 남지 않는다. 전체 이력 감사 기록 자체는 CI 검사처럼 승격 기록을 만들지 않는 경로에서 계속 읽을 수 있다.
+- 승격 기록은 어떤 기준점으로 감사했는지를 기준점 SHA의 안전한 hash로 함께 저장한다. 사후에 감사 범위를 기록만 보고 확인할 수 있다. 이 값은 승격 기록의 fingerprint에만 들어가고 pipeline 계약 fingerprint와 profile fingerprint에는 영향을 주지 않으므로 승인 성공 횟수를 reset하지 않는다.
 
 공개 `release:resume`은 최초 2회에 필요한 사람의 최종 승인만 받는다. candidate·PR·DB·Vercel·cleanup 상태를 caller가 만든 JSON으로 제출해 상태를 전진시키는 경로는 `RELEASE_TRUSTED_EXECUTOR_REQUIRED`로 거부한다. 이 상태 전이는 고정 저장소·계정·permission·현재 ref/SHA와 trusted workflow 결과를 직접 확인하는 운영 executor만 호출할 수 있다. 해당 executor가 설치되기 전에는 승격이 안전하게 중단된 상태이며 수동 JSON으로 우회할 수 없다.
+
+#### 승격 executor
+
+승격 단계를 실제로 수행하는 운영 executor는 `release:exec`이며, 네 개의 하위 명령으로 나뉜다.
+
+```bash
+pnpm release:exec -- status --repo <기준-checkout> --run-id <run-id>
+pnpm release:exec -- next --repo <기준-checkout> --run-id <run-id> [--db-evidence <파일 경로>] [--dry-run]
+pnpm release:exec -- run --repo <기준-checkout> --run-id <run-id> [--db-evidence <파일 경로>] [--dry-run]
+pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id> [--branch stg]
+```
+
+| 하위 명령 | 용도 | 현재 상태 |
+| --- | --- | --- |
+| `status` | 기록을 읽어 다음 단계, 필요한 계정, 사전 점검 차단 사유, 사람 승인 명령을 보고한다. 아무 것도 쓰지 않는다 | 동작 |
+| `next` | 다음 단계 하나를 실제로 수행하고 실측한 증거로 상태를 전진시킨다. `--dry-run`이면 무엇을 할지만 보고한다 | 동작 |
+| `run` | 멈춰야 할 지점에 닿을 때까지 `next`를 반복한다. 한 번에 최대 12회다 | 동작 |
+| `probe-vercel` | 기록에 적힌 project·domain으로 Preview·Production 배포와 Preview 환경 범위를 읽기 전용으로 확인한다 | 동작 |
+
+`--db-evidence`와 `--dry-run`은 `next`와 `run`에만 허용한다. `status`나 `probe-vercel`에 붙이면 `INVALID_EXECUTOR_ARGUMENTS`로 거부한다. 같은 인자를 두 번 적어도 같은 코드로 거부한다.
+
+`next` 한 번은 아래 순서로만 진행하고, 앞 단계에서 멈추면 그 뒤 작업은 아예 실행하지 않는다.
+
+1. 승격 기록과 승인 정책을 읽는다.
+2. registry lock이 남아 있으면 `PROMOTION_REGISTRY_LOCKED`로 보고만 하고 끝낸다.
+3. 다음 단계가 없으면 `TERMINAL`, 사람 승인이 필요하면 공개 `release:resume` 명령 한 줄과 함께 `HUMAN_APPROVAL_REQUIRED`로 끝낸다.
+4. DB gate 단계인데 증거 파일이 없으면 `DB_EVIDENCE_REQUIRED`로 끝낸다. 이 시점까지 원격을 만지지 않는다.
+5. 증거 파일을 안전하게 읽고, 원격 ref·저장소 identity·필요 계정을 실측해 사전 점검한다. 차단 사유가 하나라도 있으면 `PREFLIGHT_BLOCKED`로 끝낸다.
+6. `--dry-run`이면 수행할 단계·하위 작업·계정만 `DRY_RUN`으로 보고하고 끝낸다. 원격과 승격 기록을 바꾸지 않는다.
+7. 계정이 필요한 하위 작업을 각자의 계정 lock 안에서 수행하고, 결과를 다시 읽어 조립기에 넣은 뒤 상태를 전진시킨다. 결과는 `ADVANCED`다.
+
+`run`은 사람 승인 필요, 사전 점검 차단, DB 증거 필요, DB gate 차단, 종료 상태, 어댑터 오류 중 하나에 닿으면 멈추고 각 회차 결과를 함께 보고한다. 어댑터 오류는 대문자 코드 하나로만 남기고 공급자·명령 출력 원문은 담지 않는다. 12회 상한은 무한 반복을 막는 안전장치이며 상한에 닿아도 상태를 억지로 전진시키지 않는다.
+
+계정 lock 안에서 일어난 실패도 실패 종류를 잃지 않는다. 계정 확인 자체가 막힌 것과 인증된 뒤 실제 작업이 실패한 것을 구분해서, 병합 충돌·push 검증 실패·보호 branch·PR 병합 검증 실패처럼 이미 정해진 대문자 코드가 있으면 그 코드를 그대로 보고한다. 코드가 없는 실패만 `EXECUTOR_AUTH_OPERATION_FAILED`로 모은다. 어느 경우에도 공급자 메시지·stack·명령 출력 원문은 옮기지 않는다.
+
+`probe-vercel`은 읽기만 한다. 배포를 만들지 않고 alias를 바꾸지 않으며 승격 기록도 고치지 않는다. `--branch`는 Preview 환경 범위를 확인할 branch이며 기본값은 `stg`다. 이 인자는 `probe-vercel`에만 허용하고 다른 하위 명령에 붙이면 `INVALID_EXECUTOR_ARGUMENTS`로 거부한다. 접근 자격이 준비되지 않았으면 결과를 꾸미지 않고 `VERCEL_TOKEN_MISSING`을 그대로 보고해 준비가 필요한 상태를 드러낸다.
+
+`status`는 읽기 전용이다. registry lock을 만들지 않고 승격 기록도 고치지 않는다. 현재 `collab/stg`가 이 승격이 만들 수 있었던 값이 아니면 `PROMOTION_BASE_MOVED`, 저장소 identity가 다르면 `REPOSITORY_IDENTITY_MISMATCH`로 차단한다. 어떤 값을 통과시키는지는 바로 아래에서 정한다. 실패는 대문자 코드 하나로만 보고하며 공급자 원문·명령 출력은 담지 않는다.
+
+##### 자기 자신이 옮긴 `stg`와 남이 옮긴 `stg`
+
+`stg` 끝 커밋이 기록과 다르다는 사실만으로는 남이 끼어든 것인지, 이 승격이 방금 만든 결과인지 알 수 없다. 그래서 사전 점검은 관측한 끝 커밋이 이 승격이 정당하게 만들 수 있었던 값인지도 함께 본다.
+
+| 기록 상태 | 관측한 `stg` 끝 커밋을 통과시키는 조건 |
+| --- | --- |
+| `stg` PR 열림 | 그 커밋의 부모가 정확히 기록의 `stg` 기준, candidate 순서일 때 |
+| production 반영 완료 | 그 커밋이 기록의 확정된 `main` SHA와 같을 때 |
+| 그 밖의 모든 상태 | 통과시키지 않는다 |
+
+부모를 실측하지 못했거나 순서·값이 하나라도 다르면 지금처럼 `PROMOTION_BASE_MOVED`로 차단한다. 제3자가 `stg`를 다른 커밋으로 옮긴 경우는 부모가 맞지 않으므로 계속 차단된다. 이 판정 덕분에 병합은 성공했지만 이어지는 확인이 실패한 재시도, 정리 도중 candidate 삭제만 실패한 재시도가 영구 교착에 빠지지 않고 멱등 재사용 경로로 이어진다.
+
+##### 정상 지연을 실패로 세지 않기
+
+배포 레코드 생성, production alias 전환, 첫 응답은 병합 직후 짧게 늦어질 수 있다. 이 세 확인은 한 번 읽고 끝내지 않고 유한 폴링으로 기다린다. 시도 횟수와 간격은 주입 가능하며 기본값은 보수적으로 잡는다.
+
+| 확인 대상 | 기본 시도 | 기본 간격 | 소진했을 때 |
+| --- | --- | --- | --- |
+| 정확한 commit의 배포 레코드 | 20회 | 15초 | `VERCEL_DEPLOYMENT_NOT_FOUND` |
+| production alias 전환 | 20회 | 15초 | alias 미전환으로 판정해 `PRODUCTION_FAILED` |
+| 읽기 전용 smoke test | 5회 | 15초 | smoke 실패로 판정해 alias만 rollback |
+
+폴링은 읽기 전용 조회와 `GET` smoke만 반복하며 배포·alias·DB를 바꾸지 않는다. 마지막 시도까지 조건이 맞지 않을 때만 기존 실패 코드로 끝낸다.
+
+##### 고아 registry lock
+
+승격 기록의 lock 파일은 쓰기 순간에만 존재하고 정상 종료 때 사라진다. 남아 있다면 다른 실행이 진행 중이거나 앞선 실행이 비정상 종료한 것이다. `status`와 `next`는 시작할 때 lock 존재를 확인해 `PROMOTION_REGISTRY_LOCKED`로 보고만 하고, 어떤 경우에도 스스로 지우지 않는다. 자동 회수는 진행 중인 다른 실행의 쓰기를 덮어쓸 수 있어 제공하지 않는다. 사람이 진행 중인 실행이 없음을 확인한 뒤 직접 정리한다.
+
+##### DB gate 증거 파일
+
+원격 데이터베이스는 v13 작업면에서 조회하지 않는다. DB gate에 필요한 사실은 topik-ai 절차가 JSON 파일로 만들어 `%LOCALAPPDATA%\TalkpikPipeline\db-evidence\` 아래에 두고, executor는 `--db-evidence`로 받은 그 파일만 읽는다. 허용 폴더 밖 경로, 폴더 탈출, symbolic link·reparse point, 일반 파일이 아닌 대상, 256 KiB 초과, JSON 파싱 실패는 각각 `DB_EVIDENCE_PATH_ESCAPE`, `DB_EVIDENCE_SYMLINK`, `DB_EVIDENCE_UNREADABLE`, `DB_EVIDENCE_TOO_LARGE`, `DB_EVIDENCE_INVALID_JSON`으로 거부한다. 파일을 읽는 단계는 의미를 판단하지 않고, 판단은 기존 DB gate 계약이 한다. 요구 항목과 판정 결과는 [`topik-ai-migration-evidence-handoff.md`](./topik-ai-migration-evidence-handoff.md)가 owner다. 자동 적용이 켜진 것으로 표시된 증거는 통과시키지 않으며 복구는 forward-fix만 허용한다.
+
+##### 제출 증거 사본
+
+승격 기록의 journal에는 event digest만 남는다. 사후 감사를 위해 제출한 event 사본은 기준 checkout의 Git 공용 폴더 안 `ai-pipeline/promotions/v1/evidence/<run-id>/<순번 3자리>-<event 이름>.json`에 원자적으로 기록한다. 순번은 journal 길이로 정해지므로 같은 단계를 다시 실행해도 파일이 늘어나지 않는다. token 유사 key나 값이 있으면 사본을 만들지 않고 `PROMOTION_EVIDENCE_SECRET_FORBIDDEN`으로 거부한다. 사본 기록 실패는 `PROMOTION_EVIDENCE_RECORDING_WARNING` 경고로만 남기고 이미 확정된 상태 전이 결과를 바꾸지 않는다. 측정 기록 실패를 경고로만 다루는 `task:measure`와 같은 원칙이다.
+
+이미 있는 사본은 덮어쓰지 않는다. 같은 순번 자리에 기록된 event가 새로 제출한 event와 완전히 같을 때만 멱등 성공으로 처리하고 파일 내용과 기록 시각을 그대로 남긴다. 내용이 다르거나 읽을 수 없으면 `PROMOTION_EVIDENCE_CONFLICT`로 중단해 사후 감사 자료가 조용히 바뀌지 않게 한다.
+
+event의 시각과 사본의 기록 시각은 그 단계의 외부 작업이 끝난 직후에 같은 값으로 만든다. 인증, Git·GitHub 작업, 최대 수 분까지 걸릴 수 있는 Vercel 폴링을 시작하기 전에 시각을 미리 고정하지 않으므로, 기록된 시각과 실제 완료 시각이 크게 벌어지지 않는다. 호출자가 고정된 시각 값을 직접 넘긴 경우에는 그 값을 그대로 존중한다.
+
+executor는 단계를 계정이 필요한 하위 작업으로 쪼개 계정을 고정한다. 한 단계가 생성과 병합을 함께 포함하면 하위 작업별로 계정이 다르다. 사전 점검에서 필요한 계정을 먼저 확인하고, 실제 수행도 하위 작업마다 그 계정의 lock 안에서 실행한다. 계정 확인이 실패하면 `EXECUTOR_ACCOUNT_UNAVAILABLE`로 차단하고 원격을 만지지 않는다.
+
+| 단계 | 하위 작업 | 계정 |
+| --- | --- | --- |
+| candidate 생성 | 생성, push | `blackstarzck` |
+| `stg` PR 생성 | 생성 | `blackstarzck` |
+| `stg` PR 병합 | 병합 | `guestkeduall-design` |
+| `stg` PR 병합 | Preview 확인 | 계정 불필요 |
+| DB gate 평가 | 확인 | 계정 불필요 |
+| `main` PR 생성 | 생성 | `blackstarzck` |
+| `main` PR 병합 | 병합 | `guestkeduall-design` |
+| `main` PR 병합 | 병합 parent 확인 | 계정 불필요 |
+| Production 확인 | 확인 | 계정 불필요 |
+| alias rollback 확인 | rollback 확인 | 계정 불필요 |
+| 정리 | `stg` 동기화·candidate 삭제 | `guestkeduall-design` |
+
+사람의 최종 승인은 executor 안에 두지 않는다. 승인이 필요한 상태에서는 `status`와 `next`가 사용자가 그대로 복사해 실행할 수 있는 공개 `release:resume` 명령 한 줄을 출력하고 그 자리에서 멈춘다. 승인 값과 기록 revision·fingerprint를 사람이 직접 확인한 뒤 스스로 실행해야 하고, executor가 자기 자신에게 승인을 발급할 수 없어야 하기 때문이다. 공백이 있는 Windows 경로도 그대로 복사 실행할 수 있게 경로 인자를 quote한다.
+
+승인을 executor가 발급하지 못하게 하는 장치는 세 겹이다. 승인 대기 상태의 단계 계획에는 제출할 event 자체가 없고, 승인 event를 만드는 조립기가 없으며, 상태를 전진시키기 직전 검사가 `PROD_APPROVAL_GRANTED` 제출을 `EXECUTOR_APPROVAL_EVENT_FORBIDDEN`으로 거부한다.
+
+같은 단계를 두 번 실행해도 중복 부작용이 생기지 않는다.
+
+| 단계 | 재실행 때 확인하는 사실 | 이미 되어 있으면 |
+| --- | --- | --- |
+| candidate 생성 | 원격에 candidate branch가 있는지, 없으면 로컬에 있는지 | 병합을 다시 하지 않고 그 SHA를 그대로 쓴다. 원격에 이미 있으면 push도 하지 않고, 로컬만 있으면 parent를 먼저 확인한 뒤에만 push한다 |
+| `stg`·`main` PR 생성 | 같은 base·head의 열린 PR이 있는지 | 새 PR을 만들지 않고 기존 PR 번호와 head SHA를 쓴다 |
+| `stg`·`main` PR 병합 | 원격 branch 끝 커밋의 parent가 기대한 기준·head 순서인지 | 병합을 다시 요청하지 않고 그 병합 커밋을 그대로 쓴다 |
+| alias rollback | 현재 alias가 이미 이전 `READY` 배포를 가리키는지 | alias를 다시 지정하지 않는다 |
+| 정리 | `stg`가 이미 `main`과 같은지, candidate branch가 남아 있는지 | 동기화와 삭제를 건너뛴다 |
+
+`stg` 동기화는 fast-forward만 허용하고 force 계열 인자를 쓰지 않으며, 대상 branch가 `stg`가 아니면 `EXECUTOR_FAST_FORWARD_BRANCH_FORBIDDEN`으로 거부한다. 앞서지 않는 SHA로 옮기려 하면 `EXECUTOR_FAST_FORWARD_NOT_POSSIBLE`로 중단하고, push 뒤 원격 ref를 다시 읽어 다르면 `EXECUTOR_PUSH_VERIFY_FAILED`로 중단한다.
 
 1. Keduall `stg`에서 `chore/promote-<date>-<source-sha>` candidate를 만든다.
 2. 정확한 Black source SHA를 `--no-ff`로 병합하고 candidate parent가 현재 `stg`, Black source 순서인지 검사한다.
@@ -162,6 +287,50 @@ pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-rev
 8. Production 성공 뒤 `stg`가 fast-forward 가능할 때만 `main`으로 동기화하고 candidate workspace를 정리한다. `stg`와 `main`은 삭제하지 않는다.
 
 squash, rebase, Keduall `main` 직접 push는 허용하지 않는다. `PromotionRunV1`은 Black source SHA·tree hash, Keduall stg 기준·candidate·stg·main SHA, migration manifest와 증거, 승인 mode·성공 횟수, Vercel deployment ID·commit SHA·alias, 중단·재개 상태를 닫힌 secret-safe schema로 저장한다.
+
+executor가 Git과 GitHub를 만지는 경로는 `scripts/lib/ai-release-git.mjs` 어댑터 계층 하나로 모은다. 어댑터는 상태 기록을 직접 고치지 않고, 실제로 관측한 값만 돌려준다. 상태 전이는 그 관측값을 `scripts/lib/ai-release-executor.mjs`의 조립기에 넣어야만 만들어진다.
+
+| 어댑터 | 하는 일 | 코드 수준에서 막는 것 |
+| --- | --- | --- |
+| Git 어댑터 | remote 갱신, 정확한 SHA 조회, 병합 parent 실측, candidate 병합, branch push, 조상 관계 확인, `stg` fast-forward 동기화, candidate branch 삭제 | `--force`·`-f`·`--force-with-lease`·`--force-if-includes`와 `+`로 시작하는 refspec, `--squash`·`--rebase`·`--hard`, `stg` 외 branch의 동기화 |
+| GitHub 어댑터 | 열린 PR 탐지, PR 생성, PR 상태 조회, PR 병합 | `gh auth` 하위 명령 전체, `--squash`·`--rebase`·`--admin` |
+| Vercel 어댑터 | 정확한 commit의 배포 조회, `READY` 대기, alias 대상 조회, alias 재지정, 이전 `READY` production 조회, Preview 환경 범위 확인 | `assignAlias` 외 모든 경로의 쓰기 동작, 응답 원문 보관, 환경 변수 값 요청 |
+| 관측값 사상 함수 | candidate·`stg` PR·`stg` ready·`main` PR·`main` merge·정리·사전 점검·Preview·Production·rollback 관측값을 조립기가 요구하는 모양으로 만든다 | 측정하지 않은 값, SHA 형식이 아닌 값, boolean이 아닌 판정 |
+
+- candidate 병합은 고유한 임시 worktree에서 `--no-ff`로만 수행하고, 결과 SHA와 parent를 다시 읽어 `stg` 기준·Black source 순서를 확인한다. 충돌이면 병합을 중단하고 `EXECUTOR_CANDIDATE_MERGE_CONFLICT`로 보고한다. 성공·실패 모두 임시 worktree 정리를 시도하며, 정리가 실패하면 조용히 넘기지 않고 `cleanupFailed`로 결과에 드러낸다. 강제 삭제는 하지 않는다.
+- branch push는 force 계열 인자를 쓰지 않고, push 뒤 원격 ref를 다시 읽어 기대한 SHA와 같은지 확인한다. 다르거나 읽지 못하면 `EXECUTOR_PUSH_VERIFY_FAILED`로 중단한다.
+- branch push는 원격 branch 삭제와 같은 범위로 `chore/promote-<날짜>-<source8>` 형식의 candidate branch만 허용한다. `stg`, `main`, `master`, `develop`, `production`, `staging`은 `EXECUTOR_PROTECTED_BRANCH`, 그 밖의 형식은 `EXECUTOR_CANDIDATE_BRANCH_INVALID`로 거부하며 어떤 명령도 실행하지 않는다. `stg`를 `main`으로 맞추는 동기화는 별도 fast-forward 경로만 담당한다.
+- candidate를 원격에 올리기 전에 로컬 candidate 커밋의 parent가 기록의 `stg` 기준·Black source 순서인지 먼저 확인한다. 이전 실행이 남긴 로컬 branch가 다른 커밋을 가리키면 push하지 않고 `EXECUTOR_LINEAGE_MISMATCH`로 중단하므로, 검사에 실패할 커밋이 원격에 먼저 올라가는 순서가 생기지 않는다.
+- 원격 branch 끝 커밋 조회는 조회 성공과 branch 부재를 구분한다. 명령이 성공하고 결과가 비어 있을 때만 branch가 없는 것으로 보고, 명령 실패나 예상과 다른 출력은 `EXECUTOR_REF_LOOKUP_FAILED`로 중단한다. 인증·네트워크 실패가 branch 삭제 성공이나 미발행 candidate로 잘못 기록되지 않는다.
+- PR 병합은 병합 커밋 방식과 기대 head commit 고정을 함께 요구한다. squash 병합은 병합 커밋의 조상 관계를 끊어 이후 `stg` 동기화와 자동 정리 판정을 망치므로 허용하지 않는다.
+- 원격 branch 삭제는 `chore/promote-<날짜>-<source8>` 형식의 candidate branch만 허용한다. `stg`, `main`, `master`, `develop`, `production`, `staging`은 `EXECUTOR_PROTECTED_BRANCH`로 거부한다.
+- 어댑터는 계정을 스스로 바꾸지 않고 현재 로그인 계정을 그대로 쓴다. 계정 고정은 호출자가 repository 단위 auth lock 안에서 감싸며, `blackstarzck` 계정으로 Keduall 저장소에 접근하는 조합은 `collabSource` profile로만 승인한다.
+- 모든 자식 프로세스는 shell 없이, 유한 timeout과 제한된 출력 buffer로 실행한다. 실패는 대문자 코드 하나로만 보고하고 자식 프로세스의 출력 원문은 오류·반환값·기록에 담지 않는다.
+
+executor가 Vercel을 조회하는 경로는 `scripts/lib/ai-release-vercel.mjs` 어댑터 하나로 모은다. 이 어댑터도 상태 기록을 직접 고치지 않고 관측값만 돌려주며, 상태 전이는 그 관측값을 `scripts/lib/ai-release-executor.mjs`의 조립기에 넣어야만 만들어진다.
+
+- 배포 조회, `READY` 대기, alias 대상 조회, 이전 `READY` production 조회, Preview 환경 범위 확인은 모두 읽기 전용이다. 유일한 쓰기 동작은 smoke 실패 뒤 이전 `READY` deployment로 alias만 되돌리는 alias 재지정이며, 재지정 뒤 alias 대상을 다시 읽어 기대한 deployment와 같은지 확인한다. 다르면 `VERCEL_ALIAS_MISMATCH`로 중단한다. 어떤 경우에도 DB는 되돌리지 않으므로 rollback 관측값의 DB 변경 여부는 항상 거짓 상수다.
+- Preview 환경 범위 확인은 환경 변수의 이름과 적용 범위만 조회하고 값은 요청하지 않는다. `stg`는 유료 custom environment 없이 branch Preview로 동작하므로 `topik-dev` 범위의 환경 key 존재만 확인한다.
+- production 읽기 전용 smoke test는 `GET`만 보내고 응답 본문을 보관하지 않으며 상태 코드만 비교한다. redirect는 따라가지 않는다. smoke 실행 경로에는 인증 헤더를 붙일 인자 자체가 없어 코드 수준에서 인증된 요청을 만들 수 없다.
+- 응답은 곧바로 닫힌 모양으로 사상하고 원문을 보관하지 않는다. 실패는 `VERCEL_TOKEN_MISSING`, `VERCEL_API_UNAVAILABLE`, `VERCEL_DEPLOYMENT_NOT_FOUND`, `VERCEL_NOT_READY`, `VERCEL_ALIAS_MISMATCH` 같은 대문자 코드 하나로만 보고하고 공급자 응답 본문·헤더 원문은 오류·반환값·기록·로그에 담지 않는다.
+- 조회 주소는 암호화된 `https` 연결만 허용한다. 평문 `http`나 다른 방식의 주소는 요청을 보내기 전에 `VERCEL_API_UNAVAILABLE`로 거부하므로, 접근 자격이 담긴 인증 헤더가 암호화되지 않은 연결로 나가는 조합이 없다. 로컬 주소도 예외로 두지 않는다.
+- 모든 요청에는 요청 하나 단위의 상한 시간이 있다. 상한을 넘기면 요청을 취소하고 `VERCEL_API_UNAVAILABLE`로 정규화하므로, 응답하지 않는 상대 하나가 폴링 상한과 무관하게 executor를 무기한 멈추지 못한다. 상한 값은 주입 가능하며 기본값은 보수적으로 잡는다. 읽기 전용 smoke test에도 같은 보호가 있어 응답하지 않는 확인은 유한 시간 뒤 실패한 확인으로 센다.
+
+##### Vercel 접근 자격 준비
+
+배포 조회에 필요한 접근 자격은 저장소 밖 로컬 경로에만 둔다.
+
+| 항목 | 값 |
+| --- | --- |
+| 파일 경로 | `%LOCALAPPDATA%\TalkpikPipeline\credentials\vercel.env` |
+| 허용 key | `VERCEL_TOKEN`, `VERCEL_TEAM_ID` 두 개뿐 |
+| 파일이 없을 때 | 환경 변수 `VERCEL_TOKEN`(필요하면 `VERCEL_TEAM_ID`)을 대신 쓴다 |
+| 둘 다 없을 때 | `VERCEL_TOKEN_MISSING`으로 중단한다 |
+
+- 허용 key 두 개 외의 key가 파일에 하나라도 있으면 조용히 무시하지 않고 `EXECUTOR_VERCEL_CREDENTIAL_INVALID`로 거부한다. 같은 key를 두 번 적거나 `KEY=값` 형태가 아닌 줄이 있으면 같은 코드로 거부한다.
+- 파일은 일반 파일이어야 한다. 파일 자체나 상위 폴더 중 하나라도 symbolic link·reparse point를 거치면 `EXECUTOR_VERCEL_CREDENTIAL_INVALID`로 거부한다.
+- 값을 돌려주는 API는 만들지 않는다. 읽은 값은 봉인된 객체 안에 갇히고, 밖으로는 요청 헤더 하나와 team 식별자·자격 출처(`file` 또는 `env`)만 나간다. 직렬화·문자열화·검사 출력은 모두 재정의해 값이 어디에도 나타나지 않는다. 그래서 자격 값은 오류 메시지, stack, 보고서, 로그, 명령 출력에 절대 나오지 않는다.
+- 이 파일은 저장소 안에 두지 않으며 에이전트가 값을 읽어 출력하거나 문서화하지 않는다. production credential은 이 경로로도 로컬 에이전트에 전달하지 않는다.
 
 같은 계약 버전의 최초 2회 production 승격은 `stg`·DB 검사가 끝난 뒤 `AWAITING_PROD_APPROVAL`에서 Keduall `main` merge 직전 최종 확인을 한 번 받는다. 명시적인 push·merge 표현도 이 확인을 생략하거나 우회하지 않는다. 두 번 연속 production `READY`, 정확한 main SHA, production alias, smoke test, cleanup이 성공하면 이후 `AUTO`다. pipeline 계약, DB workflow·호환성, Vercel project·environment·domain, remote·branch·auth profile 변경 또는 배포 실패·rollback·보안 사고는 성공 횟수를 0으로 reset한다. destructive DB migration과 강제 Git 작업은 `AUTO`에서도 별도 승인 대상이다.
 
@@ -271,9 +440,14 @@ GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 �
 ├── v3/claims/                  실행자·shared slot claim
 ├── v3/migrations/              v2→v3 copy journal
 ├── v3/cleanup/                 자동 정리 journal·report
-├── v3/sweeps/latest.json       repository sweep 요약
-└── releases/                   PromotionRunV1·승인 policy
+└── v3/sweeps/latest.json       repository sweep 요약
+
+<git-common-dir>/ai-pipeline/promotions/v1/
+├── runs/<run-id>.json          PromotionRunV1
+└── approval-policy.json        production 승인 policy
 ```
+
+승격 기록은 task lifecycle registry와 다른 root에 둔다. task 정리가 승격 기록을 건드리지 않고, 승격 기록도 task record를 건드리지 않는다.
 
 `TaskRecordV3`는 repository profile·기준 SHA·선택적 task branch·workspace mode·ownership·현재 실행자·revision·runtime·artifact manifest·cleanup policy를 저장한다. 상태는 `ACTIVE → PR_OPEN → MERGED → CLEANED|RELEASED|PRESERVED`다. branch나 worktree 경로 자체를 task identity로 사용하지 않는다. 모든 record는 허용 필드만 받고 크기·시간·경로·fingerprint를 검증하며 secret·token·원문 thread/session ID, prototype 오염, symlink·reparse·경로 탈출을 거부한다.
 
@@ -331,7 +505,7 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 먼저 전
 
 문서만 바뀌어도 Linux `verify` 작업 자체는 실행하고 신뢰 경계 검사를 통과해야 한다. dependency 설치와 app 검증만 생략한다. pipeline-only 변경은 dependency를 설치한 뒤 관련 contract를 집중 실행한다. app 전체 검증의 `pnpm test`가 lifecycle contract도 포함하므로 같은 Linux contract를 별도로 중복 실행하지 않는다.
 
-Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`의 도달 가능한 전체 이력을 감사한다.
+Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`을 승인된 기준점 이후 차분으로 감사한다.
 
 CI가 검사하는 계약은 다음과 같다.
 
