@@ -238,6 +238,21 @@ export async function parseSystemReportRequestBody(
   }
 }
 
+/**
+ * Lowercases the `Host` header and drops its port only when that port is the
+ * default for `protocol`, mirroring how `URL` normalizes an origin's host. A
+ * non-default port is left in place so it still has to match.
+ */
+function normalizeAddressedHost(host: string, protocol: string): string {
+  const normalized = host.trim().toLowerCase();
+  const defaultPort =
+    protocol === "https:" ? ":443" : protocol === "http:" ? ":80" : null;
+
+  return defaultPort && normalized.endsWith(defaultPort)
+    ? normalized.slice(0, -defaultPort.length)
+    : normalized;
+}
+
 export function isSameOriginSystemReportRequest(request: Request): boolean {
   if (request.headers.get("sec-fetch-site") !== "same-origin") return false;
 
@@ -255,10 +270,20 @@ export function isSameOriginSystemReportRequest(request: Request): boolean {
   if (!host) return false;
 
   try {
+    const originUrl = new URL(origin);
+
     // Scheme is intentionally not compared: `Host` carries none. A scheme
     // change is a different origin, so the `same-origin` Sec-Fetch-Site
     // requirement above already rejects it.
-    return new URL(origin).host === host.trim().toLowerCase();
+    //
+    // `originUrl.host` has already dropped the scheme's default port, so the
+    // raw header must be normalized the same way; otherwise a proxy that
+    // forwards the redundant `:443` / `:80` would be rejected. Parsing the
+    // header through `new URL()` instead would normalize too much — it
+    // silently discards userinfo, path, query and fragment, so
+    // `evil.example@a.example` and `a.example/evil` would both match
+    // `a.example`.
+    return originUrl.host === normalizeAddressedHost(host, originUrl.protocol);
   } catch {
     return false;
   }

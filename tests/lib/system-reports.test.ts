@@ -203,17 +203,14 @@ describe("system report same-origin enforcement", () => {
   }
 
   it("does not widen the accepted origin from forwarded headers", () => {
-    const request = new Request(
-      "https://internal.example/api/system-reports",
-      {
-        headers: {
-          origin: "https://public.example",
-          "sec-fetch-site": "same-origin",
-          "x-forwarded-host": "public.example",
-          "x-forwarded-proto": "https",
-        },
+    const request = new Request("https://internal.example/api/system-reports", {
+      headers: {
+        origin: "https://public.example",
+        "sec-fetch-site": "same-origin",
+        "x-forwarded-host": "public.example",
+        "x-forwarded-proto": "https",
       },
-    );
+    });
 
     expect(isSameOriginSystemReportRequest(request)).toBe(false);
   });
@@ -245,10 +242,41 @@ describe("system report same-origin enforcement", () => {
     expect(isSameOriginSystemReportRequest(request)).toBe(true);
   });
 
+  // `new URL(origin).host` drops the scheme's default port, but the raw `Host`
+  // header is not normalized. A proxy that forwards the redundant default port
+  // would otherwise be rejected — the same false-rejection class this guard was
+  // rewritten to remove.
+  it.each([
+    ["https with a redundant :443", "https://a.example", "a.example:443"],
+    ["http with a redundant :80", "http://a.example", "a.example:80"],
+    ["an IPv6 literal with a redundant :80", "http://[::1]", "[::1]:80"],
+    ["an uppercased host header", "https://a.example", "A.Example:443"],
+  ])("accepts %s in the host header", (_name, origin, host) => {
+    expect(
+      isSameOriginSystemReportRequest(originRequest({ host, origin })),
+    ).toBe(true);
+  });
+
   it.each([
     [
       "the origin host differs from the addressed host",
       { host: "www.dotoretopik.com", origin: "https://evil.example" },
+    ],
+    [
+      "a non-default port is dropped from the origin",
+      { host: "a.example:8443", origin: "https://a.example" },
+    ],
+    [
+      "the default port belongs to the other scheme",
+      { host: "a.example:80", origin: "https://a.example" },
+    ],
+    [
+      "userinfo is smuggled into the host header",
+      { host: "evil.example@a.example", origin: "https://a.example" },
+    ],
+    [
+      "a path is smuggled into the host header",
+      { host: "a.example/evil", origin: "https://a.example" },
     ],
     [
       "a sibling subdomain forges the origin",
