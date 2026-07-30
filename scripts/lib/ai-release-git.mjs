@@ -561,6 +561,7 @@ export function cleanupObservation({ stgFastForwardedToMain }) {
 
 export function preflightObservation({
   stgSha,
+  stgParents,
   sourceRepositoryIdentity,
   targetRepositoryIdentity,
   registryLockPresent,
@@ -568,8 +569,10 @@ export function preflightObservation({
 }) {
   if (typeof registryLockPresent !== "boolean") fail("EXECUTOR_OBSERVATION_INVALID");
   if (!Array.isArray(verifiedAccounts)) fail("EXECUTOR_OBSERVATION_INVALID");
+  if (stgParents !== null && !Array.isArray(stgParents)) fail("EXECUTOR_OBSERVATION_INVALID");
   return {
     stgSha: assertSha(stgSha),
+    stgParents: stgParents === null ? null : assertShaList(stgParents),
     sourceRepositoryIdentity: assertOwnerRepo(sourceRepositoryIdentity),
     targetRepositoryIdentity: assertOwnerRepo(targetRepositoryIdentity),
     registryLockPresent,

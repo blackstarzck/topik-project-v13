@@ -110,7 +110,12 @@ const TARGET_KEYS = new Set([
   "stgSha",
   "mainSha",
 ]);
-const SECURITY_KEYS = new Set(["auditFingerprint", "refs", "findingCount"]);
+const SECURITY_KEYS = new Set([
+  "auditFingerprint",
+  "baselineCommitHash",
+  "refs",
+  "findingCount",
+]);
 const MIGRATION_KEYS = new Set([
   "manifestDigest",
   "evidenceDigest",
@@ -362,6 +367,7 @@ function securityAuditValidation(
     stgBaseSha = null,
     stgReady = false,
     expectedBaselineSha = null,
+    requireDiffAudit = false,
   } = {},
 ) {
   if (!isPlainObject(audit)) return { ok: false, code: "SECURITY_AUDIT_REQUIRED" };
@@ -375,6 +381,9 @@ function securityAuditValidation(
   );
   if (audit.schemaVersion !== 1 || !SECURITY_AUDIT_RECORD_TYPES.has(audit.recordType)) {
     return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
+  }
+  if (requireDiffAudit && !diffAudit) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_REQUIRED" };
   }
   if (errors.length > 0) return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
   const payload = structuredClone(audit);
@@ -568,6 +577,7 @@ export function createPromotionRun({
     stgBaseSha,
     stgReady,
     expectedBaselineSha,
+    requireDiffAudit: true,
   });
   if (!auditResult.ok) fail(auditResult.code);
   const candidate = planCandidate({ now, sourceSha, stgBaseSha });
@@ -606,6 +616,7 @@ export function createPromotionRun({
     },
     security: {
       auditFingerprint: securityAudit.fingerprint,
+      baselineCommitHash: securityAudit.baseline.commitHash,
       refs: [...expectedSecurityRefs].sort(),
       findingCount: 0,
     },
@@ -656,6 +667,7 @@ export function startPromotion(input) {
       stgBaseSha: input?.stgBaseSha ?? null,
       stgReady: input?.stgReady ?? false,
       expectedBaselineSha: input?.expectedBaselineSha ?? null,
+      requireDiffAudit: true,
     },
   );
   if (!result.ok) {
@@ -738,6 +750,9 @@ export function validatePromotionRunV1(record) {
   }
   if (!BRANCH_PATTERN.test(record.target?.candidateBranch ?? "")) {
     errors.push(issue("INVALID_CANDIDATE_BRANCH", "target.candidateBranch"));
+  }
+  if (!DIGEST_PATTERN.test(record.security?.baselineCommitHash ?? "")) {
+    errors.push(issue("INVALID_DIGEST", "security.baselineCommitHash"));
   }
   if (record.migration?.autoApplyEnabled !== false) {
     errors.push(issue("DB_AUTO_APPLY_FORBIDDEN", "migration.autoApplyEnabled"));

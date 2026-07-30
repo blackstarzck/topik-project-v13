@@ -16,6 +16,7 @@ const SHA = {
   previous: "6".repeat(40),
   stgMerged: "7".repeat(40),
 };
+const BASELINE_SHA = "8".repeat(40);
 const CANDIDATE_BRANCH = "chore/promote-20260723-11111111";
 const OWNER_REPO = "keduall/topik-project-v13";
 const roots = [];
@@ -676,7 +677,8 @@ describe("release git observation mapping", () => {
   function securityAudit() {
     const payload = {
       schemaVersion: 1,
-      recordType: "SecurityArtifactAuditV1",
+      recordType: "SecurityArtifactDiffAuditV1",
+      baseline: { ref: BASELINE_SHA, commitHash: digest(BASELINE_SHA) },
       refs: ["collab/main", "collab/stg", "origin/main"],
       snapshots: [
         { ref: "collab/main", commitHash: digest(SHA.stg) },
@@ -747,6 +749,7 @@ describe("release git observation mapping", () => {
       stgBaseSha: SHA.stg,
       securityAudit: securityAudit(),
       expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+      expectedBaselineSha: BASELINE_SHA,
       controlPlaneReady: true,
       stgReady: true,
       vercelDomain: "talkpik.example.com",
@@ -903,6 +906,7 @@ describe("release git observation mapping", () => {
       stgBaseSha: SHA.stg,
       securityAudit: securityAudit(),
       expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+      expectedBaselineSha: BASELINE_SHA,
       controlPlaneReady: true,
       stgReady: true,
       vercelDomain: "talkpik.example.com",
@@ -956,6 +960,7 @@ describe("release git observation mapping", () => {
       stgBaseSha: SHA.stg,
       securityAudit: securityAudit(),
       expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+      expectedBaselineSha: BASELINE_SHA,
       controlPlaneReady: true,
       stgReady: true,
       vercelDomain: "talkpik.example.com",
@@ -967,6 +972,7 @@ describe("release git observation mapping", () => {
         record,
         observed: preflightObservation({
           stgSha: SHA.stg,
+          stgParents: [],
           sourceRepositoryIdentity: "blackstarzck/topik-project-v13",
           targetRepositoryIdentity: "keduall/topik-project-v13",
           registryLockPresent: false,
@@ -980,6 +986,7 @@ describe("release git observation mapping", () => {
         record,
         observed: preflightObservation({
           stgSha: SHA.main,
+          stgParents: null,
           sourceRepositoryIdentity: "blackstarzck/topik-project-v13",
           targetRepositoryIdentity: "keduall/topik-project-v13",
           registryLockPresent: true,
@@ -990,6 +997,16 @@ describe("release git observation mapping", () => {
       ok: false,
       blockers: ["PROMOTION_BASE_MOVED", "PROMOTION_REGISTRY_LOCKED", "EXECUTOR_ACCOUNT_UNAVAILABLE"],
     });
+    expect(() =>
+      preflightObservation({
+        stgSha: SHA.stg,
+        stgParents: ["not-a-sha"],
+        sourceRepositoryIdentity: "blackstarzck/topik-project-v13",
+        targetRepositoryIdentity: "keduall/topik-project-v13",
+        registryLockPresent: false,
+        verifiedAccounts: ["blackstarzck"],
+      }),
+    ).toThrowError("EXECUTOR_LINEAGE_MISMATCH");
   });
 
   it("rejects observations that are not measured booleans or SHAs", async () => {

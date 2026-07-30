@@ -39,6 +39,7 @@ const SHA = {
   previous: "6".repeat(40),
   stgMerged: "7".repeat(40),
 };
+const BASELINE_SHA = "8".repeat(40);
 
 function digest(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -55,7 +56,8 @@ async function executor() {
 function securityAudit() {
   const payload = {
     schemaVersion: 1,
-    recordType: "SecurityArtifactAuditV1",
+    recordType: "SecurityArtifactDiffAuditV1",
+    baseline: { ref: BASELINE_SHA, commitHash: digest(BASELINE_SHA) },
     refs: ["collab/main", "collab/stg", "origin/main"],
     snapshots: [
       { ref: "collab/main", commitHash: digest(SHA.stg) },
@@ -107,6 +109,7 @@ function runInput(overrides = {}) {
     stgBaseSha: SHA.stg,
     securityAudit: securityAudit(),
     expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+    expectedBaselineSha: BASELINE_SHA,
     controlPlaneReady: true,
     stgReady: true,
     vercelDomain: "talkpik.example.com",
@@ -182,6 +185,110 @@ function productionObserved(overrides = {}) {
       ...overrides,
     },
   };
+}
+
+async function runAtState(target) {
+  const { advancePromotionRun } = await promotion();
+  const {
+    buildCandidateVerifiedEvent,
+    buildDbGateEvaluatedEvent,
+    buildMainMergeVerifiedEvent,
+    buildMainPrOpenEvent,
+    buildProductionEvaluatedEvent,
+    buildStgPrOpenEvent,
+    buildStgReadyEvent,
+  } = await executor();
+  let { record, policy } = await plannedRun();
+  const advance = (event) => {
+    const result = advancePromotionRun(record, {
+      expectedRevision: record.revision,
+      expectedFingerprint: record.fingerprint,
+      policy,
+      event,
+    });
+    record = result.record;
+    policy = result.policy;
+  };
+
+  if (target === "PLANNED") return record;
+  advance(
+    buildCandidateVerifiedEvent({
+      at: "2026-07-23T10:01:00.000Z",
+      record,
+      observed: candidateObserved(),
+    }),
+  );
+  if (target === "CANDIDATE_VERIFIED") return record;
+  advance(
+    buildStgPrOpenEvent({
+      at: "2026-07-23T10:02:00.000Z",
+      record,
+      observed: {
+        targetBranch: "stg",
+        headBranch: record.target.candidateBranch,
+        headSha: SHA.candidate,
+      },
+    }),
+  );
+  if (target === "STG_PR_OPEN") return record;
+  advance(
+    buildStgReadyEvent({
+      at: "2026-07-23T10:03:00.000Z",
+      record,
+      observed: previewObserved(),
+    }),
+  );
+  if (target === "STG_READY") return record;
+  advance(
+    buildDbGateEvaluatedEvent({
+      at: "2026-07-23T10:04:00.000Z",
+      record,
+      observed: { migrationEvidence: migrationEvidence() },
+    }),
+  );
+  advance({
+    type: "PROD_APPROVAL_GRANTED",
+    at: "2026-07-23T10:05:00.000Z",
+    approvalFingerprint: record.approval.approvalFingerprint,
+  });
+  advance(
+    buildMainPrOpenEvent({
+      at: "2026-07-23T10:06:00.000Z",
+      record,
+      observed: {
+        targetBranch: "main",
+        headBranch: "stg",
+        headSha: record.target.stgSha,
+        mergeMethod: "merge",
+        directMainPush: false,
+      },
+    }),
+  );
+  advance(
+    buildMainMergeVerifiedEvent({
+      at: "2026-07-23T10:07:00.000Z",
+      record,
+      observed: {
+        mainBaseSha: SHA.previous,
+        mainSha: SHA.main,
+        headSha: record.target.stgSha,
+        parents: [SHA.previous, record.target.stgSha],
+        targetBranch: "main",
+        mergeMethod: "merge",
+        directMainPush: false,
+      },
+    }),
+  );
+  if (target === "PRODUCTION_VERIFYING") return record;
+  advance(
+    buildProductionEvaluatedEvent({
+      at: "2026-07-23T10:08:00.000Z",
+      record,
+      observed: productionObserved(),
+    }),
+  );
+  if (target === "RELEASED") return record;
+  throw new Error(`unsupported target state ${target}`);
 }
 
 async function walkToCleaned() {
@@ -687,6 +794,64 @@ describe("promotion executor preflight", () => {
     expect(() => evaluatePreflight({ record: { state: "PLANNED" }, observed: clean })).toThrowError(
       "EXECUTOR_RECORD_INVALID",
     );
+  });
+
+  it("accepts a stg tip this run itself could have produced and still blocks a third-party move", async () => {
+    const { evaluatePreflight } = await executor();
+    const base = {
+      sourceRepositoryIdentity: "blackstarzck/topik-project-v13",
+      targetRepositoryIdentity: "keduall/topik-project-v13",
+      registryLockPresent: false,
+      verifiedAccounts: ["blackstarzck", "guestkeduall-design"],
+    };
+
+    const pending = await runAtState("STG_PR_OPEN");
+    expect(pending.target.stgSha).toBeNull();
+    expect(
+      evaluatePreflight({
+        record: pending,
+        observed: { ...base, stgSha: SHA.stgMerged, stgParents: [SHA.stg, SHA.candidate] },
+      }),
+    ).toEqual({ ok: true, blockers: [] });
+    for (const stgParents of [
+      [SHA.candidate, SHA.stg],
+      [SHA.stg, SHA.previous],
+      [SHA.stg],
+      [],
+      null,
+      undefined,
+    ]) {
+      expect(
+        evaluatePreflight({
+          record: pending,
+          observed: { ...base, stgSha: SHA.stgMerged, stgParents },
+        }).blockers,
+      ).toContain("PROMOTION_BASE_MOVED");
+    }
+
+    const released = await runAtState("RELEASED");
+    expect(released.state).toBe("RELEASED");
+    expect(released.target.mainSha).toBe(SHA.main);
+    expect(
+      evaluatePreflight({
+        record: released,
+        observed: { ...base, stgSha: SHA.main, stgParents: [SHA.previous, SHA.stgMerged] },
+      }),
+    ).toEqual({ ok: true, blockers: [] });
+    expect(
+      evaluatePreflight({
+        record: released,
+        observed: { ...base, stgSha: SHA.previous, stgParents: [] },
+      }).blockers,
+    ).toContain("PROMOTION_BASE_MOVED");
+
+    const planned = await runAtState("PLANNED");
+    expect(
+      evaluatePreflight({
+        record: planned,
+        observed: { ...base, stgSha: SHA.stgMerged, stgParents: [SHA.stg, SHA.candidate] },
+      }).blockers,
+    ).toContain("PROMOTION_BASE_MOVED");
   });
 
   it("blocks the executor while a human production approval is pending", async () => {

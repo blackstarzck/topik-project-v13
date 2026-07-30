@@ -70,6 +70,7 @@ const COMMAND_FLAGS = new Map([
 ]);
 const DEFAULT_PREVIEW_BRANCH = "stg";
 const CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
+const SHA_PATTERN = /^[a-f0-9]{40}$/u;
 
 const KEDUALL = PROMOTION_PROFILES.keduall;
 const BLACK_ACCOUNT = PROMOTION_PROFILES.black.authLogin;
@@ -83,6 +84,12 @@ const EXECUTOR_MAX_RUN_ITERATIONS = 12;
 const DB_RETRY_STATES = new Set(["DB_BASELINE_REQUIRED", "DB_GATE_BLOCKED"]);
 const DEFAULT_READY_ATTEMPTS = 30;
 const DEFAULT_READY_INTERVAL_MS = 10_000;
+const DEFAULT_DEPLOYMENT_ATTEMPTS = 20;
+const DEFAULT_DEPLOYMENT_INTERVAL_MS = 15_000;
+const DEFAULT_ALIAS_ATTEMPTS = 20;
+const DEFAULT_ALIAS_INTERVAL_MS = 15_000;
+const DEFAULT_SMOKE_ATTEMPTS = 5;
+const DEFAULT_SMOKE_INTERVAL_MS = 15_000;
 const DEFAULT_SMOKE_CHECKS = Object.freeze([
   Object.freeze({ path: "/", expectedStatus: 200 }),
 ]);
@@ -101,7 +108,10 @@ export function safeExecutorCode(error) {
 }
 
 export function parseExecutorArguments(argv) {
-  const [command, ...tokens] = argv;
+  const input = Array.isArray(argv) ? argv : [];
+  const rest = input[0] === "--" ? input.slice(1) : input;
+  if (rest[0] === "--") throw executorError("INVALID_EXECUTOR_ARGUMENTS");
+  const [command, ...tokens] = rest;
   if (!COMMANDS.has(command)) throw executorError("EXECUTOR_COMMAND_REQUIRED");
   const allowed = COMMAND_FLAGS.get(command);
   const values = {};
@@ -174,6 +184,27 @@ function readOnlyGitText(repository, args, commandRunner) {
   return output;
 }
 
+function readOnlyCommitParents(repository, sha, commandRunner) {
+  const output = readOnlyGitText(
+    repository,
+    ["rev-list", "--parents", "-n", "1", sha],
+    commandRunner,
+  );
+  if (output === null) return null;
+  const tokens = output.split(/\s+/u).map((entry) => entry.toLowerCase());
+  if (tokens[0] !== sha) return null;
+  const parents = tokens.slice(1);
+  return parents.every((entry) => SHA_PATTERN.test(entry)) ? parents : null;
+}
+
+function adapterCommitParents(git, sha) {
+  try {
+    return git.commitParents(sha);
+  } catch {
+    return null;
+  }
+}
+
 function repositoryIdentityOrNull(repository, remote, commandRunner) {
   const url = readOnlyGitText(repository, ["remote", "get-url", remote], commandRunner);
   if (url === null) return null;
@@ -202,8 +233,13 @@ export function collectExecutorObservations({
   } catch {
     registryLockPresent = null;
   }
+  const normalizedStgSha = stgSha === null ? null : stgSha.toLowerCase();
   return {
-    stgSha: stgSha === null ? null : stgSha.toLowerCase(),
+    stgSha: normalizedStgSha,
+    stgParents:
+      normalizedStgSha === null
+        ? null
+        : readOnlyCommitParents(repository, normalizedStgSha, commandRunner),
     sourceRepositoryIdentity: repositoryIdentityOrNull(
       repository,
       PROMOTION_PROFILES.black.remote,
@@ -337,6 +373,64 @@ function migrationEvidenceRoot(options) {
   return path.join(localAppData, ...DB_EVIDENCE_SEGMENTS);
 }
 
+function defaultSleep(milliseconds) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+
+function attemptLimit(value) {
+  return Number.isSafeInteger(value) && value > 0 ? value : 1;
+}
+
+async function pollForValue({ attempts, intervalMs, sleep, probe }) {
+  const limit = attemptLimit(attempts);
+  for (let attempt = 1; attempt <= limit; attempt += 1) {
+    const value = await probe();
+    if (value !== null) return value;
+    if (attempt === limit) break;
+    await sleep(intervalMs);
+  }
+  return null;
+}
+
+function awaitDeployment(context, vercel, target) {
+  return pollForValue({
+    attempts: context.deploymentAttempts,
+    intervalMs: context.deploymentIntervalMs,
+    sleep: context.sleep,
+    probe: () => vercel.findDeploymentByCommit(target),
+  });
+}
+
+async function awaitAliasSwitch(context, vercel, { domain, deploymentId }) {
+  const matched = await pollForValue({
+    attempts: context.aliasAttempts,
+    intervalMs: context.aliasIntervalMs,
+    sleep: context.sleep,
+    probe: async () => {
+      const current = await vercel.getAliasTarget({ domain });
+      return current !== null && current.deploymentId === deploymentId ? true : null;
+    },
+  });
+  return matched === true;
+}
+
+async function awaitReadOnlySmoke(context, baseUrl) {
+  const limit = attemptLimit(context.smokeAttempts);
+  let observed = null;
+  for (let attempt = 1; attempt <= limit; attempt += 1) {
+    observed = await context.smoke({
+      baseUrl,
+      checks: context.smokeChecks,
+      fetchImplementation: context.smokeFetch,
+    });
+    if (observed?.smokePassed === true || attempt === limit) break;
+    await context.sleep(context.smokeIntervalMs);
+  }
+  return observed;
+}
+
 function lazily(factory) {
   let value;
   let created = false;
@@ -375,6 +469,13 @@ function buildStepContext({ repository, options, migrationEvidence, warnings }) 
     smokeFetch: options.smokeFetch ?? options.fetchImplementation ?? globalThis.fetch,
     readyAttempts: options.readyAttempts ?? DEFAULT_READY_ATTEMPTS,
     readyIntervalMs: options.readyIntervalMs ?? DEFAULT_READY_INTERVAL_MS,
+    sleep: options.sleep ?? defaultSleep,
+    deploymentAttempts: options.deploymentAttempts ?? DEFAULT_DEPLOYMENT_ATTEMPTS,
+    deploymentIntervalMs: options.deploymentIntervalMs ?? DEFAULT_DEPLOYMENT_INTERVAL_MS,
+    aliasAttempts: options.aliasAttempts ?? DEFAULT_ALIAS_ATTEMPTS,
+    aliasIntervalMs: options.aliasIntervalMs ?? DEFAULT_ALIAS_INTERVAL_MS,
+    smokeAttempts: options.smokeAttempts ?? DEFAULT_SMOKE_ATTEMPTS,
+    smokeIntervalMs: options.smokeIntervalMs ?? DEFAULT_SMOKE_INTERVAL_MS,
     worktreeRoot: options.worktreeRoot ?? path.join(tmpdir(), "talkpik-promotion-candidate"),
     writeEvidence: options.writeEvidence ?? writeSubmittedEvidence,
     authRunner:
@@ -407,7 +508,13 @@ async function withAccount(context, account, operation) {
     profile: repositoryProfileFor(account),
     operation,
   });
-  if (outcome?.result !== "AUTHENTICATED") throw executorError(authBlockerCode(outcome?.blocker));
+  if (outcome?.result !== "AUTHENTICATED") {
+    throw executorError(
+      typeof outcome?.operationCode === "string" && CODE_PATTERN.test(outcome.operationCode)
+        ? outcome.operationCode
+        : authBlockerCode(outcome?.blocker),
+    );
+  }
   return outcome.value;
 }
 
@@ -537,7 +644,7 @@ function stgMergeHandlers(record, context) {
     },
     async verify(scratch) {
       const vercel = context.vercel();
-      const deployment = await vercel.findDeploymentByCommit({
+      const deployment = await awaitDeployment(context, vercel, {
         projectId: record.vercel.project,
         commitSha: scratch.stgSha,
         target: "preview",
@@ -630,7 +737,7 @@ function productionHandlers(record, context) {
   return {
     async verify(scratch) {
       const vercel = context.vercel();
-      const deployment = await vercel.findDeploymentByCommit({
+      const deployment = await awaitDeployment(context, vercel, {
         projectId: record.vercel.project,
         commitSha: record.target.mainSha,
         target: "production",
@@ -645,12 +752,11 @@ function productionHandlers(record, context) {
         projectId: record.vercel.project,
         beforeDeploymentId: deployment.deploymentId,
       });
-      const aliasTarget = await vercel.getAliasTarget({ domain: record.vercel.domain });
-      const smoke = await context.smoke({
-        baseUrl: `https://${record.vercel.domain}`,
-        checks: context.smokeChecks,
-        fetchImplementation: context.smokeFetch,
+      const aliasSwitched = await awaitAliasSwitch(context, vercel, {
+        domain: record.vercel.domain,
+        deploymentId: deployment.deploymentId,
       });
+      const smoke = await awaitReadOnlySmoke(context, `https://${record.vercel.domain}`);
       scratch.evidence = productionObservation({
         deployment: {
           deploymentId: deployment.deploymentId,
@@ -661,7 +767,7 @@ function productionHandlers(record, context) {
         project: record.vercel.project,
         domain: record.vercel.domain,
         alias: record.vercel.domain,
-        aliasSwitched: aliasTarget !== null && aliasTarget.deploymentId === deployment.deploymentId,
+        aliasSwitched,
         smoke,
         previousReady,
       });
@@ -908,9 +1014,14 @@ export async function runNext(values, options = {}) {
 
   context.git.fetchRemote({ remote: KEDUALL.remote });
   const observed = collectExecutorObservations({ repository, gitCommonDir, runId });
-  observed.stgSha =
-    context.git.remoteBranchSha({ remote: KEDUALL.remote, branch: KEDUALL.stgBranch }) ??
-    observed.stgSha;
+  const remoteStgSha = context.git.remoteBranchSha({
+    remote: KEDUALL.remote,
+    branch: KEDUALL.stgBranch,
+  });
+  if (remoteStgSha !== null) {
+    observed.stgSha = remoteStgSha;
+    observed.stgParents = adapterCommitParents(context.git, remoteStgSha);
+  }
   observed.verifiedAccounts = await verifiedAccountsFor(
     context,
     plan.accountProfile?.accounts ?? [],

@@ -27,6 +27,7 @@ const SHA = {
   candidate: "4".repeat(40),
   stgMerged: "7".repeat(40),
 };
+const BASELINE_SHA = "8".repeat(40);
 
 function digest(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -54,7 +55,8 @@ function git(cwd, args) {
 function securityAudit() {
   const payload = {
     schemaVersion: 1,
-    recordType: "SecurityArtifactAuditV1",
+    recordType: "SecurityArtifactDiffAuditV1",
+    baseline: { ref: BASELINE_SHA, commitHash: digest(BASELINE_SHA) },
     refs: ["collab/main", "collab/stg", "origin/main"],
     snapshots: [
       { ref: "collab/main", commitHash: digest(SHA.stg) },
@@ -110,6 +112,7 @@ async function awaitingApprovalRun() {
     stgBaseSha: SHA.stg,
     securityAudit: securityAudit(),
     expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+    expectedBaselineSha: BASELINE_SHA,
     controlPlaneReady: true,
     stgReady: true,
     vercelDomain: "talkpik.example.com",
@@ -235,6 +238,23 @@ describe("promotion executor CLI arguments", () => {
       command: "status",
       values: { repo: "C:\\repo", "run-id": RUN_ID },
     });
+  });
+
+  it("skips exactly one leading -- separator and rejects any other stray --", async () => {
+    const { parseExecutorArguments } = await import("../../scripts/ai-pipeline-executor.mjs");
+    const tail = ["status", "--repo", "C:\\repo", "--run-id", RUN_ID];
+
+    expect(parseExecutorArguments(["--", ...tail])).toEqual({
+      command: "status",
+      values: { repo: "C:\\repo", "run-id": RUN_ID },
+    });
+    expect(() => parseExecutorArguments(["--", "--", ...tail])).toThrowError(
+      "INVALID_EXECUTOR_ARGUMENTS",
+    );
+    expect(() =>
+      parseExecutorArguments(["status", "--repo", "C:\\repo", "--", "--run-id", RUN_ID]),
+    ).toThrowError("INVALID_EXECUTOR_ARGUMENTS");
+    expect(() => parseExecutorArguments(["--"])).toThrowError("EXECUTOR_COMMAND_REQUIRED");
   });
 
   it("refuses a symbolic repository path", async () => {
@@ -559,6 +579,7 @@ async function promotionRunAt(stage) {
     stgBaseSha: SHA.stg,
     securityAudit: securityAudit(),
     expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+    expectedBaselineSha: BASELINE_SHA,
     controlPlaneReady: true,
     stgReady: true,
     vercelDomain: "talkpik.example.com",
@@ -600,6 +621,8 @@ async function promotionRunAt(stage) {
     headBranch: record.target.candidateBranch,
     headSha: SHA.candidate,
   });
+  if (stage === "STG_PR_OPEN") return { record, policy };
+
   advance({
     type: "STG_READY",
     at: "2026-07-23T10:03:00.000Z",
@@ -651,6 +674,26 @@ async function promotionRunAt(stage) {
     directMainPush: false,
     actualParents: [MAIN_SHA.base, record.target.stgSha],
   });
+  if (stage !== "RELEASED") return { record, policy };
+
+  advance({
+    type: "PRODUCTION_EVALUATED",
+    at: "2026-07-23T10:08:00.000Z",
+    evidence: {
+      deploymentId: "dpl_production_001",
+      commitSha: MAIN_SHA.merged,
+      project: "topik-project-v13",
+      state: "READY",
+      target: "production",
+      alias: "talkpik.example.com",
+      domain: "talkpik.example.com",
+      smokeReadOnly: true,
+      smokePassed: true,
+      aliasSwitched: true,
+      previousReadyDeploymentId: "dpl_production_previous",
+      previousReadyState: "READY",
+    },
+  });
   return { record, policy };
 }
 
@@ -684,7 +727,23 @@ async function stagedRepository(stage) {
   return { gitCommonDir, policyFile, record, repository, runFile };
 }
 
-function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED" } = {}) {
+const OPERATION_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
+
+function preservedOperationCode(error) {
+  const systemError = error?.syscall !== undefined || typeof error?.errno === "number";
+  return !systemError && typeof error?.code === "string" && OPERATION_CODE_PATTERN.test(error.code)
+    ? error.code
+    : null;
+}
+
+function fakeWorld({
+  smokePassed = true,
+  aliasSwitched = true,
+  stage = "PLANNED",
+  missingDeploymentCount = 0,
+  aliasLagCount = 0,
+  smokeFailureCount = 0,
+} = {}) {
   const calls = [];
   let currentAccount = null;
   const note = (call) => calls.push({ call, account: currentAccount });
@@ -703,10 +762,11 @@ function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED"
     commits.set(SHA.stgMerged, [SHA.stg, SHA.candidate]);
     remotes.set(`collab/${CANDIDATE_BRANCH}`, SHA.candidate);
   }
-  if (stage === "PRODUCTION_VERIFYING") {
+  if (stage === "PRODUCTION_VERIFYING" || stage === "RELEASED") {
     commits.set(MAIN_SHA.merged, [MAIN_SHA.base, SHA.stgMerged]);
     remotes.set("collab/main", MAIN_SHA.merged);
   }
+  if (stage === "RELEASED") remotes.set("collab/stg", MAIN_SHA.merged);
   const localBranches = new Map();
   const pullRequests = [];
   let nextNumber = 101;
@@ -814,8 +874,12 @@ function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED"
     ["talkpik.example.com", aliasSwitched ? "dpl_production_001" : "dpl_production_previous"],
   ]);
 
+  let deploymentLookups = 0;
+  let aliasReads = 0;
   const vercelAdapter = {
     findDeploymentByCommit({ commitSha, target }) {
+      deploymentLookups += 1;
+      if (deploymentLookups <= missingDeploymentCount) return Promise.resolve(null);
       return Promise.resolve(deployments.get(`${target}:${commitSha}`) ?? null);
     },
     waitForReady({ deploymentId }) {
@@ -829,6 +893,10 @@ function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED"
       return Promise.resolve({ deploymentId: "dpl_production_previous", state: "READY" });
     },
     getAliasTarget({ domain }) {
+      aliasReads += 1;
+      if (aliasReads <= aliasLagCount) {
+        return Promise.resolve({ deploymentId: "dpl_production_previous" });
+      }
       const deploymentId = aliases.get(domain);
       return Promise.resolve(deploymentId === undefined ? null : { deploymentId });
     },
@@ -839,19 +907,37 @@ function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED"
     },
   };
 
-  const smoke = () =>
-    Promise.resolve({
-      smokePassed,
+  let smokeCalls = 0;
+  const smoke = () => {
+    smokeCalls += 1;
+    const passed = smokePassed && smokeCalls > smokeFailureCount;
+    return Promise.resolve({
+      smokePassed: passed,
       smokeReadOnly: true,
       checkCount: 1,
-      failedCheckCount: smokePassed ? 0 : 1,
+      failedCheckCount: passed ? 0 : 1,
     });
+  };
+
+  const sleeps = [];
+  const sleep = (milliseconds) => {
+    sleeps.push(milliseconds);
+    return Promise.resolve();
+  };
 
   const authRunner = async ({ profile, operation }) => {
     const previous = currentAccount;
     currentAccount = profile.authLogin;
     try {
       return { result: "AUTHENTICATED", value: await operation() };
+    } catch (error) {
+      const operationCode = preservedOperationCode(error);
+      return {
+        result: "PRESERVED",
+        blocker: "AUTH_OPERATION_FAILED",
+        message: "The authenticated repository operation failed.",
+        ...(operationCode === null ? {} : { operationCode }),
+      };
     } finally {
       currentAccount = previous;
     }
@@ -866,14 +952,17 @@ function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED"
   return {
     aliases,
     calls,
+    commits,
     git: gitAdapter,
     remotes,
+    sleeps,
     options: {
       git: gitAdapter,
       github: githubAdapter,
       vercel: vercelAdapter,
       smoke,
       authRunner,
+      sleep,
       now,
     },
     callNames: () => calls.map((entry) => entry.call),
@@ -1310,6 +1399,151 @@ describe("promotion executor step execution", () => {
     expect(deniedStep.preflight.blockers).toContain("EXECUTOR_ACCOUNT_UNAVAILABLE");
     expect(deniedStep.observed.verifiedAccounts).toEqual([]);
     expect(deniedWorld.callNames()).toEqual(["fetch:collab"]);
+  });
+
+  it("resumes when its own stg merge landed but the preview observation failed", async () => {
+    const { runNext } = await executorModule();
+    const { repository } = await stagedRepository("STG_PR_OPEN");
+    const world = fakeWorld({ stage: "STG_PR_OPEN" });
+
+    expect(world.remotes.get("collab/stg")).toBe(SHA.stgMerged);
+    const step = await runNext({ repo: repository, "run-id": RUN_ID }, world.options);
+
+    expect(step.preflight).toEqual({ ok: true, blockers: [] });
+    expect(step.observed.stgParents).toEqual([SHA.stg, SHA.candidate]);
+    expect(step.outcome).toBe("ADVANCED");
+    expect(step.result.state).toBe("STG_READY");
+    expect(world.callNames().filter((name) => name.startsWith("merge-pr:"))).toEqual([]);
+  });
+
+  it("still blocks a third-party stg move while the stg pull request is open", async () => {
+    const { runNext } = await executorModule();
+    const { repository, runFile } = await stagedRepository("STG_PR_OPEN");
+    const world = fakeWorld({ stage: "STG_PR_OPEN" });
+    const foreign = "9".repeat(40);
+    world.commits.set(foreign, [SHA.stg, "a".repeat(40)]);
+    world.remotes.set("collab/stg", foreign);
+    const before = readFileSync(runFile, "utf8");
+
+    const step = await runNext({ repo: repository, "run-id": RUN_ID }, world.options);
+
+    expect(step.outcome).toBe("PREFLIGHT_BLOCKED");
+    expect(step.preflight.blockers).toContain("PROMOTION_BASE_MOVED");
+    expect(step.result).toBeNull();
+    expect(readFileSync(runFile, "utf8")).toBe(before);
+  });
+
+  it("resumes cleanup when its own stg fast-forward landed but candidate removal failed", async () => {
+    const { runNext } = await executorModule();
+    const { repository } = await stagedRepository("RELEASED");
+    const world = fakeWorld({ stage: "RELEASED" });
+
+    expect(world.remotes.get("collab/stg")).toBe(MAIN_SHA.merged);
+    const step = await runNext({ repo: repository, "run-id": RUN_ID }, world.options);
+
+    expect(step.preflight).toEqual({ ok: true, blockers: [] });
+    expect(step.outcome).toBe("ADVANCED");
+    expect(step.result.state).toBe("CLEANED");
+    expect(world.callNames().filter((name) => name.startsWith("sync:"))).toEqual([]);
+    expect(world.callNames()).toContain(`delete:collab/${CANDIDATE_BRANCH}`);
+    expect(world.remotes.has(`collab/${CANDIDATE_BRANCH}`)).toBe(false);
+  });
+
+  it("falls back to the authentication blocker when the adapter failure carries no code", async () => {
+    const { runSequence } = await executorModule();
+    const { repository } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+
+    const result = await runSequence(
+      { repo: repository, "run-id": RUN_ID },
+      {
+        ...world.options,
+        git: {
+          ...world.git,
+          pushBranch() {
+            throw new Error("SENTINEL_PROVIDER_TRANSCRIPT");
+          },
+        },
+      },
+    );
+
+    expect(result.stoppedBecause).toBe("ADAPTER_ERROR");
+    expect(result.iterations.at(-1).error).toBe("EXECUTOR_AUTH_OPERATION_FAILED");
+    expect(JSON.stringify(result)).not.toContain("SENTINEL_PROVIDER_TRANSCRIPT");
+  });
+
+  it("waits for a late production deployment record and fails once the attempts run out", async () => {
+    const { runNext } = await executorModule();
+    const late = await stagedRepository("PRODUCTION_VERIFYING");
+    const lateWorld = fakeWorld({ stage: "PRODUCTION_VERIFYING", missingDeploymentCount: 2 });
+
+    const step = await runNext(
+      { repo: late.repository, "run-id": RUN_ID },
+      { ...lateWorld.options, deploymentAttempts: 3, deploymentIntervalMs: 1234 },
+    );
+    expect(step.outcome).toBe("ADVANCED");
+    expect(step.result.state).toBe("RELEASED");
+    expect(lateWorld.sleeps).toEqual([1234, 1234]);
+
+    const never = await stagedRepository("PRODUCTION_VERIFYING");
+    const neverWorld = fakeWorld({ stage: "PRODUCTION_VERIFYING", missingDeploymentCount: 9 });
+    await expect(
+      runNext(
+        { repo: never.repository, "run-id": RUN_ID },
+        { ...neverWorld.options, deploymentAttempts: 2, deploymentIntervalMs: 7 },
+      ),
+    ).rejects.toThrowError("VERCEL_DEPLOYMENT_NOT_FOUND");
+    expect(neverWorld.sleeps).toEqual([7]);
+  });
+
+  it("waits for the production alias to switch before recording PRODUCTION_FAILED", async () => {
+    const { runNext } = await executorModule();
+    const lagging = await stagedRepository("PRODUCTION_VERIFYING");
+    const laggingWorld = fakeWorld({ stage: "PRODUCTION_VERIFYING", aliasLagCount: 2 });
+
+    const switched = await runNext(
+      { repo: lagging.repository, "run-id": RUN_ID },
+      { ...laggingWorld.options, aliasAttempts: 3, aliasIntervalMs: 5 },
+    );
+    expect(switched.result.state).toBe("RELEASED");
+    expect(laggingWorld.sleeps).toEqual([5, 5]);
+
+    const stuck = await stagedRepository("PRODUCTION_VERIFYING");
+    const stuckWorld = fakeWorld({ stage: "PRODUCTION_VERIFYING", aliasSwitched: false });
+    const failed = await runNext(
+      { repo: stuck.repository, "run-id": RUN_ID },
+      { ...stuckWorld.options, aliasAttempts: 3, aliasIntervalMs: 5 },
+    );
+    expect(failed.result).toMatchObject({
+      state: "PRODUCTION_FAILED",
+      blocker: "PRODUCTION_FAILED_PREVIOUS_ALIAS_PRESERVED",
+    });
+    expect(stuckWorld.sleeps).toEqual([5, 5]);
+  });
+
+  it("retries the read-only smoke test before requiring an alias rollback", async () => {
+    const { runNext } = await executorModule();
+    const flaky = await stagedRepository("PRODUCTION_VERIFYING");
+    const flakyWorld = fakeWorld({ stage: "PRODUCTION_VERIFYING", smokeFailureCount: 2 });
+
+    const recovered = await runNext(
+      { repo: flaky.repository, "run-id": RUN_ID },
+      { ...flakyWorld.options, smokeAttempts: 3, smokeIntervalMs: 9 },
+    );
+    expect(recovered.result.state).toBe("RELEASED");
+    expect(flakyWorld.sleeps).toEqual([9, 9]);
+
+    const broken = await stagedRepository("PRODUCTION_VERIFYING");
+    const brokenWorld = fakeWorld({ stage: "PRODUCTION_VERIFYING", smokePassed: false });
+    const rollback = await runNext(
+      { repo: broken.repository, "run-id": RUN_ID },
+      { ...brokenWorld.options, smokeAttempts: 2, smokeIntervalMs: 9 },
+    );
+    expect(rollback.result).toMatchObject({
+      state: "ALIAS_ROLLBACK_REQUIRED",
+      blocker: "ALIAS_ROLLBACK_REQUIRED",
+    });
+    expect(brokenWorld.sleeps).toEqual([9]);
   });
 
   it("keeps the executor sources free of the remote database apply surface", () => {

@@ -111,14 +111,16 @@ function pickKeys(source, keys) {
   return Object.fromEntries(keys.map((key) => [key, source[key]]));
 }
 
+function sameOrderedShas(observedList, expectedList) {
+  return (
+    Array.isArray(observedList) &&
+    observedList.length === expectedList.length &&
+    observedList.every((value, index) => value === expectedList[index])
+  );
+}
+
 function assertOrderedParents(observedParents, expectedParents) {
-  if (
-    !Array.isArray(observedParents) ||
-    observedParents.length !== expectedParents.length ||
-    observedParents.some((value, index) => value !== expectedParents[index])
-  ) {
-    fail("EXECUTOR_LINEAGE_MISMATCH");
-  }
+  if (!sameOrderedShas(observedParents, expectedParents)) fail("EXECUTOR_LINEAGE_MISMATCH");
 }
 
 function assertMergeCommitOnly(observed) {
@@ -463,6 +465,26 @@ export function buildCleanupVerifiedEvent({ at, record, observed }) {
   return { type: "CLEANUP_VERIFIED", at, stgFastForwardedToMain: true };
 }
 
+function stgTipBelongsToRun(record, observed) {
+  if (observed.stgSha === (record.target.stgSha ?? record.target.stgBaseSha)) return true;
+  if (record.state === "STG_PR_OPEN") {
+    return (
+      SHA_PATTERN.test(record.target.candidateSha ?? "") &&
+      sameOrderedShas(observed.stgParents, [
+        record.target.stgBaseSha,
+        record.target.candidateSha,
+      ])
+    );
+  }
+  if (record.state === "RELEASED") {
+    return (
+      SHA_PATTERN.test(record.target.mainSha ?? "") &&
+      observed.stgSha === record.target.mainSha
+    );
+  }
+  return false;
+}
+
 export function evaluatePreflight({ record, observed }) {
   if (validatePromotionRunV1(record).length > 0) fail("EXECUTOR_RECORD_INVALID");
   assertObserved(observed);
@@ -471,9 +493,8 @@ export function evaluatePreflight({ record, observed }) {
   if (plan.terminal) blockers.push("EXECUTOR_RUN_TERMINAL");
   if (plan.requiresHumanApproval) blockers.push("EXECUTOR_HUMAN_APPROVAL_REQUIRED");
 
-  const expectedStgTip = record.target.stgSha ?? record.target.stgBaseSha;
   if (!SHA_PATTERN.test(observed.stgSha ?? "")) blockers.push("EXECUTOR_STG_TIP_UNVERIFIED");
-  else if (observed.stgSha !== expectedStgTip) blockers.push("PROMOTION_BASE_MOVED");
+  else if (!stgTipBelongsToRun(record, observed)) blockers.push("PROMOTION_BASE_MOVED");
 
   for (const [actual, expected] of [
     [observed.sourceRepositoryIdentity, record.source.repositoryIdentity],

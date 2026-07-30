@@ -264,6 +264,17 @@ async function safeGh(runCommand, args, { signal, timeoutMs = 20_000 } = {}) {
   }
 }
 
+const OPERATION_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/u;
+
+function preservedOperationCode(error) {
+  const systemError = error?.syscall !== undefined || typeof error?.errno === "number";
+  return !systemError &&
+    typeof error?.code === "string" &&
+    OPERATION_CODE_PATTERN.test(error.code)
+    ? error.code
+    : null;
+}
+
 export async function withRepositoryAuth({
   profile,
   localAppData = process.env.LOCALAPPDATA,
@@ -388,10 +399,12 @@ export async function withRepositoryAuth({
         if (signal?.aborted || error?.name === "TaskSweepBudgetExceeded") {
           pendingError = error;
         } else {
+          const operationCode = preservedOperationCode(error);
           outcome = {
             result: "PRESERVED",
             blocker: "AUTH_OPERATION_FAILED",
             message: "The authenticated repository operation failed.",
+            ...(operationCode === null ? {} : { operationCode }),
           };
         }
       }

@@ -25,6 +25,7 @@ const SHA = {
   previous: "6".repeat(40),
   stgMerged: "7".repeat(40),
 };
+const BASELINE_SHA = "8".repeat(40);
 
 function digest(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -576,7 +577,8 @@ describe("vercel observation mapping", () => {
   function securityAudit() {
     const payload = {
       schemaVersion: 1,
-      recordType: "SecurityArtifactAuditV1",
+      recordType: "SecurityArtifactDiffAuditV1",
+      baseline: { ref: BASELINE_SHA, commitHash: digest(BASELINE_SHA) },
       refs: ["collab/main", "collab/stg", "origin/main"],
       snapshots: [
         { ref: "collab/main", commitHash: digest(SHA.stg) },
@@ -640,6 +642,7 @@ describe("vercel observation mapping", () => {
       stgBaseSha: SHA.stg,
       securityAudit: securityAudit(),
       expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+      expectedBaselineSha: BASELINE_SHA,
       controlPlaneReady: true,
       stgReady: true,
       vercelDomain: DOMAIN,

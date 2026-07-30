@@ -160,6 +160,8 @@ pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-rev
 - 기준점이나 예외를 바꾸려면 `config/security-audit-baseline.json`을 고쳐야 하고, `/config/`는 CODEOWNERS가 보호하므로 소유자 리뷰를 거친다. `release:start`에는 기준점·예외를 지정하는 명령 인자가 없어 caller가 감사 범위를 우회할 수 없다.
 - 이 파일이 없거나 schema·fingerprint가 깨졌으면 `SECURITY_BASELINE_CONFIG_INVALID`로 즉시 중단한다. 전체 이력 감사로 조용히 되돌아가지 않는다.
 - 감사 기록은 `SecurityArtifactDiffAuditV1`이며 기준점 SHA의 안전한 hash를 담는다. `release:start`가 읽은 승인 기준점과 이 hash가 다르면 `SECURITY_AUDIT_BASELINE_MISMATCH`, 기준점 정보 없이 차분 기록을 제출하면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부한다.
+- 새 승격 기록을 만드는 경로는 차분 감사 기록만 받는다. 기준점 없는 전체 이력 감사 기록을 넣으면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부하므로 기준점 검증이 통째로 생략되는 조합이 남지 않는다. 전체 이력 감사 기록 자체는 CI 검사처럼 승격 기록을 만들지 않는 경로에서 계속 읽을 수 있다.
+- 승격 기록은 어떤 기준점으로 감사했는지를 기준점 SHA의 안전한 hash로 함께 저장한다. 사후에 감사 범위를 기록만 보고 확인할 수 있다. 이 값은 승격 기록의 fingerprint에만 들어가고 pipeline 계약 fingerprint와 profile fingerprint에는 영향을 주지 않으므로 승인 성공 횟수를 reset하지 않는다.
 
 공개 `release:resume`은 최초 2회에 필요한 사람의 최종 승인만 받는다. candidate·PR·DB·Vercel·cleanup 상태를 caller가 만든 JSON으로 제출해 상태를 전진시키는 경로는 `RELEASE_TRUSTED_EXECUTOR_REQUIRED`로 거부한다. 이 상태 전이는 고정 저장소·계정·permission·현재 ref/SHA와 trusted workflow 결과를 직접 확인하는 운영 executor만 호출할 수 있다. 해당 executor가 설치되기 전에는 승격이 안전하게 중단된 상태이며 수동 JSON으로 우회할 수 없다.
 
@@ -195,9 +197,35 @@ pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id> [--
 
 `run`은 사람 승인 필요, 사전 점검 차단, DB 증거 필요, DB gate 차단, 종료 상태, 어댑터 오류 중 하나에 닿으면 멈추고 각 회차 결과를 함께 보고한다. 어댑터 오류는 대문자 코드 하나로만 남기고 공급자·명령 출력 원문은 담지 않는다. 12회 상한은 무한 반복을 막는 안전장치이며 상한에 닿아도 상태를 억지로 전진시키지 않는다.
 
+계정 lock 안에서 일어난 실패도 실패 종류를 잃지 않는다. 계정 확인 자체가 막힌 것과 인증된 뒤 실제 작업이 실패한 것을 구분해서, 병합 충돌·push 검증 실패·보호 branch·PR 병합 검증 실패처럼 이미 정해진 대문자 코드가 있으면 그 코드를 그대로 보고한다. 코드가 없는 실패만 `EXECUTOR_AUTH_OPERATION_FAILED`로 모은다. 어느 경우에도 공급자 메시지·stack·명령 출력 원문은 옮기지 않는다.
+
 `probe-vercel`은 읽기만 한다. 배포를 만들지 않고 alias를 바꾸지 않으며 승격 기록도 고치지 않는다. `--branch`는 Preview 환경 범위를 확인할 branch이며 기본값은 `stg`다. 이 인자는 `probe-vercel`에만 허용하고 다른 하위 명령에 붙이면 `INVALID_EXECUTOR_ARGUMENTS`로 거부한다. 접근 자격이 준비되지 않았으면 결과를 꾸미지 않고 `VERCEL_TOKEN_MISSING`을 그대로 보고해 준비가 필요한 상태를 드러낸다.
 
-`status`는 읽기 전용이다. registry lock을 만들지 않고 승격 기록도 고치지 않는다. 기록에 적힌 Keduall `stg` 기준이 현재 `collab/stg`와 다르면 `PROMOTION_BASE_MOVED`, 저장소 identity가 다르면 `REPOSITORY_IDENTITY_MISMATCH`로 차단한다. 실패는 대문자 코드 하나로만 보고하며 공급자 원문·명령 출력은 담지 않는다.
+`status`는 읽기 전용이다. registry lock을 만들지 않고 승격 기록도 고치지 않는다. 현재 `collab/stg`가 이 승격이 만들 수 있었던 값이 아니면 `PROMOTION_BASE_MOVED`, 저장소 identity가 다르면 `REPOSITORY_IDENTITY_MISMATCH`로 차단한다. 어떤 값을 통과시키는지는 바로 아래에서 정한다. 실패는 대문자 코드 하나로만 보고하며 공급자 원문·명령 출력은 담지 않는다.
+
+##### 자기 자신이 옮긴 `stg`와 남이 옮긴 `stg`
+
+`stg` 끝 커밋이 기록과 다르다는 사실만으로는 남이 끼어든 것인지, 이 승격이 방금 만든 결과인지 알 수 없다. 그래서 사전 점검은 관측한 끝 커밋이 이 승격이 정당하게 만들 수 있었던 값인지도 함께 본다.
+
+| 기록 상태 | 관측한 `stg` 끝 커밋을 통과시키는 조건 |
+| --- | --- |
+| `stg` PR 열림 | 그 커밋의 부모가 정확히 기록의 `stg` 기준, candidate 순서일 때 |
+| production 반영 완료 | 그 커밋이 기록의 확정된 `main` SHA와 같을 때 |
+| 그 밖의 모든 상태 | 통과시키지 않는다 |
+
+부모를 실측하지 못했거나 순서·값이 하나라도 다르면 지금처럼 `PROMOTION_BASE_MOVED`로 차단한다. 제3자가 `stg`를 다른 커밋으로 옮긴 경우는 부모가 맞지 않으므로 계속 차단된다. 이 판정 덕분에 병합은 성공했지만 이어지는 확인이 실패한 재시도, 정리 도중 candidate 삭제만 실패한 재시도가 영구 교착에 빠지지 않고 멱등 재사용 경로로 이어진다.
+
+##### 정상 지연을 실패로 세지 않기
+
+배포 레코드 생성, production alias 전환, 첫 응답은 병합 직후 짧게 늦어질 수 있다. 이 세 확인은 한 번 읽고 끝내지 않고 유한 폴링으로 기다린다. 시도 횟수와 간격은 주입 가능하며 기본값은 보수적으로 잡는다.
+
+| 확인 대상 | 기본 시도 | 기본 간격 | 소진했을 때 |
+| --- | --- | --- | --- |
+| 정확한 commit의 배포 레코드 | 20회 | 15초 | `VERCEL_DEPLOYMENT_NOT_FOUND` |
+| production alias 전환 | 20회 | 15초 | alias 미전환으로 판정해 `PRODUCTION_FAILED` |
+| 읽기 전용 smoke test | 5회 | 15초 | smoke 실패로 판정해 alias만 rollback |
+
+폴링은 읽기 전용 조회와 `GET` smoke만 반복하며 배포·alias·DB를 바꾸지 않는다. 마지막 시도까지 조건이 맞지 않을 때만 기존 실패 코드로 끝낸다.
 
 ##### 고아 registry lock
 

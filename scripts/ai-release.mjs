@@ -153,7 +153,10 @@ export function loadSecurityAuditBaseline({
 }
 
 export function parseReleaseArguments(argv) {
-  const [command, ...tokens] = argv;
+  const input = Array.isArray(argv) ? argv : [];
+  const rest = input[0] === "--" ? input.slice(1) : input;
+  if (rest[0] === "--") throw cliError("INVALID_RELEASE_ARGUMENTS");
+  const [command, ...tokens] = rest;
   if (!COMMANDS.has(command)) throw cliError("RELEASE_COMMAND_REQUIRED");
   if (tokens.length % 2 !== 0) throw cliError("INVALID_RELEASE_ARGUMENTS");
   const values = {};

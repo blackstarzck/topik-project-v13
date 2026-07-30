@@ -23,6 +23,7 @@ const SHA = {
   previous: "6".repeat(40),
   stgMerged: "7".repeat(40),
 };
+const BASELINE_SHA = "8".repeat(40);
 
 function digest(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -37,6 +38,24 @@ function tempRoot() {
 }
 
 function securityAudit(overrides = {}) {
+  const payload = {
+    schemaVersion: 1,
+    recordType: "SecurityArtifactDiffAuditV1",
+    baseline: { ref: BASELINE_SHA, commitHash: digest(BASELINE_SHA) },
+    refs: ["collab/main", "collab/stg", "origin/main"],
+    snapshots: [
+      { ref: "collab/main", commitHash: digest(SHA.stg) },
+      { ref: "collab/stg", commitHash: digest(SHA.stg) },
+      { ref: "origin/main", commitHash: digest(SHA.source) },
+    ],
+    findings: [],
+    summary: { refCount: 3, scannedPathCount: 24, findingCount: 0 },
+    ...overrides,
+  };
+  return { ...payload, fingerprint: digest(JSON.stringify(payload)) };
+}
+
+function legacySecurityAudit(overrides = {}) {
   const payload = {
     schemaVersion: 1,
     recordType: "SecurityArtifactAuditV1",
@@ -123,6 +142,7 @@ function runInput(overrides = {}) {
     stgBaseSha: SHA.stg,
     securityAudit: securityAudit(),
     expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+    expectedBaselineSha: BASELINE_SHA,
     controlPlaneReady: true,
     stgReady: true,
     vercelDomain: "talkpik.example.com",
@@ -256,6 +276,79 @@ describe("security incident gate", () => {
     );
   });
 
+  it("creates a promotion record only from a baseline-bound diff audit", async () => {
+    const { createPromotionRun, startPromotion, validateSecurityAuditEvidence } =
+      await import("../../scripts/lib/ai-release-promotion.mjs");
+    const legacy = legacySecurityAudit();
+
+    expect(
+      validateSecurityAuditEvidence(legacy, ["collab/main", "collab/stg", "origin/main"], {
+        sourceSha: SHA.source,
+        stgBaseSha: SHA.stg,
+        stgReady: true,
+      }),
+    ).toEqual({ ok: true, code: "SECURITY_AUDIT_CLEAR" });
+    expect(() => createPromotionRun(runInput({ securityAudit: legacy }))).toThrowError(
+      "SECURITY_AUDIT_BASELINE_REQUIRED",
+    );
+    expect(startPromotion(runInput({ securityAudit: legacy }))).toEqual({
+      schemaVersion: 1,
+      recordType: "PromotionStartResultV1",
+      state: "SECURITY_INCIDENT_BLOCKED",
+      blocker: "SECURITY_AUDIT_BASELINE_REQUIRED",
+      mutationAttempted: false,
+    });
+    expect(() =>
+      createPromotionRun(runInput({ expectedBaselineSha: null })),
+    ).toThrowError("SECURITY_AUDIT_BASELINE_REQUIRED");
+    expect(() =>
+      createPromotionRun(runInput({ expectedBaselineSha: SHA.previous })),
+    ).toThrowError("SECURITY_AUDIT_BASELINE_MISMATCH");
+  });
+
+  it("stores the audited baseline without moving the contract or profile fingerprint", async () => {
+    const {
+      PROMOTION_PROFILES,
+      createPromotionRun,
+      promotionProfileFingerprint,
+      stableFingerprint,
+      validatePromotionRunV1,
+    } = await import("../../scripts/lib/ai-release-promotion.mjs");
+    const audit = securityAudit();
+    const record = createPromotionRun(runInput({ securityAudit: audit }));
+
+    expect(record.security).toEqual({
+      auditFingerprint: audit.fingerprint,
+      baselineCommitHash: digest(BASELINE_SHA),
+      refs: ["collab/main", "collab/stg", "origin/main"],
+      findingCount: 0,
+    });
+    expect(validatePromotionRunV1(record)).toEqual([]);
+    expect(record.contractFingerprint).toBe(
+      stableFingerprint({
+        contractVersion: "3.1",
+        black: PROMOTION_PROFILES.black,
+        keduall: PROMOTION_PROFILES.keduall,
+        dbPolicy: "baseline-required-manual-apply-forward-fix",
+        vercelPolicy: "stg-preview-main-production-exact-sha-read-only-smoke",
+        approvalPolicy: "two-consecutive-successes",
+      }),
+    );
+    expect(record.profileFingerprint).toBe(
+      promotionProfileFingerprint({
+        vercelProject: "topik-project-v13",
+        vercelDomain: "talkpik.example.com",
+      }),
+    );
+
+    const missingBaseline = structuredClone(record);
+    delete missingBaseline.security.baselineCommitHash;
+    expect(validatePromotionRunV1(missingBaseline)).toContainEqual({
+      code: "INVALID_DIGEST",
+      path: "security.baselineCommitHash",
+    });
+  });
+
   it("loads only an in-root non-symlink audit file", async () => {
     const { loadSecurityAuditEvidence } =
       await import("../../scripts/lib/ai-release-promotion.mjs");
@@ -265,7 +358,7 @@ describe("security incident gate", () => {
     const evidencePath = path.join(evidenceDir, "audit.json");
     writeFileSync(evidencePath, JSON.stringify(securityAudit()));
     expect(loadSecurityAuditEvidence({ evidencePath, allowedRoot: root })).toMatchObject({
-      recordType: "SecurityArtifactAuditV1",
+      recordType: "SecurityArtifactDiffAuditV1",
     });
     expect(() =>
       loadSecurityAuditEvidence({ evidencePath: path.join(root, "..", "outside.json"), allowedRoot: root }),
@@ -751,6 +844,33 @@ describe("registry and CLI contract", () => {
       "--event-at", "2026-07-23T10:00:00.000Z",
       "--approval", digest("approval"),
     ])).not.toThrow();
+  });
+
+  it("skips exactly one leading -- separator and rejects any other stray --", async () => {
+    const { parseReleaseArguments } = await import("../../scripts/ai-release.mjs");
+    const tail = [
+      "start",
+      "--repo", "C:\\repo",
+      "--run-id", "promotion-20260723-11111111",
+      "--vercel-project", "topik-project-v13",
+      "--vercel-domain", "example.com",
+    ];
+
+    expect(parseReleaseArguments(["--", ...tail])).toEqual(parseReleaseArguments(tail));
+    expect(() => parseReleaseArguments(["--", "--", ...tail])).toThrowError(
+      "INVALID_RELEASE_ARGUMENTS",
+    );
+    expect(() =>
+      parseReleaseArguments([
+        "start",
+        "--repo", "C:\\repo",
+        "--",
+        "--run-id", "promotion-20260723-11111111",
+        "--vercel-project", "topik-project-v13",
+        "--vercel-domain", "example.com",
+      ]),
+    ).toThrowError("INVALID_RELEASE_ARGUMENTS");
+    expect(() => parseReleaseArguments(["--"])).toThrowError("RELEASE_COMMAND_REQUIRED");
   });
 
   it("derives start evidence from fixed refs and rejects caller-authored transition evidence", async () => {

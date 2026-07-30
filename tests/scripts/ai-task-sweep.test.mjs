@@ -161,6 +161,52 @@ describe("repository authentication for one-shot task sweep", () => {
     );
   });
 
+  it("preserves the uppercase operation code without the provider transcript", async () => {
+    const successfulAuth = () => [
+      { stdout: "blackstarzck\n", stderr: "", exitCode: 0 },
+      { stdout: "blackstarzck\n", stderr: "", exitCode: 0 },
+      { stdout: "true\n", stderr: "", exitCode: 0 },
+    ];
+    const attempt = async (thrown) => {
+      const outputs = successfulAuth();
+      const recorder = commandRecorder(() => outputs.shift());
+      return withRepositoryAuth({
+        profile: PIPELINE_REPOSITORY_PROFILES.origin,
+        localAppData: makeRoot(),
+        runCommand: recorder.runCommand,
+        operation: async () => {
+          throw thrown;
+        },
+      });
+    };
+
+    const coded = await attempt(
+      Object.assign(new Error("remote rejected: secret-looking-output"), {
+        code: "EXECUTOR_PUSH_VERIFY_FAILED",
+      }),
+    );
+    expect(coded).toEqual({
+      result: "PRESERVED",
+      blocker: "AUTH_OPERATION_FAILED",
+      message: "The authenticated repository operation failed.",
+      operationCode: "EXECUTOR_PUSH_VERIFY_FAILED",
+    });
+    expect(JSON.stringify(coded)).not.toMatch(/secret-looking-output|remote rejected/u);
+
+    for (const thrown of [
+      new Error("plain failure"),
+      Object.assign(new Error("lowercase"), { code: "not_a_code" }),
+      Object.assign(new Error("system"), { code: "ENOENT", errno: -4058, syscall: "spawnSync" }),
+    ]) {
+      const outcome = await attempt(thrown);
+      expect(outcome).toEqual({
+        result: "PRESERVED",
+        blocker: "AUTH_OPERATION_FAILED",
+        message: "The authenticated repository operation failed.",
+      });
+    }
+  });
+
   it("uses one host-wide github.com auth lock", async () => {
     const root = makeRoot();
     const outputs = [
