@@ -147,7 +147,6 @@ const pipelineContractImplementationPaths = Object.freeze([
 ]);
 const pipelineContractDocumentationPaths = Object.freeze([
   ".codex/skills/finishing-a-development-branch/SKILL.md",
-  "AGENTS.md",
   "README.md",
   "TESTING.md",
   "docs/operations/README.md",
