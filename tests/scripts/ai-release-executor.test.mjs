@@ -1039,6 +1039,8 @@ describe("promotion executor submitted evidence copy", () => {
       readdirSync(path.dirname(target)).filter((entry) => entry.endsWith(".tmp")),
     ).toEqual([]);
 
+    const originalBytes = readFileSync(target);
+    const originalModified = statSync(target).mtimeMs;
     expect(
       writeSubmittedEvidence({
         gitCommonDir,
@@ -1049,6 +1051,60 @@ describe("promotion executor submitted evidence copy", () => {
       }),
     ).toBe(target);
     expect(readdirSync(path.dirname(target))).toEqual(["002-CANDIDATE_VERIFIED.json"]);
+    expect(readFileSync(target).equals(originalBytes)).toBe(true);
+    expect(statSync(target).mtimeMs).toBe(originalModified);
+  });
+
+  it("refuses to overwrite an audit copy whose recorded event differs", async () => {
+    const { writeSubmittedEvidence } = await executor();
+    const gitCommonDir = registryRoot();
+    const { record } = await plannedRun();
+    const event = {
+      type: "CANDIDATE_VERIFIED",
+      at: "2026-07-23T10:01:00.000Z",
+      candidateSha: SHA.candidate,
+      branch: record.target.candidateBranch,
+    };
+    const target = writeSubmittedEvidence({
+      gitCommonDir,
+      runId: RUN_ID,
+      event,
+      sequence: 2,
+      now: "2026-07-23T10:01:05.000Z",
+    });
+    const originalBytes = readFileSync(target);
+
+    for (const conflicting of [
+      { ...event, at: "2026-07-23T10:09:00.000Z" },
+      { ...event, candidateSha: SHA.main },
+      { type: "CANDIDATE_VERIFIED", at: event.at },
+    ]) {
+      expect(() =>
+        writeSubmittedEvidence({
+          gitCommonDir,
+          runId: RUN_ID,
+          event: conflicting,
+          sequence: 2,
+          now: "2026-07-23T10:09:05.000Z",
+        }),
+      ).toThrowError("PROMOTION_EVIDENCE_CONFLICT");
+      expect(readFileSync(target).equals(originalBytes)).toBe(true);
+    }
+
+    writeFileSync(target, "{ not json", "utf8");
+    expect(() =>
+      writeSubmittedEvidence({
+        gitCommonDir,
+        runId: RUN_ID,
+        event,
+        sequence: 2,
+        now: "2026-07-23T10:09:05.000Z",
+      }),
+    ).toThrowError("PROMOTION_EVIDENCE_CONFLICT");
+    expect(readFileSync(target, "utf8")).toBe("{ not json");
+    expect(
+      readdirSync(path.dirname(target)).filter((entry) => entry.endsWith(".tmp")),
+    ).toEqual([]);
   });
 
   it("refuses to record an event that carries a token-like key or value", async () => {

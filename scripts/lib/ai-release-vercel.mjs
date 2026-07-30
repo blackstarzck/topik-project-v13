@@ -8,6 +8,8 @@ import path from "node:path";
 const DEFAULT_BASE_URL = "https://api.vercel.com";
 const DEFAULT_LIST_LIMIT = 100;
 const DEFAULT_SMOKE_TIMEOUT_MS = 10_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMED_OUT = Symbol("VERCEL_REQUEST_TIMED_OUT");
 
 const CREDENTIAL_DIRECTORY = ["TalkpikPipeline", "credentials"];
 const CREDENTIAL_FILE = "vercel.env";
@@ -245,6 +247,26 @@ function defaultClock() {
   return Date.now();
 }
 
+async function withRequestDeadline(timeoutMs, invoke) {
+  const controller = new AbortController();
+  let timer = null;
+  const expiry = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      resolve(REQUEST_TIMED_OUT);
+    }, timeoutMs);
+    if (typeof timer?.unref === "function") timer.unref();
+  });
+  try {
+    const outcome = await Promise.race([invoke(controller.signal), expiry]);
+    return outcome === REQUEST_TIMED_OUT ? null : outcome;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function readyStateOf(entry) {
   const state = entry.readyState ?? entry.state;
   if (typeof state !== "string" || !STATE_PATTERN.test(state)) fail("VERCEL_API_UNAVAILABLE");
@@ -279,6 +301,7 @@ export function createVercelAdapter({
   sleep = defaultSleep,
   clock = defaultClock,
   baseUrl = DEFAULT_BASE_URL,
+  requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 }) {
   if (
     credentialProvider === null ||
@@ -293,15 +316,14 @@ export function createVercelAdapter({
       typeof clock !== "function") {
     fail("VERCEL_API_UNAVAILABLE");
   }
+  const requestTimeout = assertPositiveInteger(requestTimeoutMs, "VERCEL_API_UNAVAILABLE");
   let origin;
   try {
     origin = new URL(baseUrl);
   } catch {
     return fail("VERCEL_API_UNAVAILABLE");
   }
-  if (origin.protocol !== "https:" && origin.protocol !== "http:") {
-    fail("VERCEL_API_UNAVAILABLE");
-  }
+  if (origin.protocol !== "https:") fail("VERCEL_API_UNAVAILABLE");
 
   const buildUrl = (endpoint, query) => {
     const url = new URL(endpoint, origin.origin);
@@ -317,32 +339,29 @@ export function createVercelAdapter({
     const headers = { accept: "application/json" };
     headers.authorization = credentialProvider.authorizationHeader();
     if (body !== undefined) headers["content-type"] = "application/json";
-    let response;
-    try {
-      response = await fetchImplementation(buildUrl(endpoint, query), {
+    const outcome = await withRequestDeadline(requestTimeout, async (signal) => {
+      const response = await fetchImplementation(buildUrl(endpoint, query), {
         method,
         headers,
         redirect: "error",
+        signal,
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
-    } catch {
-      response = null;
-    }
-    if (response === null || response === undefined) fail("VERCEL_API_UNAVAILABLE");
-    const status = Number(response.status);
-    if (!Number.isInteger(status)) fail("VERCEL_API_UNAVAILABLE");
-    if (status === 404) return { status, payload: null };
-    if (status < 200 || status >= 300 || typeof response.json !== "function") {
-      fail("VERCEL_API_UNAVAILABLE");
-    }
-    let payload;
-    try {
-      payload = await response.json();
-    } catch {
-      payload = null;
-    }
-    if (!isPlainObject(payload)) fail("VERCEL_API_UNAVAILABLE");
-    return { status, payload };
+      if (response === null || response === undefined) return null;
+      const status = Number(response.status);
+      if (!Number.isInteger(status)) return null;
+      if (status === 404) return { status, payload: null };
+      if (status < 200 || status >= 300 || typeof response.json !== "function") return null;
+      let payload;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+      return isPlainObject(payload) ? { status, payload } : null;
+    });
+    if (outcome === null || outcome === undefined) fail("VERCEL_API_UNAVAILABLE");
+    return outcome;
   };
 
   const readJson = (endpoint, query = {}) => sendRequest("GET", endpoint, query);
@@ -567,19 +586,15 @@ export async function runReadOnlySmoke({
 
   let failedCheckCount = 0;
   for (const plan of plans) {
-    let status = null;
-    try {
+    const status = await withRequestDeadline(timeout, async (signal) => {
       const response = await fetchImplementation(plan.url, {
         method: "GET",
         redirect: "manual",
-        ...(typeof AbortSignal?.timeout === "function"
-          ? { signal: AbortSignal.timeout(timeout) }
-          : {}),
+        signal,
       });
-      status = Number(response?.status);
-    } catch {
-      status = null;
-    }
+      const observed = Number(response?.status);
+      return Number.isInteger(observed) ? observed : null;
+    });
     if (status !== plan.expectedStatus) failedCheckCount += 1;
   }
 

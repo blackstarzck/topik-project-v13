@@ -95,6 +95,12 @@ function nonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function exactIsoTimestamp(value) {
+  if (!nonEmptyString(value)) return false;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) && new Date(parsed).toISOString() === value;
+}
+
 export function validateSecurityBaselineConfig(config) {
   if (!exactKeys(config, BASELINE_CONFIG_KEYS)) {
     throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
@@ -103,8 +109,7 @@ export function validateSecurityBaselineConfig(config) {
     config.schemaVersion !== 1 ||
     config.recordType !== "SecurityAuditBaselineV1" ||
     !BASELINE_SHA_PATTERN.test(config.baselineSha ?? "") ||
-    !nonEmptyString(config.approvedAt) ||
-    new Date(Date.parse(config.approvedAt)).toISOString() !== config.approvedAt ||
+    !exactIsoTimestamp(config.approvedAt) ||
     !Array.isArray(config.refs) ||
     config.refs.length === 0 ||
     config.refs.some((ref) => !nonEmptyString(ref)) ||
@@ -124,7 +129,7 @@ export function validateSecurityBaselineConfig(config) {
     ) {
       throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
     }
-    const key = `${exception.path.toLowerCase()}\0${exception.rule}`;
+    const key = `${exception.path}\0${exception.rule}`;
     if (seen.has(key)) throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
     seen.add(key);
   }

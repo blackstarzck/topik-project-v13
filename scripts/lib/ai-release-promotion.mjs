@@ -334,7 +334,7 @@ export function verifyRepositoryProfile({ profile, remoteUrl, authLogin }) {
   return { ok: true, profile: profile.name };
 }
 
-function securityBaselineValidation(audit, expectedBaselineSha) {
+function securityBaselineValidation(audit, expectedBaselineSha, expectedBaselineRef) {
   const errors = [];
   checkClosed(audit.baseline, SECURITY_BASELINE_KEYS, "baseline", errors);
   if (
@@ -356,6 +356,13 @@ function securityBaselineValidation(audit, expectedBaselineSha) {
   if (audit.baseline.commitHash !== digest(expectedBaselineSha.toLowerCase())) {
     return { ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" };
   }
+  const boundRef =
+    typeof expectedBaselineRef === "string" && expectedBaselineRef.length > 0
+      ? expectedBaselineRef
+      : expectedBaselineSha.toLowerCase();
+  if (audit.baseline.ref !== boundRef) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" };
+  }
   return { ok: true, code: "SECURITY_AUDIT_BASELINE_BOUND" };
 }
 
@@ -367,6 +374,7 @@ function securityAuditValidation(
     stgBaseSha = null,
     stgReady = false,
     expectedBaselineSha = null,
+    expectedBaselineRef = null,
     requireDiffAudit = false,
   } = {},
 ) {
@@ -420,7 +428,11 @@ function securityAuditValidation(
     return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
   }
   if (diffAudit) {
-    const baseline = securityBaselineValidation(audit, expectedBaselineSha);
+    const baseline = securityBaselineValidation(
+      audit,
+      expectedBaselineSha,
+      expectedBaselineRef,
+    );
     if (!baseline.ok) return baseline;
   }
   const actualRefs = [...audit.refs].sort();

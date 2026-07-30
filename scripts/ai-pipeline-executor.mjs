@@ -587,10 +587,14 @@ function candidateHandlers(record, context) {
       scratch.published = false;
     },
     push(scratch) {
+      const parents = context.git.commitParents(scratch.candidateSha);
       if (scratch.published !== true) {
+        if (!sameShaList(parents, [record.target.stgBaseSha, record.source.sha])) {
+          throw executorError("EXECUTOR_LINEAGE_MISMATCH");
+        }
         context.git.pushBranch({ remote, branch, expectedSha: scratch.candidateSha });
       }
-      scratch.parents = context.git.commitParents(scratch.candidateSha);
+      scratch.parents = parents;
     },
   };
 }
@@ -1045,8 +1049,9 @@ export async function runNext(values, options = {}) {
     context,
     handlers: handlerFactory(record, context),
   });
+  const completedAt = resolveNow(options);
   const event = assertExecutorSubmittableEvent(
-    assembleStepEvent({ step: plan.step, record, scratch, at: now }),
+    assembleStepEvent({ step: plan.step, record, scratch, at: completedAt }),
   );
   const advanced = advancePromotionRun(record, {
     expectedRevision: record.revision,
@@ -1069,7 +1074,7 @@ export async function runNext(values, options = {}) {
       runId,
       event,
       sequence: advanced.record.journal.length,
-      now,
+      now: completedAt,
     });
   } catch {
     warnings.push("PROMOTION_EVIDENCE_RECORDING_WARNING");

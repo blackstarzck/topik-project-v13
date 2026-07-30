@@ -1294,6 +1294,96 @@ describe("promotion executor step execution", () => {
     });
   });
 
+  it("stamps the step event and the audit copy after the external work finishes", async () => {
+    const { runNext } = await executorModule();
+    const { repository } = await stagedRepository("STG_PR_OPEN");
+    const world = fakeWorld({ stage: "STG_PR_OPEN" });
+    const copies = [];
+    let minute = 0;
+
+    const step = await runNext(
+      { repo: repository, "run-id": RUN_ID },
+      {
+        ...world.options,
+        vercel: {
+          ...world.options.vercel,
+          waitForReady(input) {
+            minute += 7;
+            return world.options.vercel.waitForReady(input);
+          },
+        },
+        now: () => new Date(Date.UTC(2026, 6, 24, 9, minute, 0)).toISOString(),
+        writeEvidence: (input) => {
+          copies.push(input);
+          return "recorded";
+        },
+      },
+    );
+
+    expect(step.outcome).toBe("ADVANCED");
+    expect(step.result.state).toBe("STG_READY");
+    expect(copies).toHaveLength(1);
+    expect(copies[0].event.at).toBe("2026-07-24T09:07:00.000Z");
+    expect(copies[0].now).toBe(copies[0].event.at);
+  });
+
+  it("honours an explicitly supplied timestamp for the step event", async () => {
+    const { runNext } = await executorModule();
+    const { repository } = await stagedRepository("STG_PR_OPEN");
+    const world = fakeWorld({ stage: "STG_PR_OPEN" });
+    const copies = [];
+
+    const step = await runNext(
+      { repo: repository, "run-id": RUN_ID },
+      {
+        ...world.options,
+        now: "2026-07-24T11:30:00.000Z",
+        writeEvidence: (input) => {
+          copies.push(input);
+          return "recorded";
+        },
+      },
+    );
+
+    expect(step.outcome).toBe("ADVANCED");
+    expect(copies[0].event.at).toBe("2026-07-24T11:30:00.000Z");
+    expect(copies[0].now).toBe("2026-07-24T11:30:00.000Z");
+  });
+
+  it("never publishes a local candidate branch whose lineage is not the approved merge", async () => {
+    const { runNext } = await executorModule();
+    const { repository } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+    const tampered = "9".repeat(40);
+
+    await expect(
+      runNext(
+        { repo: repository, "run-id": RUN_ID },
+        {
+          ...world.options,
+          git: {
+            ...world.git,
+            remoteBranchSha({ remote, branch }) {
+              return branch === CANDIDATE_BRANCH
+                ? null
+                : world.git.remoteBranchSha({ remote, branch });
+            },
+            resolveCommit(ref) {
+              return ref === CANDIDATE_BRANCH ? tampered : world.git.resolveCommit(ref);
+            },
+            commitParents(sha) {
+              return sha === tampered ? [SHA.stg, "8".repeat(40)] : world.git.commitParents(sha);
+            },
+          },
+        },
+      ),
+    ).rejects.toThrowError("EXECUTOR_LINEAGE_MISMATCH");
+
+    expect(world.callNames().filter((name) => name.startsWith("push:"))).toEqual([]);
+    expect(world.callNames().filter((name) => name.startsWith("candidate-merge:"))).toEqual([]);
+    expect(world.remotes.has(`collab/${CANDIDATE_BRANCH}`)).toBe(false);
+  });
+
   it("reports an orphan registry lock as a blocker and never removes it", async () => {
     const { runNext } = await executorModule();
     const { repository, runFile } = await stagedRepository("PLANNED");

@@ -164,8 +164,68 @@ describe("approved path allowlist", () => {
     expect(ruleByPath(filtered)).toEqual({
       ".scratch/notes.md": "TRACKED_SCRATCH_PATH",
       "tools/debug.sql": "UNAPPROVED_SQL_PATH",
+      "tools/Rollback.SQL": "UNAPPROVED_SQL_PATH",
     });
-    expect(filtered.summary.findingCount).toBe(2);
+    expect(filtered.summary.findingCount).toBe(3);
+  });
+
+  it("keeps a path whose letter case differs from the exception blocked", async () => {
+    const { auditSecurityArtifactChanges, auditSecurityArtifacts } = await import(
+      "../../scripts/lib/security-artifact-audit.mjs"
+    );
+    const { repoPath, baselineSha } = createFixtureRepository();
+
+    const wrongCasing = [{ path: "tools/rollback.sql", rule: "UNAPPROVED_SQL_PATH" }];
+    const exactCasing = [{ path: "tools/Rollback.SQL", rule: "UNAPPROVED_SQL_PATH" }];
+
+    expect(
+      ruleByPath(
+        auditSecurityArtifactChanges({
+          approvedPathAllowlist: wrongCasing,
+          baselineRef: baselineSha,
+          repoPath,
+          refs: ["main"],
+        }),
+      )["tools/Rollback.SQL"],
+    ).toBe("UNAPPROVED_SQL_PATH");
+    expect(
+      ruleByPath(auditSecurityArtifacts({ approvedPathAllowlist: wrongCasing, repoPath, refs: ["main"] }))[
+        "tools/Rollback.SQL"
+      ],
+    ).toBe("UNAPPROVED_SQL_PATH");
+    expect(
+      ruleByPath(
+        auditSecurityArtifactChanges({
+          approvedPathAllowlist: exactCasing,
+          baselineRef: baselineSha,
+          repoPath,
+          refs: ["main"],
+        }),
+      )["tools/Rollback.SQL"],
+    ).toBeUndefined();
+    expect(
+      ruleByPath(auditSecurityArtifacts({ approvedPathAllowlist: exactCasing, repoPath, refs: ["main"] }))[
+        "tools/Rollback.SQL"
+      ],
+    ).toBeUndefined();
+  });
+
+  it("accepts two exceptions that differ only in letter case as separate files", async () => {
+    const { auditSecurityArtifactChanges } = await import(
+      "../../scripts/lib/security-artifact-audit.mjs"
+    );
+    const { repoPath, baselineSha } = createFixtureRepository();
+
+    const report = auditSecurityArtifactChanges({
+      approvedPathAllowlist: [
+        { path: "tools/rollback.sql", rule: "UNAPPROVED_SQL_PATH" },
+        { path: "tools/Rollback.SQL", rule: "UNAPPROVED_SQL_PATH" },
+      ],
+      baselineRef: baselineSha,
+      repoPath,
+      refs: ["main"],
+    });
+    expect(ruleByPath(report)["tools/Rollback.SQL"]).toBeUndefined();
   });
 
   it("keeps a different rule on an allowlisted path blocked in the full-history audit", async () => {
@@ -265,6 +325,29 @@ describe("baseline diff audit evidence", () => {
         refs,
         { expectedBaselineSha: BASELINE_SHA },
       ),
+    ).toEqual({ ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" });
+  });
+
+  it("blocks a diff audit whose baseline ref is not the approved baseline", async () => {
+    const { validateSecurityAuditEvidence } = await import(
+      "../../scripts/lib/ai-release-promotion.mjs"
+    );
+    const refs = ["collab/main", "collab/stg", "origin/main"];
+
+    for (const ref of [OTHER_SHA, "refs/heads/other", BASELINE_SHA.toUpperCase()]) {
+      expect(
+        validateSecurityAuditEvidence(
+          diffAudit({ baseline: { ref, commitHash: digest(BASELINE_SHA) } }),
+          refs,
+          { expectedBaselineSha: BASELINE_SHA },
+        ),
+      ).toEqual({ ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" });
+    }
+    expect(
+      validateSecurityAuditEvidence(diffAudit(), refs, {
+        expectedBaselineSha: BASELINE_SHA,
+        expectedBaselineRef: "origin/main-mirror",
+      }),
     ).toEqual({ ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" });
   });
 
@@ -441,6 +524,9 @@ describe("approved baseline configuration", () => {
         exceptions: [{ path: "../a.sql", rule: "UNAPPROVED_SQL_PATH", reason: "x" }],
       }),
       JSON.stringify({ ...valid, refs: ["origin/main", "collab/main"] }),
+      JSON.stringify({ ...valid, approvedAt: "not-a-timestamp" }),
+      JSON.stringify({ ...valid, approvedAt: "2026-13-40T99:00:00.000Z" }),
+      JSON.stringify({ ...valid, approvedAt: "2026-07-30T01:00:00Z" }),
     ]) {
       writeFileSync(configPath, broken);
       expect(() => loadSecurityAuditBaseline({ configPath, allowedRoot: root })).toThrowError(

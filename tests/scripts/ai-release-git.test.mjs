@@ -281,7 +281,7 @@ describe("release git adapter push safety", () => {
     }
   });
 
-  it("reads a remote branch tip as a SHA or null without failing", async () => {
+  it("separates an absent remote branch from a failed remote lookup", async () => {
     const { createGitAdapter } = await adapters();
     const repository = temporaryRoot();
     const build = (response) =>
@@ -299,17 +299,65 @@ describe("release git adapter push safety", () => {
         branch: "stg",
       }),
     ).toBeNull();
-    expect(
-      build({ status: 128, stdout: "", stderr: SENTINEL }).remoteBranchSha({
-        remote: "collab",
-        branch: "stg",
-      }),
-    ).toBeNull();
-    expect(
-      build({ status: 0, stdout: lsRemoteLine(SHA.stgMerged, "other"), stderr: "" }).remoteBranchSha(
-        { remote: "collab", branch: "stg" },
-      ),
-    ).toBeNull();
+    for (const response of [
+      { status: 128, stdout: "", stderr: SENTINEL },
+      { status: 1, stdout: "", stderr: SENTINEL },
+      { status: 0, stdout: lsRemoteLine(SHA.stgMerged, "other"), stderr: "" },
+      { status: 0, stdout: `not-a-sha\trefs/heads/stg\n`, stderr: "" },
+    ]) {
+      expect(() =>
+        build(response).remoteBranchSha({ remote: "collab", branch: "stg" }),
+      ).toThrowError("EXECUTOR_REF_LOOKUP_FAILED");
+    }
+  });
+
+  it("never records a branch deletion when the confirming lookup fails", async () => {
+    const { createGitAdapter } = await adapters();
+    const repository = temporaryRoot();
+    const unreadable = recorder([
+      { status: 0, stdout: "", stderr: "" },
+      { status: 128, stdout: "", stderr: SENTINEL },
+    ]);
+
+    expect(() =>
+      createGitAdapter({
+        repoPath: repository,
+        commandRunner: unreadable.runner,
+      }).deleteRemoteBranch({ remote: "collab", branch: CANDIDATE_BRANCH }),
+    ).toThrowError("EXECUTOR_REF_LOOKUP_FAILED");
+    expect(unreadable.calls.map((call) => call.args)).toEqual([
+      ["push", "collab", "--delete", `refs/heads/${CANDIDATE_BRANCH}`],
+      ["ls-remote", "collab", `refs/heads/${CANDIDATE_BRANCH}`],
+    ]);
+  });
+
+  it("pushes only candidate branches and protects long-lived branches", async () => {
+    const { createGitAdapter, PROTECTED_BRANCH_NAMES } = await adapters();
+    const repository = temporaryRoot();
+
+    for (const branch of PROTECTED_BRANCH_NAMES) {
+      const blocked = recorder([]);
+      expect(() =>
+        createGitAdapter({ repoPath: repository, commandRunner: blocked.runner }).pushBranch({
+          remote: "collab",
+          branch,
+          expectedSha: SHA.main,
+        }),
+      ).toThrowError("EXECUTOR_PROTECTED_BRANCH");
+      expect(blocked.calls).toHaveLength(0);
+    }
+
+    for (const branch of ["feat/example", "chore/promote-2026072-11111111"]) {
+      const blocked = recorder([]);
+      expect(() =>
+        createGitAdapter({ repoPath: repository, commandRunner: blocked.runner }).pushBranch({
+          remote: "collab",
+          branch,
+          expectedSha: SHA.candidate,
+        }),
+      ).toThrowError("EXECUTOR_CANDIDATE_BRANCH_INVALID");
+      expect(blocked.calls).toHaveLength(0);
+    }
   });
 
   it("fails with EXECUTOR_PUSH_VERIFY_FAILED when the remote SHA differs or is unreadable", async () => {
@@ -423,7 +471,12 @@ describe("release git adapter push safety", () => {
       () => gitAdapter.resolveCommit("collab/stg"),
       () => gitAdapter.commitParents(SHA.candidate),
       () => gitAdapter.isFastForward({ fromSha: SHA.stg, toSha: SHA.main }),
-      () => gitAdapter.pushBranch({ remote: "collab", branch: "stg", expectedSha: SHA.main }),
+      () =>
+        gitAdapter.pushBranch({
+          remote: "collab",
+          branch: CANDIDATE_BRANCH,
+          expectedSha: SHA.candidate,
+        }),
       () => gitAdapter.deleteRemoteBranch({ remote: "collab", branch: CANDIDATE_BRANCH }),
     ]) {
       try {

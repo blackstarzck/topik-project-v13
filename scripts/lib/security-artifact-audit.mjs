@@ -268,9 +268,7 @@ function validateApprovedPathAllowlist(entries) {
   ) {
     throw auditError("APPROVED_PATH_ALLOWLIST_INVALID");
   }
-  const normalized = entries.map(
-    (entry) => `${entry.path.toLowerCase()}\0${entry.rule}`,
-  );
+  const normalized = entries.map((entry) => `${entry.path}\0${entry.rule}`);
   if (new Set(normalized).size !== normalized.length) {
     throw auditError("APPROVED_PATH_ALLOWLIST_INVALID");
   }
@@ -330,9 +328,7 @@ function matchingRule(
 ) {
   const rule = detectedRule(relativePath, rootImageAllowlist, evidenceAllowlist);
   if (rule === null) return null;
-  return approvedPathAllowlist.has(`${relativePath.toLowerCase()}\0${rule}`)
-    ? null
-    : rule;
+  return approvedPathAllowlist.has(`${relativePath}\0${rule}`) ? null : rule;
 }
 
 function sha256(value) {

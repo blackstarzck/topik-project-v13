@@ -6,6 +6,7 @@ import {
   atomicWritePromotionFile,
   cleanupEligibility,
   scanForSecrets,
+  stableFingerprint,
   validateCandidateMerge,
   validatePromotionRunV1,
   validateVercelPreviewEvidence,
@@ -580,6 +581,24 @@ export function submittedEvidencePath({ gitCommonDir, runId, sequence, eventType
   return path.join(directory, `${String(sequence).padStart(3, "0")}-${eventType}.json`);
 }
 
+function recordsSameEvent(target, runId, sequence, event) {
+  let stored;
+  try {
+    stored = JSON.parse(readFileSync(target, "utf8"));
+  } catch {
+    return false;
+  }
+  return (
+    isPlainObject(stored) &&
+    stored.schemaVersion === 1 &&
+    stored.recordType === "PromotionSubmittedEvidenceV1" &&
+    stored.runId === runId &&
+    stored.sequence === sequence &&
+    validTimestamp(stored.recordedAt) &&
+    stableFingerprint(stored.event) === stableFingerprint(event)
+  );
+}
+
 export function writeSubmittedEvidence({ gitCommonDir, runId, event, sequence, now }) {
   assertTimestamp(now);
   if (!isPlainObject(event)) fail("PROMOTION_EVIDENCE_EVENT_INVALID");
@@ -597,6 +616,10 @@ export function writeSubmittedEvidence({ gitCommonDir, runId, event, sequence, n
   if (existsSync(target)) {
     const status = lstatSync(target);
     if (status.isSymbolicLink() || !status.isFile()) fail("PROMOTION_EVIDENCE_SYMLINK");
+    if (!recordsSameEvent(target, runId, sequence, event)) {
+      fail("PROMOTION_EVIDENCE_CONFLICT");
+    }
+    return target;
   }
   atomicWritePromotionFile(target, {
     schemaVersion: 1,

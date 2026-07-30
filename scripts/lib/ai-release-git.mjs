@@ -209,11 +209,25 @@ export function createGitAdapter({
 
   const remoteBranchSha = (remote, branch) => {
     const result = git(repoPath, ["ls-remote", remote, `refs/heads/${branch}`]);
-    if (!result.ok) return null;
+    if (!result.ok) fail("EXECUTOR_REF_LOOKUP_FAILED");
+    if (result.stdout.trim() === "") return null;
     const tokens = firstLineTokens(result.stdout);
-    if (tokens.length < 2 || !SHA_PATTERN.test(tokens[0])) return null;
-    if (tokens[1] !== `refs/heads/${branch}`) return null;
+    if (
+      tokens.length < 2 ||
+      !SHA_PATTERN.test(tokens[0]) ||
+      tokens[1] !== `refs/heads/${branch}`
+    ) {
+      fail("EXECUTOR_REF_LOOKUP_FAILED");
+    }
     return tokens[0].toLowerCase();
+  };
+
+  const pushedBranchSha = (remote, branch) => {
+    try {
+      return remoteBranchSha(remote, branch);
+    } catch {
+      return fail("EXECUTOR_PUSH_VERIFY_FAILED");
+    }
   };
 
   const removeCandidateWorktree = (worktreePath) =>
@@ -297,12 +311,15 @@ export function createGitAdapter({
 
     pushBranch({ remote, branch, expectedSha }) {
       assertRemote(remote);
-      assertBranch(branch);
+      if (typeof branch !== "string" || PROTECTED_BRANCH_NAMES.includes(branch)) {
+        fail("EXECUTOR_PROTECTED_BRANCH");
+      }
+      assertCandidateBranch(branch);
       const expected = assertSha(expectedSha);
       if (!git(repoPath, ["push", remote, `refs/heads/${branch}:refs/heads/${branch}`]).ok) {
         fail("EXECUTOR_PUSH_FAILED");
       }
-      const observedSha = remoteBranchSha(remote, branch);
+      const observedSha = pushedBranchSha(remote, branch);
       if (observedSha !== expected) fail("EXECUTOR_PUSH_VERIFY_FAILED");
       return { ok: true, remoteSha: observedSha };
     },
@@ -324,7 +341,7 @@ export function createGitAdapter({
       if (!git(repoPath, ["push", remote, `${expected}:refs/heads/${branch}`]).ok) {
         fail("EXECUTOR_PUSH_FAILED");
       }
-      const observedSha = remoteBranchSha(remote, branch);
+      const observedSha = pushedBranchSha(remote, branch);
       if (observedSha !== expected) fail("EXECUTOR_PUSH_VERIFY_FAILED");
       return { ok: true, alreadySynced: false, remoteSha: observedSha };
     },

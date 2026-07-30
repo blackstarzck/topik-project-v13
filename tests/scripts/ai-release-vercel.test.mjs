@@ -571,6 +571,67 @@ describe("vercel adapter request safety", () => {
       }),
     ).toThrowError("VERCEL_API_UNAVAILABLE");
   });
+
+  it("refuses a base URL that would carry the credential over a plain connection", async () => {
+    const { createVercelAdapter } = await vercel();
+    const credentialProvider = await fileCredentialProvider();
+
+    for (const baseUrl of [
+      "http://api.vercel.com",
+      "http://127.0.0.1:3000",
+      "http://localhost:3000",
+      "ftp://api.vercel.com",
+      "not-a-url",
+    ]) {
+      expect(() =>
+        createVercelAdapter({
+          credentialProvider,
+          fetchImplementation: () => {
+            throw new Error("must not run");
+          },
+          baseUrl,
+        }),
+      ).toThrowError("VERCEL_API_UNAVAILABLE");
+    }
+    expect(
+      createVercelAdapter({
+        credentialProvider,
+        fetchImplementation: () => Promise.resolve(jsonResponse(200, {})),
+        baseUrl: "https://api.vercel.test",
+      }),
+    ).toBeDefined();
+  });
+
+  it("abandons a request that never answers and reports it as an unavailable API", async () => {
+    const { createVercelAdapter } = await vercel();
+    const signals = [];
+    const adapter = createVercelAdapter({
+      credentialProvider: await fileCredentialProvider(),
+      fetchImplementation: (target, init) => {
+        signals.push(init?.signal ?? null);
+        return new Promise(() => {});
+      },
+      sleep: () => Promise.resolve(),
+      clock: () => 0,
+      requestTimeoutMs: 5,
+    });
+
+    await expect(
+      adapter.findDeploymentByCommit({
+        projectId: PROJECT,
+        commitSha: SHA.stgMerged,
+        target: "preview",
+      }),
+    ).rejects.toThrowError("VERCEL_API_UNAVAILABLE");
+    await expect(
+      adapter.waitForReady({ deploymentId: "dpl_preview_001", maxAttempts: 1, intervalMs: 1 }),
+    ).rejects.toThrowError("VERCEL_API_UNAVAILABLE");
+    expect(signals).toHaveLength(2);
+    for (const signal of signals) {
+      expect(signal).toBeInstanceOf(AbortSignal);
+      expect(signal.aborted).toBe(true);
+    }
+  });
 });
 
 describe("vercel observation mapping", () => {
@@ -1058,5 +1119,25 @@ describe("read-only production smoke runner", () => {
         },
       }),
     ).rejects.toThrowError("EXECUTOR_SMOKE_CHECK_INVALID");
+  });
+
+  it("counts a check that never answers as failed instead of hanging", async () => {
+    const { runReadOnlySmoke } = await vercel();
+    const signals = [];
+
+    expect(
+      await runReadOnlySmoke({
+        baseUrl: `https://${DOMAIN}`,
+        checks: [{ path: "/", expectedStatus: 200 }],
+        fetchImplementation: (target, init) => {
+          signals.push(init?.signal ?? null);
+          return new Promise(() => {});
+        },
+        timeoutMs: 5,
+      }),
+    ).toEqual({ smokePassed: false, smokeReadOnly: true, checkCount: 1, failedCheckCount: 1 });
+    expect(signals).toHaveLength(1);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+    expect(signals[0].aborted).toBe(true);
   });
 });

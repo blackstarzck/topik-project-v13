@@ -88,14 +88,23 @@ gate를 통과하면 v13은 증거 원문을 승격 기록에 저장하지 않�
 
 ## 5. topik-ai가 남길 handback 항목
 
-secret과 실제 사용자 데이터를 제외하고 다음을 v13에 전달한다.
+이 절은 gate가 읽는 JSON 파일의 내용이 아니라, 사람이 주고받는 인계 기록이다. gate 스키마는 3절의 18개 field로 닫혀 있고 다른 key가 하나라도 늘어나면 차단하므로, 아래 항목을 증거 JSON 안에 넣으면 안 된다. executor는 증거 JSON만 읽고 이 인계 기록은 읽지 않는다. 인계 기록은 topik-ai의 운영 절차 문서와 승격 작업 보고로 전달·보관하며, gate 판정에는 쓰이지 않는다.
 
-- 적용한 migration 경로·timestamp·checksum 목록과 적용 전후 원격 tracker 상태
-- 적용 대상 논리 환경 이름, 적용 시각, 사용한 고정 tool 버전
-- backup·PITR 확인 시각과 확인자
-- `topik-dev`에서 이전·현재 앱 버전 호환성 검증 결과
-- 예행 적용과 실제 적용 결과가 같다는 확인
-- 위 계약대로 만든 증거 JSON 파일의 경로와 checksum
+secret과 실제 사용자 데이터를 제외하고 다음을 인계 기록으로 남긴다.
+
+| 인계 항목 | gate 증거에서 대응하는 값 |
+| --- | --- |
+| 적용한 migration 경로·timestamp·checksum 목록 | `newMigrations` 항목이 같은 사실을 담는다 |
+| 적용 전후 원격 tracker 상태 | `remoteTrackerDigest`와 `trackerIsExactManifestPrefix`가 digest·판정으로만 담는다 |
+| `topik-dev` 이전·현재 앱 버전 호환성 검증 결과 | `nMinusOneTopikDevPassed`, `nTopikDevPassed` |
+| 예행 적용과 실제 적용 결과가 같다는 확인 | `dryRunDigest`와 `applyDigest`가 같아야 한다 |
+| 사용한 고정 tool 버전 | `pinnedToolchainDigest`가 digest로만 담는다 |
+| backup·PITR 확인 사실 | `backupPitrEvidenceDigest`가 digest로만 담는다 |
+| 적용 대상 논리 환경 이름, 적용 시각 | gate 증거에 없다. 인계 기록에만 남긴다 |
+| backup·PITR 확인 시각과 확인자 | gate 증거에 없다. 인계 기록에만 남긴다 |
+| 증거 JSON 파일의 경로와 checksum | gate 증거에 없다. 인계 기록에만 남긴다 |
+
+마지막 세 항목을 gate가 직접 검사하게 만들려면 3절의 닫힌 스키마를 늘려야 한다. 스키마를 늘리면 승격 기록의 계약이 함께 바뀌므로 별도 승인이 필요한 후속 작업으로 남긴다.
 
 ## 6. 제외 범위
 
