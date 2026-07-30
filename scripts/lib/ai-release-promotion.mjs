@@ -25,7 +25,7 @@ const SECRET_VALUE_PATTERNS = [
   /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/u,
   /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/u,
 ];
-const STATES = new Set([
+export const PROMOTION_STATES = Object.freeze([
   "BOOTSTRAP_REQUIRED",
   "PLANNED",
   "CANDIDATE_VERIFIED",
@@ -44,6 +44,7 @@ const STATES = new Set([
   "PRESERVED",
   "SECURITY_INCIDENT_BLOCKED",
 ]);
+const STATES = new Set(PROMOTION_STATES);
 
 export const PROMOTION_PROFILES = Object.freeze({
   black: Object.freeze({
@@ -1363,6 +1364,10 @@ function runPath(gitCommonDir, runId) {
   if (!RUN_ID_PATTERN.test(runId ?? "")) fail("PROMOTION_RUN_ID_INVALID");
   const root = assertRegistryRoot(gitCommonDir);
   return path.join(root, "ai-pipeline", "promotions", "v1", "runs", `${runId}.json`);
+}
+
+export function promotionRunLockPath({ gitCommonDir, runId }) {
+  return `${runPath(gitCommonDir, runId)}.lock`;
 }
 
 function atomicWrite(filePath, value) {

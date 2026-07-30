@@ -991,6 +991,8 @@ describe("package interface", () => {
       "check:task-lifecycle:v3",
       "check:task-lifecycle:sweep",
       "check:task-lifecycle:release",
+      "check:task-lifecycle:baseline-audit",
+      "check:task-lifecycle:executor",
       "check:task-lifecycle:security",
       "check:task-lifecycle:validation",
     ];

@@ -163,6 +163,44 @@ pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-rev
 
 공개 `release:resume`은 최초 2회에 필요한 사람의 최종 승인만 받는다. candidate·PR·DB·Vercel·cleanup 상태를 caller가 만든 JSON으로 제출해 상태를 전진시키는 경로는 `RELEASE_TRUSTED_EXECUTOR_REQUIRED`로 거부한다. 이 상태 전이는 고정 저장소·계정·permission·현재 ref/SHA와 trusted workflow 결과를 직접 확인하는 운영 executor만 호출할 수 있다. 해당 executor가 설치되기 전에는 승격이 안전하게 중단된 상태이며 수동 JSON으로 우회할 수 없다.
 
+#### 승격 executor
+
+승격 단계를 실제로 수행하는 운영 executor는 `release:exec`이며, 네 개의 하위 명령으로 나뉜다.
+
+```bash
+pnpm release:exec -- status --repo <기준-checkout> --run-id <run-id>
+pnpm release:exec -- next --repo <기준-checkout> --run-id <run-id>
+pnpm release:exec -- run --repo <기준-checkout> --run-id <run-id>
+pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id>
+```
+
+| 하위 명령 | 용도 | 현재 상태 |
+| --- | --- | --- |
+| `status` | 기록을 읽어 다음 단계, 필요한 계정, 사전 점검 차단 사유, 사람 승인 명령을 보고한다. 아무 것도 쓰지 않는다 | 동작 |
+| `next` | 다음 단계 하나에 필요한 관측 항목과 실행 계획만 보여준다 | 미구현(`EXECUTOR_STEP_NOT_IMPLEMENTED`) |
+| `run` | 다음 단계 하나를 실제로 수행하고 검증된 증거로 상태를 전진시킨다 | 미구현(`EXECUTOR_STEP_NOT_IMPLEMENTED`) |
+| `probe-vercel` | Vercel Preview·Production 배포 상태를 읽기 전용으로 확인한다 | 미구현(`EXECUTOR_STEP_NOT_IMPLEMENTED`) |
+
+`status`는 읽기 전용이다. registry lock을 만들지 않고 승격 기록도 고치지 않는다. 고아로 남은 registry lock을 찾으면 `PROMOTION_REGISTRY_LOCKED`로 보고만 하고 지우지 않는다. 기록에 적힌 Keduall `stg` 기준이 현재 `collab/stg`와 다르면 `PROMOTION_BASE_MOVED`, 저장소 identity가 다르면 `REPOSITORY_IDENTITY_MISMATCH`로 차단한다. 실패는 대문자 코드 하나로만 보고하며 공급자 원문·명령 출력은 담지 않는다.
+
+executor는 단계를 계정이 필요한 하위 작업으로 쪼개 계정을 고정한다. 한 단계가 생성과 병합을 함께 포함하면 하위 작업별로 계정이 다르다.
+
+| 단계 | 하위 작업 | 계정 |
+| --- | --- | --- |
+| candidate 생성 | 생성, push | `blackstarzck` |
+| `stg` PR 생성 | 생성 | `blackstarzck` |
+| `stg` PR 병합 | 병합 | `guestkeduall-design` |
+| `stg` PR 병합 | Preview 확인 | 계정 불필요 |
+| DB gate 평가 | 확인 | 계정 불필요 |
+| `main` PR 생성 | 생성 | `blackstarzck` |
+| `main` PR 병합 | 병합 | `guestkeduall-design` |
+| `main` PR 병합 | 병합 parent 확인 | 계정 불필요 |
+| Production 확인 | 확인 | 계정 불필요 |
+| alias rollback 확인 | rollback 확인 | 계정 불필요 |
+| 정리 | `stg` 동기화·candidate 삭제 | `guestkeduall-design` |
+
+사람의 최종 승인은 executor 안에 두지 않는다. 승인이 필요한 상태에서는 `status`가 사용자가 그대로 복사해 실행할 수 있는 공개 `release:resume` 명령 한 줄을 출력한다. 승인 값과 기록 revision·fingerprint를 사람이 직접 확인한 뒤 스스로 실행해야 하고, executor가 자기 자신에게 승인을 발급할 수 없어야 하기 때문이다. 공백이 있는 Windows 경로도 그대로 복사 실행할 수 있게 경로 인자를 quote한다.
+
 1. Keduall `stg`에서 `chore/promote-<date>-<source-sha>` candidate를 만든다.
 2. 정확한 Black source SHA를 `--no-ff`로 병합하고 candidate parent가 현재 `stg`, Black source 순서인지 검사한다.
 3. candidate → `stg` PR을 `guestkeduall-design`으로 처리한다.
