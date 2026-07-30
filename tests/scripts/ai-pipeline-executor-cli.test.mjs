@@ -2,11 +2,14 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   realpathSync,
   rmSync,
   symlinkSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -253,15 +256,6 @@ describe("promotion executor CLI arguments", () => {
     );
   });
 
-  it("keeps next and run unimplemented in this step", async () => {
-    const { runExecutorCli } = await import("../../scripts/ai-pipeline-executor.mjs");
-    for (const command of ["next", "run"]) {
-      await expect(
-        runExecutorCli([command, "--repo", "C:\\repo", "--run-id", RUN_ID]),
-      ).rejects.toThrowError("EXECUTOR_STEP_NOT_IMPLEMENTED");
-    }
-  });
-
   it("accepts --branch only for probe-vercel", async () => {
     const { parseExecutorArguments } = await import("../../scripts/ai-pipeline-executor.mjs");
 
@@ -283,6 +277,61 @@ describe("promotion executor CLI arguments", () => {
       expect(() =>
         parseExecutorArguments([command, "--repo", "C:\\repo", "--run-id", RUN_ID, "--branch", "stg"]),
       ).toThrowError("INVALID_EXECUTOR_ARGUMENTS");
+    }
+  });
+
+  it("accepts --db-evidence and --dry-run only for next and run", async () => {
+    const { parseExecutorArguments } = await import("../../scripts/ai-pipeline-executor.mjs");
+
+    for (const command of ["next", "run"]) {
+      expect(
+        parseExecutorArguments([
+          command,
+          "--repo",
+          "C:\\repo",
+          "--run-id",
+          RUN_ID,
+          "--db-evidence",
+          "C:\\evidence\\migration.json",
+          "--dry-run",
+        ]),
+      ).toEqual({
+        command,
+        values: {
+          repo: "C:\\repo",
+          "run-id": RUN_ID,
+          "db-evidence": "C:\\evidence\\migration.json",
+          "dry-run": true,
+        },
+      });
+      expect(() =>
+        parseExecutorArguments([
+          command,
+          "--repo",
+          "C:\\repo",
+          "--run-id",
+          RUN_ID,
+          "--dry-run",
+          "--dry-run",
+        ]),
+      ).toThrowError("INVALID_EXECUTOR_ARGUMENTS");
+      expect(() =>
+        parseExecutorArguments([
+          command,
+          "--repo",
+          "C:\\repo",
+          "--run-id",
+          RUN_ID,
+          "--db-evidence",
+        ]),
+      ).toThrowError("INVALID_EXECUTOR_ARGUMENTS");
+    }
+    for (const command of ["status", "probe-vercel"]) {
+      for (const flag of [["--dry-run"], ["--db-evidence", "C:\\evidence\\migration.json"]]) {
+        expect(() =>
+          parseExecutorArguments([command, "--repo", "C:\\repo", "--run-id", RUN_ID, ...flag]),
+        ).toThrowError("INVALID_EXECUTOR_ARGUMENTS");
+      }
     }
   });
 });
@@ -479,5 +528,804 @@ describe("promotion executor status", () => {
     expect(badFlag.status).toBe(1);
     expect(badFlag.stdout).toBe("");
     expect(badFlag.stderr.trim()).toBe(JSON.stringify({ error: "INVALID_EXECUTOR_ARGUMENTS" }));
+  });
+});
+
+const MAIN_SHA = Object.freeze({
+  base: "8".repeat(40),
+  merged: "5".repeat(40),
+});
+const CANDIDATE_BRANCH = "chore/promote-20260723-11111111";
+
+async function promotionLib() {
+  return import("../../scripts/lib/ai-release-promotion.mjs");
+}
+
+async function executorModule() {
+  return import("../../scripts/ai-pipeline-executor.mjs");
+}
+
+function adapterError(code) {
+  return Object.assign(new Error(code), { code });
+}
+
+async function promotionRunAt(stage) {
+  const { advancePromotionRun, createApprovalPolicy, createPromotionRun } = await promotionLib();
+  let record = createPromotionRun({
+    runId: RUN_ID,
+    now: "2026-07-23T10:00:00.000Z",
+    sourceSha: SHA.source,
+    sourceTreeHash: SHA.tree,
+    stgBaseSha: SHA.stg,
+    securityAudit: securityAudit(),
+    expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
+    controlPlaneReady: true,
+    stgReady: true,
+    vercelDomain: "talkpik.example.com",
+    vercelProject: "topik-project-v13",
+  });
+  let policy = createApprovalPolicy({
+    contractFingerprint: record.contractFingerprint,
+    profileFingerprint: record.profileFingerprint,
+  });
+  if (stage === "PLANNED") return { record, policy };
+
+  const advance = (event) => {
+    const result = advancePromotionRun(record, {
+      expectedRevision: record.revision,
+      expectedFingerprint: record.fingerprint,
+      policy,
+      event,
+    });
+    record = result.record;
+    policy = result.policy;
+  };
+  advance({
+    type: "CANDIDATE_VERIFIED",
+    at: "2026-07-23T10:01:00.000Z",
+    candidateSha: SHA.candidate,
+    branch: record.target.candidateBranch,
+    baseSha: SHA.stg,
+    sourceSha: SHA.source,
+    actualParents: [SHA.stg, SHA.source],
+    mergeMethod: "merge",
+    noFastForward: true,
+    targetBranch: "stg",
+    directMainPush: false,
+  });
+  advance({
+    type: "STG_PR_OPEN",
+    at: "2026-07-23T10:02:00.000Z",
+    targetBranch: "stg",
+    headBranch: record.target.candidateBranch,
+    headSha: SHA.candidate,
+  });
+  advance({
+    type: "STG_READY",
+    at: "2026-07-23T10:03:00.000Z",
+    stgSha: SHA.stgMerged,
+    mergeMethod: "merge",
+    actualParents: [SHA.stg, SHA.candidate],
+    directMainPush: false,
+    previewEvidence: {
+      deploymentId: "dpl_preview_001",
+      commitSha: SHA.stgMerged,
+      project: "topik-project-v13",
+      state: "READY",
+      target: "preview",
+      branch: "stg",
+      environmentScope: "topik-dev",
+    },
+  });
+  if (stage === "STG_READY") return { record, policy };
+
+  advance({
+    type: "DB_GATE_EVALUATED",
+    at: "2026-07-23T10:04:00.000Z",
+    migrationEvidence: migrationEvidence(),
+  });
+  if (stage === "AWAITING_PROD_APPROVAL") return { record, policy };
+
+  advance({
+    type: "PROD_APPROVAL_GRANTED",
+    at: "2026-07-23T10:05:00.000Z",
+    approvalFingerprint: record.approval.approvalFingerprint,
+  });
+  advance({
+    type: "MAIN_PR_OPEN",
+    at: "2026-07-23T10:06:00.000Z",
+    targetBranch: "main",
+    headBranch: "stg",
+    headSha: record.target.stgSha,
+    mergeMethod: "merge",
+    directMainPush: false,
+  });
+  advance({
+    type: "MAIN_MERGE_VERIFIED",
+    at: "2026-07-23T10:07:00.000Z",
+    mainBaseSha: MAIN_SHA.base,
+    mainSha: MAIN_SHA.merged,
+    headSha: record.target.stgSha,
+    targetBranch: "main",
+    mergeMethod: "merge",
+    directMainPush: false,
+    actualParents: [MAIN_SHA.base, record.target.stgSha],
+  });
+  return { record, policy };
+}
+
+async function stagedRepository(stage) {
+  const repository = temporaryRoot();
+  git(repository, ["init", "--initial-branch=main"]);
+  git(repository, [
+    "remote",
+    "add",
+    "origin",
+    "https://github.com/blackstarzck/topik-project-v13.git",
+  ]);
+  git(repository, [
+    "remote",
+    "add",
+    "collab",
+    "https://github.com/keduall/topik-project-v13.git",
+  ]);
+  const { writeApprovalPolicy, writePromotionRun } = await promotionLib();
+  const { record, policy } = await promotionRunAt(stage);
+  const gitCommonDir = path.join(repository, ".git");
+  writeApprovalPolicy({ gitCommonDir, policy });
+  const runFile = writePromotionRun({ gitCommonDir, record });
+  const policyFile = path.join(
+    gitCommonDir,
+    "ai-pipeline",
+    "promotions",
+    "v1",
+    "approval-policy.json",
+  );
+  return { gitCommonDir, policyFile, record, repository, runFile };
+}
+
+function fakeWorld({ smokePassed = true, aliasSwitched = true, stage = "PLANNED" } = {}) {
+  const calls = [];
+  let currentAccount = null;
+  const note = (call) => calls.push({ call, account: currentAccount });
+
+  const stgMergedAlready = stage !== "PLANNED";
+  const commits = new Map([
+    [SHA.stg, []],
+    [MAIN_SHA.base, []],
+  ]);
+  const remotes = new Map([
+    ["collab/stg", stgMergedAlready ? SHA.stgMerged : SHA.stg],
+    ["collab/main", MAIN_SHA.base],
+  ]);
+  if (stgMergedAlready) {
+    commits.set(SHA.candidate, [SHA.stg, SHA.source]);
+    commits.set(SHA.stgMerged, [SHA.stg, SHA.candidate]);
+    remotes.set(`collab/${CANDIDATE_BRANCH}`, SHA.candidate);
+  }
+  if (stage === "PRODUCTION_VERIFYING") {
+    commits.set(MAIN_SHA.merged, [MAIN_SHA.base, SHA.stgMerged]);
+    remotes.set("collab/main", MAIN_SHA.merged);
+  }
+  const localBranches = new Map();
+  const pullRequests = [];
+  let nextNumber = 101;
+
+  const gitAdapter = {
+    fetchRemote({ remote }) {
+      note(`fetch:${remote}`);
+      return { ok: true };
+    },
+    remoteBranchSha({ remote, branch }) {
+      return remotes.get(`${remote}/${branch}`) ?? null;
+    },
+    commitParents(sha) {
+      if (!commits.has(sha)) throw adapterError("EXECUTOR_REF_LOOKUP_FAILED");
+      return commits.get(sha);
+    },
+    resolveCommit(ref) {
+      const sha = localBranches.get(ref);
+      if (sha === undefined) throw adapterError("EXECUTOR_REF_LOOKUP_FAILED");
+      return sha;
+    },
+    createCandidateMerge({ candidateBranch, baseSha, sourceSha }) {
+      note(`candidate-merge:${candidateBranch}`);
+      commits.set(SHA.candidate, [baseSha, sourceSha]);
+      localBranches.set(candidateBranch, SHA.candidate);
+      return {
+        candidateSha: SHA.candidate,
+        actualParents: [baseSha, sourceSha],
+        cleanupFailed: false,
+      };
+    },
+    pushBranch({ remote, branch, expectedSha }) {
+      note(`push:${remote}/${branch}`);
+      remotes.set(`${remote}/${branch}`, expectedSha);
+      return { ok: true, remoteSha: expectedSha };
+    },
+    isFastForward() {
+      return true;
+    },
+    fastForwardRemoteBranch({ remote, branch, expectedSha }) {
+      const current = remotes.get(`${remote}/${branch}`) ?? null;
+      if (current === expectedSha) return { ok: true, alreadySynced: true, remoteSha: current };
+      note(`sync:${remote}/${branch}`);
+      remotes.set(`${remote}/${branch}`, expectedSha);
+      return { ok: true, alreadySynced: false, remoteSha: expectedSha };
+    },
+    deleteRemoteBranch({ remote, branch }) {
+      note(`delete:${remote}/${branch}`);
+      remotes.delete(`${remote}/${branch}`);
+      return { ok: true };
+    },
+  };
+
+  const findPullRequest = ({ base, head }) => {
+    const found = pullRequests.find(
+      (entry) => entry.base === base && entry.head === head && entry.state === "OPEN",
+    );
+    return found === undefined
+      ? null
+      : { number: found.number, headSha: found.headSha, state: found.state };
+  };
+
+  const githubAdapter = {
+    findPullRequest,
+    createPullRequest({ base, head }) {
+      const existing = findPullRequest({ base, head });
+      if (existing !== null) return { number: existing.number, headSha: existing.headSha };
+      note(`open-pr:${base}<-${head}`);
+      const entry = {
+        number: nextNumber,
+        base,
+        head,
+        headSha: remotes.get(`collab/${head}`) ?? null,
+        state: "OPEN",
+      };
+      nextNumber += 1;
+      pullRequests.push(entry);
+      return { number: entry.number, headSha: entry.headSha };
+    },
+    mergePullRequest({ number, expectedHeadSha }) {
+      const entry = pullRequests.find((candidate) => candidate.number === number);
+      if (entry === undefined || entry.headSha !== expectedHeadSha) {
+        throw adapterError("EXECUTOR_PR_MERGE_VERIFY_FAILED");
+      }
+      note(`merge-pr:${entry.base}<-${entry.head}`);
+      entry.state = "MERGED";
+      const mergeCommitSha = entry.base === "stg" ? SHA.stgMerged : MAIN_SHA.merged;
+      commits.set(mergeCommitSha, [remotes.get(`collab/${entry.base}`), expectedHeadSha]);
+      remotes.set(`collab/${entry.base}`, mergeCommitSha);
+      return { mergeCommitSha };
+    },
+  };
+
+  const deployments = new Map([
+    [
+      `preview:${SHA.stgMerged}`,
+      { deploymentId: "dpl_preview_001", state: "READY", target: "preview", branch: "stg" },
+    ],
+    [
+      `production:${MAIN_SHA.merged}`,
+      { deploymentId: "dpl_production_001", state: "READY", target: "production", branch: "main" },
+    ],
+  ]);
+  const aliases = new Map([
+    ["talkpik.example.com", aliasSwitched ? "dpl_production_001" : "dpl_production_previous"],
+  ]);
+
+  const vercelAdapter = {
+    findDeploymentByCommit({ commitSha, target }) {
+      return Promise.resolve(deployments.get(`${target}:${commitSha}`) ?? null);
+    },
+    waitForReady({ deploymentId }) {
+      note(`ready:${deploymentId}`);
+      return Promise.resolve({ state: "READY" });
+    },
+    verifyPreviewEnvironmentScope() {
+      return Promise.resolve({ environmentScope: "topik-dev" });
+    },
+    findPreviousReadyProduction() {
+      return Promise.resolve({ deploymentId: "dpl_production_previous", state: "READY" });
+    },
+    getAliasTarget({ domain }) {
+      const deploymentId = aliases.get(domain);
+      return Promise.resolve(deploymentId === undefined ? null : { deploymentId });
+    },
+    assignAlias({ deploymentId, domain }) {
+      note(`assign-alias:${deploymentId}`);
+      aliases.set(domain, deploymentId);
+      return Promise.resolve({ assigned: true });
+    },
+  };
+
+  const smoke = () =>
+    Promise.resolve({
+      smokePassed,
+      smokeReadOnly: true,
+      checkCount: 1,
+      failedCheckCount: smokePassed ? 0 : 1,
+    });
+
+  const authRunner = async ({ profile, operation }) => {
+    const previous = currentAccount;
+    currentAccount = profile.authLogin;
+    try {
+      return { result: "AUTHENTICATED", value: await operation() };
+    } finally {
+      currentAccount = previous;
+    }
+  };
+
+  let tick = 0;
+  const now = () => {
+    tick += 1;
+    return new Date(Date.UTC(2026, 6, 24, 9, tick, 0)).toISOString();
+  };
+
+  return {
+    aliases,
+    calls,
+    git: gitAdapter,
+    remotes,
+    options: {
+      git: gitAdapter,
+      github: githubAdapter,
+      vercel: vercelAdapter,
+      smoke,
+      authRunner,
+      now,
+    },
+    callNames: () => calls.map((entry) => entry.call),
+    accountFor: (prefix) =>
+      calls.filter((entry) => entry.call.startsWith(prefix)).map((entry) => entry.account),
+  };
+}
+
+function migrationEvidenceFile(overrides = {}) {
+  const localAppData = temporaryRoot();
+  const allowed = path.join(localAppData, "TalkpikPipeline", "db-evidence");
+  mkdirSync(allowed, { recursive: true });
+  const file = path.join(allowed, "evidence.json");
+  writeFileSync(file, `${JSON.stringify({ ...migrationEvidence(), ...overrides })}\n`, "utf8");
+  return { localAppData, file };
+}
+
+async function grantProductionApproval(gitCommonDir) {
+  const {
+    advancePromotionRun,
+    persistPromotionTransition,
+    readApprovalPolicy,
+    readPromotionRun,
+    writeApprovalPolicy,
+    writePromotionRun,
+  } = await promotionLib();
+  const record = readPromotionRun({ gitCommonDir, runId: RUN_ID });
+  const policy = readApprovalPolicy({ gitCommonDir });
+  const advanced = advancePromotionRun(record, {
+    expectedRevision: record.revision,
+    expectedFingerprint: record.fingerprint,
+    policy,
+    event: {
+      type: "PROD_APPROVAL_GRANTED",
+      at: "2026-07-24T10:00:00.000Z",
+      approvalFingerprint: record.approval.approvalFingerprint,
+    },
+  });
+  persistPromotionTransition({
+    currentRecord: record,
+    currentPolicy: policy,
+    result: advanced,
+    writeRun: (nextRecord, expectedFingerprint) =>
+      writePromotionRun({ gitCommonDir, record: nextRecord, expectedFingerprint }),
+    writePolicy: (nextPolicy, expectedFingerprint) =>
+      writeApprovalPolicy({ gitCommonDir, policy: nextPolicy, expectedFingerprint }),
+  });
+  return advanced.record;
+}
+
+describe("promotion executor step execution", () => {
+  it("walks PLANNED to CLEANED with run, stopping for the human approval and resuming", async () => {
+    const { runSequence } = await executorModule();
+    const { gitCommonDir, repository } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+    const evidence = migrationEvidenceFile();
+    const values = { repo: repository, "run-id": RUN_ID, "db-evidence": evidence.file };
+    const options = { ...world.options, localAppData: evidence.localAppData };
+
+    const first = await runSequence(values, options);
+    expect(first.recordType).toBe("PromotionExecutorRunV1");
+    expect(first.iterationLimit).toBe(12);
+    expect(first.stoppedBecause).toBe("HUMAN_APPROVAL_REQUIRED");
+    expect(first.iterations.map((entry) => entry.state)).toEqual([
+      "PLANNED",
+      "CANDIDATE_VERIFIED",
+      "STG_PR_OPEN",
+      "STG_READY",
+      "AWAITING_PROD_APPROVAL",
+    ]);
+    expect(first.iterations.map((entry) => entry.outcome)).toEqual([
+      "ADVANCED",
+      "ADVANCED",
+      "ADVANCED",
+      "ADVANCED",
+      "HUMAN_APPROVAL_REQUIRED",
+    ]);
+    const approvalStep = first.iterations.at(-1);
+    expect(approvalStep.humanApproval.required).toBe(true);
+    expect(approvalStep.humanApproval.command).toContain("pnpm release:resume --");
+    expect(approvalStep.humanApproval.command).toContain("--event PROD_APPROVAL_GRANTED");
+
+    expect((await grantProductionApproval(gitCommonDir)).state).toBe("PROD_APPROVED");
+
+    const second = await runSequence(values, options);
+    expect(second.stoppedBecause).toBe("TERMINAL");
+    expect(second.iterations.map((entry) => entry.state)).toEqual([
+      "PROD_APPROVED",
+      "MAIN_PR_OPEN",
+      "PRODUCTION_VERIFYING",
+      "RELEASED",
+      "CLEANED",
+    ]);
+    expect(second.iterations.at(-2).result.state).toBe("CLEANED");
+
+    expect(world.callNames().filter((name) => !name.startsWith("fetch:"))).toEqual([
+      `candidate-merge:${CANDIDATE_BRANCH}`,
+      `push:collab/${CANDIDATE_BRANCH}`,
+      `open-pr:stg<-${CANDIDATE_BRANCH}`,
+      `merge-pr:stg<-${CANDIDATE_BRANCH}`,
+      "ready:dpl_preview_001",
+      "open-pr:main<-stg",
+      "merge-pr:main<-stg",
+      "ready:dpl_production_001",
+      "sync:collab/stg",
+      `delete:collab/${CANDIDATE_BRANCH}`,
+    ]);
+    expect(world.accountFor("candidate-merge:")).toEqual(["blackstarzck"]);
+    expect(world.accountFor("push:")).toEqual(["blackstarzck"]);
+    expect(world.accountFor("open-pr:")).toEqual(["blackstarzck", "blackstarzck"]);
+    expect(world.accountFor("merge-pr:")).toEqual([
+      "guestkeduall-design",
+      "guestkeduall-design",
+    ]);
+    expect(world.accountFor("ready:")).toEqual([null, null]);
+    expect(world.accountFor("sync:")).toEqual(["guestkeduall-design"]);
+    expect(world.accountFor("delete:")).toEqual(["guestkeduall-design"]);
+    expect(world.remotes.get("collab/stg")).toBe(MAIN_SHA.merged);
+    expect(world.remotes.has(`collab/${CANDIDATE_BRANCH}`)).toBe(false);
+
+    const evidenceDirectory = path.join(
+      gitCommonDir,
+      "ai-pipeline",
+      "promotions",
+      "v1",
+      "evidence",
+      RUN_ID,
+    );
+    expect(readdirSync(evidenceDirectory).sort()).toEqual([
+      "002-CANDIDATE_VERIFIED.json",
+      "003-STG_PR_OPEN.json",
+      "004-STG_READY.json",
+      "005-DB_GATE_EVALUATED.json",
+      "007-MAIN_PR_OPEN.json",
+      "008-MAIN_MERGE_VERIFIED.json",
+      "009-PRODUCTION_EVALUATED.json",
+      "010-CLEANUP_VERIFIED.json",
+    ]);
+    const copy = JSON.parse(
+      readFileSync(path.join(evidenceDirectory, "005-DB_GATE_EVALUATED.json"), "utf8"),
+    );
+    expect(copy.recordType).toBe("PromotionSubmittedEvidenceV1");
+    expect(copy.event.migrationEvidence.autoApplyEnabled).toBe(false);
+  });
+
+  it("stops on a blocked DB gate and passes once the corrected evidence arrives", async () => {
+    const { runNext, runSequence } = await executorModule();
+    const { repository, runFile } = await stagedRepository("STG_READY");
+    const world = fakeWorld({ stage: "STG_READY" });
+    const blocked = migrationEvidenceFile({ destructiveSql: true });
+    const passing = migrationEvidenceFile();
+    const before = readFileSync(runFile, "utf8");
+
+    const missing = await runNext({ repo: repository, "run-id": RUN_ID }, world.options);
+    expect(missing.outcome).toBe("DB_EVIDENCE_REQUIRED");
+    expect(missing.step).toBe("EVALUATE_DB_GATE");
+    expect(missing.result).toBeNull();
+    expect(world.callNames()).toEqual([]);
+    expect(readFileSync(runFile, "utf8")).toBe(before);
+
+    const blockedRun = await runSequence(
+      { repo: repository, "run-id": RUN_ID, "db-evidence": blocked.file },
+      { ...world.options, localAppData: blocked.localAppData },
+    );
+    expect(blockedRun.stoppedBecause).toBe("DB_GATE_BLOCKED");
+    expect(blockedRun.iterationCount).toBe(1);
+    expect(blockedRun.iterations[0].result).toMatchObject({
+      state: "DB_GATE_BLOCKED",
+      blocker: "DB_GATE_BLOCKED",
+    });
+
+    const retried = await runNext(
+      { repo: repository, "run-id": RUN_ID, "db-evidence": blocked.file },
+      { ...world.options, localAppData: blocked.localAppData },
+    );
+    expect(retried.state).toBe("DB_GATE_BLOCKED");
+    expect(retried.step).toBe("EVALUATE_DB_GATE");
+    expect(retried.result.state).toBe("DB_GATE_BLOCKED");
+
+    const passed = await runNext(
+      { repo: repository, "run-id": RUN_ID, "db-evidence": passing.file },
+      { ...world.options, localAppData: passing.localAppData },
+    );
+    expect(passed.step).toBe("EVALUATE_DB_GATE");
+    expect(passed.result).toMatchObject({ state: "AWAITING_PROD_APPROVAL", blocker: null });
+    expect(world.callNames().filter((name) => !name.startsWith("fetch:"))).toEqual([]);
+  });
+
+  it("rolls the alias back to the previous READY deployment and preserves the run", async () => {
+    const { runSequence } = await executorModule();
+    const { repository } = await stagedRepository("PRODUCTION_VERIFYING");
+    const world = fakeWorld({ smokePassed: false, stage: "PRODUCTION_VERIFYING" });
+
+    const result = await runSequence({ repo: repository, "run-id": RUN_ID }, world.options);
+
+    expect(result.iterations.map((entry) => entry.state)).toEqual([
+      "PRODUCTION_VERIFYING",
+      "ALIAS_ROLLBACK_REQUIRED",
+      "PRESERVED",
+    ]);
+    expect(result.iterations[0].result).toMatchObject({
+      state: "ALIAS_ROLLBACK_REQUIRED",
+      blocker: "ALIAS_ROLLBACK_REQUIRED",
+    });
+    expect(result.iterations[1].result).toMatchObject({
+      state: "PRESERVED",
+      blocker: "PRODUCTION_SMOKE_FAILED_ALIAS_ROLLED_BACK",
+    });
+    expect(result.stoppedBecause).toBe("TERMINAL");
+    expect(world.callNames()).toContain("assign-alias:dpl_production_previous");
+    expect(world.aliases.get("talkpik.example.com")).toBe("dpl_production_previous");
+    expect(world.callNames().filter((name) => name.startsWith("delete:"))).toEqual([]);
+  });
+
+  it("records PRODUCTION_FAILED and resets the approval policy when the alias never switched", async () => {
+    const { runSequence } = await executorModule();
+    const { gitCommonDir, repository } = await stagedRepository("PRODUCTION_VERIFYING");
+    const world = fakeWorld({ aliasSwitched: false, stage: "PRODUCTION_VERIFYING" });
+
+    const result = await runSequence({ repo: repository, "run-id": RUN_ID }, world.options);
+
+    expect(result.iterations[0].result).toMatchObject({
+      state: "PRODUCTION_FAILED",
+      blocker: "PRODUCTION_FAILED_PREVIOUS_ALIAS_PRESERVED",
+    });
+    expect(result.iterations.at(-1).outcome).toBe("TERMINAL");
+    expect(result.stoppedBecause).toBe("TERMINAL");
+    expect(world.callNames()).not.toContain("assign-alias:dpl_production_previous");
+    const { readApprovalPolicy } = await promotionLib();
+    expect(readApprovalPolicy({ gitCommonDir })).toMatchObject({
+      consecutiveSuccessCount: 0,
+      lastResetReason: "DEPLOYMENT_FAILURE",
+    });
+  });
+
+  it("changes neither the remote nor the registry on a dry run", async () => {
+    const { runNext } = await executorModule();
+    const { policyFile, repository, runFile } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+    const runBefore = readFileSync(runFile, "utf8");
+    const policyBefore = readFileSync(policyFile, "utf8");
+
+    const step = await runNext(
+      { repo: repository, "run-id": RUN_ID, "dry-run": true },
+      world.options,
+    );
+
+    expect(step.outcome).toBe("DRY_RUN");
+    expect(step.dryRun).toBe(true);
+    expect(step.result).toBeNull();
+    expect(step.preflight).toEqual({ ok: true, blockers: [] });
+    expect(step.intent).toMatchObject({
+      step: "CREATE_CANDIDATE",
+      operations: [
+        { operation: "create", account: "blackstarzck" },
+        { operation: "push", account: "blackstarzck" },
+      ],
+      targetRepository: "keduall/topik-project-v13",
+      candidateBranch: CANDIDATE_BRANCH,
+    });
+    expect(world.callNames()).toEqual(["fetch:collab"]);
+    expect(world.remotes.get("collab/stg")).toBe(SHA.stg);
+    expect(world.remotes.has(`collab/${CANDIDATE_BRANCH}`)).toBe(false);
+    expect(readFileSync(runFile, "utf8")).toBe(runBefore);
+    expect(readFileSync(policyFile, "utf8")).toBe(policyBefore);
+    expect(
+      existsSync(path.join(repository, ".git", "ai-pipeline", "promotions", "v1", "evidence")),
+    ).toBe(false);
+  });
+
+  it("repeats a step without a duplicate candidate push or duplicate pull request", async () => {
+    const { runNext } = await executorModule();
+    const { gitCommonDir, record, repository } = await stagedRepository("PLANNED");
+    const { readPromotionRun, writePromotionRun } = await promotionLib();
+    const world = fakeWorld();
+    const values = { repo: repository, "run-id": RUN_ID };
+    const rewindTo = (target) =>
+      writePromotionRun({
+        gitCommonDir,
+        record: target,
+        expectedFingerprint: readPromotionRun({ gitCommonDir, runId: RUN_ID }).fingerprint,
+      });
+
+    const first = await runNext(values, world.options);
+    expect(first.result.state).toBe("CANDIDATE_VERIFIED");
+    const candidateVerified = readPromotionRun({ gitCommonDir, runId: RUN_ID });
+
+    rewindTo(record);
+    const repeatedCandidate = await runNext(values, world.options);
+    expect(repeatedCandidate.result.state).toBe("CANDIDATE_VERIFIED");
+    expect(
+      readPromotionRun({ gitCommonDir, runId: RUN_ID }).target.candidateSha,
+    ).toBe(candidateVerified.target.candidateSha);
+    expect(world.callNames().filter((name) => name.startsWith("candidate-merge:"))).toHaveLength(1);
+    expect(world.callNames().filter((name) => name.startsWith("push:"))).toHaveLength(1);
+
+    const opened = await runNext(values, world.options);
+    expect(opened.result.state).toBe("STG_PR_OPEN");
+
+    rewindTo(candidateVerified);
+    const repeatedOpen = await runNext(values, world.options);
+    expect(repeatedOpen.result.state).toBe("STG_PR_OPEN");
+    expect(world.callNames().filter((name) => name.startsWith("open-pr:"))).toHaveLength(1);
+    expect(world.remotes.get(`collab/${CANDIDATE_BRANCH}`)).toBe(SHA.candidate);
+  });
+
+  it("keeps a failed evidence copy from changing the advanced state", async () => {
+    const { runNext } = await executorModule();
+    const { gitCommonDir, repository } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+
+    const step = await runNext(
+      { repo: repository, "run-id": RUN_ID },
+      {
+        ...world.options,
+        writeEvidence: () => {
+          throw new Error("evidence registry is unavailable");
+        },
+      },
+    );
+
+    expect(step.outcome).toBe("ADVANCED");
+    expect(step.result.state).toBe("CANDIDATE_VERIFIED");
+    expect(step.warnings).toEqual(["PROMOTION_EVIDENCE_RECORDING_WARNING"]);
+    const { readPromotionRun } = await promotionLib();
+    expect(readPromotionRun({ gitCommonDir, runId: RUN_ID })).toMatchObject({
+      state: "CANDIDATE_VERIFIED",
+      fingerprint: step.result.fingerprint,
+    });
+  });
+
+  it("reports an orphan registry lock as a blocker and never removes it", async () => {
+    const { runNext } = await executorModule();
+    const { repository, runFile } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+    const lockPath = `${runFile}.lock`;
+    writeFileSync(lockPath, "", { encoding: "utf8", flag: "wx", mode: 0o600 });
+
+    const step = await runNext({ repo: repository, "run-id": RUN_ID }, world.options);
+    expect(step.outcome).toBe("PREFLIGHT_BLOCKED");
+    expect(step.preflight.blockers).toEqual(["PROMOTION_REGISTRY_LOCKED"]);
+    expect(step.registryLock).toEqual({ present: true, removed: false, autoRemoval: false });
+    expect(step.result).toBeNull();
+    expect(world.callNames()).toEqual([]);
+    expect(existsSync(lockPath)).toBe(true);
+
+    const status = runCli(["status", "--repo", repository, "--run-id", RUN_ID]);
+    expect(status.status).toBe(0);
+    const parsed = JSON.parse(status.stdout);
+    expect(parsed.preflight.blockers).toContain("PROMOTION_REGISTRY_LOCKED");
+    expect(parsed.registryLock).toEqual({ present: true, removed: false, autoRemoval: false });
+    expect(existsSync(lockPath)).toBe(true);
+  });
+
+  it("stops the run loop with an uppercase code when an adapter fails", async () => {
+    const { runSequence } = await executorModule();
+    const { repository } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+
+    const result = await runSequence(
+      { repo: repository, "run-id": RUN_ID },
+      {
+        ...world.options,
+        git: {
+          ...world.git,
+          pushBranch() {
+            throw adapterError("EXECUTOR_PUSH_VERIFY_FAILED");
+          },
+        },
+      },
+    );
+
+    expect(result.stoppedBecause).toBe("ADAPTER_ERROR");
+    expect(result.iterations).toEqual([
+      {
+        recordType: "PromotionExecutorStepErrorV1",
+        outcome: "ADAPTER_ERROR",
+        attempt: 1,
+        error: "EXECUTOR_PUSH_VERIFY_FAILED",
+      },
+    ]);
+  });
+
+  it("never submits a production approval event from the executor", async () => {
+    const { runNext } = await executorModule();
+    const { assertExecutorSubmittableEvent } = await import(
+      "../../scripts/lib/ai-release-executor.mjs"
+    );
+    const { repository, runFile } = await stagedRepository("AWAITING_PROD_APPROVAL");
+    const world = fakeWorld({ stage: "AWAITING_PROD_APPROVAL" });
+    const before = readFileSync(runFile, "utf8");
+
+    expect(() => assertExecutorSubmittableEvent({ type: "PROD_APPROVAL_GRANTED" })).toThrowError(
+      "EXECUTOR_APPROVAL_EVENT_FORBIDDEN",
+    );
+
+    const step = await runNext({ repo: repository, "run-id": RUN_ID }, world.options);
+    expect(step.outcome).toBe("HUMAN_APPROVAL_REQUIRED");
+    expect(step.event).toBeNull();
+    expect(step.plan.requiresHumanApproval).toBe(true);
+    expect(step.result).toBeNull();
+    expect(world.callNames()).toEqual([]);
+    expect(readFileSync(runFile, "utf8")).toBe(before);
+  });
+
+  it("blocks a moved stg tip and an unverifiable account before performing any step", async () => {
+    const { runNext } = await executorModule();
+    const moved = await stagedRepository("PLANNED");
+    const movedWorld = fakeWorld();
+    movedWorld.remotes.set("collab/stg", SHA.candidate);
+    const movedBefore = readFileSync(moved.runFile, "utf8");
+
+    const movedStep = await runNext(
+      { repo: moved.repository, "run-id": RUN_ID },
+      movedWorld.options,
+    );
+    expect(movedStep.outcome).toBe("PREFLIGHT_BLOCKED");
+    expect(movedStep.preflight.blockers).toContain("PROMOTION_BASE_MOVED");
+    expect(movedStep.result).toBeNull();
+    expect(movedWorld.callNames()).toEqual(["fetch:collab"]);
+    expect(readFileSync(moved.runFile, "utf8")).toBe(movedBefore);
+
+    const denied = await stagedRepository("PLANNED");
+    const deniedWorld = fakeWorld();
+    const deniedStep = await runNext(
+      { repo: denied.repository, "run-id": RUN_ID },
+      {
+        ...deniedWorld.options,
+        authRunner: () =>
+          Promise.resolve({ result: "PRESERVED", blocker: "AUTH_PERMISSION_DENIED" }),
+      },
+    );
+    expect(deniedStep.outcome).toBe("PREFLIGHT_BLOCKED");
+    expect(deniedStep.preflight.blockers).toContain("EXECUTOR_ACCOUNT_UNAVAILABLE");
+    expect(deniedStep.observed.verifiedAccounts).toEqual([]);
+    expect(deniedWorld.callNames()).toEqual(["fetch:collab"]);
+  });
+
+  it("keeps the executor sources free of the remote database apply surface", () => {
+    const forbidden = [
+      ["", "database", "query"].join("/"),
+      ["session", "replication", "role"].join("_"),
+    ];
+    for (const relativePath of [
+      path.join("scripts", "ai-pipeline-executor.mjs"),
+      path.join("scripts", "lib", "ai-release-executor.mjs"),
+      path.join("scripts", "lib", "ai-release-git.mjs"),
+      path.join("scripts", "lib", "ai-release-vercel.mjs"),
+      path.join("scripts", "lib", "ai-release-promotion.mjs"),
+    ]) {
+      const source = readFileSync(path.join(projectRoot, relativePath), "utf8");
+      for (const needle of forbidden) expect(source).not.toContain(needle);
+    }
   });
 });

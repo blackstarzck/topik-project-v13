@@ -1,5 +1,11 @@
+import { existsSync, lstatSync, readFileSync, realpathSync, statSync } from "node:fs";
+import path from "node:path";
+
 import {
+  assertPromotionRegistryRoot,
+  atomicWritePromotionFile,
   cleanupEligibility,
+  scanForSecrets,
   validateCandidateMerge,
   validatePromotionRunV1,
   validateVercelPreviewEvidence,
@@ -8,6 +14,17 @@ import {
 
 const SHA_PATTERN = /^[a-f0-9]{40}$/u;
 const DIGEST_PATTERN = /^[a-f0-9]{64}$/u;
+const RUN_ID_PATTERN = /^promotion-[0-9]{8}-[a-f0-9]{8}$/u;
+const EVENT_TYPE_PATTERN = /^[A-Z][A-Z0-9_]{0,63}$/u;
+const MAX_MIGRATION_EVIDENCE_BYTES = 256 * 1024;
+const MAX_EVIDENCE_SEQUENCE = 999;
+const EVIDENCE_REGISTRY_SEGMENTS = Object.freeze([
+  "ai-pipeline",
+  "promotions",
+  "v1",
+  "evidence",
+]);
+const EXECUTOR_FORBIDDEN_EVENT_TYPES = Object.freeze(["PROD_APPROVAL_GRANTED"]);
 const SECRET_KEY_PATTERN =
   /(authorization|cookie|credential|password|private.?key|secret|service.?role|token|thread.?id|session.?id|raw.?output|command.?output)/iu;
 
@@ -483,6 +500,105 @@ export function evaluatePreflight({ record, observed }) {
   const unique = [...new Set(blockers)];
   return { ok: unique.length === 0, blockers: unique };
 }
+
+function pathContains(parent, child) {
+  const relative = path.relative(path.resolve(parent), path.resolve(child));
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+export function loadMigrationEvidenceFile({ evidencePath, allowedRoot }) {
+  if (typeof evidencePath !== "string" || evidencePath.trim() === "" ||
+      typeof allowedRoot !== "string" || allowedRoot.trim() === "") {
+    fail("DB_EVIDENCE_UNREADABLE");
+  }
+  const root = path.resolve(allowedRoot);
+  const target = path.resolve(evidencePath);
+  if (!pathContains(root, target)) fail("DB_EVIDENCE_PATH_ESCAPE");
+  let rootReal;
+  let targetReal;
+  let status;
+  try {
+    if (lstatSync(root).isSymbolicLink()) fail("DB_EVIDENCE_SYMLINK");
+    const link = lstatSync(target);
+    if (link.isSymbolicLink()) fail("DB_EVIDENCE_SYMLINK");
+    if (!link.isFile()) fail("DB_EVIDENCE_UNREADABLE");
+    rootReal = realpathSync.native(root);
+    targetReal = realpathSync.native(target);
+    status = statSync(targetReal);
+  } catch (error) {
+    if (error instanceof ExecutorError) throw error;
+    fail("DB_EVIDENCE_UNREADABLE");
+  }
+  if (path.resolve(rootReal).toLowerCase() !== root.toLowerCase()) fail("DB_EVIDENCE_SYMLINK");
+  if (!pathContains(rootReal, targetReal)) fail("DB_EVIDENCE_PATH_ESCAPE");
+  if (!status.isFile()) fail("DB_EVIDENCE_UNREADABLE");
+  if (status.size > MAX_MIGRATION_EVIDENCE_BYTES) fail("DB_EVIDENCE_TOO_LARGE");
+  let content;
+  try {
+    content = readFileSync(targetReal, "utf8");
+  } catch {
+    fail("DB_EVIDENCE_UNREADABLE");
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    fail("DB_EVIDENCE_INVALID_JSON");
+  }
+  return parsed;
+}
+
+export function submittedEvidencePath({ gitCommonDir, runId, sequence, eventType }) {
+  if (!RUN_ID_PATTERN.test(runId ?? "")) fail("PROMOTION_EVIDENCE_RUN_ID_INVALID");
+  if (!Number.isSafeInteger(sequence) || sequence < 1 || sequence > MAX_EVIDENCE_SEQUENCE) {
+    fail("PROMOTION_EVIDENCE_SEQUENCE_INVALID");
+  }
+  if (!EVENT_TYPE_PATTERN.test(eventType ?? "")) fail("PROMOTION_EVIDENCE_EVENT_INVALID");
+  const root = assertPromotionRegistryRoot(gitCommonDir);
+  const directory = path.join(root, ...EVIDENCE_REGISTRY_SEGMENTS, runId);
+  return path.join(directory, `${String(sequence).padStart(3, "0")}-${eventType}.json`);
+}
+
+export function writeSubmittedEvidence({ gitCommonDir, runId, event, sequence, now }) {
+  assertTimestamp(now);
+  if (!isPlainObject(event)) fail("PROMOTION_EVIDENCE_EVENT_INVALID");
+  const target = submittedEvidencePath({
+    gitCommonDir,
+    runId,
+    sequence,
+    eventType: event.type,
+  });
+  if (scanForSecrets(event).length > 0) fail("PROMOTION_EVIDENCE_SECRET_FORBIDDEN");
+  const directory = path.dirname(target);
+  if (existsSync(directory) && lstatSync(directory).isSymbolicLink()) {
+    fail("PROMOTION_EVIDENCE_SYMLINK");
+  }
+  if (existsSync(target)) {
+    const status = lstatSync(target);
+    if (status.isSymbolicLink() || !status.isFile()) fail("PROMOTION_EVIDENCE_SYMLINK");
+  }
+  atomicWritePromotionFile(target, {
+    schemaVersion: 1,
+    recordType: "PromotionSubmittedEvidenceV1",
+    runId,
+    sequence,
+    recordedAt: now,
+    event: structuredClone(event),
+  });
+  return target;
+}
+
+export function assertExecutorSubmittableEvent(event) {
+  if (!isPlainObject(event) || !EVENT_TYPE_PATTERN.test(event.type ?? "")) {
+    fail("EXECUTOR_EVENT_INVALID");
+  }
+  if (EXECUTOR_FORBIDDEN_EVENT_TYPES.includes(event.type)) {
+    fail("EXECUTOR_APPROVAL_EVENT_FORBIDDEN");
+  }
+  return event;
+}
+
+export const EXECUTOR_FORBIDDEN_EVENTS = EXECUTOR_FORBIDDEN_EVENT_TYPES;
 
 export function quoteCommandArgument(value) {
   return `'${String(value).replaceAll("'", "''")}'`;

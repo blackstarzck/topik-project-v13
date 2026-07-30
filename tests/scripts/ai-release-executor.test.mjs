@@ -1,6 +1,34 @@
 import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+
+const temporaryRoots = [];
+
+function temporaryRoot() {
+  const root = realpathSync.native(mkdtempSync(path.join(tmpdir(), "ai-release-executor-")));
+  temporaryRoots.push(root);
+  return root;
+}
+
+afterEach(() => {
+  for (const root of temporaryRoots.splice(0)) {
+    rmSync(root, { force: true, recursive: true });
+  }
+});
 
 const SHA = {
   source: "1".repeat(40),
@@ -684,5 +712,311 @@ describe("promotion executor preflight", () => {
         at: "2026-07-23T10:10:00.000Z",
       }),
     ).toThrowError("EXECUTOR_HUMAN_APPROVAL_NOT_PENDING");
+  });
+});
+
+describe("promotion executor DB evidence loader", () => {
+  function evidenceRoot() {
+    const root = temporaryRoot();
+    const allowed = path.join(root, "db-evidence");
+    mkdirSync(allowed, { recursive: true });
+    return { root, allowed };
+  }
+
+  it("refuses paths outside the allowed root and refuses symbolic evidence", async () => {
+    const { loadMigrationEvidenceFile } = await executor();
+    const { root, allowed } = evidenceRoot();
+    const outside = path.join(root, "outside.json");
+    writeFileSync(outside, JSON.stringify(migrationEvidence()), "utf8");
+
+    expect(() =>
+      loadMigrationEvidenceFile({ evidencePath: outside, allowedRoot: allowed }),
+    ).toThrowError("DB_EVIDENCE_PATH_ESCAPE");
+    expect(() =>
+      loadMigrationEvidenceFile({
+        evidencePath: path.join(allowed, "..", "outside.json"),
+        allowedRoot: allowed,
+      }),
+    ).toThrowError("DB_EVIDENCE_PATH_ESCAPE");
+    expect(() =>
+      loadMigrationEvidenceFile({
+        evidencePath: path.join(allowed, "missing.json"),
+        allowedRoot: allowed,
+      }),
+    ).toThrowError("DB_EVIDENCE_UNREADABLE");
+    expect(() =>
+      loadMigrationEvidenceFile({ evidencePath: allowed, allowedRoot: allowed }),
+    ).toThrowError("DB_EVIDENCE_UNREADABLE");
+
+    const linkPath = path.join(allowed, "linked.json");
+    let linked = false;
+    try {
+      symlinkSync(outside, linkPath, "file");
+      linked = true;
+    } catch {
+      // Windows may deny link creation outside developer mode.
+    }
+    if (linked) {
+      expect(() =>
+        loadMigrationEvidenceFile({ evidencePath: linkPath, allowedRoot: allowed }),
+      ).toThrowError("DB_EVIDENCE_SYMLINK");
+    }
+  });
+
+  it("refuses invalid JSON and oversized evidence files", async () => {
+    const { loadMigrationEvidenceFile } = await executor();
+    const { allowed } = evidenceRoot();
+    const broken = path.join(allowed, "broken.json");
+    writeFileSync(broken, "{ not json", "utf8");
+    expect(() =>
+      loadMigrationEvidenceFile({ evidencePath: broken, allowedRoot: allowed }),
+    ).toThrowError("DB_EVIDENCE_INVALID_JSON");
+
+    const oversized = path.join(allowed, "oversized.json");
+    writeFileSync(oversized, `{"padding":"${"a".repeat(300 * 1024)}"}`, "utf8");
+    expect(() =>
+      loadMigrationEvidenceFile({ evidencePath: oversized, allowedRoot: allowed }),
+    ).toThrowError("DB_EVIDENCE_TOO_LARGE");
+  });
+
+  it("loads evidence the real migration gate accepts without validating it itself", async () => {
+    const { validateMigrationEvidence } = await promotion();
+    const { loadMigrationEvidenceFile } = await executor();
+    const { allowed } = evidenceRoot();
+    const file = path.join(allowed, "evidence.json");
+    writeFileSync(file, `${JSON.stringify(migrationEvidence(), null, 2)}\n`, "utf8");
+
+    const loaded = loadMigrationEvidenceFile({ evidencePath: file, allowedRoot: allowed });
+    expect(loaded).toEqual(migrationEvidence());
+    expect(validateMigrationEvidence(loaded)).toMatchObject({
+      ok: true,
+      code: "DB_GATE_PASSED_MANUAL_APPLY",
+      autoApplyAllowed: false,
+    });
+
+    const blockedFile = path.join(allowed, "blocked.json");
+    writeFileSync(
+      blockedFile,
+      JSON.stringify(migrationEvidence({ destructiveSql: true })),
+      "utf8",
+    );
+    const blocked = loadMigrationEvidenceFile({
+      evidencePath: blockedFile,
+      allowedRoot: allowed,
+    });
+    expect(validateMigrationEvidence(blocked)).toMatchObject({
+      ok: false,
+      code: "DB_GATE_BLOCKED",
+      recovery: "FORWARD_FIX_ONLY",
+    });
+  });
+});
+
+describe("promotion executor submitted evidence copy", () => {
+  const RUN_ID = "promotion-20260723-11111111";
+
+  function registryRoot() {
+    const commonDir = path.join(temporaryRoot(), ".git");
+    mkdirSync(commonDir, { recursive: true });
+    return commonDir;
+  }
+
+  it("records the submitted event atomically at the expected path and mode", async () => {
+    const { writePromotionRun } = await promotion();
+    const { submittedEvidencePath, writeSubmittedEvidence } = await executor();
+    const gitCommonDir = registryRoot();
+    const { record } = await plannedRun();
+    const runFile = writePromotionRun({ gitCommonDir, record });
+    const event = {
+      type: "CANDIDATE_VERIFIED",
+      at: "2026-07-23T10:01:00.000Z",
+      candidateSha: SHA.candidate,
+      branch: record.target.candidateBranch,
+    };
+
+    const target = writeSubmittedEvidence({
+      gitCommonDir,
+      runId: RUN_ID,
+      event,
+      sequence: 2,
+      now: "2026-07-23T10:01:05.000Z",
+    });
+
+    expect(target).toBe(
+      path.join(
+        gitCommonDir,
+        "ai-pipeline",
+        "promotions",
+        "v1",
+        "evidence",
+        RUN_ID,
+        "002-CANDIDATE_VERIFIED.json",
+      ),
+    );
+    expect(
+      submittedEvidencePath({
+        gitCommonDir,
+        runId: RUN_ID,
+        sequence: 2,
+        eventType: "CANDIDATE_VERIFIED",
+      }),
+    ).toBe(target);
+    expect(JSON.parse(readFileSync(target, "utf8"))).toEqual({
+      schemaVersion: 1,
+      recordType: "PromotionSubmittedEvidenceV1",
+      runId: RUN_ID,
+      sequence: 2,
+      recordedAt: "2026-07-23T10:01:05.000Z",
+      event,
+    });
+    expect(statSync(target).mode & 0o777).toBe(statSync(runFile).mode & 0o777);
+    expect(
+      readdirSync(path.dirname(target)).filter((entry) => entry.endsWith(".tmp")),
+    ).toEqual([]);
+
+    expect(
+      writeSubmittedEvidence({
+        gitCommonDir,
+        runId: RUN_ID,
+        event,
+        sequence: 2,
+        now: "2026-07-23T10:01:06.000Z",
+      }),
+    ).toBe(target);
+    expect(readdirSync(path.dirname(target))).toEqual(["002-CANDIDATE_VERIFIED.json"]);
+  });
+
+  it("refuses to record an event that carries a token-like key or value", async () => {
+    const { writeSubmittedEvidence } = await executor();
+    const gitCommonDir = registryRoot();
+    const directory = path.join(
+      gitCommonDir,
+      "ai-pipeline",
+      "promotions",
+      "v1",
+      "evidence",
+      RUN_ID,
+    );
+
+    expect(() =>
+      writeSubmittedEvidence({
+        gitCommonDir,
+        runId: RUN_ID,
+        event: {
+          type: "STG_READY",
+          at: "2026-07-23T10:03:00.000Z",
+          previewEvidence: { deploymentId: "dpl_1", serviceRoleKey: "canary" },
+        },
+        sequence: 4,
+        now: "2026-07-23T10:03:05.000Z",
+      }),
+    ).toThrowError("PROMOTION_EVIDENCE_SECRET_FORBIDDEN");
+    expect(() =>
+      writeSubmittedEvidence({
+        gitCommonDir,
+        runId: RUN_ID,
+        event: {
+          type: "STG_READY",
+          at: "2026-07-23T10:03:00.000Z",
+          note: `ghp_${"a".repeat(30)}`,
+        },
+        sequence: 4,
+        now: "2026-07-23T10:03:05.000Z",
+      }),
+    ).toThrowError("PROMOTION_EVIDENCE_SECRET_FORBIDDEN");
+    expect(() =>
+      writeSubmittedEvidence({
+        gitCommonDir,
+        runId: "not-a-run-id",
+        event: { type: "STG_READY" },
+        sequence: 1,
+        now: "2026-07-23T10:03:05.000Z",
+      }),
+    ).toThrowError("PROMOTION_EVIDENCE_RUN_ID_INVALID");
+    expect(() =>
+      writeSubmittedEvidence({
+        gitCommonDir,
+        runId: RUN_ID,
+        event: { type: "STG_READY" },
+        sequence: 0,
+        now: "2026-07-23T10:03:05.000Z",
+      }),
+    ).toThrowError("PROMOTION_EVIDENCE_SEQUENCE_INVALID");
+    expect(existsSync(directory)).toBe(false);
+  });
+
+  it("keeps a failed evidence copy from changing the persisted transition", async () => {
+    const {
+      advancePromotionRun,
+      persistPromotionTransition,
+      readPromotionRun,
+      writeApprovalPolicy,
+      writePromotionRun,
+    } = await promotion();
+    const { buildCandidateVerifiedEvent, writeSubmittedEvidence } = await executor();
+    const gitCommonDir = registryRoot();
+    const { record, policy } = await plannedRun();
+    writeApprovalPolicy({ gitCommonDir, policy });
+    writePromotionRun({ gitCommonDir, record });
+    const event = buildCandidateVerifiedEvent({
+      at: "2026-07-23T10:01:00.000Z",
+      record,
+      observed: candidateObserved(),
+    });
+    const advanced = advancePromotionRun(record, {
+      expectedRevision: record.revision,
+      expectedFingerprint: record.fingerprint,
+      policy,
+      event,
+    });
+    persistPromotionTransition({
+      currentRecord: record,
+      currentPolicy: policy,
+      result: advanced,
+      writeRun: (nextRecord, expectedFingerprint) =>
+        writePromotionRun({ gitCommonDir, record: nextRecord, expectedFingerprint }),
+      writePolicy: (nextPolicy, expectedFingerprint) =>
+        writeApprovalPolicy({ gitCommonDir, policy: nextPolicy, expectedFingerprint }),
+    });
+
+    let warning = null;
+    try {
+      writeSubmittedEvidence({
+        gitCommonDir: path.join(gitCommonDir, "missing-registry"),
+        runId: record.runId,
+        event,
+        sequence: advanced.record.journal.length,
+        now: "2026-07-23T10:01:05.000Z",
+      });
+    } catch {
+      warning = "PROMOTION_EVIDENCE_RECORDING_WARNING";
+    }
+
+    expect(warning).toBe("PROMOTION_EVIDENCE_RECORDING_WARNING");
+    const persisted = readPromotionRun({ gitCommonDir, runId: record.runId });
+    expect(persisted.state).toBe("CANDIDATE_VERIFIED");
+    expect(persisted.fingerprint).toBe(advanced.record.fingerprint);
+    expect(persisted.revision).toBe(advanced.record.revision);
+  });
+});
+
+describe("promotion executor approval boundary", () => {
+  it("refuses to submit a production approval event from the executor", async () => {
+    const { assertExecutorSubmittableEvent, EXECUTOR_FORBIDDEN_EVENTS } = await executor();
+
+    expect(EXECUTOR_FORBIDDEN_EVENTS).toEqual(["PROD_APPROVAL_GRANTED"]);
+    expect(() =>
+      assertExecutorSubmittableEvent({
+        type: "PROD_APPROVAL_GRANTED",
+        at: "2026-07-23T10:05:00.000Z",
+        approvalFingerprint: digest("approval"),
+      }),
+    ).toThrowError("EXECUTOR_APPROVAL_EVENT_FORBIDDEN");
+    expect(() => assertExecutorSubmittableEvent({ type: "not-a-code" })).toThrowError(
+      "EXECUTOR_EVENT_INVALID",
+    );
+    expect(assertExecutorSubmittableEvent({ type: "CANDIDATE_VERIFIED" })).toEqual({
+      type: "CANDIDATE_VERIFIED",
+    });
   });
 });

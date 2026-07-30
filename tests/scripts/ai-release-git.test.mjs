@@ -1059,3 +1059,93 @@ describe("pipeline repository profiles", () => {
     expect(new Set(combinations).size).toBe(combinations.length);
   });
 });
+
+describe("promotion executor stg fast-forward", () => {
+  it("fast-forwards only stg, only forward, and only after re-reading the remote", async () => {
+    const { createGitAdapter, FAST_FORWARD_ALLOWED_BRANCHES } = await adapters();
+    const repository = temporaryRoot();
+
+    expect(FAST_FORWARD_ALLOWED_BRANCHES).toEqual(["stg"]);
+    for (const branch of ["main", "master", "production", CANDIDATE_BRANCH]) {
+      const blocked = recorder([]);
+      expect(() =>
+        createGitAdapter({
+          repoPath: repository,
+          commandRunner: blocked.runner,
+        }).fastForwardRemoteBranch({ remote: "collab", branch, expectedSha: SHA.main }),
+      ).toThrowError("EXECUTOR_FAST_FORWARD_BRANCH_FORBIDDEN");
+      expect(blocked.calls).toHaveLength(0);
+    }
+
+    const alreadySynced = recorder([
+      { status: 0, stdout: lsRemoteLine(SHA.main, "stg"), stderr: "" },
+    ]);
+    expect(
+      createGitAdapter({
+        repoPath: repository,
+        commandRunner: alreadySynced.runner,
+      }).fastForwardRemoteBranch({ remote: "collab", branch: "stg", expectedSha: SHA.main }),
+    ).toEqual({ ok: true, alreadySynced: true, remoteSha: SHA.main });
+    expect(alreadySynced.calls.map((call) => call.args)).toEqual([
+      ["ls-remote", "collab", "refs/heads/stg"],
+    ]);
+
+    const behind = recorder([
+      { status: 0, stdout: lsRemoteLine(SHA.stgMerged, "stg"), stderr: "" },
+      { status: 1, stdout: "", stderr: SENTINEL },
+    ]);
+    expect(() =>
+      createGitAdapter({
+        repoPath: repository,
+        commandRunner: behind.runner,
+      }).fastForwardRemoteBranch({ remote: "collab", branch: "stg", expectedSha: SHA.main }),
+    ).toThrowError("EXECUTOR_FAST_FORWARD_NOT_POSSIBLE");
+    expect(behind.calls.map((call) => call.args)).toEqual([
+      ["ls-remote", "collab", "refs/heads/stg"],
+      ["merge-base", "--is-ancestor", SHA.stgMerged, SHA.main],
+    ]);
+
+    const synced = recorder([
+      { status: 0, stdout: lsRemoteLine(SHA.stgMerged, "stg"), stderr: "" },
+      { status: 0, stdout: "", stderr: "" },
+      { status: 0, stdout: "", stderr: "" },
+      { status: 0, stdout: lsRemoteLine(SHA.main, "stg"), stderr: "" },
+    ]);
+    expect(
+      createGitAdapter({
+        repoPath: repository,
+        commandRunner: synced.runner,
+      }).fastForwardRemoteBranch({ remote: "collab", branch: "stg", expectedSha: SHA.main }),
+    ).toEqual({ ok: true, alreadySynced: false, remoteSha: SHA.main });
+    expect(synced.calls.map((call) => call.args)).toEqual([
+      ["ls-remote", "collab", "refs/heads/stg"],
+      ["merge-base", "--is-ancestor", SHA.stgMerged, SHA.main],
+      ["push", "collab", `${SHA.main}:refs/heads/stg`],
+      ["ls-remote", "collab", "refs/heads/stg"],
+    ]);
+    for (const call of synced.calls) {
+      expect(call.args.some((arg) => /^(?:-f|--force|\+)/u.test(arg))).toBe(false);
+    }
+
+    const unverified = recorder([
+      { status: 0, stdout: lsRemoteLine(SHA.stgMerged, "stg"), stderr: "" },
+      { status: 0, stdout: "", stderr: "" },
+      { status: 0, stdout: "", stderr: "" },
+      { status: 0, stdout: lsRemoteLine(SHA.stgMerged, "stg"), stderr: "" },
+    ]);
+    expect(() =>
+      createGitAdapter({
+        repoPath: repository,
+        commandRunner: unverified.runner,
+      }).fastForwardRemoteBranch({ remote: "collab", branch: "stg", expectedSha: SHA.main }),
+    ).toThrowError("EXECUTOR_PUSH_VERIFY_FAILED");
+
+    const missing = recorder([{ status: 2, stdout: "", stderr: SENTINEL }]);
+    expect(() =>
+      createGitAdapter({
+        repoPath: repository,
+        commandRunner: missing.runner,
+      }).fastForwardRemoteBranch({ remote: "collab", branch: "stg", expectedSha: SHA.main }),
+    ).toThrowError("EXECUTOR_REF_LOOKUP_FAILED");
+  });
+});

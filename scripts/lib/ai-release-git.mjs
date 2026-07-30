@@ -15,6 +15,8 @@ const FORCE_ARGUMENT_PATTERN =
   /^(?:-f|--force|--force-with-lease(?:=.*)?|--force-if-includes|\+.+)$/u;
 const MERGE_METHOD_ARGUMENT_PATTERN = /^(?:--squash|--rebase|--hard|--admin)$/u;
 
+export const FAST_FORWARD_ALLOWED_BRANCHES = Object.freeze(["stg"]);
+
 export const PROTECTED_BRANCH_NAMES = Object.freeze([
   "stg",
   "main",
@@ -217,6 +219,13 @@ export function createGitAdapter({
   const removeCandidateWorktree = (worktreePath) =>
     git(repoPath, ["worktree", "remove", worktreePath]).ok;
 
+  const isAncestor = (fromSha, toSha) => {
+    const result = git(repoPath, ["merge-base", "--is-ancestor", fromSha, toSha]);
+    if (result.ok) return true;
+    if (result.status === 1) return false;
+    return fail("EXECUTOR_ANCESTRY_LOOKUP_FAILED");
+  };
+
   return Object.freeze({
     repoPath,
 
@@ -299,12 +308,25 @@ export function createGitAdapter({
     },
 
     isFastForward({ fromSha, toSha }) {
-      const from = assertSha(fromSha);
-      const to = assertSha(toSha);
-      const result = git(repoPath, ["merge-base", "--is-ancestor", from, to]);
-      if (result.ok) return true;
-      if (result.status === 1) return false;
-      return fail("EXECUTOR_ANCESTRY_LOOKUP_FAILED");
+      return isAncestor(assertSha(fromSha), assertSha(toSha));
+    },
+
+    fastForwardRemoteBranch({ remote, branch, expectedSha }) {
+      assertRemote(remote);
+      if (typeof branch !== "string" || !FAST_FORWARD_ALLOWED_BRANCHES.includes(branch)) {
+        fail("EXECUTOR_FAST_FORWARD_BRANCH_FORBIDDEN");
+      }
+      const expected = assertSha(expectedSha);
+      const current = remoteBranchSha(remote, branch);
+      if (current === null) fail("EXECUTOR_REF_LOOKUP_FAILED");
+      if (current === expected) return { ok: true, alreadySynced: true, remoteSha: current };
+      if (!isAncestor(current, expected)) fail("EXECUTOR_FAST_FORWARD_NOT_POSSIBLE");
+      if (!git(repoPath, ["push", remote, `${expected}:refs/heads/${branch}`]).ok) {
+        fail("EXECUTOR_PUSH_FAILED");
+      }
+      const observedSha = remoteBranchSha(remote, branch);
+      if (observedSha !== expected) fail("EXECUTOR_PUSH_VERIFY_FAILED");
+      return { ok: true, alreadySynced: false, remoteSha: observedSha };
     },
 
     deleteRemoteBranch({ remote, branch }) {

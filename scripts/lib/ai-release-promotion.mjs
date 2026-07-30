@@ -266,6 +266,12 @@ function collectSecrets(value, prefix, errors) {
   }
 }
 
+export function scanForSecrets(value) {
+  const errors = [];
+  collectSecrets(value, "", errors);
+  return uniqueErrors(errors);
+}
+
 function validShaOrNull(value) {
   return value === null || SHA_PATTERN.test(value ?? "");
 }
@@ -1453,6 +1459,9 @@ export function writeApprovalPolicy({ gitCommonDir, policy, expectedFingerprint 
   });
   return target;
 }
+
+export { assertRegistryRoot as assertPromotionRegistryRoot };
+export { atomicWrite as atomicWritePromotionFile };
 
 export function readApprovalPolicy({ gitCommonDir }) {
   const target = policyPath(gitCommonDir);
