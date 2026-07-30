@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "recordType": "SecurityAuditBaselineV1",
   "baselineSha": "e91e4aa3acfb8610d0ec413c3dfc206408d1f4ad",
-  "approvedAt": "2026-07-30T01:00:00.000Z",
+  "approvedAt": "2026-07-30T23:55:11.800Z",
   "refs": [
     "collab/main",
     "collab/stg",
@@ -80,10 +80,65 @@
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
     {
+      "path": "supabase/migrations/down/20260527113000_storage_email_confirmed_hardening.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260701140000_accept_affiliation_invite.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260710093000_revoke_anon_superseded_auth_gate.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260710095000_profiles_country_code_iso_check.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260718120000_auth_gate_exact_consent_snapshots.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260722120000_writing_completion_and_pdf_outcomes.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260723234527_consent_account_deletion_rls.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260724120000_user_data_reference_integrity.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260724130000_institution_invite_trust_boundary.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260724140000_pdf_export_request_idempotency.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260729120000_list_user_problems_canonical_catalog_fix.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
       "path": "tests/e2e/_tmp-seed-notif.mjs",
       "rule": "TEMPORARY_SCRIPT_PATH",
       "reason": "알림 E2E가 쓰는 seed helper다. 파일명에 임시 표시가 있지만 tracked 테스트 자산이다."
     }
   ],
-  "fingerprint": "e718536578d84d38295e33a0d67d7d31d19da766f9b213deb6dd0745541f0a70"
+  "fingerprint": "c9a410240b7022340b8decc24f6fbbc38bc0088bcd4b203835024bcdcd8ad19a"
 }
