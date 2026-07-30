@@ -8,7 +8,7 @@
 | 정본 | 이 문서와 실행 가능한 `package.json` 명령·contract test |
 | 마지막 검토 | 2026-07-24 |
 
-이 문서는 AI 개발 작업의 시작, Codex↔Claude 인수인계, Black 개발 저장소 검증, Keduall 운영 승격, Vercel 배포와 자동 정리를 한 흐름으로 정의하는 유일한 세부 workflow owner다. `AGENTS.md`, 이 문서, 실행 명령과 contract test는 같은 변경 묶음에서 함께 바뀌어야 한다.
+이 문서는 AI 개발 작업의 시작, Codex↔Claude 인수인계, Black 개발 저장소 검증, Keduall 운영 승격, Vercel 배포와 자동 정리를 한 흐름으로 정의하는 유일한 세부 workflow owner다. `AGENTS.md`의 workflow 계약, 이 문서, 실행 명령과 contract test는 같은 변경 묶음에서 함께 바뀌어야 한다. 대화 방식처럼 workflow와 무관한 `AGENTS.md` 변경은 이 결합 검사 대상이 아니다.
 
 ## 용어와 불변 조건
 

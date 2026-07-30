@@ -138,11 +138,7 @@ describe("project structure allowlist", () => {
         rootDir: root,
         changedPaths: ["AGENTS.md"],
       }).errors,
-    ).toEqual(
-      expect.arrayContaining([
-        "Pipeline v3.1 implementation and owner documentation must change together.",
-      ]),
-    );
+    ).toEqual([]);
     expect(
       evaluateProjectStructure({
         rootDir: root,
