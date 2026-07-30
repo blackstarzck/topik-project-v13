@@ -1384,6 +1384,36 @@ describe("promotion executor step execution", () => {
     expect(world.remotes.has(`collab/${CANDIDATE_BRANCH}`)).toBe(false);
   });
 
+  it("rejects an already published candidate branch whose lineage is not the approved merge", async () => {
+    const { runNext } = await executorModule();
+    const { repository } = await stagedRepository("PLANNED");
+    const world = fakeWorld();
+    const stale = "7".repeat(40);
+
+    await expect(
+      runNext(
+        { repo: repository, "run-id": RUN_ID },
+        {
+          ...world.options,
+          git: {
+            ...world.git,
+            remoteBranchSha({ remote, branch }) {
+              return branch === CANDIDATE_BRANCH
+                ? stale
+                : world.git.remoteBranchSha({ remote, branch });
+            },
+            commitParents(sha) {
+              return sha === stale ? [SHA.stg, "6".repeat(40)] : world.git.commitParents(sha);
+            },
+          },
+        },
+      ),
+    ).rejects.toThrowError("EXECUTOR_LINEAGE_MISMATCH");
+
+    expect(world.callNames().filter((name) => name.startsWith("push:"))).toEqual([]);
+    expect(world.callNames().filter((name) => name.startsWith("merge-pr:"))).toEqual([]);
+  });
+
   it("reports an orphan registry lock as a blocker and never removes it", async () => {
     const { runNext } = await executorModule();
     const { repository, runFile } = await stagedRepository("PLANNED");

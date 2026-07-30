@@ -588,10 +588,10 @@ function candidateHandlers(record, context) {
     },
     push(scratch) {
       const parents = context.git.commitParents(scratch.candidateSha);
+      if (!sameShaList(parents, [record.target.stgBaseSha, record.source.sha])) {
+        throw executorError("EXECUTOR_LINEAGE_MISMATCH");
+      }
       if (scratch.published !== true) {
-        if (!sameShaList(parents, [record.target.stgBaseSha, record.source.sha])) {
-          throw executorError("EXECUTOR_LINEAGE_MISMATCH");
-        }
         context.git.pushBranch({ remote, branch, expectedSha: scratch.candidateSha });
       }
       scratch.parents = parents;
