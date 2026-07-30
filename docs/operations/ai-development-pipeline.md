@@ -148,7 +148,18 @@ pnpm release:status -- --repo <기준-checkout> --run-id <run-id>
 pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-revision <revision> --expected-fingerprint <fingerprint> --event PROD_APPROVAL_GRANTED --event-at <ISO-8601> --approval <approval-fingerprint>
 ```
 
-`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인한 뒤 `origin/main`과 `collab/main` 또는 `collab/stg`에서 SHA를 직접 읽고, 그 reachable history에 대한 보안 감사를 직접 실행한다. finding이 하나라도 있거나 ref를 읽지 못하면 승격 기록을 시작하지 않는다.
+`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인한 뒤 `origin/main`과 `collab/main` 또는 `collab/stg`에서 SHA를 직접 읽고, 승인된 기준점 이후의 차분에 대한 보안 감사를 직접 실행한다. finding이 하나라도 있거나 ref를 읽지 못하면 승격 기록을 시작하지 않는다.
+
+#### 기준점 차분 보안 감사
+
+보안 감사의 기준점과 승인된 예외는 `config/security-audit-baseline.json`에만 둔다. 이 파일은 승인된 기준점 commit SHA, 승인 시각, 감사 대상 ref 목록과 `(경로, 규칙)` 예외 인벤토리를 닫힌 schema로 담고 전체 내용의 SHA-256 fingerprint를 함께 저장한다.
+
+- 기준점 이전의 오래된 이력은 검토를 마친 예외 인벤토리로 통과시킨다. 이미 정리할 수 없는 과거 산출물 때문에 승격이 영구히 막히는 상태를 없애는 것이 목적이다.
+- 기준점 이후 새로 추가되거나 수정된 산출물의 finding은 그대로 차단한다. finding이 하나라도 있으면 `SECURITY_INCIDENT_BLOCKED`이며 이 조건은 완화하지 않는다.
+- 예외는 경로 하나에 규칙 하나씩 정확히 대응한다. 같은 경로가 나중에 다른 규칙을 위반하면 계속 차단된다. 경로만으로 모든 규칙을 면제하는 통짜 예외는 제공하지 않는다.
+- 기준점이나 예외를 바꾸려면 `config/security-audit-baseline.json`을 고쳐야 하고, `/config/`는 CODEOWNERS가 보호하므로 소유자 리뷰를 거친다. `release:start`에는 기준점·예외를 지정하는 명령 인자가 없어 caller가 감사 범위를 우회할 수 없다.
+- 이 파일이 없거나 schema·fingerprint가 깨졌으면 `SECURITY_BASELINE_CONFIG_INVALID`로 즉시 중단한다. 전체 이력 감사로 조용히 되돌아가지 않는다.
+- 감사 기록은 `SecurityArtifactDiffAuditV1`이며 기준점 SHA의 안전한 hash를 담는다. `release:start`가 읽은 승인 기준점과 이 hash가 다르면 `SECURITY_AUDIT_BASELINE_MISMATCH`, 기준점 정보 없이 차분 기록을 제출하면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부한다.
 
 공개 `release:resume`은 최초 2회에 필요한 사람의 최종 승인만 받는다. candidate·PR·DB·Vercel·cleanup 상태를 caller가 만든 JSON으로 제출해 상태를 전진시키는 경로는 `RELEASE_TRUSTED_EXECUTOR_REQUIRED`로 거부한다. 이 상태 전이는 고정 저장소·계정·permission·현재 ref/SHA와 trusted workflow 결과를 직접 확인하는 운영 executor만 호출할 수 있다. 해당 executor가 설치되기 전에는 승격이 안전하게 중단된 상태이며 수동 JSON으로 우회할 수 없다.
 
@@ -271,9 +282,14 @@ GitHub의 squash merge는 PR head commit 자체가 `origin/main`의 조상이 �
 ├── v3/claims/                  실행자·shared slot claim
 ├── v3/migrations/              v2→v3 copy journal
 ├── v3/cleanup/                 자동 정리 journal·report
-├── v3/sweeps/latest.json       repository sweep 요약
-└── releases/                   PromotionRunV1·승인 policy
+└── v3/sweeps/latest.json       repository sweep 요약
+
+<git-common-dir>/ai-pipeline/promotions/v1/
+├── runs/<run-id>.json          PromotionRunV1
+└── approval-policy.json        production 승인 policy
 ```
+
+승격 기록은 task lifecycle registry와 다른 root에 둔다. task 정리가 승격 기록을 건드리지 않고, 승격 기록도 task record를 건드리지 않는다.
 
 `TaskRecordV3`는 repository profile·기준 SHA·선택적 task branch·workspace mode·ownership·현재 실행자·revision·runtime·artifact manifest·cleanup policy를 저장한다. 상태는 `ACTIVE → PR_OPEN → MERGED → CLEANED|RELEASED|PRESERVED`다. branch나 worktree 경로 자체를 task identity로 사용하지 않는다. 모든 record는 허용 필드만 받고 크기·시간·경로·fingerprint를 검증하며 secret·token·원문 thread/session ID, prototype 오염, symlink·reparse·경로 탈출을 거부한다.
 
@@ -331,7 +347,7 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 먼저 전
 
 문서만 바뀌어도 Linux `verify` 작업 자체는 실행하고 신뢰 경계 검사를 통과해야 한다. dependency 설치와 app 검증만 생략한다. pipeline-only 변경은 dependency를 설치한 뒤 관련 contract를 집중 실행한다. app 전체 검증의 `pnpm test`가 lifecycle contract도 포함하므로 같은 Linux contract를 별도로 중복 실행하지 않는다.
 
-Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`의 도달 가능한 전체 이력을 감사한다.
+Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`을 승인된 기준점 이후 차분으로 감사한다.
 
 CI가 검사하는 계약은 다음과 같다.
 

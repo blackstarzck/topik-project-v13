@@ -132,6 +132,7 @@ const referenceScanExemptions = new Set([
 ]);
 const pipelineContractImplementationPaths = Object.freeze([
   "config/artifact-hygiene-policy.json",
+  "config/security-audit-baseline.json",
   "package.json",
   "scripts/ai-release.mjs",
   "scripts/ai-task.mjs",

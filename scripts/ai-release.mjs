@@ -7,12 +7,13 @@ import {
   realpathSync,
 } from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   advancePromotionRun,
   createApprovalPolicy,
   createPromotionRun,
+  loadSecurityAuditEvidence,
   parseRepositoryIdentity,
   PROMOTION_PROFILES,
   persistPromotionTransition,
@@ -21,11 +22,16 @@ import {
   readPromotionRun,
   reconcileApprovalPolicy,
   resetApprovalPolicy,
+  stableFingerprint,
   validateSecurityAuditEvidence,
   writeApprovalPolicy,
   writePromotionRun,
 } from "./lib/ai-release-promotion.mjs";
-import { auditSecurityArtifacts } from "./lib/security-artifact-audit.mjs";
+import {
+  auditSecurityArtifactChanges,
+  SECURITY_ARTIFACT_RULE_NAMES,
+  unsafeTreePath,
+} from "./lib/security-artifact-audit.mjs";
 
 const COMMANDS = new Set(["start", "status", "resume"]);
 const VALUE_FLAGS = new Set([
@@ -44,8 +50,106 @@ const VALUE_FLAGS = new Set([
   "vercel-domain",
 ]);
 
+const RELEASE_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+);
+const SECURITY_BASELINE_CONFIG_PATH = path.join(
+  RELEASE_ROOT,
+  "config",
+  "security-audit-baseline.json",
+);
+const BASELINE_CONFIG_KEYS = [
+  "approvedAt",
+  "baselineSha",
+  "exceptions",
+  "fingerprint",
+  "recordType",
+  "refs",
+  "schemaVersion",
+];
+const BASELINE_EXCEPTION_KEYS = ["path", "reason", "rule"];
+const BASELINE_SHA_PATTERN = /^[a-f0-9]{40}$/u;
+const BASELINE_RULE_NAMES = new Set(SECURITY_ARTIFACT_RULE_NAMES);
+
 function cliError(code) {
   return Object.assign(new Error(code), { code });
+}
+
+function plainObject(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function exactKeys(value, expected) {
+  if (!plainObject(value)) return false;
+  const keys = Object.keys(value).sort();
+  return keys.length === expected.length &&
+    keys.every((key, index) => key === expected[index]);
+}
+
+function nonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+export function validateSecurityBaselineConfig(config) {
+  if (!exactKeys(config, BASELINE_CONFIG_KEYS)) {
+    throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
+  }
+  if (
+    config.schemaVersion !== 1 ||
+    config.recordType !== "SecurityAuditBaselineV1" ||
+    !BASELINE_SHA_PATTERN.test(config.baselineSha ?? "") ||
+    !nonEmptyString(config.approvedAt) ||
+    new Date(Date.parse(config.approvedAt)).toISOString() !== config.approvedAt ||
+    !Array.isArray(config.refs) ||
+    config.refs.length === 0 ||
+    config.refs.some((ref) => !nonEmptyString(ref)) ||
+    new Set(config.refs).size !== config.refs.length ||
+    JSON.stringify(config.refs) !== JSON.stringify([...config.refs].sort()) ||
+    !Array.isArray(config.exceptions)
+  ) {
+    throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
+  }
+  const seen = new Set();
+  for (const exception of config.exceptions) {
+    if (
+      !exactKeys(exception, BASELINE_EXCEPTION_KEYS) ||
+      unsafeTreePath(exception.path) ||
+      !BASELINE_RULE_NAMES.has(exception.rule) ||
+      !nonEmptyString(exception.reason)
+    ) {
+      throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
+    }
+    const key = `${exception.path.toLowerCase()}\0${exception.rule}`;
+    if (seen.has(key)) throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
+    seen.add(key);
+  }
+  const payload = structuredClone(config);
+  delete payload.fingerprint;
+  if (
+    !/^[a-f0-9]{64}$/u.test(config.fingerprint ?? "") ||
+    config.fingerprint !== stableFingerprint(payload)
+  ) {
+    throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
+  }
+  return config;
+}
+
+export function loadSecurityAuditBaseline({
+  configPath = SECURITY_BASELINE_CONFIG_PATH,
+  allowedRoot = RELEASE_ROOT,
+} = {}) {
+  let parsed;
+  try {
+    parsed = loadSecurityAuditEvidence({ evidencePath: configPath, allowedRoot });
+  } catch {
+    throw cliError("SECURITY_BASELINE_CONFIG_INVALID");
+  }
+  return validateSecurityBaselineConfig(parsed);
 }
 
 export function parseReleaseArguments(argv) {
@@ -172,9 +276,12 @@ export function collectReleaseStartEvidence({
   repoPath,
   stgReady = false,
   commandRunner = executeReleaseGit,
-  audit = auditSecurityArtifacts,
+  audit = auditSecurityArtifactChanges,
+  baselineConfigPath = SECURITY_BASELINE_CONFIG_PATH,
+  loadBaseline = loadSecurityAuditBaseline,
 }) {
   const repository = safeRepository(repoPath);
+  const baseline = loadBaseline({ configPath: baselineConfigPath });
   const originUrl = releaseGitText(
     repository,
     ["remote", "get-url", PROMOTION_PROFILES.black.remote],
@@ -214,7 +321,15 @@ export function collectReleaseStartEvidence({
     "collab/main",
     ...(stgReady ? ["collab/stg"] : []),
   ].sort();
+  if (expectedSecurityRefs.some((ref) => !baseline.refs.includes(ref))) {
+    throw cliError("SECURITY_BASELINE_REFS_MISMATCH");
+  }
   const securityAudit = audit({
+    approvedPathAllowlist: baseline.exceptions.map((exception) => ({
+      path: exception.path,
+      rule: exception.rule,
+    })),
+    baselineRef: baseline.baselineSha,
     repoPath: repository,
     refs: expectedSecurityRefs,
   });
@@ -223,6 +338,7 @@ export function collectReleaseStartEvidence({
     sourceSha,
     sourceTreeHash,
     stgBaseSha,
+    baselineSha: baseline.baselineSha,
     expectedSecurityRefs,
     securityAudit,
   };
@@ -279,6 +395,7 @@ function runStart(values) {
       sourceSha: collected.sourceSha,
       stgBaseSha: collected.stgBaseSha,
       stgReady: bool(values["stg-ready"]),
+      expectedBaselineSha: collected.baselineSha,
     },
   );
   enforceReleaseSecurityResult({ security, commonDir });
@@ -294,6 +411,7 @@ function runStart(values) {
     stgBaseSha: collected.stgBaseSha,
     securityAudit: collected.securityAudit,
     expectedSecurityRefs: collected.expectedSecurityRefs,
+    expectedBaselineSha: collected.baselineSha,
     controlPlaneReady: bool(values["control-plane-ready"]),
     stgReady: bool(values["stg-ready"]),
     vercelProject: values["vercel-project"],

@@ -8,6 +8,21 @@ const COMMAND_MAX_BUFFER_BYTES = 8 * 1024 * 1024;
 const DEFAULT_REFS = Object.freeze(["origin/main", "collab/main"]);
 const DEFAULT_EVIDENCE_ALLOWLIST = Object.freeze([]);
 const DEFAULT_ROOT_IMAGE_ALLOWLIST = Object.freeze([]);
+const DEFAULT_APPROVED_PATH_ALLOWLIST = Object.freeze([]);
+const RULE_NAMES = Object.freeze([
+  "INTERMEDIATE_SCREENSHOT_PATH",
+  "ROOT_IMAGE_NOT_ALLOWLISTED",
+  "ROOT_TEMP_FILE",
+  "TEMPORARY_SCRIPT_PATH",
+  "TRACKED_ARTIFACT_PATH",
+  "TRACKED_ENV_FILE",
+  "TRACKED_SCRATCH_PATH",
+  "TRACKED_TMP_PATH",
+  "UNAPPROVED_SQL_PATH",
+]);
+const RULE_NAME_SET = new Set(RULE_NAMES);
+
+export const SECURITY_ARTIFACT_RULE_NAMES = RULE_NAMES;
 const REF_PATTERN =
   /^(?!-)(?!.*(?:\.\.|@\{|\/\/|[~^:?*[\]\\\s]))[A-Za-z0-9][A-Za-z0-9._/-]*[A-Za-z0-9]$/u;
 const ROOT_TEMP_EXTENSION = /\.(?:bak|log|pid|temp|tmp)$/iu;
@@ -98,7 +113,7 @@ function decodeUtf8(buffer, failureCode) {
   }
 }
 
-function unsafeTreePath(relativePath) {
+export function unsafeTreePath(relativePath) {
   if (
     typeof relativePath !== "string" ||
     relativePath.length === 0 ||
@@ -227,7 +242,42 @@ function validateEvidenceAllowlist(entries) {
   return new Set(normalized);
 }
 
-function matchingRule(
+function plainObject(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function validateApprovedPathAllowlist(entries) {
+  if (
+    !Array.isArray(entries) ||
+    entries.some((entry) => {
+      if (!plainObject(entry)) return true;
+      const keys = Object.keys(entry);
+      return (
+        keys.length !== 2 ||
+        !keys.includes("path") ||
+        !keys.includes("rule") ||
+        unsafeTreePath(entry.path) ||
+        typeof entry.rule !== "string" ||
+        !RULE_NAME_SET.has(entry.rule)
+      );
+    })
+  ) {
+    throw auditError("APPROVED_PATH_ALLOWLIST_INVALID");
+  }
+  const normalized = entries.map(
+    (entry) => `${entry.path.toLowerCase()}\0${entry.rule}`,
+  );
+  if (new Set(normalized).size !== normalized.length) {
+    throw auditError("APPROVED_PATH_ALLOWLIST_INVALID");
+  }
+  return new Set(normalized);
+}
+
+function detectedRule(
   relativePath,
   rootImageAllowlist,
   evidenceAllowlist,
@@ -270,6 +320,19 @@ function matchingRule(
     return "ROOT_IMAGE_NOT_ALLOWLISTED";
   }
   return null;
+}
+
+function matchingRule(
+  relativePath,
+  rootImageAllowlist,
+  evidenceAllowlist,
+  approvedPathAllowlist,
+) {
+  const rule = detectedRule(relativePath, rootImageAllowlist, evidenceAllowlist);
+  if (rule === null) return null;
+  return approvedPathAllowlist.has(`${relativePath.toLowerCase()}\0${rule}`)
+    ? null
+    : rule;
 }
 
 function sha256(value) {
@@ -352,6 +415,7 @@ function firstParent(buffer, commit) {
 }
 
 export function auditSecurityArtifactChanges({
+  approvedPathAllowlist = DEFAULT_APPROVED_PATH_ALLOWLIST,
   baselineRef,
   evidenceAllowlist = DEFAULT_EVIDENCE_ALLOWLIST,
   repoPath,
@@ -367,6 +431,7 @@ export function auditSecurityArtifactChanges({
   }
   const allowedEvidence = validateEvidenceAllowlist(evidenceAllowlist);
   const allowedRootImages = validateRootImageAllowlist(rootImageAllowlist);
+  const approvedPaths = validateApprovedPathAllowlist(approvedPathAllowlist);
   assertRepositoryRoot(commandRunner, repositoryRoot);
 
   const resolvedBaseline = resolveRef(
@@ -447,6 +512,7 @@ export function auditSecurityArtifactChanges({
           relativePath,
           allowedRootImages,
           allowedEvidence,
+          approvedPaths,
         );
         if (rule === null) continue;
         const key = `${relativePath}\0${rule}`;
@@ -508,6 +574,7 @@ export function auditSecurityArtifactChanges({
 }
 
 export function auditSecurityArtifacts({
+  approvedPathAllowlist = DEFAULT_APPROVED_PATH_ALLOWLIST,
   evidenceAllowlist = DEFAULT_EVIDENCE_ALLOWLIST,
   repoPath,
   refs = DEFAULT_REFS,
@@ -518,6 +585,7 @@ export function auditSecurityArtifacts({
   const auditedRefs = validateRefs(refs);
   const allowedEvidence = validateEvidenceAllowlist(evidenceAllowlist);
   const allowedRootImages = validateRootImageAllowlist(rootImageAllowlist);
+  const approvedPaths = validateApprovedPathAllowlist(approvedPathAllowlist);
   assertRepositoryRoot(commandRunner, repositoryRoot);
 
   const candidates = [];
@@ -565,6 +633,7 @@ export function auditSecurityArtifacts({
         relativePath,
         allowedRootImages,
         allowedEvidence,
+        approvedPaths,
       );
       if (rule !== null) {
         const commitHashes = [

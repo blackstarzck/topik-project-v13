@@ -640,7 +640,7 @@ describe("registry and CLI contract", () => {
   it("splits the lifecycle contract into bounded runnable shards", () => {
     const packageJson = JSON.parse(readFileSync(path.resolve("package.json"), "utf8"));
     expect(packageJson.scripts["check:task-lifecycle"]).toBe(
-      "pnpm check:task-lifecycle:v2 && pnpm check:task-lifecycle:cleanup-finalize && pnpm check:task-lifecycle:cleanup-locks && pnpm check:task-lifecycle:cleanup-mutate && pnpm check:task-lifecycle:cleanup-recovery && pnpm check:task-lifecycle:cleanup-contract && pnpm check:task-lifecycle:autocleanup-contract && pnpm check:task-lifecycle:autocleanup-remote && pnpm check:task-lifecycle:autocleanup-worker && pnpm check:task-lifecycle:autocleanup-recovery && pnpm check:task-lifecycle:metrics && pnpm check:task-lifecycle:v3 && pnpm check:task-lifecycle:sweep && pnpm check:task-lifecycle:release && pnpm check:task-lifecycle:security && pnpm check:task-lifecycle:validation",
+      "pnpm check:task-lifecycle:v2 && pnpm check:task-lifecycle:cleanup-finalize && pnpm check:task-lifecycle:cleanup-locks && pnpm check:task-lifecycle:cleanup-mutate && pnpm check:task-lifecycle:cleanup-recovery && pnpm check:task-lifecycle:cleanup-contract && pnpm check:task-lifecycle:autocleanup-contract && pnpm check:task-lifecycle:autocleanup-remote && pnpm check:task-lifecycle:autocleanup-worker && pnpm check:task-lifecycle:autocleanup-recovery && pnpm check:task-lifecycle:metrics && pnpm check:task-lifecycle:v3 && pnpm check:task-lifecycle:sweep && pnpm check:task-lifecycle:release && pnpm check:task-lifecycle:baseline-audit && pnpm check:task-lifecycle:security && pnpm check:task-lifecycle:validation",
     );
     const shardNames = [
       "check:task-lifecycle:v2",
@@ -657,6 +657,7 @@ describe("registry and CLI contract", () => {
       "check:task-lifecycle:v3",
       "check:task-lifecycle:sweep",
       "check:task-lifecycle:release",
+      "check:task-lifecycle:baseline-audit",
       "check:task-lifecycle:security",
       "check:task-lifecycle:validation",
     ];
@@ -676,6 +677,7 @@ describe("registry and CLI contract", () => {
       "tests/scripts/ai-task-v3-adapter.test.mjs",
       "tests/scripts/ai-task-sweep.test.mjs",
       "tests/scripts/ai-release-promotion.test.mjs",
+      "tests/scripts/ai-release-baseline-audit.test.mjs",
       "tests/scripts/security-artifact-audit.test.mjs",
       "tests/scripts/ai-validation-evidence.test.mjs",
     ]));

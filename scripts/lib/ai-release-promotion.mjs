@@ -178,8 +178,14 @@ const SECURITY_AUDIT_KEYS = new Set([
   "snapshots",
   "fingerprint",
 ]);
+const SECURITY_DIFF_AUDIT_KEYS = new Set([...SECURITY_AUDIT_KEYS, "baseline"]);
+const SECURITY_AUDIT_RECORD_TYPES = new Set([
+  "SecurityArtifactAuditV1",
+  "SecurityArtifactDiffAuditV1",
+]);
 const SECURITY_SUMMARY_KEYS = new Set(["refCount", "scannedPathCount", "findingCount"]);
 const SECURITY_SNAPSHOT_KEYS = new Set(["ref", "commitHash"]);
+const SECURITY_BASELINE_KEYS = new Set(["ref", "commitHash"]);
 
 export class PromotionError extends Error {
   constructor(code) {
@@ -214,6 +220,8 @@ function digest(value) {
 function fingerprint(value) {
   return digest(JSON.stringify(stableValue(value)));
 }
+
+export { fingerprint as stableFingerprint };
 
 function recordFingerprint(record) {
   const payload = structuredClone(record);
@@ -314,15 +322,51 @@ export function verifyRepositoryProfile({ profile, remoteUrl, authLogin }) {
   return { ok: true, profile: profile.name };
 }
 
+function securityBaselineValidation(audit, expectedBaselineSha) {
+  const errors = [];
+  checkClosed(audit.baseline, SECURITY_BASELINE_KEYS, "baseline", errors);
+  if (
+    errors.length > 0 ||
+    !isPlainObject(audit.baseline) ||
+    typeof audit.baseline.ref !== "string" ||
+    audit.baseline.ref.length === 0 ||
+    !DIGEST_PATTERN.test(audit.baseline.commitHash ?? "") ||
+    audit.refs.includes(audit.baseline.ref)
+  ) {
+    return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
+  }
+  if (
+    typeof expectedBaselineSha !== "string" ||
+    !SHA_PATTERN.test(expectedBaselineSha)
+  ) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_REQUIRED" };
+  }
+  if (audit.baseline.commitHash !== digest(expectedBaselineSha.toLowerCase())) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" };
+  }
+  return { ok: true, code: "SECURITY_AUDIT_BASELINE_BOUND" };
+}
+
 function securityAuditValidation(
   audit,
   expectedRefs,
-  { sourceSha = null, stgBaseSha = null, stgReady = false } = {},
+  {
+    sourceSha = null,
+    stgBaseSha = null,
+    stgReady = false,
+    expectedBaselineSha = null,
+  } = {},
 ) {
   if (!isPlainObject(audit)) return { ok: false, code: "SECURITY_AUDIT_REQUIRED" };
+  const diffAudit = audit.recordType === "SecurityArtifactDiffAuditV1";
   const errors = [];
-  checkClosed(audit, SECURITY_AUDIT_KEYS, "", errors);
-  if (audit.schemaVersion !== 1 || audit.recordType !== "SecurityArtifactAuditV1") {
+  checkClosed(
+    audit,
+    diffAudit ? SECURITY_DIFF_AUDIT_KEYS : SECURITY_AUDIT_KEYS,
+    "",
+    errors,
+  );
+  if (audit.schemaVersion !== 1 || !SECURITY_AUDIT_RECORD_TYPES.has(audit.recordType)) {
     return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
   }
   if (errors.length > 0) return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
@@ -358,6 +402,10 @@ function securityAuditValidation(
       new Set(audit.snapshots.map((snapshot) => snapshot.ref)).size !== audit.refs.length ||
       audit.summary.findingCount !== audit.findings.length) {
     return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
+  }
+  if (diffAudit) {
+    const baseline = securityBaselineValidation(audit, expectedBaselineSha);
+    if (!baseline.ok) return baseline;
   }
   const actualRefs = [...audit.refs].sort();
   const requiredRefs = [...expectedRefs].sort();
@@ -490,6 +538,7 @@ export function createPromotionRun({
   stgBaseSha,
   securityAudit,
   expectedSecurityRefs = ["collab/main", "collab/stg", "origin/main"],
+  expectedBaselineSha = null,
   controlPlaneReady = false,
   stgReady = false,
   vercelProject,
@@ -511,6 +560,7 @@ export function createPromotionRun({
     sourceSha,
     stgBaseSha,
     stgReady,
+    expectedBaselineSha,
   });
   if (!auditResult.ok) fail(auditResult.code);
   const candidate = planCandidate({ now, sourceSha, stgBaseSha });
@@ -598,6 +648,7 @@ export function startPromotion(input) {
       sourceSha: input?.sourceSha ?? null,
       stgBaseSha: input?.stgBaseSha ?? null,
       stgReady: input?.stgReady ?? false,
+      expectedBaselineSha: input?.expectedBaselineSha ?? null,
     },
   );
   if (!result.ok) {
