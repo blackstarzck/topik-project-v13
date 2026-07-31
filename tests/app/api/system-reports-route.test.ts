@@ -139,7 +139,11 @@ describe("POST /api/system-reports", () => {
   // or a proxied production host into a 400.
   it.each([
     ["a loopback IP in development", "127.0.0.1:3001", "http://127.0.0.1:3001"],
-    ["a LAN IP in development", "192.168.1.50:3001", "http://192.168.1.50:3001"],
+    [
+      "a LAN IP in development",
+      "192.168.1.50:3001",
+      "http://192.168.1.50:3001",
+    ],
     [
       "a proxied production host",
       "www.dotoretopik.com",

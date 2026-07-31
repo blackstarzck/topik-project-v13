@@ -96,12 +96,10 @@ test.describe("A-01/A-02 auth page switch", () => {
 
     await page.goto("/login?reason=withdrawn", { waitUntil: "networkidle" });
 
-    const withdrawnMessage = page
-      .locator(".ant-message-notice")
-      .filter({
-        hasText:
-          "탈퇴 처리된 계정이에요. 탈퇴 후 30일 이내에는 고객센터를 통해 복구를 요청할 수 있어요.",
-      });
+    const withdrawnMessage = page.locator(".ant-message-notice").filter({
+      hasText:
+        "탈퇴 처리된 계정이에요. 탈퇴 후 30일 이내에는 고객센터를 통해 복구를 요청할 수 있어요.",
+    });
     await expect(withdrawnMessage).toBeVisible();
     await expect(page.getByTestId("login-session-notice")).toHaveCount(0);
     await expect(page.locator(".ant-notification-notice")).toHaveCount(0);

@@ -36,7 +36,8 @@ const labels = {
   googleMethod: "Google login",
   googleDescription: "Use Google to sign in.",
   passwordMethod: "Change password",
-  passwordDescription: "Send an email link to change the password for this account.",
+  passwordDescription:
+    "Send an email link to change the password for this account.",
   passwordAction: "Send link",
   passwordSent: "Password change link sent.",
   passwordRateLimited: "Please wait before sending another password email.",
@@ -266,6 +267,8 @@ describe("AccountLoginMethodsCard", () => {
       ).toBeTruthy();
     });
     expect(document.querySelector(".ant-alert-error")).toBeNull();
-    expect(screen.queryByText(/provider raw password reset failure/)).toBeNull();
+    expect(
+      screen.queryByText(/provider raw password reset failure/),
+    ).toBeNull();
   });
 });

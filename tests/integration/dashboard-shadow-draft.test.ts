@@ -23,11 +23,19 @@ vi.mock("@/lib/learning/server", () => ({
 }));
 
 vi.mock("@/lib/learning/kpi", () => ({
-  getDashboardKpi: async () => ({ todayAttempts: 0, totalAttempts: 0, streakDays: 0 }),
+  getDashboardKpi: async () => ({
+    todayAttempts: 0,
+    totalAttempts: 0,
+    streakDays: 0,
+  }),
 }));
 
 vi.mock("@/lib/practice/next", () => ({
-  getNextProblemBundle: async () => ({ primary: null, primaryTier: 4, alternatives: [] }),
+  getNextProblemBundle: async () => ({
+    primary: null,
+    primaryTier: 4,
+    alternatives: [],
+  }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -39,25 +47,30 @@ vi.mock("@/lib/supabase/server", () => ({
       }
       return Promise.resolve({
         data: fixture.canonicalRows,
-        error: fixture.canonicalError ? { message: fixture.canonicalError } : null,
+        error: fixture.canonicalError
+          ? { message: fixture.canonicalError }
+          : null,
       });
     },
   }),
 }));
 
 function makeQuery(table: string) {
-  const rows = table === "writing_drafts"
-    ? [{
-        problem_id: "problem-51",
-        question_no: 51,
-        answer_text: "draft answer",
-        answer_json: null,
-        char_count: 12,
-        autosave_status: "clean",
-        last_saved_at: "2026-07-01T10:00:00.000Z",
-        updated_at: "2026-07-01T10:00:00.000Z",
-      }]
-    : [];
+  const rows =
+    table === "writing_drafts"
+      ? [
+          {
+            problem_id: "problem-51",
+            question_no: 51,
+            answer_text: "draft answer",
+            answer_json: null,
+            char_count: 12,
+            autosave_status: "clean",
+            last_saved_at: "2026-07-01T10:00:00.000Z",
+            updated_at: "2026-07-01T10:00:00.000Z",
+          },
+        ]
+      : [];
   const chain = {
     select: () => chain,
     eq: () => chain,
@@ -76,9 +89,8 @@ beforeEach(() => {
 describe("DashboardPage canonical draft card", () => {
   it("hydrates a saved draft card from canonical current metadata", async () => {
     fixture.canonicalRows = [canonicalRow("Canonical dashboard draft")];
-    const { default: DashboardPage } = await import(
-      "../../src/app/(workspace)/dashboard/page"
-    );
+    const { default: DashboardPage } =
+      await import("../../src/app/(workspace)/dashboard/page");
 
     const page = (await DashboardPage()) as unknown as {
       props: { children: Array<{ props?: Record<string, unknown> }> };
@@ -93,9 +105,8 @@ describe("DashboardPage canonical draft card", () => {
   });
 
   it("does not render a current-content card for a draft whose question is no longer published", async () => {
-    const { default: DashboardPage } = await import(
-      "../../src/app/(workspace)/dashboard/page"
-    );
+    const { default: DashboardPage } =
+      await import("../../src/app/(workspace)/dashboard/page");
 
     const page = (await DashboardPage()) as unknown as {
       props: { children: Array<{ props?: Record<string, unknown> }> };
@@ -107,9 +118,8 @@ describe("DashboardPage canonical draft card", () => {
 
   it("fails the current dashboard request when canonical content cannot be read", async () => {
     fixture.canonicalError = "catalog unavailable";
-    const { default: DashboardPage } = await import(
-      "../../src/app/(workspace)/dashboard/page"
-    );
+    const { default: DashboardPage } =
+      await import("../../src/app/(workspace)/dashboard/page");
 
     await expect(DashboardPage()).rejects.toThrow(
       "getCanonicalWritingProblems: catalog unavailable",

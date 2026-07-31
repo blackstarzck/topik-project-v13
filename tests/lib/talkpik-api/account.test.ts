@@ -109,14 +109,15 @@ describe("TalkPik account API adapter", () => {
 
   it("aborts the external deletion request after the configured timeout", async () => {
     vi.useFakeTimers();
-    const fetchImpl = vi.fn((_url: string | URL | Request, init?: RequestInit) =>
-      new Promise<Response>((_resolve, reject) => {
-        const signal = init?.signal;
-        expect(signal).toBeInstanceOf(AbortSignal);
-        signal?.addEventListener("abort", () => {
-          reject(new DOMException("aborted", "AbortError"));
-        });
-      }),
+    const fetchImpl = vi.fn(
+      (_url: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          const signal = init?.signal;
+          expect(signal).toBeInstanceOf(AbortSignal);
+          signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        }),
     );
 
     const deleteRequest = deleteTalkpikAccountProfile({

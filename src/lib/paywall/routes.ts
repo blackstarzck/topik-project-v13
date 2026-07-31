@@ -12,9 +12,9 @@ export function resolvePaywallReturnTo(
   });
 }
 
-export function paywallHref(
-  { returnTo }: { returnTo?: string | null } = {},
-): string {
+export function paywallHref({
+  returnTo,
+}: { returnTo?: string | null } = {}): string {
   if (!returnTo) return APP_ROUTES.paywall;
 
   const resolvedReturnTo = resolvePaywallReturnTo(returnTo);
