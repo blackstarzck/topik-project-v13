@@ -12,6 +12,9 @@ coverage/
 .tmp/
 artifacts/
 
+# Sibling task worktrees — gitignored checkouts of this same repo, formatted on their own branch.
+.worktrees/
+
 *.html
 *.md
 *.sql
