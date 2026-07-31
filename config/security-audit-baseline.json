@@ -3,7 +3,11 @@
   "recordType": "SecurityAuditBaselineV1",
   "baselineSha": "e91e4aa3acfb8610d0ec413c3dfc206408d1f4ad",
   "approvedAt": "2026-07-30T01:00:00.000Z",
-  "refs": ["collab/main", "collab/stg", "origin/main"],
+  "refs": [
+    "collab/main",
+    "collab/stg",
+    "origin/main"
+  ],
   "exceptions": [
     {
       "path": ".env.example",
