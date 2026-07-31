@@ -25,13 +25,13 @@ import {
   writeApprovalPolicy,
   writePromotionRun,
 } from "./lib/ai-release-promotion.mjs";
-import { auditSecurityArtifactChanges } from "./lib/security-artifact-audit.mjs";
-// 기준선 검증·로딩은 CI 감사 스텝과 공유하는 lib 이 단일 정의다.
+// 기준선 검증·로딩은 CI 감사 스텝과 공유하도록 감사 lib 이 단일 정의다.
 import {
+  auditSecurityArtifactChanges,
   loadSecurityAuditBaseline,
   SECURITY_BASELINE_CONFIG_PATH,
   validateSecurityBaselineConfig,
-} from "./lib/security-audit-baseline.mjs";
+} from "./lib/security-artifact-audit.mjs";
 
 export { loadSecurityAuditBaseline, validateSecurityBaselineConfig };
 

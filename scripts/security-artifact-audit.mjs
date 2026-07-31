@@ -3,13 +3,11 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
+  approvedPathAllowlistFromBaseline,
   auditSecurityArtifactChanges,
   auditSecurityArtifacts,
-} from "./lib/security-artifact-audit.mjs";
-import {
-  approvedPathAllowlistFromBaseline,
   loadSecurityAuditBaseline,
-} from "./lib/security-audit-baseline.mjs";
+} from "./lib/security-artifact-audit.mjs";
 
 const SAFE_ERROR_CODES = new Set([
   "BASELINE_RELATION_INVALID",
