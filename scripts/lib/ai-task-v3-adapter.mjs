@@ -142,11 +142,21 @@ function repositoryIdentity(remoteUrl) {
   }
 }
 
+export const ADAPTER_PROFILE_IDENTITIES = Object.freeze(Object.keys(ADAPTER_PROFILES));
+
+export function adapterIdentity(recordIdentity) {
+  if (typeof recordIdentity !== "string" || recordIdentity.length > 4096) return null;
+  const parts = recordIdentity.trim().toLowerCase().split("/").filter(Boolean);
+  if (parts.length !== 3 || parts[0] !== "github.com") return null;
+  return `${parts[1]}/${parts[2]}`;
+}
+
 function exactProfile(record) {
   const identityValue = record?.repoProfile?.repositoryIdentity;
   const authLogin = record?.repoProfile?.authLogin;
   if (typeof identityValue !== "string" || typeof authLogin !== "string") return null;
-  const identity = identityValue.toLowerCase();
+  const identity = adapterIdentity(identityValue);
+  if (identity === null) return null;
   const profile = ADAPTER_PROFILES[identity];
   if (!profile ||
       authLogin.toLowerCase() !== profile.auth.authLogin.toLowerCase()) {
@@ -161,10 +171,11 @@ function resolveRemote({ repoPath, record, profile, gitRunner }) {
     ...profile.remoteCandidates,
   ].filter((candidate, index, values) =>
     typeof candidate === "string" && values.indexOf(candidate) === index);
+  const expected = adapterIdentity(record.repoProfile.repositoryIdentity);
+  if (expected === null) return null;
   for (const candidate of candidates) {
     const result = runGit(gitRunner, repoPath, ["remote", "get-url", candidate]);
-    if (result.status === 0 &&
-        repositoryIdentity(result.stdout) === record.repoProfile.repositoryIdentity.toLowerCase()) {
+    if (result.status === 0 && repositoryIdentity(result.stdout) === expected) {
       return candidate;
     }
   }
@@ -283,7 +294,7 @@ function readPromotionEvidenceDefault({ commonDir, record, mainSha }) {
       exactTask &&
       released &&
       promotion.target.repositoryIdentity.toLowerCase() ===
-        record.repoProfile.repositoryIdentity.toLowerCase() &&
+        adapterIdentity(record.repoProfile.repositoryIdentity) &&
       promotion.target.mainSha === mainSha &&
       promotion.vercel.commitSha === mainSha &&
       promotion.vercel.smokeStatus === "PASSED" &&

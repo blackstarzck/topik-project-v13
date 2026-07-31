@@ -24,6 +24,7 @@
 | [`writing-submission-gate-runbook.md`](./writing-submission-gate-runbook.md) | 활성 | v13 클라이언트 운영 | 작문 제출 게이트 상태 확인, 드릴 재인증·활성화, 비상 차단 | outbox 계약·제출 경로 변경 때 |
 | [`topik-ai-pdf-request-identity-cutover-handoff.md`](./topik-ai-pdf-request-identity-cutover-handoff.md) | 실행 대기 | topik-ai DB·배포 운영 | 기존 PDF queued/reserved 안전 종료, 요청 식별자 migration과 v13 앱의 maintenance cutover | PDF 요청 식별자 migration 원격 적용·배포·handback 때 |
 | [`system-reporting-handoff.md`](./system-reporting-handoff.md) | 실행 대기 | topik-ai DB·운영 | 시스템 리포팅 migration의 dev 검증, production 적용, 권한 검증과 v13 handback | 리포팅 DB 적용·검증·배포 때 |
+| [`topik-ai-migration-evidence-handoff.md`](./topik-ai-migration-evidence-handoff.md) | 실행 대기 | topik-ai DB·운영 | 승격 DB gate가 요구하는 마이그레이션 증거 파일 계약, 자동 적용 비활성, forward-fix 복구 | 승격 DB gate 계약·증거 형식·수동 적용 절차 변경 때 |
 
 ## 적용 원칙
 

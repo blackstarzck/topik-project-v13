@@ -25,7 +25,7 @@ const SECRET_VALUE_PATTERNS = [
   /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/u,
   /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/u,
 ];
-const STATES = new Set([
+export const PROMOTION_STATES = Object.freeze([
   "BOOTSTRAP_REQUIRED",
   "PLANNED",
   "CANDIDATE_VERIFIED",
@@ -44,6 +44,7 @@ const STATES = new Set([
   "PRESERVED",
   "SECURITY_INCIDENT_BLOCKED",
 ]);
+const STATES = new Set(PROMOTION_STATES);
 
 export const PROMOTION_PROFILES = Object.freeze({
   black: Object.freeze({
@@ -109,7 +110,12 @@ const TARGET_KEYS = new Set([
   "stgSha",
   "mainSha",
 ]);
-const SECURITY_KEYS = new Set(["auditFingerprint", "refs", "findingCount"]);
+const SECURITY_KEYS = new Set([
+  "auditFingerprint",
+  "baselineCommitHash",
+  "refs",
+  "findingCount",
+]);
 const MIGRATION_KEYS = new Set([
   "manifestDigest",
   "evidenceDigest",
@@ -178,8 +184,14 @@ const SECURITY_AUDIT_KEYS = new Set([
   "snapshots",
   "fingerprint",
 ]);
+const SECURITY_DIFF_AUDIT_KEYS = new Set([...SECURITY_AUDIT_KEYS, "baseline"]);
+const SECURITY_AUDIT_RECORD_TYPES = new Set([
+  "SecurityArtifactAuditV1",
+  "SecurityArtifactDiffAuditV1",
+]);
 const SECURITY_SUMMARY_KEYS = new Set(["refCount", "scannedPathCount", "findingCount"]);
 const SECURITY_SNAPSHOT_KEYS = new Set(["ref", "commitHash"]);
+const SECURITY_BASELINE_KEYS = new Set(["ref", "commitHash"]);
 
 export class PromotionError extends Error {
   constructor(code) {
@@ -214,6 +226,8 @@ function digest(value) {
 function fingerprint(value) {
   return digest(JSON.stringify(stableValue(value)));
 }
+
+export { fingerprint as stableFingerprint };
 
 function recordFingerprint(record) {
   const payload = structuredClone(record);
@@ -255,6 +269,12 @@ function collectSecrets(value, prefix, errors) {
       collectSecrets(entry, prefix ? `${prefix}.${key}` : key, errors);
     });
   }
+}
+
+export function scanForSecrets(value) {
+  const errors = [];
+  collectSecrets(value, "", errors);
+  return uniqueErrors(errors);
 }
 
 function validShaOrNull(value) {
@@ -314,16 +334,64 @@ export function verifyRepositoryProfile({ profile, remoteUrl, authLogin }) {
   return { ok: true, profile: profile.name };
 }
 
+function securityBaselineValidation(audit, expectedBaselineSha, expectedBaselineRef) {
+  const errors = [];
+  checkClosed(audit.baseline, SECURITY_BASELINE_KEYS, "baseline", errors);
+  if (
+    errors.length > 0 ||
+    !isPlainObject(audit.baseline) ||
+    typeof audit.baseline.ref !== "string" ||
+    audit.baseline.ref.length === 0 ||
+    !DIGEST_PATTERN.test(audit.baseline.commitHash ?? "") ||
+    audit.refs.includes(audit.baseline.ref)
+  ) {
+    return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
+  }
+  if (
+    typeof expectedBaselineSha !== "string" ||
+    !SHA_PATTERN.test(expectedBaselineSha)
+  ) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_REQUIRED" };
+  }
+  if (audit.baseline.commitHash !== digest(expectedBaselineSha.toLowerCase())) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" };
+  }
+  const boundRef =
+    typeof expectedBaselineRef === "string" && expectedBaselineRef.length > 0
+      ? expectedBaselineRef
+      : expectedBaselineSha.toLowerCase();
+  if (audit.baseline.ref !== boundRef) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_MISMATCH" };
+  }
+  return { ok: true, code: "SECURITY_AUDIT_BASELINE_BOUND" };
+}
+
 function securityAuditValidation(
   audit,
   expectedRefs,
-  { sourceSha = null, stgBaseSha = null, stgReady = false } = {},
+  {
+    sourceSha = null,
+    stgBaseSha = null,
+    stgReady = false,
+    expectedBaselineSha = null,
+    expectedBaselineRef = null,
+    requireDiffAudit = false,
+  } = {},
 ) {
   if (!isPlainObject(audit)) return { ok: false, code: "SECURITY_AUDIT_REQUIRED" };
+  const diffAudit = audit.recordType === "SecurityArtifactDiffAuditV1";
   const errors = [];
-  checkClosed(audit, SECURITY_AUDIT_KEYS, "", errors);
-  if (audit.schemaVersion !== 1 || audit.recordType !== "SecurityArtifactAuditV1") {
+  checkClosed(
+    audit,
+    diffAudit ? SECURITY_DIFF_AUDIT_KEYS : SECURITY_AUDIT_KEYS,
+    "",
+    errors,
+  );
+  if (audit.schemaVersion !== 1 || !SECURITY_AUDIT_RECORD_TYPES.has(audit.recordType)) {
     return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
+  }
+  if (requireDiffAudit && !diffAudit) {
+    return { ok: false, code: "SECURITY_AUDIT_BASELINE_REQUIRED" };
   }
   if (errors.length > 0) return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
   const payload = structuredClone(audit);
@@ -358,6 +426,14 @@ function securityAuditValidation(
       new Set(audit.snapshots.map((snapshot) => snapshot.ref)).size !== audit.refs.length ||
       audit.summary.findingCount !== audit.findings.length) {
     return { ok: false, code: "SECURITY_AUDIT_SCHEMA_INVALID" };
+  }
+  if (diffAudit) {
+    const baseline = securityBaselineValidation(
+      audit,
+      expectedBaselineSha,
+      expectedBaselineRef,
+    );
+    if (!baseline.ok) return baseline;
   }
   const actualRefs = [...audit.refs].sort();
   const requiredRefs = [...expectedRefs].sort();
@@ -490,6 +566,7 @@ export function createPromotionRun({
   stgBaseSha,
   securityAudit,
   expectedSecurityRefs = ["collab/main", "collab/stg", "origin/main"],
+  expectedBaselineSha = null,
   controlPlaneReady = false,
   stgReady = false,
   vercelProject,
@@ -511,6 +588,8 @@ export function createPromotionRun({
     sourceSha,
     stgBaseSha,
     stgReady,
+    expectedBaselineSha,
+    requireDiffAudit: true,
   });
   if (!auditResult.ok) fail(auditResult.code);
   const candidate = planCandidate({ now, sourceSha, stgBaseSha });
@@ -549,6 +628,7 @@ export function createPromotionRun({
     },
     security: {
       auditFingerprint: securityAudit.fingerprint,
+      baselineCommitHash: securityAudit.baseline.commitHash,
       refs: [...expectedSecurityRefs].sort(),
       findingCount: 0,
     },
@@ -598,6 +678,8 @@ export function startPromotion(input) {
       sourceSha: input?.sourceSha ?? null,
       stgBaseSha: input?.stgBaseSha ?? null,
       stgReady: input?.stgReady ?? false,
+      expectedBaselineSha: input?.expectedBaselineSha ?? null,
+      requireDiffAudit: true,
     },
   );
   if (!result.ok) {
@@ -680,6 +762,9 @@ export function validatePromotionRunV1(record) {
   }
   if (!BRANCH_PATTERN.test(record.target?.candidateBranch ?? "")) {
     errors.push(issue("INVALID_CANDIDATE_BRANCH", "target.candidateBranch"));
+  }
+  if (!DIGEST_PATTERN.test(record.security?.baselineCommitHash ?? "")) {
+    errors.push(issue("INVALID_DIGEST", "security.baselineCommitHash"));
   }
   if (record.migration?.autoApplyEnabled !== false) {
     errors.push(issue("DB_AUTO_APPLY_FORBIDDEN", "migration.autoApplyEnabled"));
@@ -1314,6 +1399,10 @@ function runPath(gitCommonDir, runId) {
   return path.join(root, "ai-pipeline", "promotions", "v1", "runs", `${runId}.json`);
 }
 
+export function promotionRunLockPath({ gitCommonDir, runId }) {
+  return `${runPath(gitCommonDir, runId)}.lock`;
+}
+
 function atomicWrite(filePath, value) {
   mkdirSync(path.dirname(filePath), { recursive: true });
   const temporary = `${filePath}.${process.pid}.${randomUUID()}.tmp`;
@@ -1397,6 +1486,9 @@ export function writeApprovalPolicy({ gitCommonDir, policy, expectedFingerprint 
   });
   return target;
 }
+
+export { assertRegistryRoot as assertPromotionRegistryRoot };
+export { atomicWrite as atomicWritePromotionFile };
 
 export function readApprovalPolicy({ gitCommonDir }) {
   const target = policyPath(gitCommonDir);

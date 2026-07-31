@@ -1452,7 +1452,7 @@ describe("CI trusted UI contract boundary", () => {
     );
     expect(workflow).not.toContain("+refs/heads/main:refs/remotes/collab/main");
     expect(pipelineDocs).toContain(
-      "Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`의 도달 가능한 전체 이력을 감사한다.",
+      "Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`을 승인된 기준점 이후 차분으로 감사한다.",
     );
   });
 
