@@ -510,6 +510,7 @@ export async function autoCleanupTaskV3Adapter({
   v2AutoCleanup = autoCleanupTask,
   reconcileIsolated = reconcileDelegatedCleanupV3,
   localAppData = process.env.LOCALAPPDATA,
+  env = process.env,
   signal = undefined,
   timeoutMs = undefined,
 } = {}) {
@@ -546,6 +547,7 @@ export async function autoCleanupTaskV3Adapter({
   const authenticated = await withAuth({
     profile: profile.auth,
     localAppData,
+    env,
     runCommand,
     ...(signal ? { signal } : {}),
     ...(authTimeoutMs === undefined ? {} : { timeoutMs: authTimeoutMs }),
@@ -599,6 +601,7 @@ export async function runRepositorySweepV3({
   repoPath,
   now = new Date().toISOString(),
   localAppData = process.env.LOCALAPPDATA,
+  env = process.env,
   discoverTasks = discoverTasksDefault,
   runCommand = productionCommandRunner,
   gitRunner = productionGitRunner,
@@ -639,6 +642,7 @@ export async function runRepositorySweepV3({
         now,
         trigger: "SWEEP",
         localAppData,
+        env,
         signal,
         timeoutMs,
         runCommand,
