@@ -58,6 +58,7 @@
     "scripts/ai-validation-evidence.mjs",
     "scripts/check-artifact-hygiene.mjs",
     "scripts/check-github-owner-auth.mjs",
+    "scripts/check-migration-freeze.mjs",
     "scripts/lib/ai-release-executor.mjs",
     "scripts/lib/ai-release-git.mjs",
     "scripts/lib/ai-release-promotion.mjs",
