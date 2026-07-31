@@ -238,15 +238,52 @@ export async function parseSystemReportRequestBody(
   }
 }
 
+/**
+ * Lowercases the `Host` header and drops its port only when that port is the
+ * default for `protocol`, mirroring how `URL` normalizes an origin's host. A
+ * non-default port is left in place so it still has to match.
+ */
+function normalizeAddressedHost(host: string, protocol: string): string {
+  const normalized = host.trim().toLowerCase();
+  const defaultPort =
+    protocol === "https:" ? ":443" : protocol === "http:" ? ":80" : null;
+
+  return defaultPort && normalized.endsWith(defaultPort)
+    ? normalized.slice(0, -defaultPort.length)
+    : normalized;
+}
+
 export function isSameOriginSystemReportRequest(request: Request): boolean {
   if (request.headers.get("sec-fetch-site") !== "same-origin") return false;
 
   const origin = request.headers.get("origin");
   if (!origin) return false;
 
+  // `Host` is the authority the browser actually addressed, and is the only
+  // trustworthy comparison target here. `request.url` must NOT be used: the
+  // Next server pins its hostname to the server's own origin and ignores
+  // `Host`, so comparing against it rejected genuinely same-origin submissions
+  // from every other hostname — 127.0.0.1 or a LAN IP in development, and any
+  // proxied host in production. `x-forwarded-*` stays ignored so a forwarded
+  // header still cannot widen the accepted origin.
+  const host = request.headers.get("host");
+  if (!host) return false;
+
   try {
-    const requestUrl = new URL(request.url);
-    return new URL(origin).origin === requestUrl.origin;
+    const originUrl = new URL(origin);
+
+    // Scheme is intentionally not compared: `Host` carries none. A scheme
+    // change is a different origin, so the `same-origin` Sec-Fetch-Site
+    // requirement above already rejects it.
+    //
+    // `originUrl.host` has already dropped the scheme's default port, so the
+    // raw header must be normalized the same way; otherwise a proxy that
+    // forwards the redundant `:443` / `:80` would be rejected. Parsing the
+    // header through `new URL()` instead would normalize too much — it
+    // silently discards userinfo, path, query and fragment, so
+    // `evil.example@a.example` and `a.example/evil` would both match
+    // `a.example`.
+    return originUrl.host === normalizeAddressedHost(host, originUrl.protocol);
   } catch {
     return false;
   }
