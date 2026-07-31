@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
+import { mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { inspect } from "node:util";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 const SENTINEL = "SENTINEL-CREDENTIAL-9f3a";
 const TEAM_ID = "team_fixture";
@@ -1139,5 +1140,84 @@ describe("read-only production smoke runner", () => {
     expect(signals).toHaveLength(1);
     expect(signals[0]).toBeInstanceOf(AbortSignal);
     expect(signals[0].aborted).toBe(true);
+  });
+});
+
+describe("credential location follows the shared pipeline folder", () => {
+  const roots = [];
+
+  afterEach(() => {
+    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  });
+
+  function sharedRoot() {
+    const root = realpathSync.native(mkdtempSync(path.join(tmpdir(), "talkpik-shared-cred-")));
+    roots.push(root);
+    return root;
+  }
+
+  function filesystemFor(expectedFile, contents) {
+    const directories = new Set();
+    let directory = path.dirname(expectedFile);
+    for (;;) {
+      directories.add(directory);
+      const parent = path.dirname(directory);
+      if (parent === directory) break;
+      directory = parent;
+    }
+    const classify = (target) => {
+      if (target === expectedFile) return contents === null ? null : "file";
+      return directories.has(target) ? "directory" : null;
+    };
+    return {
+      lstatSync(target) {
+        const kind = classify(target);
+        if (kind === null) throw missingFileError();
+        return fileStatus(kind);
+      },
+      statSync(target) {
+        const kind = classify(target);
+        if (kind === null) throw missingFileError();
+        return fileStatus(kind);
+      },
+      readFileSync(target) {
+        if (target !== expectedFile || contents === null) throw missingFileError();
+        return contents;
+      },
+    };
+  }
+
+  it("reads the credential from the configured shared folder, not the personal folder", async () => {
+    const { createVercelCredentialProvider } = await vercel();
+    const shared = sharedRoot();
+    const expected = path.join(shared, "credentials", "vercel.env");
+
+    const provider = createVercelCredentialProvider({
+      localAppData: "C:\Users\someone\AppData\Local",
+      env: { TALKPIK_PIPELINE_SHARED_ROOT: shared },
+      ...filesystemFor(expected, `VERCEL_TOKEN=${SENTINEL}\n`),
+    });
+
+    expect(provider.source()).toBe("file");
+    expect(inspect(provider)).not.toContain(SENTINEL);
+  });
+
+  it("does not fall back to the personal folder when a shared folder is configured", async () => {
+    const { createVercelCredentialProvider } = await vercel();
+    const shared = sharedRoot();
+    const personal = path.join(
+      "C:\Users\someone\AppData\Local",
+      "TalkpikPipeline",
+      "credentials",
+      "vercel.env",
+    );
+
+    expect(() =>
+      createVercelCredentialProvider({
+        localAppData: "C:\Users\someone\AppData\Local",
+        env: { TALKPIK_PIPELINE_SHARED_ROOT: shared },
+        ...filesystemFor(personal, `VERCEL_TOKEN=${SENTINEL}\n`),
+      }),
+    ).toThrowError("VERCEL_TOKEN_MISSING");
   });
 });

@@ -235,7 +235,7 @@ pnpm release:exec -- probe-vercel --repo <기준-checkout> --run-id <run-id> [--
 
 ##### DB gate 증거 파일
 
-원격 데이터베이스는 v13 작업면에서 조회하지 않는다. DB gate에 필요한 사실은 topik-ai 절차가 JSON 파일로 만들어 `%LOCALAPPDATA%\TalkpikPipeline\db-evidence\` 아래에 두고, executor는 `--db-evidence`로 받은 그 파일만 읽는다. 허용 폴더 밖 경로, 폴더 탈출, symbolic link·reparse point, 일반 파일이 아닌 대상, 256 KiB 초과, JSON 파싱 실패는 각각 `DB_EVIDENCE_PATH_ESCAPE`, `DB_EVIDENCE_SYMLINK`, `DB_EVIDENCE_UNREADABLE`, `DB_EVIDENCE_TOO_LARGE`, `DB_EVIDENCE_INVALID_JSON`으로 거부한다. 파일을 읽는 단계는 의미를 판단하지 않고, 판단은 기존 DB gate 계약이 한다. 요구 항목과 판정 결과는 [`topik-ai-migration-evidence-handoff.md`](./topik-ai-migration-evidence-handoff.md)가 owner다. 자동 적용이 켜진 것으로 표시된 증거는 통과시키지 않으며 복구는 forward-fix만 허용한다.
+원격 데이터베이스는 v13 작업면에서 조회하지 않는다. DB gate에 필요한 사실은 topik-ai 절차가 JSON 파일로 만들어 공유 pipeline 폴더의 `db-evidence\` 아래에 두고, executor는 `--db-evidence`로 받은 그 파일만 읽는다. 허용 폴더 밖 경로, 폴더 탈출, symbolic link·reparse point, 일반 파일이 아닌 대상, 256 KiB 초과, JSON 파싱 실패는 각각 `DB_EVIDENCE_PATH_ESCAPE`, `DB_EVIDENCE_SYMLINK`, `DB_EVIDENCE_UNREADABLE`, `DB_EVIDENCE_TOO_LARGE`, `DB_EVIDENCE_INVALID_JSON`으로 거부한다. 파일을 읽는 단계는 의미를 판단하지 않고, 판단은 기존 DB gate 계약이 한다. 요구 항목과 판정 결과는 [`topik-ai-migration-evidence-handoff.md`](./topik-ai-migration-evidence-handoff.md)가 owner다. 자동 적용이 켜진 것으로 표시된 증거는 통과시키지 않으며 복구는 forward-fix만 허용한다.
 
 ##### 제출 증거 사본
 
@@ -322,7 +322,7 @@ executor가 Vercel을 조회하는 경로는 `scripts/lib/ai-release-vercel.mjs`
 
 | 항목 | 값 |
 | --- | --- |
-| 파일 경로 | `%LOCALAPPDATA%\TalkpikPipeline\credentials\vercel.env` |
+| 파일 경로 | 공유 pipeline 폴더의 `credentials\vercel.env` |
 | 허용 key | `VERCEL_TOKEN`, `VERCEL_TEAM_ID` 두 개뿐 |
 | 파일이 없을 때 | 환경 변수 `VERCEL_TOKEN`(필요하면 `VERCEL_TEAM_ID`)을 대신 쓴다 |
 | 둘 다 없을 때 | `VERCEL_TOKEN_MISSING`으로 중단한다 |
@@ -385,6 +385,12 @@ pnpm task:sweep -- --repo <기준-checkout>
 두 명령의 목적은 다르다. `finish`는 일상적인 작업 마감 안내를 빠르게 만들고, `finalize`는 실제 삭제 승인값을 만들기 위한 깊은 정리 사전 검사다. `finalize`와 `cleanup`은 주요 단계별 실제 소요 시간을 `timings`로 함께 출력한다. 이 시간은 진단 정보일 뿐 승인 fingerprint나 registry schema에는 포함하지 않는다.
 
 수동 복구 경로에서는 `ready: true`인 legacy 후보 목록과 fingerprint를 사용자에게 보고하고, 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. 정상 병합된 managed v3 task는 별도의 사용자 승인값 없이 자동 정리한다. `task:autocleanup`은 특정 task 하나를, `task:sweep`은 최대 10개를 순차 검사해 병합·소유권·runtime·경로·HEAD/PR SHA가 모두 안전할 때만 비강제 cleanup journal을 실행한다.
+
+pipeline이 도구 사이에서 공유해야 하는 상태는 **공유 pipeline 폴더** 하나에 모은다. 계정 전환 잠금(`locks\`), 배포 접근 자격(`credentials\`), DB gate 증거(`db-evidence\`)가 여기에 들어간다. 위치는 환경 변수 `TALKPIK_PIPELINE_SHARED_ROOT`에 절대 경로로 지정하고, Codex와 Claude를 포함한 모든 도구가 같은 값을 보도록 사용자 환경 변수로 설정한다.
+
+지정하지 않으면 개인 폴더(`%LOCALAPPDATA%\TalkpikPipeline`)로 되돌아간다. 단일 도구만 쓰는 환경에서는 이 기본값으로 충분하지만, 앱 격리(container)로 개인 폴더가 도구마다 다른 실제 위치로 전환되는 환경에서는 잠금이 서로 보이지 않아 상호 배제가 무력해진다. 그런 경우 pipeline은 조용히 갈라지지 않고 `reparse point` 검사에서 차단한다. 지정한 경로가 절대 경로가 아니거나 존재하지 않거나 다른 위치로 전환되면 추측하지 않고 즉시 실패한다.
+
+계정 전환은 컴퓨터 전체에 영향을 주므로 공유 폴더를 저장소 안에 두지 않는다. 여러 저장소를 동시에 작업할 때도 하나의 잠금이 되도록 저장소 밖 고정 위치를 쓴다.
 
 `TaskRecordV3`는 저장소 identity를 `<host>/<owner>/<repository>` 형태로 기록하고, 자동 정리의 승인 목록은 `<owner>/<repository>` 형태를 key로 쓴다. 두 표기를 잇는 정규화는 `github.com` host만 인정하며, 세 segment가 아니거나 host가 다르면 승인하지 않고 `REPOSITORY_PROFILE_UNAPPROVED`로 보존한다. 따라서 `local` host로 기록된 저장소와 다른 host의 동명 저장소는 자동 정리 대상이 되지 않는다. remote 해석과 승격 기록 대조도 같은 정규화 결과로 비교하며, 정규화에 실패하면 비교를 시도하지 않고 즉시 보존한다. 테스트 fixture는 실제 기록과 같은 `<host>/<owner>/<repository>` 형태를 써야 하고, 그 정합성은 `parseRepositoryIdentity`의 출력이 승인 목록으로 정규화되는지 확인하는 계약 테스트로 고정한다.
 

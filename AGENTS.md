@@ -67,6 +67,7 @@
 - 공유 기준 checkout에서 다른 task를 위해 `switch`, `checkout`, `reset`, `rebase`, `merge`하지 않는다.
 - 도구와 무관하게 branch는 `feat|fix|refactor|test|docs|chore|ci/<kebab-slug>` 형식만 쓴다. Codex와 Claude는 도구별 branch·worktree를 새로 만들지 않고 같은 task branch·workspace·`TaskRecordV3`를 인수인계한다. 기존 v2 record는 변경하지 않고 v3로 복사하며, 미등록 legacy worktree는 발견 목록에만 남기고 자동 소유권이나 삭제 권한을 부여하지 않는다.
 - worktree는 포트, dev server, 로컬 DB, `.env.local`, test data를 격리하지 않는다. 병렬 runtime은 고유 loopback port와 분리된 test data를 사용한다.
+- pipeline의 계정 전환 잠금과 배포 접근 자격은 도구가 달라도 **같은 실제 위치**를 가리켜야 한다. 계정 전환은 컴퓨터 전체에 영향을 주므로 도구마다 잠금 위치가 갈리면 상호 배제가 무력화된다. 공유 위치는 환경 변수 `TALKPIK_PIPELINE_SHARED_ROOT`에 절대 경로로 지정하고, Codex와 Claude를 포함한 모든 도구가 같은 값을 보도록 사용자 환경 변수로 설정한다. 지정하지 않으면 개인 폴더(`%LOCALAPPDATA%\TalkpikPipeline`)로 되돌아가는데, 앱 격리(container)로 그 경로가 도구마다 다른 실제 위치로 전환되는 환경에서는 pipeline이 조용히 갈라지지 않고 차단된다. 지정한 경로가 전환되거나 존재하지 않으면 추측하지 않고 즉시 실패한다.
 - 다른 사용자의 변경을 되돌리지 않는다. dirty·untracked·ignored-sensitive 파일이나 미게시 commit이 있으면 소유자를 확인하기 전 삭제하지 않는다.
 - 완료된 branch/worktree도 publish·merge·소유권·runtime 종료를 확인하기 전 삭제하지 않는다. 강제 정리는 하지 않는다.
 - 작업 산출물과 정리는 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다. `task:finalize`는 report-only다. 병합과 소유권이 증명된 managed v3 task는 `task:autocleanup` 또는 `task:sweep`이 승인 입력 없이 비강제 정리한다. `task:cleanup --approval`은 legacy·수동 복구 호환 경로로 유지한다. 강제 삭제는 제공하지 않으며 `stg`와 `main`은 절대 정리 대상이 아니다.

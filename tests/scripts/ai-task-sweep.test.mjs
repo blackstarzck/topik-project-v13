@@ -14,7 +14,9 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   PIPELINE_REPOSITORY_PROFILES,
+  PIPELINE_SHARED_ROOT_ENV,
   acquireTaskSweepLease,
+  resolvePipelineSharedRoot,
   runTaskSweep,
   withRepositoryAuth,
 } from "../../scripts/lib/ai-task-sweep.mjs";
@@ -449,5 +451,83 @@ describe("one-shot task sweep lease and budget", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(existsSync(lockPath)).toBe(false);
     expect(() => JSON.parse(readFileSync(lockPath, "utf8"))).toThrow();
+  });
+});
+
+describe("pipeline shared root is the same real location for every tool", () => {
+  const roots = [];
+
+  afterEach(() => {
+    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  });
+
+  function tempRoot() {
+    const root = mkdtempSync(path.join(tmpdir(), "talkpik-shared-root-"));
+    roots.push(realpathSync.native(root));
+    return roots.at(-1);
+  }
+
+  it("uses the configured shared root instead of the per-tool personal folder", () => {
+    const shared = tempRoot();
+    const resolved = resolvePipelineSharedRoot({
+      localAppData: "C:\Users\someone\AppData\Local",
+      env: { [PIPELINE_SHARED_ROOT_ENV]: shared },
+    });
+    expect(resolved).toEqual({ root: shared, source: "configured" });
+  });
+
+  it("falls back to the personal folder when no shared root is configured", () => {
+    const shared = tempRoot();
+    const resolved = resolvePipelineSharedRoot({ localAppData: shared, env: {} });
+    expect(resolved).toEqual({
+      root: path.join(shared, "TalkpikPipeline"),
+      source: "local-app-data",
+    });
+  });
+
+  it("refuses a configured shared root that is redirected somewhere else", () => {
+    const real = tempRoot();
+    const parent = tempRoot();
+    const link = path.join(parent, "redirected");
+    try {
+      symlinkSync(real, link, "junction");
+    } catch {
+      return;
+    }
+    expect(() =>
+      resolvePipelineSharedRoot({ localAppData: real, env: { [PIPELINE_SHARED_ROOT_ENV]: link } }),
+    ).toThrowError(PIPELINE_SHARED_ROOT_ENV);
+  });
+
+  it("refuses a relative or absent configured shared root instead of guessing", () => {
+    const shared = tempRoot();
+    expect(() =>
+      resolvePipelineSharedRoot({
+        localAppData: shared,
+        env: { [PIPELINE_SHARED_ROOT_ENV]: "relative/path" },
+      }),
+    ).toThrowError("absolute");
+    expect(() =>
+      resolvePipelineSharedRoot({
+        localAppData: shared,
+        env: { [PIPELINE_SHARED_ROOT_ENV]: path.join(shared, "missing-folder") },
+      }),
+    ).toThrowError("does not exist");
+  });
+
+  it("puts the authentication lock under the configured shared root", async () => {
+    const shared = tempRoot();
+    let observedLockRoot = null;
+    await withRepositoryAuth({
+      profile: PIPELINE_REPOSITORY_PROFILES.origin,
+      localAppData: "C:\Users\someone\AppData\Local",
+      env: { [PIPELINE_SHARED_ROOT_ENV]: shared },
+      runCommand: () => ({ stdout: "blackstarzck", stderr: "", exitCode: 0 }),
+      operation: () => "done",
+      isPidAlive: () => false,
+      beforeStaleQuarantine: () => {},
+    }).catch(() => {});
+    observedLockRoot = existsSync(path.join(shared, "locks"));
+    expect(observedLockRoot).toBe(true);
   });
 });
