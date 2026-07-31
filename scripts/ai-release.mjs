@@ -27,6 +27,7 @@ import {
 } from "./lib/ai-release-promotion.mjs";
 // 기준선 검증·로딩은 CI 감사 스텝과 공유하도록 감사 lib 이 단일 정의다.
 import {
+  approvedPathAllowlistFromBaseline,
   auditSecurityArtifactChanges,
   loadSecurityAuditBaseline,
   SECURITY_BASELINE_CONFIG_PATH,
@@ -232,10 +233,7 @@ export function collectReleaseStartEvidence({
     throw cliError("SECURITY_BASELINE_REFS_MISMATCH");
   }
   const securityAudit = audit({
-    approvedPathAllowlist: baseline.exceptions.map((exception) => ({
-      path: exception.path,
-      rule: exception.rule,
-    })),
+    approvedPathAllowlist: approvedPathAllowlistFromBaseline(baseline),
     baselineRef: baseline.baselineSha,
     repoPath: repository,
     refs: expectedSecurityRefs,

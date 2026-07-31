@@ -8,7 +8,9 @@
 --       → 20260617195000 의 인라인 249개 ISO 배열(수용 집합은 forward 와 동일)
 -- 두 제약이 함수를 참조하므로 반드시 제약을 먼저 재작성하고 함수를 drop 한다.
 -- 원본 nationality 제약은 NOT VALID 없이 추가되었지만 최종 카탈로그 상태가
--- 같은 not valid + validate 로 복원한다(락 시간 단축). forward 이후 저장된
+-- 같은 not valid + validate 로 복원한다. 단 이 down 은 단일 트랜잭션이라
+-- ACCESS EXCLUSIVE 락이 commit 까지 유지되므로 락 시간이 줄지는 않는다 —
+-- 유지보수 창에서 실행한다. forward 이후 저장된
 -- 값은 모두 ISO 집합이므로 두 VALIDATE 는 백필 없이 통과한다.
 --
 -- 기능 경고: 이미 적용된 20260718120000 의 complete_auth_gate(jsonb 오버로드)
