@@ -47,6 +47,9 @@ function postRequest(
     headers: {
       "content-type": "application/json",
       "idempotency-key": idempotencyKey,
+      // A real request always carries `Host`; the same-origin guard compares
+      // the browser `Origin` against it rather than against `request.url`.
+      host: "localhost",
       origin: "http://localhost",
       "sec-fetch-site": "same-origin",
       ...headers,
@@ -130,6 +133,30 @@ describe("POST /api/system-reports", () => {
     });
   });
 
+  // Regression: the server's own notion of its URL is not the browser's
+  // origin. Next pins `request.url` to the dev/server hostname and ignores
+  // `Host`, which previously turned every submission from 127.0.0.1, a LAN IP
+  // or a proxied production host into a 400.
+  it.each([
+    ["a loopback IP in development", "127.0.0.1:3001", "http://127.0.0.1:3001"],
+    ["a LAN IP in development", "192.168.1.50:3001", "http://192.168.1.50:3001"],
+    [
+      "a proxied production host",
+      "www.dotoretopik.com",
+      "https://www.dotoretopik.com",
+    ],
+  ])(
+    "accepts a same-origin submission from %s when request.url names another host",
+    async (_name, host, origin) => {
+      const response = await route.POST(
+        postRequest(JSON.stringify(report), { host, origin }),
+      );
+
+      expect(response.status).toBe(201);
+      expect(helpers.rpc).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("continues anonymously when the optional auth lookup fails", async () => {
     helpers.getUser.mockRejectedValueOnce(new Error("auth unavailable"));
 
@@ -161,6 +188,30 @@ describe("POST /api/system-reports", () => {
       () => {
         const request = postRequest();
         request.headers.delete("origin");
+        return request;
+      },
+    ],
+    [
+      "an origin forging same-origin metadata for another host",
+      () =>
+        postRequest(JSON.stringify(report), {
+          host: "www.dotoretopik.com",
+          origin: "https://evil.example",
+        }),
+    ],
+    [
+      "a sibling subdomain claiming same-origin",
+      () =>
+        postRequest(JSON.stringify(report), {
+          host: "www.dotoretopik.com",
+          origin: "https://evil.dotoretopik.com",
+        }),
+    ],
+    [
+      "missing host authority",
+      () => {
+        const request = postRequest();
+        request.headers.delete("host");
         return request;
       },
     ],
