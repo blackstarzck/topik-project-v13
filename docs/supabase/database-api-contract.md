@@ -62,6 +62,7 @@
 - `context`는 query·hash가 없는 pathname, 브라우저·OS·기기 유형의 대분류, viewport width/height, locale만 받는다. 앱 버전은 신뢰하는 server 환경에서 추가한다.
 - IP·referrer·원본 User-Agent·query·hash와 browser가 보낸 사용자 ID는 요청하거나 저장하지 않는다. 서버가 쿠키 session을 직접 확인해 로그인 사용자의 ID만 선택적으로 연결한다.
 - `Content-Type: application/json`, `Sec-Fetch-Site: same-origin`과 정확한 origin을 요구하며 JSON 본문은 16 KiB로 제한한다.
+- origin 대조 기준은 browser가 실제로 주소지정한 `Host` 헤더다. `request.url`은 server가 스스로를 부르는 이름으로 고정되어 `Host`를 반영하지 않으므로 쓰지 않으며, `x-forwarded-*`는 위조로 허용 origin을 넓힐 수 없도록 무시한다. **따라서 reverse proxy는 client가 접속한 원본 `Host`를 변형 없이 전달해야 한다**(nginx `proxy_set_header Host $host;` 또는 동등 설정). scheme의 기본 port(`:443`/`:80`)만 정규화하므로 그 외 port는 정확히 일치해야 한다.
 - 새 행을 만들면 `201`, 같은 idempotency key의 재요청이면 기존 접수번호·접수 시각과 함께 `200`을 반환한다. 입력 오류는 `400`, 본문 초과는 `413`, 저장소 장애는 내부 정보를 숨긴 일반 오류 `503`이다.
 
 DB 정본은 `20260723170000_system_reports.sql`이다. 이 migration은 `private.system_reports`에 내부 UUID, 사용자·시간을 드러내지 않는 무작위 `SR-` 접수번호, 고유 idempotency key, 선택적 Auth 사용자 ID, 유형·이메일·제목·내용, 허용된 화면 정보, 앱 버전과 생성 시각을 저장한다. 보관 기한과 자동 삭제 작업은 두지 않으며 topik-ai 운영 owner가 필요할 때 승인된 절차로 수동 삭제한다.
