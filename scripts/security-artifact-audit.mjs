@@ -6,11 +6,16 @@ import {
   auditSecurityArtifactChanges,
   auditSecurityArtifacts,
 } from "./lib/security-artifact-audit.mjs";
+import {
+  approvedPathAllowlistFromBaseline,
+  loadSecurityAuditBaseline,
+} from "./lib/security-audit-baseline.mjs";
 
 const SAFE_ERROR_CODES = new Set([
   "BASELINE_RELATION_INVALID",
   "CLI_ARGUMENT_INVALID",
   "EVIDENCE_ALLOWLIST_INVALID",
+  "SECURITY_BASELINE_CONFIG_INVALID",
   "HISTORY_LOOKUP_FAILED",
   "HISTORY_PATH_INVALID",
   "REF_INVALID",
@@ -35,6 +40,7 @@ function cliError(code) {
 
 function parseArguments(argv) {
   const options = {
+    baselineConfigPath: null,
     baselineRef: null,
     mode: null,
     refs: null,
@@ -43,7 +49,8 @@ function parseArguments(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     let field;
-    if (argument === "--baseline-ref") field = "baselineRef";
+    if (argument === "--baseline-config") field = "baselineConfigPath";
+    else if (argument === "--baseline-ref") field = "baselineRef";
     else if (argument === "--mode") field = "mode";
     else if (argument === "--refs") field = "refs";
     else if (argument === "--repo") field = "repoPath";
@@ -68,6 +75,7 @@ function parseArguments(argv) {
       ? undefined
       : options.refs.split(",").map((entry) => entry.trim());
   return {
+    baselineConfigPath: options.baselineConfigPath,
     baselineRef: options.baselineRef,
     mode,
     refs,
@@ -93,6 +101,7 @@ export function runSecurityArtifactAuditCli({
   audit = auditSecurityArtifacts,
   auditChanges = auditSecurityArtifactChanges,
   argv = process.argv.slice(2),
+  loadBaseline = loadSecurityAuditBaseline,
   writeStderr = (value) => process.stderr.write(value),
   writeStdout = (value) => process.stdout.write(value),
 } = {}) {
@@ -100,10 +109,19 @@ export function runSecurityArtifactAuditCli({
     const options = parseArguments(argv);
     const auditFunction =
       options.baselineRef === null ? audit : auditChanges;
+    // 승인된 예외는 config/security-audit-baseline.json 이 단일 출처다. 이 옵션이
+    // 없으면 승격 파이프라인만 예외를 적용하고 CI 는 적용하지 못한다.
+    const approvedPathAllowlist =
+      options.baselineConfigPath === null
+        ? undefined
+        : approvedPathAllowlistFromBaseline(
+            loadBaseline({ configPath: path.resolve(options.baselineConfigPath) }),
+          );
     const report = auditFunction({
       ...(options.baselineRef === null
         ? {}
         : { baselineRef: options.baselineRef }),
+      ...(approvedPathAllowlist === undefined ? {} : { approvedPathAllowlist }),
       repoPath: options.repoPath,
       ...(options.refs === undefined ? {} : { refs: options.refs }),
     });

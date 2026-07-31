@@ -477,7 +477,7 @@ describe("approved baseline configuration", () => {
     expect(config.recordType).toBe("SecurityAuditBaselineV1");
     expect(config.baselineSha).toBe(BASELINE_SHA);
     expect(config.refs).toEqual(["collab/main", "collab/stg", "origin/main"]);
-    expect(config.exceptions).toHaveLength(15);
+    expect(config.exceptions).toHaveLength(26);
     for (const exception of config.exceptions) {
       expect(Object.keys(exception).sort()).toEqual(["path", "reason", "rule"]);
       expect(SECURITY_ARTIFACT_RULE_NAMES).toContain(exception.rule);
@@ -486,7 +486,7 @@ describe("approved baseline configuration", () => {
     }
     expect(
       new Set(config.exceptions.map((entry) => `${entry.path} ${entry.rule}`)).size,
-    ).toBe(15);
+    ).toBe(26);
 
     const payload = structuredClone(config);
     delete payload.fingerprint;
