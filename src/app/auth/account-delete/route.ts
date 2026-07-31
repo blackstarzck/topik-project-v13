@@ -13,7 +13,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function normalizeHttpOrigin(value: string | undefined): string | null {
+function normalizeHttpOrigin(value: string | null | undefined): string | null {
   if (!value) return null;
   try {
     const url = new URL(value.trim());
@@ -36,31 +36,84 @@ function configuredSiteOrigin(): string | null {
   return normalizeHttpOrigin(process.env.NEXT_PUBLIC_SITE_URL);
 }
 
-function trustedRequestOrigins(request: NextRequest): Set<string> {
-  const origins = new Set<string>();
-  const configured = configuredSiteOrigin();
-  if (configured) origins.add(configured);
+/**
+ * The authority the browser actually addressed, parsed from `Host`.
+ *
+ * `x-forwarded-*` is deliberately not consulted, so a forwarded header can
+ * never widen what this route accepts.
+ */
+function addressedAuthority(request: NextRequest): URL | null {
+  const host = request.headers.get("host")?.trim().toLowerCase();
+  if (!host) return null;
 
-  if (process.env.NODE_ENV !== "production") {
-    const requestOrigin = normalizeHttpOrigin(request.url);
-    if (requestOrigin && isLoopbackOrigin(requestOrigin)) {
-      origins.add(requestOrigin);
-    }
+  try {
+    const url = new URL(`http://${host}`);
+    // Only a bare authority may pass. A value carrying a path, query or
+    // userinfo is not a `Host` and must not be read as one — otherwise
+    // `127.0.0.1:3001/@evil.example` would parse as a loopback authority.
+    return url.host === host ? url : null;
+  } catch {
+    return null;
   }
-
-  return origins;
 }
 
+/**
+ * The browser-addressed origin, trusted outside production only, and only for a
+ * loopback authority.
+ *
+ * `request.url` must NOT be used here: the Next server pins its hostname to the
+ * server's own origin and ignores `Host` (verified on Next 16.2.6 — a probe
+ * with `Host: app.example.com` still reported `https://localhost:3001/...`, and
+ * only the protocol tracked `x-forwarded-proto`). A dev server on :3001
+ * therefore trusted `http://localhost:3001` no matter which host the browser
+ * addressed, so a browser at `http://127.0.0.1:3001` was refused its own
+ * account deletion. `Origin` supplies the scheme and `Host` proves the
+ * authority the browser addressed.
+ */
+function loopbackBrowserOrigin(request: NextRequest): string | null {
+  if (process.env.NODE_ENV === "production") return null;
+
+  const addressed = addressedAuthority(request);
+  if (!addressed || !isLoopbackOrigin(addressed.origin)) return null;
+
+  const origin = normalizeHttpOrigin(request.headers.get("origin"));
+  if (!origin) return null;
+
+  // Hosts are compared, not origins: `Host` carries no scheme. A scheme change
+  // is a different origin, which the `Origin` allowlist above still governs in
+  // production; here the pairing only has to prove the browser addressed
+  // exactly this loopback authority.
+  return new URL(origin).host === addressed.host ? origin : null;
+}
+
+/**
+ * `NEXT_PUBLIC_SITE_URL` stays the authoritative allowlist: in production it is
+ * the only accepted origin. Outside production the loopback fallback also
+ * accepts the loopback authority the browser actually addressed, so a dev
+ * server reached on a different loopback host or port than the configured one
+ * still works.
+ */
+function isTrustedBrowserOrigin(request: NextRequest, origin: string): boolean {
+  return (
+    origin === configuredSiteOrigin() ||
+    origin === loopbackBrowserOrigin(request)
+  );
+}
+
+/**
+ * Redirects are built on the origin the browser is actually on, so a dev server
+ * that booted on :3001 does not complete the deletion and then bounce the
+ * browser to a dead :3000. A dev port is assigned at boot — parallel worktrees
+ * each land on a different one — so no static `NEXT_PUBLIC_SITE_URL` can track
+ * it.
+ *
+ * Production is unaffected: `loopbackBrowserOrigin` is null there, leaving
+ * `NEXT_PUBLIC_SITE_URL` as the only possible base, so a rewritten `Host` can
+ * never redirect the browser elsewhere. Every caller runs after
+ * `isSameOriginPost`, so any origin reached here is already proven trusted.
+ */
 function redirectUrl(request: NextRequest, path: string) {
-  const configured = configuredSiteOrigin();
-  const requestOrigin = normalizeHttpOrigin(request.url);
-  const baseOrigin =
-    configured ??
-    (process.env.NODE_ENV !== "production" &&
-    requestOrigin &&
-    isLoopbackOrigin(requestOrigin)
-      ? requestOrigin
-      : null);
+  const baseOrigin = loopbackBrowserOrigin(request) ?? configuredSiteOrigin();
 
   if (!baseOrigin) {
     throw new Error("Trusted site origin is not configured");
@@ -72,14 +125,12 @@ function isSameOriginPost(request: NextRequest): boolean {
   const secFetchSite = request.headers.get("sec-fetch-site");
   if (secFetchSite === "cross-site") return false;
 
-  const origin = request.headers.get("origin");
-  if (!origin || origin === "null") return false;
+  // Rejects an absent, opaque (`null`) or non-http(s) `Origin` before any
+  // comparison.
+  const origin = normalizeHttpOrigin(request.headers.get("origin"));
+  if (!origin) return false;
 
-  try {
-    return trustedRequestOrigins(request).has(new URL(origin).origin);
-  } catch {
-    return false;
-  }
+  return isTrustedBrowserOrigin(request, origin);
 }
 
 function redirectToDeleteError(request: NextRequest) {
