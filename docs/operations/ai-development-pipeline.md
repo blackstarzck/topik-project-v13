@@ -164,6 +164,9 @@ pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-rev
 - 승인 시각이 정해진 형식의 시각 값이 아니면 다른 오류로 새지 않고 `SECURITY_BASELINE_CONFIG_INVALID`로 거부한다.
 - 새 승격 기록을 만드는 경로는 차분 감사 기록만 받는다. 기준점 없는 전체 이력 감사 기록을 넣으면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부하므로 기준점 검증이 통째로 생략되는 조합이 남지 않는다. 전체 이력 감사 기록 자체는 CI 검사처럼 승격 기록을 만들지 않는 경로에서 계속 읽을 수 있다.
 - 승격 기록은 어떤 기준점으로 감사했는지를 기준점 SHA의 안전한 hash로 함께 저장한다. 사후에 감사 범위를 기록만 보고 확인할 수 있다. 이 값은 승격 기록의 fingerprint에만 들어가고 pipeline 계약 fingerprint와 profile fingerprint에는 영향을 주지 않으므로 승인 성공 횟수를 reset하지 않는다.
+- **CI의 감사 단계도 같은 승인 인벤토리를 읽는다.** `.github/workflows/ci.yml`은 `scripts/security-artifact-audit.mjs`에 `--baseline-config config/security-audit-baseline.json`을 넘긴다. 이 배선이 없을 때는 승격 파이프라인만 예외를 적용하고 CI는 적용하지 못해, 기준선에 이미 승인된 종류의 경로를 새로 추가하는 PR이 항상 CI에서 막혔다. 규칙이 최상위 `supabase/migrations/*.sql`만 승인하므로 `supabase/migrations/down/`의 되돌리기 SQL이 정확히 그 경우다.
+- 그래서 `down/`에 파일을 추가하는 변경은 **같은 PR에서 기준선 예외 등록이 따라온다.** `(경로, 규칙)` 항목을 넣고 fingerprint를 다시 계산해야 하며, `/config/`가 CODEOWNERS 보호 경로이므로 이 등록 자체가 승인 장치다. 규칙을 넓혀 폴더 단위로 승인하지는 않는다. 그렇게 하면 그 폴더의 SQL이 소유자 승인 없이 통과하기 때문이다.
+- `--baseline-config`를 주지 않으면 CLI 동작은 이전과 완전히 같다(예외 미적용). 기준선 파일이 없거나 fingerprint가 어긋나면 감사를 그냥 통과시키지 않고 `SECURITY_BASELINE_CONFIG_INVALID`로 중단한다.
 
 공개 `release:resume`은 최초 2회에 필요한 사람의 최종 승인만 받는다. candidate·PR·DB·Vercel·cleanup 상태를 caller가 만든 JSON으로 제출해 상태를 전진시키는 경로는 `RELEASE_TRUSTED_EXECUTOR_REQUIRED`로 거부한다. 이 상태 전이는 고정 저장소·계정·permission·현재 ref/SHA와 trusted workflow 결과를 직접 확인하는 운영 executor만 호출할 수 있다. 해당 executor가 설치되기 전에는 승격이 안전하게 중단된 상태이며 수동 JSON으로 우회할 수 없다.
 
