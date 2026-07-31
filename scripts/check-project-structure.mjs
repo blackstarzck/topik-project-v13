@@ -190,6 +190,144 @@ function inspectPipelineContractCoupling(changedPaths, errors) {
   }
 }
 
+// Learner migration authoring freeze.
+//
+// `supabase/migrations/*.sql` is frozen at this watermark. That history was adopted
+// byte for byte into topik-ai (`supabase/migrations-v13/`), which now owns both
+// authoring and remote apply for the learner namespace. Editing a frozen file here
+// breaks the parity proof adoption rests on; authoring a new one here splits
+// ownership again.
+//
+// Still allowed: `down/**` (rollback assets for pre-freeze migrations) and
+// `INDEX.md` (documentation of the existing history).
+//
+// There is deliberately no override switch. A violation is resolved by moving the
+// file to topik-ai, not by renegotiating the watermark.
+export const LEARNER_FREEZE_WATERMARK = "20260729120000";
+export const LEARNER_ARCHIVE_TARGET = "topik-ai supabase/migrations-v13/";
+
+const LEARNER_FORWARD_DIR = "supabase/migrations/";
+const LEARNER_FORWARD_FILE =
+  /^supabase\/migrations\/(\d{14})_[a-z0-9_]+\.sql$/u;
+
+export function isLearnerFreezeExemptPath(filePath) {
+  return (
+    filePath.startsWith(`${LEARNER_FORWARD_DIR}down/`) ||
+    filePath === `${LEARNER_FORWARD_DIR}INDEX.md`
+  );
+}
+
+export function parseNameStatusZ(stdout) {
+  const fields = String(stdout ?? "")
+    .split("\0")
+    .filter(Boolean);
+  const entries = [];
+  for (let index = 0; index < fields.length; ) {
+    const status = fields[index][0];
+    // With -z, renames and copies emit three fields: status, source, destination.
+    if (status === "R" || status === "C") {
+      entries.push({
+        status,
+        path: fields[index + 1],
+        renamedTo: fields[index + 2],
+      });
+      index += 3;
+      continue;
+    }
+    entries.push({ status, path: fields[index + 1] });
+    index += 2;
+  }
+  return entries;
+}
+
+export function evaluateLearnerMigrationFreeze(entries) {
+  const violations = [];
+  for (const entry of entries) {
+    if (!entry.path.startsWith(LEARNER_FORWARD_DIR)) continue;
+    if (isLearnerFreezeExemptPath(entry.path)) continue;
+
+    const match = LEARNER_FORWARD_FILE.exec(entry.path);
+    if (!match) {
+      violations.push(
+        `${entry.path}: unexpected file under ${LEARNER_FORWARD_DIR} (${entry.status}). ` +
+          "Only forward migrations, down/ rollbacks and INDEX.md belong here.",
+      );
+      continue;
+    }
+
+    if (entry.status === "A") {
+      violations.push(
+        `${entry.path}: new forward migration authored here. Learner authoring is frozen ` +
+          `at ${LEARNER_FREEZE_WATERMARK}; author it in ${LEARNER_ARCHIVE_TARGET} with a ` +
+          "timestamp above the watermark instead.",
+      );
+      continue;
+    }
+
+    if (entry.status === "R" || entry.status === "C") {
+      violations.push(
+        `${entry.path}: ${entry.status === "R" ? "renamed" : "copied"} to ${entry.renamedTo}. ` +
+          "Frozen history keeps its exact name — the adopted archive is matched by name and bytes.",
+      );
+      continue;
+    }
+
+    violations.push(
+      `${entry.path}: frozen history changed (${entry.status}). ` +
+        (match[1] <= LEARNER_FREEZE_WATERMARK
+          ? "This file is adopted byte for byte in the archive, so editing it breaks the parity proof. "
+          : "") +
+        "Fix it forward from topik-ai instead.",
+    );
+  }
+  return violations;
+}
+
+function inspectLearnerMigrationFreeze(changedEntries, errors) {
+  if (changedEntries === null) return;
+  for (const violation of evaluateLearnerMigrationFreeze(changedEntries)) {
+    errors.push(`Learner migration freeze: ${violation}`);
+  }
+}
+
+function learnerMigrationEntriesFromGit(rootDir) {
+  const baseRef = process.env.PROJECT_STRUCTURE_BASE_REF;
+  if (baseRef === undefined || baseRef.length === 0) return null;
+  if (!/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/iu.test(baseRef)) {
+    throw new Error("Learner migration freeze base ref is invalid.");
+  }
+  // -M so a rename of frozen history is reported as a rename, not add + delete.
+  const result = spawnSync(
+    "git",
+    [
+      "diff",
+      "--name-status",
+      "-z",
+      "-M",
+      `${baseRef}...HEAD`,
+      "--",
+      LEARNER_FORWARD_DIR,
+    ],
+    {
+      cwd: rootDir,
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "",
+        SystemRoot: process.env.SystemRoot ?? "",
+        WINDIR: process.env.WINDIR ?? "",
+      },
+      maxBuffer: 4 * 1024 * 1024,
+      shell: false,
+      timeout: 10_000,
+      windowsHide: true,
+    },
+  );
+  if (result.status !== 0 || result.error || result.signal) {
+    throw new Error("Learner migration freeze inventory failed.");
+  }
+  return parseNameStatusZ(result.stdout);
+}
+
 function pipelineChangedPathsFromGit(rootDir) {
   const baseRef = process.env.PROJECT_STRUCTURE_BASE_REF;
   if (baseRef === undefined || baseRef.length === 0) return null;
@@ -656,11 +794,13 @@ function activeFiles(rootDir, errors) {
 export function evaluateProjectStructure({
   rootDir = process.cwd(),
   changedPaths = null,
+  changedEntries = null,
 } = {}) {
   const errors = [];
   if (!existsSync(rootDir))
     return { errors: [`Project root does not exist: ${rootDir}`] };
   inspectPipelineContractCoupling(changedPaths, errors);
+  inspectLearnerMigrationFreeze(changedEntries, errors);
   inspectDocsTopLevel(rootDir, errors);
   inspectOperationsRoot(rootDir, errors);
   inspectQaRoot(rootDir, errors);
@@ -680,13 +820,15 @@ export function evaluateProjectStructure({
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
 if (invokedPath === fileURLToPath(import.meta.url)) {
   let changedPaths = null;
+  let changedEntries = null;
   let changedPathError = null;
   try {
     changedPaths = pipelineChangedPathsFromGit(process.cwd());
+    changedEntries = learnerMigrationEntriesFromGit(process.cwd());
   } catch (error) {
     changedPathError = error.message;
   }
-  const result = evaluateProjectStructure({ changedPaths });
+  const result = evaluateProjectStructure({ changedPaths, changedEntries });
   if (changedPathError !== null) result.errors.unshift(changedPathError);
   if (result.errors.length > 0) {
     for (const error of result.errors) process.stderr.write(`- ${error}\n`);
