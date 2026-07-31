@@ -15,7 +15,7 @@
 7. 검증 계약: `TESTING.md`
 8. 외부 백엔드 참고: `docs/swagger-api/`
 
-**learner 마이그레이션 저작 동결(2026-07-30)**: 워터마크 `20260729120000` 이하의 `supabase/migrations/*.sql`은 불변이며(편집·이름변경·삭제 금지), 신규 learner 마이그레이션은 이 저장소가 아니라 topik-ai `supabase/migrations-v13/`에 워터마크 초과 timestamp로 작성한다. `migrations/down/**`와 `migrations/INDEX.md`는 예외로 계속 갱신한다. CI가 `scripts/check-migration-freeze.mjs`로 강제하며 우회 스위치는 없다 — 위반은 해당 파일을 topik-ai로 옮겨 해소한다. 근거와 상세는 [`supabase/README.md`](./supabase/README.md)의 "저작 동결" 절이다.
+**learner 마이그레이션 저작 동결(2026-07-30)**: 워터마크 `20260729120000` 이하의 `supabase/migrations/*.sql`은 불변이며(편집·이름변경·삭제 금지), 신규 learner 마이그레이션은 이 저장소가 아니라 topik-ai `supabase/migrations-v13/`에 워터마크 초과 timestamp로 작성한다. `migrations/down/**`와 `migrations/INDEX.md`는 예외로 계속 갱신한다. CI가 `scripts/check-project-structure.mjs`의 계약 검사로 강제하며 우회 스위치는 없다 — 위반은 해당 파일을 topik-ai로 옮겨 해소한다. 근거와 상세는 [`supabase/README.md`](./supabase/README.md)의 "저작 동결" 절이다.
 
 `README.md`는 문서 지도이며 정책 owner가 아니다. `docs/qa/`의 날짜별 계획과 보고서는 당시 상태를 보여주는 historical evidence이지 SOT가 아니다. 과거 보고서의 삭제된 경로는 기록 당시 baseline을 가리킨다.
 

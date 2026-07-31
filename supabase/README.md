@@ -27,7 +27,7 @@ supabase/
 | `migrations/down/**` | 계속 작성한다 — 동결 이전 파일들의 롤백 자산이며 운영 catch-up이 요구한다 |
 | `migrations/INDEX.md` | 계속 갱신한다 — 기존 이력의 설명 문서다 |
 
-CI가 `scripts/check-migration-freeze.mjs`로 이를 강제한다. 우회 스위치는 없다 — 위반은 워터마크 재협상이 아니라 해당 파일을 topik-ai로 옮겨 해소한다.
+CI가 `scripts/check-project-structure.mjs`의 계약 검사로 이를 강제한다(`pnpm check:project-structure`, base ref 는 `PROJECT_STRUCTURE_BASE_REF`). 우회 스위치는 없다 — 위반은 워터마크 재협상이 아니라 해당 파일을 topik-ai로 옮겨 해소한다.
 
 기존 이력을 고쳐야 하는 상황이면 이 저장소에서 수정하지 말고 topik-ai에서 **새 forward 마이그레이션**으로 앞으로 고친다. 적용 시점에 실패한 마이그레이션은 forward로 고칠 수 없으므로, 그 경우의 예외 경로도 topik-ai가 관리한다.
 

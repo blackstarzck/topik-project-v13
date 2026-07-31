@@ -516,7 +516,7 @@ CI가 검사하는 계약은 다음과 같다.
 3. 기존 v1 report-only worktree lifecycle
 4. v2 호환과 v3 task lifecycle·cleanup contract
 5. security artifact audit와 PromotionRunV1 contract
-6. learner 마이그레이션 저작 동결(`scripts/check-migration-freeze.mjs`)
+6. learner 마이그레이션 저작 동결(project structure 계약에 포함)
 7. typecheck, 전체 test, lint, build
 8. Windows에서 v1·v2·v3·one-shot sweep cleanup lifecycle contract
 
