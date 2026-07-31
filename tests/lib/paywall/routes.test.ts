@@ -1,17 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  paywallHref,
-  resolvePaywallReturnTo,
-} from "@/lib/paywall/routes";
+import { paywallHref, resolvePaywallReturnTo } from "@/lib/paywall/routes";
 
 describe("paywall route helpers", () => {
-  it.each([
-    "/practice/next",
-    "/practice/next?source=alternative#plans",
-  ])("preserves an allowed paywall return target: %s", (returnTo) => {
-    expect(resolvePaywallReturnTo(returnTo)).toBe(returnTo);
-  });
+  it.each(["/practice/next", "/practice/next?source=alternative#plans"])(
+    "preserves an allowed paywall return target: %s",
+    (returnTo) => {
+      expect(resolvePaywallReturnTo(returnTo)).toBe(returnTo);
+    },
+  );
 
   it.each([
     null,
@@ -42,8 +39,6 @@ describe("paywall route helpers", () => {
 
   it("omits missing or unsafe targets from direct paywall links", () => {
     expect(paywallHref()).toBe("/paywall");
-    expect(paywallHref({ returnTo: "https://evil.example" })).toBe(
-      "/paywall",
-    );
+    expect(paywallHref({ returnTo: "https://evil.example" })).toBe("/paywall");
   });
 });

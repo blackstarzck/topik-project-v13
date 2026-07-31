@@ -37,9 +37,7 @@ describe("AppBackControl", () => {
     expect(link.getAttribute("href")).toBe("/library");
     expect(link.getAttribute("aria-label")).toBe("Back to library");
     expect(link.getAttribute("data-replace")).toBe("true");
-    expect(link.querySelector("svg")?.getAttribute("aria-hidden")).toBe(
-      "true",
-    );
+    expect(link.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("renders guarded semantic back actions as buttons", () => {

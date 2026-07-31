@@ -30,8 +30,7 @@ vi.mock("@/lib/writing/server", () => ({
   getActiveDraft: (...args: unknown[]) => getActiveDraftMock(...args),
   getRetrySubmissionSeed: (...args: unknown[]) =>
     getRetrySubmissionSeedMock(...args),
-  getComparisonReport: (...args: unknown[]) =>
-    getComparisonReportMock(...args),
+  getComparisonReport: (...args: unknown[]) => getComparisonReportMock(...args),
   getSubmission: (...args: unknown[]) => getSubmissionMock(...args),
   isProblemIdLikeUuid: (value: unknown) =>
     typeof value === "string" &&
@@ -91,20 +90,23 @@ describe("renderWritingQuestionPage", () => {
     {},
     { returnTo: "https://evil.example/dashboard" },
     { returnTo: ["/dashboard", "/library"] },
-  ])("uses the problem list for a missing or unsafe return target", async (searchParams) => {
-    requireUserMock.mockResolvedValue({ id: "user-1" });
-    getWritingProblemMock.mockResolvedValue(null);
+  ])(
+    "uses the problem list for a missing or unsafe return target",
+    async (searchParams) => {
+      requireUserMock.mockResolvedValue({ id: "user-1" });
+      getWritingProblemMock.mockResolvedValue(null);
 
-    const element = await renderWritingQuestionPage(
-      51,
-      Promise.resolve(searchParams),
-    );
-    render(element);
+      const element = await renderWritingQuestionPage(
+        51,
+        Promise.resolve(searchParams),
+      );
+      render(element);
 
-    expect(writingPageContentMock).toHaveBeenCalledWith(
-      expect.objectContaining({ returnHref: "/practice/problems" }),
-    );
-  });
+      expect(writingPageContentMock).toHaveBeenCalledWith(
+        expect.objectContaining({ returnHref: "/practice/problems" }),
+      );
+    },
+  );
 
   it("accepts only the current feedback as a retry return target", async () => {
     const problemId = "00000000-0000-4000-8000-000000000051";

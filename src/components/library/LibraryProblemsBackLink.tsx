@@ -8,10 +8,6 @@ type Props = {
 
 export function LibraryProblemsBackLink({ label, testId }: Props) {
   return (
-    <AppBackControl
-      href={APP_ROUTES.library}
-      label={label}
-      testId={testId}
-    />
+    <AppBackControl href={APP_ROUTES.library} label={label} testId={testId} />
   );
 }
