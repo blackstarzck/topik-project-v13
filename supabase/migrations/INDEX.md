@@ -4,6 +4,8 @@
 
 실제 SQL 파일은 **Supabase CLI 호환을 위해 `supabase/migrations/` 디렉토리 바로 아래에 flat 으로 위치**합니다 (CLI는 하위 폴더 SQL을 스캔하지 않음). 본 문서는 가독성을 위한 메타 정리입니다.
 
+> **저작 동결(2026-07-30)**: 이 인덱스가 담는 forward 이력은 워터마크 `20260729120000`에서 동결됐다. 이하 파일은 불변이며 신규 learner 마이그레이션은 topik-ai `supabase/migrations-v13/`에 작성한다. 이 문서와 `down/`은 예외로 계속 갱신한다 — 상세는 [`../README.md`](../README.md)의 "저작 동결" 절.
+
 명명 규칙·idempotency·CLI 적용 명령은 [`../README.md`](../README.md) 참조.
 테이블 컬럼·RLS·RPC의 실행 가능한 정본은 timestamp 순으로 재생한 migration SQL 본문이다. 사람이 읽는 도메인·보안 계약은 `docs/supabase/`를 함께 참조한다.
 

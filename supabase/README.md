@@ -16,6 +16,21 @@ supabase/
 
 `migrations/`는 Supabase CLI가 순서대로 읽을 수 있도록 flat 구조를 유지한다. 파일명은 `YYYYMMDDHHMMSS_<snake_case_description>.sql` 형식이며 timestamp 순서가 의존 순서다.
 
+## 저작 동결 (2026-07-30)
+
+`migrations/*.sql`의 **저작은 워터마크 `20260729120000`에서 동결**됐다. 그 시점까지의 100개 forward 파일은 topik-ai 저장소 `supabase/migrations-v13/`에 **바이트 그대로** 채택됐고, 이후 learner 스키마의 저작과 원격 적용은 그 저장소가 소유한다.
+
+| 대상 | 이 저장소에서 |
+| --- | --- |
+| 워터마크 이하 forward `*.sql` | **불변** — 편집·이름변경·삭제 금지. 채택본과의 바이트 동일성이 소유권 이전의 증명 근거다 |
+| 신규 learner 마이그레이션 | **작성하지 않는다** — topik-ai `supabase/migrations-v13/`에 워터마크 초과 timestamp로 작성한다 |
+| `migrations/down/**` | 계속 작성한다 — 동결 이전 파일들의 롤백 자산이며 운영 catch-up이 요구한다 |
+| `migrations/INDEX.md` | 계속 갱신한다 — 기존 이력의 설명 문서다 |
+
+CI가 `scripts/check-migration-freeze.mjs`로 이를 강제한다. 우회 스위치는 없다 — 위반은 워터마크 재협상이 아니라 해당 파일을 topik-ai로 옮겨 해소한다.
+
+기존 이력을 고쳐야 하는 상황이면 이 저장소에서 수정하지 말고 topik-ai에서 **새 forward 마이그레이션**으로 앞으로 고친다. 적용 시점에 실패한 마이그레이션은 forward로 고칠 수 없으므로, 그 경우의 예외 경로도 topik-ai가 관리한다.
+
 ## 계약 소유권
 
 - 실제 schema, grant, RLS, policy, trigger, function/RPC: timestamp 순으로 재생한 `migrations/*.sql`

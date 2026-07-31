@@ -578,6 +578,11 @@ jobs:
           needs.classify-changes.outputs.run_pipeline_contracts == 'true'
         run: pnpm install --frozen-lockfile
 
+      - name: Check learner migration freeze
+        env:
+          MIGRATION_FREEZE_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: node scripts/check-migration-freeze.mjs
+
       - name: Check project structure
         env:
           PROJECT_STRUCTURE_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
@@ -790,6 +795,11 @@ jobs:
 
       - name: Check security artifacts in reachable publish history
         run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
+
+      - name: Check learner migration freeze
+        env:
+          MIGRATION_FREEZE_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: node scripts/check-migration-freeze.mjs
 
       - name: Check project structure
         run: node scripts/check-project-structure.mjs

@@ -19,6 +19,7 @@
     "check:agent-skills": "node scripts/sync-agent-skills.mjs --check",
     "prepare:worktree-env": "node scripts/prepare-worktree-env.mjs",
     "check:project-structure": "node scripts/check-project-structure.mjs",
+    "check:migration-freeze": "node scripts/check-migration-freeze.mjs",
     "report:artifact-hygiene": "node scripts/check-artifact-hygiene.mjs --mode report",
     "check:artifact-hygiene": "node scripts/check-artifact-hygiene.mjs --mode check",
     "report:security-artifacts": "node scripts/security-artifact-audit.mjs --repo . --mode report",
