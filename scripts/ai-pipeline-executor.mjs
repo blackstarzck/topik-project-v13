@@ -56,6 +56,7 @@ import {
 } from "./lib/ai-release-vercel.mjs";
 import {
   PIPELINE_REPOSITORY_PROFILES,
+  resolvePipelineSharedRoot,
   withRepositoryAuth,
 } from "./lib/ai-task-sweep.mjs";
 
@@ -93,7 +94,7 @@ const DEFAULT_SMOKE_INTERVAL_MS = 15_000;
 const DEFAULT_SMOKE_CHECKS = Object.freeze([
   Object.freeze({ path: "/", expectedStatus: 200 }),
 ]);
-const DB_EVIDENCE_SEGMENTS = Object.freeze(["TalkpikPipeline", "db-evidence"]);
+const DB_EVIDENCE_SUBDIRECTORY = "db-evidence";
 const NO_HUMAN_APPROVAL = Object.freeze({ required: false, command: null });
 
 function executorError(code) {
@@ -365,12 +366,16 @@ async function executorAuthCommand(command, args, commandOptions) {
 }
 
 function migrationEvidenceRoot(options) {
-  const localAppData = options.localAppData ?? process.env.LOCALAPPDATA;
-  if (typeof localAppData !== "string" || localAppData.trim() === "" ||
-      !path.isAbsolute(localAppData)) {
+  let shared;
+  try {
+    shared = resolvePipelineSharedRoot({
+      localAppData: options.localAppData ?? process.env.LOCALAPPDATA,
+      env: options.env ?? process.env,
+    });
+  } catch {
     throw executorError("DB_EVIDENCE_ROOT_UNAVAILABLE");
   }
-  return path.join(localAppData, ...DB_EVIDENCE_SEGMENTS);
+  return path.join(shared.root, DB_EVIDENCE_SUBDIRECTORY);
 }
 
 function defaultSleep(milliseconds) {
@@ -484,6 +489,7 @@ function buildStepContext({ repository, options, migrationEvidence, warnings }) 
         withRepositoryAuth({
           profile,
           localAppData,
+          env: options.env ?? process.env,
           runCommand: executorAuthCommand,
           operation,
         })),

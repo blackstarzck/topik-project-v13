@@ -31,6 +31,8 @@ export const PIPELINE_REPOSITORY_PROFILES = Object.freeze({
   }),
 });
 
+export const PIPELINE_SHARED_ROOT_ENV = "TALKPIK_PIPELINE_SHARED_ROOT";
+
 const DEFAULT_STALE_LEASE_MS = 15 * 60_000;
 const SWEEP_LIMITS = Object.freeze({
   maxTasks: 10,
@@ -71,6 +73,30 @@ function assertNoReparseTraversal(targetPath, label) {
       }
     }
   }
+}
+
+export function resolvePipelineSharedRoot({
+  localAppData = process.env.LOCALAPPDATA,
+  env = process.env,
+} = {}) {
+  const configured = env?.[PIPELINE_SHARED_ROOT_ENV];
+  if (typeof configured === "string" && configured.trim().length > 0) {
+    const root = configured.trim();
+    if (!path.isAbsolute(root)) {
+      throw new Error(`${PIPELINE_SHARED_ROOT_ENV} must be an absolute path.`);
+    }
+    if (!existsSync(root)) {
+      throw new Error(`${PIPELINE_SHARED_ROOT_ENV} does not exist.`);
+    }
+    assertNoReparseTraversal(root, PIPELINE_SHARED_ROOT_ENV);
+    return { root, source: "configured" };
+  }
+  if (typeof localAppData !== "string" || !path.isAbsolute(localAppData)) {
+    throw new Error(
+      "LocalAppData is required for the host-wide authentication lock.",
+    );
+  }
+  return { root: path.join(localAppData, "TalkpikPipeline"), source: "local-app-data" };
 }
 
 function validLeaseRecord(value) {
@@ -278,6 +304,7 @@ function preservedOperationCode(error) {
 export async function withRepositoryAuth({
   profile,
   localAppData = process.env.LOCALAPPDATA,
+  env = process.env,
   runCommand,
   operation,
   nowMs = Date.now(),
@@ -289,13 +316,11 @@ export async function withRepositoryAuth({
   cleanupTimeoutMs = 5_000,
 }) {
   const safeProfile = validateRepositoryProfile(profile);
-  if (typeof localAppData !== "string" || !path.isAbsolute(localAppData)) {
-    throw new Error(
-      "LocalAppData is required for the host-wide authentication lock.",
-    );
+  const sharedRoot = resolvePipelineSharedRoot({ localAppData, env });
+  if (sharedRoot.source === "local-app-data") {
+    assertNoReparseTraversal(localAppData, "LocalAppData");
   }
-  assertNoReparseTraversal(localAppData, "LocalAppData");
-  const hostLockRoot = path.join(localAppData, "TalkpikPipeline", "locks");
+  const hostLockRoot = path.join(sharedRoot.root, "locks");
   if (typeof runCommand !== "function" || typeof operation !== "function") {
     throw new Error(
       "Authentication requires injected command and operation functions.",
