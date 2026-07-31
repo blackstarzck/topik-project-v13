@@ -516,8 +516,11 @@ CI가 검사하는 계약은 다음과 같다.
 3. 기존 v1 report-only worktree lifecycle
 4. v2 호환과 v3 task lifecycle·cleanup contract
 5. security artifact audit와 PromotionRunV1 contract
-6. typecheck, 전체 test, lint, build
-7. Windows에서 v1·v2·v3·one-shot sweep cleanup lifecycle contract
+6. learner 마이그레이션 저작 동결(project structure 계약에 포함)
+7. typecheck, 전체 test, lint, build
+8. Windows에서 v1·v2·v3·one-shot sweep cleanup lifecycle contract
+
+6번은 `supabase/migrations/*.sql`의 저작이 워터마크 `20260729120000`에서 동결됐다는 사실을 강제한다. 그 이하 forward 파일은 topik-ai `supabase/migrations-v13/`에 바이트 그대로 채택돼 있어 편집·이름변경·삭제가 채택의 근거인 바이트 동일성을 깨고, 신규 learner 마이그레이션은 이 저장소가 아니라 그쪽에서 저작한다. `migrations/down/**`와 `migrations/INDEX.md`는 예외다. 우회 스위치는 없으며 위반은 해당 파일을 topik-ai로 옮겨 해소한다. 상세는 [`supabase/README.md`](../../supabase/README.md)의 "저작 동결" 절이다.
 
 세 실행 경로의 결과는 후보 코드를 checkout하거나 package를 설치하지 않는 `CI required` 작업 하나로 모은다. 이 작업은 항상 실행되며 분류 작업과 선행 작업이 실패·취소되거나, 분류 output이 누락·변조되거나, 예상과 다르게 건너뛰어지면 실패한다.
 
