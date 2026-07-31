@@ -915,3 +915,171 @@ describe("security artifact audit CLI", () => {
     expect(JSON.stringify(report)).not.toContain(resolvedSha);
   });
 });
+
+describe("security artifact audit baseline config wiring", () => {
+  async function signedBaseline(exceptions) {
+    const { stableFingerprint } = await import(
+      "../../scripts/lib/ai-release-promotion.mjs"
+    );
+    const config = {
+      schemaVersion: 1,
+      recordType: "SecurityAuditBaselineV1",
+      baselineSha: "a".repeat(40),
+      approvedAt: "2026-07-30T01:00:00.000Z",
+      refs: ["collab/main", "origin/main"],
+      exceptions,
+    };
+    return { ...config, fingerprint: stableFingerprint(config) };
+  }
+
+  function captureAudit() {
+    const seen = [];
+    return {
+      seen,
+      audit: (options) => {
+        seen.push(options);
+        return {
+          schemaVersion: 1,
+          recordType: "SecurityArtifactDiffAuditV1",
+          findings: [],
+          summary: { findingCount: 0 },
+        };
+      },
+    };
+  }
+
+  const diffArgv = [
+    "--repo",
+    ".",
+    "--mode",
+    "check",
+    "--refs",
+    "HEAD",
+    "--baseline-ref",
+    "origin/main",
+  ];
+
+  it("passes only the approved (path, rule) pairs from the baseline to the audit", async () => {
+    const { runSecurityArtifactAuditCli } = await loadCli();
+    const { audit, seen } = captureAudit();
+    const baseline = await signedBaseline([
+      {
+        path: "supabase/migrations/down/rollback.sql",
+        rule: "UNAPPROVED_SQL_PATH",
+        reason: "승인된 migration 의 되돌리기 SQL 이다.",
+      },
+    ]);
+
+    const exitCode = runSecurityArtifactAuditCli({
+      argv: [...diffArgv, "--baseline-config", "config/security-audit-baseline.json"],
+      auditChanges: audit,
+      loadBaseline: () => baseline,
+      writeStderr: () => {},
+      writeStdout: () => {},
+    });
+
+    expect(exitCode).toBe(0);
+    expect(seen).toHaveLength(1);
+    // reason 은 사람이 읽는 승인 근거이므로 감사 입력에는 넘기지 않는다.
+    expect(seen[0].approvedPathAllowlist).toEqual([
+      {
+        path: "supabase/migrations/down/rollback.sql",
+        rule: "UNAPPROVED_SQL_PATH",
+      },
+    ]);
+  });
+
+  it("omits the allowlist entirely when no baseline config is given", async () => {
+    const { runSecurityArtifactAuditCli } = await loadCli();
+    const { audit, seen } = captureAudit();
+
+    const exitCode = runSecurityArtifactAuditCli({
+      argv: diffArgv,
+      auditChanges: audit,
+      loadBaseline: () => {
+        throw new Error("baseline must not be loaded without the flag");
+      },
+      writeStderr: () => {},
+      writeStdout: () => {},
+    });
+
+    expect(exitCode).toBe(0);
+    expect(seen[0]).not.toHaveProperty("approvedPathAllowlist");
+  });
+
+  it("rejects a baseline whose fingerprint no longer matches its exceptions", async () => {
+    const { runSecurityArtifactAuditCli } = await loadCli();
+    const { audit, seen } = captureAudit();
+    const baseline = await signedBaseline([
+      {
+        path: "supabase/migrations/down/rollback.sql",
+        rule: "UNAPPROVED_SQL_PATH",
+        reason: "승인된 migration 의 되돌리기 SQL 이다.",
+      },
+    ]);
+    baseline.exceptions.push({
+      path: "tools/unapproved.sql",
+      rule: "UNAPPROVED_SQL_PATH",
+      reason: "지문 재계산 없이 몰래 추가된 예외",
+    });
+
+    let stderr = "";
+    const exitCode = runSecurityArtifactAuditCli({
+      argv: [...diffArgv, "--baseline-config", "config/security-audit-baseline.json"],
+      auditChanges: audit,
+      loadBaseline: () => baseline,
+      writeStderr: (value) => {
+        stderr += value;
+      },
+      writeStdout: () => {},
+    });
+
+    expect(exitCode).toBe(2);
+    expect(seen).toHaveLength(0);
+    expect(JSON.parse(stderr).code).toBe("SECURITY_BASELINE_CONFIG_INVALID");
+  });
+
+  it("rejects a repeated baseline config flag", async () => {
+    const { runSecurityArtifactAuditCli } = await loadCli();
+    let stderr = "";
+
+    const exitCode = runSecurityArtifactAuditCli({
+      argv: [
+        "--repo",
+        ".",
+        "--mode",
+        "check",
+        "--baseline-config",
+        "first.json",
+        "--baseline-config",
+        "second.json",
+      ],
+      writeStderr: (value) => {
+        stderr += value;
+      },
+      writeStdout: () => {},
+    });
+
+    expect(exitCode).toBe(2);
+    expect(JSON.parse(stderr).code).toBe("CLI_ARGUMENT_INVALID");
+  });
+
+  it("keeps CI wired to the approved baseline inventory", () => {
+    const workflow = readFileSync(
+      path.resolve(".github/workflows/ci.yml"),
+      "utf8",
+    );
+    const auditSteps = workflow
+      .split("\n")
+      .filter((line) =>
+        line.includes("scripts/security-artifact-audit.mjs --repo ."),
+      );
+
+    expect(auditSteps.length).toBeGreaterThan(0);
+    for (const step of auditSteps) {
+      expect(step).toContain(
+        "--baseline-config config/security-audit-baseline.json",
+      );
+    }
+  });
+});
