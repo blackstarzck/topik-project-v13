@@ -5,13 +5,15 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { resolvePipelineSharedRoot } from "./ai-task-sweep.mjs";
+
 const DEFAULT_BASE_URL = "https://api.vercel.com";
 const DEFAULT_LIST_LIMIT = 100;
 const DEFAULT_SMOKE_TIMEOUT_MS = 10_000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const REQUEST_TIMED_OUT = Symbol("VERCEL_REQUEST_TIMED_OUT");
 
-const CREDENTIAL_DIRECTORY = ["TalkpikPipeline", "credentials"];
+const CREDENTIAL_SUBDIRECTORY = "credentials";
 const CREDENTIAL_FILE = "vercel.env";
 const CREDENTIAL_ALLOWED_KEYS = Object.freeze(["VERCEL_TOKEN", "VERCEL_TEAM_ID"]);
 const CREDENTIAL_REDACTION = "[VercelCredentialProvider]";
@@ -87,12 +89,14 @@ function assertNonEmptyText(value, code) {
   return value;
 }
 
-function credentialFilePath(localAppData) {
-  if (typeof localAppData !== "string" || localAppData.trim() === "" ||
-      !path.isAbsolute(localAppData)) {
+function credentialFilePath(localAppData, env) {
+  let root;
+  try {
+    root = resolvePipelineSharedRoot({ localAppData, env }).root;
+  } catch {
     return null;
   }
-  return path.join(localAppData, ...CREDENTIAL_DIRECTORY, CREDENTIAL_FILE);
+  return path.join(root, CREDENTIAL_SUBDIRECTORY, CREDENTIAL_FILE);
 }
 
 function assertNoReparseAncestor(file, lstat) {
@@ -205,7 +209,7 @@ export function createVercelCredentialProvider({
   }
   if (env === null || typeof env !== "object") fail("EXECUTOR_VERCEL_CREDENTIAL_INVALID");
 
-  const file = credentialFilePath(localAppData);
+  const file = credentialFilePath(localAppData, env);
   if (file !== null && assertPlainCredentialFile(file, { lstat: lstatSync, stat: statSync })) {
     let content;
     try {
@@ -608,7 +612,7 @@ export async function runReadOnlySmoke({
 
 export const VERCEL_CREDENTIAL_ALLOWED_KEYS = CREDENTIAL_ALLOWED_KEYS;
 export const VERCEL_CREDENTIAL_RELATIVE_PATH = Object.freeze([
-  ...CREDENTIAL_DIRECTORY,
+  CREDENTIAL_SUBDIRECTORY,
   CREDENTIAL_FILE,
 ]);
 export const VERCEL_PREVIEW_ENVIRONMENT_SCOPE = PREVIEW_ENVIRONMENT_SCOPE;
