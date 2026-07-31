@@ -161,7 +161,8 @@ describe("isDuplicateLibrarySaveError", () => {
         code: "23505",
         message:
           'duplicate key value violates unique constraint "library_items_user_problem_uniq"',
-        details: "Key (user_id, problem_id)=(user-1, problem-1) already exists.",
+        details:
+          "Key (user_id, problem_id)=(user-1, problem-1) already exists.",
       }),
     ).toBe(true);
   });

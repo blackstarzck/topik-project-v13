@@ -107,10 +107,7 @@ export function AnalysisPendingModal({
       mask={{ closable: false }}
       destroyOnHidden
     >
-      <div
-        className="grid gap-3 sm:gap-4"
-        data-testid="analysis-pending-modal"
-      >
+      <div className="grid gap-3 sm:gap-4" data-testid="analysis-pending-modal">
         <div className="grid justify-items-center gap-2 text-center">
           <h2 className="m-0 text-xl font-bold leading-tight text-text sm:text-2xl">
             {t("pendingModalTitle")}

@@ -353,9 +353,7 @@ test("exhausted polling counts down and auto-redirects to the library without a 
     Number(/\((\d)\)/.exec((await libraryButton.textContent()) ?? "")?.[1]);
   const first = await readCountdown();
   expect(first).toBeGreaterThanOrEqual(1);
-  await expect
-    .poll(readCountdown, { timeout: 4_000 })
-    .toBeLessThan(first);
+  await expect.poll(readCountdown, { timeout: 4_000 }).toBeLessThan(first);
 
   // 아무것도 클릭하지 않아도 타이머 만료 시 /library로 자동 이동한다.
   await page.waitForURL(/\/library/, { timeout: 10_000 });

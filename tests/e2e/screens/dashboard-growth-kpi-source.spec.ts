@@ -249,7 +249,10 @@ async function cleanupKpiFixtures() {
     await sb.from("study_events").delete().in("id", createdStudyEventIds);
   }
   if (createdSubmissionIds.length > 0) {
-    await sb.from("writing_submissions").delete().in("id", createdSubmissionIds);
+    await sb
+      .from("writing_submissions")
+      .delete()
+      .in("id", createdSubmissionIds);
   }
   createdStudyEventIds.length = 0;
   createdSubmissionIds.length = 0;
@@ -259,10 +262,7 @@ test.afterEach(cleanupKpiFixtures);
 test.afterAll(cleanupKpiFixtures);
 
 test.skip(
-  !EMAIL ||
-    !SUPABASE_URL ||
-    !SERVICE_KEY ||
-    !NON_PROD_LABELS.has(ENV_LABEL),
+  !EMAIL || !SUPABASE_URL || !SERVICE_KEY || !NON_PROD_LABELS.has(ENV_LABEL),
   "KPI source e2e requires non-production Supabase service credentials",
 );
 
@@ -276,9 +276,9 @@ test("dashboard and growth KPIs use writing submissions and study-event streaks"
 
   await page.goto("/dashboard", { waitUntil: "networkidle" });
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(page.getByTestId("dashboard-kpi-today-submissions")).toContainText(
-    String(submissionCounts.today),
-  );
+  await expect(
+    page.getByTestId("dashboard-kpi-today-submissions"),
+  ).toContainText(String(submissionCounts.today));
   await expect(page.getByTestId("dashboard-kpi-streak")).toContainText(
     String(streakDays),
   );

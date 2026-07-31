@@ -386,6 +386,8 @@ pnpm task:sweep -- --repo <기준-checkout>
 
 수동 복구 경로에서는 `ready: true`인 legacy 후보 목록과 fingerprint를 사용자에게 보고하고, 사용자가 그 fingerprint를 승인한 뒤에만 `task:cleanup`을 실행한다. 정상 병합된 managed v3 task는 별도의 사용자 승인값 없이 자동 정리한다. `task:autocleanup`은 특정 task 하나를, `task:sweep`은 최대 10개를 순차 검사해 병합·소유권·runtime·경로·HEAD/PR SHA가 모두 안전할 때만 비강제 cleanup journal을 실행한다.
 
+`TaskRecordV3`는 저장소 identity를 `<host>/<owner>/<repository>` 형태로 기록하고, 자동 정리의 승인 목록은 `<owner>/<repository>` 형태를 key로 쓴다. 두 표기를 잇는 정규화는 `github.com` host만 인정하며, 세 segment가 아니거나 host가 다르면 승인하지 않고 `REPOSITORY_PROFILE_UNAPPROVED`로 보존한다. 따라서 `local` host로 기록된 저장소와 다른 host의 동명 저장소는 자동 정리 대상이 되지 않는다. remote 해석과 승격 기록 대조도 같은 정규화 결과로 비교하며, 정규화에 실패하면 비교를 시도하지 않고 즉시 보존한다. 테스트 fixture는 실제 기록과 같은 `<host>/<owner>/<repository>` 형태를 써야 하고, 그 정합성은 `parseRepositoryIdentity`의 출력이 승인 목록으로 정규화되는지 확인하는 계약 테스트로 고정한다.
+
 | workspace | 병합 뒤 자동 정리 |
 | --- | --- |
 | `shared-slot` + `managed` | runtime 종료 → task 산출물 제거 → 최신 `origin/main`으로 detach → task branch 비강제 삭제. `.worktrees/shared-dev` 폴더는 유지 |
@@ -514,8 +516,11 @@ CI가 검사하는 계약은 다음과 같다.
 3. 기존 v1 report-only worktree lifecycle
 4. v2 호환과 v3 task lifecycle·cleanup contract
 5. security artifact audit와 PromotionRunV1 contract
-6. typecheck, 전체 test, lint, build
-7. Windows에서 v1·v2·v3·one-shot sweep cleanup lifecycle contract
+6. learner 마이그레이션 저작 동결(project structure 계약에 포함)
+7. typecheck, 전체 test, lint, build
+8. Windows에서 v1·v2·v3·one-shot sweep cleanup lifecycle contract
+
+6번은 `supabase/migrations/*.sql`의 저작이 워터마크 `20260729120000`에서 동결됐다는 사실을 강제한다. 그 이하 forward 파일은 topik-ai `supabase/migrations-v13/`에 바이트 그대로 채택돼 있어 편집·이름변경·삭제가 채택의 근거인 바이트 동일성을 깨고, 신규 learner 마이그레이션은 이 저장소가 아니라 그쪽에서 저작한다. `migrations/down/**`와 `migrations/INDEX.md`는 예외다. 우회 스위치는 없으며 위반은 해당 파일을 topik-ai로 옮겨 해소한다. 상세는 [`supabase/README.md`](../../supabase/README.md)의 "저작 동결" 절이다.
 
 세 실행 경로의 결과는 후보 코드를 checkout하거나 package를 설치하지 않는 `CI required` 작업 하나로 모은다. 이 작업은 항상 실행되며 분류 작업과 선행 작업이 실패·취소되거나, 분류 output이 누락·변조되거나, 예상과 다르게 건너뛰어지면 실패한다.
 
