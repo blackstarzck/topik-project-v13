@@ -132,7 +132,10 @@ export function PhoneNumberReminderModal({
   const eligible =
     !phoneNumber && !phoneNumberPromptDismissedAt && !isExcludedRoute(pathname);
   const modalOpen =
-    eligible && !sessionSuppressed && !locallySuppressed && !permanentlyDismissed;
+    eligible &&
+    !sessionSuppressed &&
+    !locallySuppressed &&
+    !permanentlyDismissed;
 
   function suppressForSession() {
     if (!writeSessionSuppressed(userId)) {

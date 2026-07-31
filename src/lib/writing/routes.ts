@@ -82,9 +82,7 @@ export function getWritingFeedbackReturnSubmissionId(
   );
 }
 
-function writingReturnToParam(
-  value: string | null | undefined,
-): string | null {
+function writingReturnToParam(value: string | null | undefined): string | null {
   if (!value) return null;
   const resolved = resolveWritingReturnTo(value);
   return resolved === WRITING_RETURN_FALLBACK ? null : resolved;

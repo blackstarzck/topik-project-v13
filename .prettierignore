@@ -22,5 +22,10 @@ artifacts/
 docs/
 scripts/
 supabase/
+
+# Pipeline contract surfaces. scripts/ is the implementation and config/ holds the
+# contract data it is coupled to; check-project-structure.mjs requires changes here
+# to land together with their owner documentation, which prettier cannot touch.
+config/
 pnpm-lock.yaml
 pnpm-workspace.yaml

@@ -22,8 +22,7 @@ export interface WritingTimeMetricsSnapshot {
   startedAt: string;
 }
 
-export interface RecordWritingSubmissionMetricsInput
-  extends WritingTimeMetricsSnapshot {
+export interface RecordWritingSubmissionMetricsInput extends WritingTimeMetricsSnapshot {
   submissionId: string;
   problemId?: string | null;
   questionNo: number;
@@ -71,7 +70,10 @@ export async function recordWritingSubmissionMetrics(
       .from("writing_submission_metrics")
       .insert(row);
     if (error) {
-      console.warn("recordWritingSubmissionMetrics: insert failed", error.message);
+      console.warn(
+        "recordWritingSubmissionMetrics: insert failed",
+        error.message,
+      );
     }
   } catch (err) {
     console.warn(

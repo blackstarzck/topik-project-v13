@@ -59,7 +59,8 @@ vi.mock("@/components/notifications/notifications-data", () => ({
             typeof item.payload?.invitation_id === "string"
               ? item.payload.invitation_id
               : null,
-          code: typeof item.payload?.code === "string" ? item.payload.code : null,
+          code:
+            typeof item.payload?.code === "string" ? item.payload.code : null,
           codeLabel:
             typeof item.payload?.code_label === "string"
               ? item.payload.code_label
