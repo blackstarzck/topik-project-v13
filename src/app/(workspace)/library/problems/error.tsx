@@ -19,10 +19,7 @@ export default function LibraryProblemsError({ reset }: { reset: () => void }) {
         <Button key="retry" type="primary" onClick={reset}>
           {t("retry")}
         </Button>,
-        <LibraryProblemsBackLink
-          key="back"
-          label={pageT("backToLibrary")}
-        />,
+        <LibraryProblemsBackLink key="back" label={pageT("backToLibrary")} />,
       ]}
     />
   );

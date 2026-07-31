@@ -88,10 +88,7 @@ export function useUnsavedChangesGuard({
       if (mode === "replace") {
         if (typeof window !== "undefined") {
           const targetUrl = new URL(href, window.location.href);
-          if (
-            targetUrl.origin === window.location.origin &&
-            targetUrl.hash
-          ) {
+          if (targetUrl.origin === window.location.origin && targetUrl.hash) {
             // Next's segment cache can append a cached hash to the requested
             // hash when revisiting a route, producing `#hash#hash`. A document
             // replace keeps the semantic replace contract without duplicating
@@ -215,10 +212,7 @@ export function useUnsavedChangesGuard({
         const scheduledNavigation = scheduledHrefNavigationRef.current;
         scheduledHrefNavigationRef.current = null;
         if (scheduledNavigation) {
-          navigateToHref(
-            scheduledNavigation.href,
-            scheduledNavigation.mode,
-          );
+          navigateToHref(scheduledNavigation.href, scheduledNavigation.mode);
           currentHrefRef.current = window.location.href;
           return;
         }

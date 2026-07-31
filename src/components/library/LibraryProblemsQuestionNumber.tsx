@@ -15,7 +15,10 @@ export function LibraryProblemsQuestionNumber({
       data-testid="library-problems-question-number"
       className={[
         "library-problems-question-number",
-        writingQuestionNeonClass("library-problems-question-number", questionNo),
+        writingQuestionNeonClass(
+          "library-problems-question-number",
+          questionNo,
+        ),
         className,
       ]
         .filter(Boolean)

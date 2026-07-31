@@ -1108,7 +1108,9 @@ test("F-01 library problems temporary draft filter is separate from saved items"
     .first()
     .getByRole("button", { name: PROBLEMS_ACTION_MENU_OPEN })
     .click();
-  const draftActionMenu = page.getByRole("menu").filter({ hasText: "이어쓰기" });
+  const draftActionMenu = page
+    .getByRole("menu")
+    .filter({ hasText: "이어쓰기" });
   await expect(draftActionMenu).toBeVisible();
   await expect(
     draftActionMenu.getByRole("menuitem", { name: "이어쓰기" }),

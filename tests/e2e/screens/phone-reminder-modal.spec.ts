@@ -94,7 +94,9 @@ test("opens on a direct-URL landing to a non-dashboard page", async ({
   await expect(page.getByText(REMINDER_TITLE)).toBeVisible();
 });
 
-test("ignores session suppression left by another account", async ({ page }) => {
+test("ignores session suppression left by another account", async ({
+  page,
+}) => {
   await page.goto("/library", { waitUntil: "networkidle" });
   await page.evaluate((legacyKey) => {
     window.sessionStorage.setItem(legacyKey, "1");

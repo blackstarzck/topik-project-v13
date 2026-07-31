@@ -39,7 +39,9 @@ function makeClient(options: {
     const query = {
       select: () => query,
       eq: (column: string, value: unknown) => {
-        rows = rows.filter((row) => row[column] === value || row[column] === undefined);
+        rows = rows.filter(
+          (row) => row[column] === value || row[column] === undefined,
+        );
         return query;
       },
       or: () => query,
@@ -63,13 +65,25 @@ function makeClient(options: {
 describe("getWeakDimensions", () => {
   it("normalizes score ranges and returns only dimensions meeting the sample gate", async () => {
     const dimensions = [
-      ...Array.from({ length: 5 }, () => ({ user_id: "user-1", dimension: "grammar", score: 3, score_max: 10 })),
-      ...Array.from({ length: 5 }, () => ({ user_id: "user-1", dimension: "vocab", score: 60, score_max: 100 })),
+      ...Array.from({ length: 5 }, () => ({
+        user_id: "user-1",
+        dimension: "grammar",
+        score: 3,
+        score_max: 10,
+      })),
+      ...Array.from({ length: 5 }, () => ({
+        user_id: "user-1",
+        dimension: "vocab",
+        score: 60,
+        score_max: 100,
+      })),
       { user_id: "user-1", dimension: "structure", score: 1, score_max: 10 },
     ];
     const client = makeClient({ dimensions });
 
-    await expect(getWeakDimensions("user-1", 5, async () => client as never)).resolves.toEqual([
+    await expect(
+      getWeakDimensions("user-1", 5, async () => client as never),
+    ).resolves.toEqual([
       { dimension: "grammar", avgScore: 0.3, sampleCount: 5 },
       { dimension: "vocab", avgScore: 0.6, sampleCount: 5 },
     ]);
@@ -81,24 +95,40 @@ describe("getWeaknessRecommendations", () => {
     const client = makeClient({
       canonical: [canonicalRow("p51", 51)],
       items: [
-        { id: "visible", user_id: "user-1", problem_id: "p51", rank: 1, reason: "Grammar", estimated_minutes: 10, status: "active" },
-        { id: "orphan", user_id: "user-1", problem_id: "missing", rank: 2, status: "active" },
+        {
+          id: "visible",
+          user_id: "user-1",
+          problem_id: "p51",
+          rank: 1,
+          reason: "Grammar",
+          estimated_minutes: 10,
+          status: "active",
+        },
+        {
+          id: "orphan",
+          user_id: "user-1",
+          problem_id: "missing",
+          rank: 2,
+          status: "active",
+        },
       ],
     });
 
     await expect(
       getWeaknessRecommendations("user-1", async () => client as never),
-    ).resolves.toEqual([{
-      problemId: "p51",
-      title: "Canonical 51",
-      domain: "writing",
-      questionNo: 51,
-      rank: 1,
-      reason: "Grammar",
-      source: "recommendation",
-      itemId: "visible",
-      estimatedMinutes: 10,
-    }]);
+    ).resolves.toEqual([
+      {
+        problemId: "p51",
+        title: "Canonical 51",
+        domain: "writing",
+        questionNo: 51,
+        rank: 1,
+        reason: "Grammar",
+        source: "recommendation",
+        itemId: "visible",
+        estimatedMinutes: 10,
+      },
+    ]);
     expect(client.from).not.toHaveBeenCalledWith("problems");
   });
 
@@ -117,13 +147,18 @@ describe("getWeaknessRecommendations", () => {
       dimensions,
     });
 
-    const result = await getWeaknessRecommendations("user-1", async () => client as never);
+    const result = await getWeaknessRecommendations(
+      "user-1",
+      async () => client as never,
+    );
 
-    expect(result).toEqual([expect.objectContaining({
-      problemId: "grammar-problem",
-      source: "tag_fallback",
-      questionNo: 52,
-    })]);
+    expect(result).toEqual([
+      expect.objectContaining({
+        problemId: "grammar-problem",
+        source: "tag_fallback",
+        questionNo: 52,
+      }),
+    ]);
   });
 
   it("propagates canonical catalog failures", async () => {

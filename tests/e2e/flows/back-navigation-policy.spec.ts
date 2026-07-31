@@ -260,7 +260,10 @@ test("dirty native back remains history-based and supports keep or exit", async 
   await page.goto("/writing/essay-writing-54", {
     waitUntil: "load",
   });
-  await page.locator("textarea").first().fill("브라우저 뒤로가기 확인용 임시 장문 답안입니다.");
+  await page
+    .locator("textarea")
+    .first()
+    .fill("브라우저 뒤로가기 확인용 임시 장문 답안입니다.");
 
   await page.goBack();
   const modal = page.getByTestId("autosave-warning-modal");
@@ -290,10 +293,9 @@ test("library problems and paywall use fixed replace destinations", async ({
   await goBackAndExpectPath(page, "/dashboard");
 
   await gotoDashboard(page);
-  await page.goto(
-    `/paywall?returnTo=${encodeURIComponent("/practice/next")}`,
-    { waitUntil: "load" },
-  );
+  await page.goto(`/paywall?returnTo=${encodeURIComponent("/practice/next")}`, {
+    waitUntil: "load",
+  });
   await page.getByTestId("paywall-back-control").click();
   await expectPath(page, "/practice/next");
   await goBackAndExpectPath(page, "/dashboard");
