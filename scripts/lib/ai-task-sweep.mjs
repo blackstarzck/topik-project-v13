@@ -96,7 +96,6 @@ export function resolvePipelineSharedRoot({
       "LocalAppData is required for the host-wide authentication lock.",
     );
   }
-  assertNoReparseTraversal(localAppData, "LocalAppData");
   return { root: path.join(localAppData, "TalkpikPipeline"), source: "local-app-data" };
 }
 
@@ -318,6 +317,9 @@ export async function withRepositoryAuth({
 }) {
   const safeProfile = validateRepositoryProfile(profile);
   const sharedRoot = resolvePipelineSharedRoot({ localAppData, env });
+  if (sharedRoot.source === "local-app-data") {
+    assertNoReparseTraversal(localAppData, "LocalAppData");
+  }
   const hostLockRoot = path.join(sharedRoot.root, "locks");
   if (typeof runCommand !== "function" || typeof operation !== "function") {
     throw new Error(

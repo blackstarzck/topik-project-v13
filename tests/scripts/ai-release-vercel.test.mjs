@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { mkdtempSync, realpathSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { inspect } from "node:util";
@@ -1219,5 +1219,64 @@ describe("credential location follows the shared pipeline folder", () => {
         ...filesystemFor(personal, `VERCEL_TOKEN=${SENTINEL}\n`),
       }),
     ).toThrowError("VERCEL_TOKEN_MISSING");
+  });
+});
+
+describe("credential lookup never depends on the real filesystem", () => {
+  const roots = [];
+
+  afterEach(() => {
+    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  });
+
+  function realRoot(prefix) {
+    const root = realpathSync.native(mkdtempSync(path.join(tmpdir(), prefix)));
+    roots.push(root);
+    return root;
+  }
+
+  it("reads the credential even when the personal folder path is redirected on the real disk", async () => {
+    const { createVercelCredentialProvider } = await vercel();
+    const target = realRoot("talkpik-cred-target-");
+    const parent = realRoot("talkpik-cred-parent-");
+    const redirected = path.join(parent, "redirected");
+    try {
+      symlinkSync(target, redirected, "junction");
+    } catch {
+      return;
+    }
+
+    const expected = path.join(redirected, "TalkpikPipeline", "credentials", "vercel.env");
+    const directories = new Set();
+    let directory = path.dirname(expected);
+    for (;;) {
+      directories.add(directory);
+      const next = path.dirname(directory);
+      if (next === directory) break;
+      directory = next;
+    }
+    const classify = (entry) =>
+      entry === expected ? "file" : directories.has(entry) ? "directory" : null;
+
+    const provider = createVercelCredentialProvider({
+      localAppData: redirected,
+      env: {},
+      lstatSync(entry) {
+        const kind = classify(entry);
+        if (kind === null) throw missingFileError();
+        return fileStatus(kind);
+      },
+      statSync(entry) {
+        const kind = classify(entry);
+        if (kind === null) throw missingFileError();
+        return fileStatus(kind);
+      },
+      readFileSync(entry) {
+        if (entry !== expected) throw missingFileError();
+        return `VERCEL_TOKEN=${SENTINEL}\n`;
+      },
+    });
+
+    expect(provider.source()).toBe("file");
   });
 });
