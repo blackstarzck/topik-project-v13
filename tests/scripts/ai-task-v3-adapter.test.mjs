@@ -3,10 +3,13 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  ADAPTER_PROFILE_IDENTITIES,
+  adapterIdentity,
   autoCleanupTaskV3Adapter,
   runRepositorySweepV3,
   sweepTasksV3Adapter,
 } from "../../scripts/lib/ai-task-v3-adapter.mjs";
+import { parseRepositoryIdentity } from "../../scripts/lib/ai-task-lifecycle-v3.mjs";
 import {
   copyV2SweepCandidates,
   runTaskLifecycleCommand,
@@ -24,7 +27,7 @@ function record(overrides = {}) {
     headSha: HEAD,
     repoProfile: {
       remote: "origin",
-      repositoryIdentity: "blackstarzck/topik-project-v13",
+      repositoryIdentity: "github.com/blackstarzck/topik-project-v13",
       authLogin: "blackstarzck",
     },
     workspace: { kind: "shared-slot", ownership: "managed" },
@@ -132,7 +135,7 @@ describe("V3 production autocleanup adapter", () => {
     expect(captured).toEqual([expect.objectContaining({
       source: "github-pr",
       authLogin: "blackstarzck",
-      repositoryIdentity: "blackstarzck/topik-project-v13",
+      repositoryIdentity: "github.com/blackstarzck/topik-project-v13",
       headSha: HEAD,
       mainSha: MAIN,
       remoteBranch: { exists: true, sha: HEAD },
@@ -157,7 +160,7 @@ describe("V3 production autocleanup adapter", () => {
     const task = record({
       repoProfile: {
         remote: "origin",
-        repositoryIdentity: "keduall/topik-project-v13",
+        repositoryIdentity: "github.com/keduall/topik-project-v13",
         authLogin: "guestkeduall-design",
       },
     });
@@ -241,7 +244,7 @@ describe("V3 production autocleanup adapter", () => {
       readRecord: () => record({
         repoProfile: {
           remote: "origin",
-          repositoryIdentity: "other/repository",
+          repositoryIdentity: "github.com/other/repository",
           authLogin: "attacker",
         },
       }),
@@ -575,5 +578,65 @@ describe("V3 sweep and CLI routing", () => {
       },
     ]);
     expect(migrateV2Task).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("V3 record identity is the identity the adapter approves", () => {
+  it("accepts the exact identity shape the v3 lifecycle writes for both approved repositories", () => {
+    for (const [remoteUrl, expected] of [
+      ["https://github.com/blackstarzck/topik-project-v13.git", "blackstarzck/topik-project-v13"],
+      ["https://github.com/keduall/topik-project-v13.git", "keduall/topik-project-v13"],
+      ["git@github.com:blackstarzck/topik-project-v13.git", "blackstarzck/topik-project-v13"],
+    ]) {
+      const produced = parseRepositoryIdentity(remoteUrl).identity;
+      expect(adapterIdentity(produced)).toBe(expected);
+      expect(ADAPTER_PROFILE_IDENTITIES).toContain(expected);
+    }
+  });
+
+  it("refuses identities that are not exactly a github.com owner and repository", () => {
+    for (const value of [
+      "blackstarzck/topik-project-v13",
+      "local/test/topik-project-v13",
+      "evil.com/blackstarzck/topik-project-v13",
+      "github.com/blackstarzck",
+      "github.com/blackstarzck/topik-project-v13/extra",
+      "",
+      null,
+      undefined,
+      42,
+    ]) {
+      expect(adapterIdentity(value)).toBeNull();
+    }
+  });
+
+  it("preserves a merged managed task instead of approving it when the identity is unapproved", async () => {
+    const task = record({
+      repoProfile: {
+        remote: "origin",
+        repositoryIdentity: "local/test/topik-project-v13",
+        authLogin: "local",
+      },
+    });
+    const harness = originHarness({ task });
+
+    const result = await autoCleanupTaskV3Adapter({
+      repoPath: "C:/repo",
+      branch: task.branch.name,
+      now: NOW,
+      readRecord: () => task,
+      runCommand: harness.runCommand,
+      gitRunner: harness.gitRunner,
+      localAppData: "C:/Users/test/AppData/Local",
+      withAuth: async () => {
+        throw new Error("authentication must not be attempted for an unapproved identity");
+      },
+      cleanupRecord: () => {
+        throw new Error("cleanup must not run for an unapproved identity");
+      },
+    });
+
+    expect(result.result).toBe("PRESERVED");
+    expect(result.blocker).toBe("REPOSITORY_PROFILE_UNAPPROVED");
   });
 });
