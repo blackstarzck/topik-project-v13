@@ -365,7 +365,7 @@ jobs:
           git cat-file -e 'refs/remotes/origin/main^{commit}'
 
       - name: Check security artifacts in reachable publish history
-        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
+        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main --baseline-config config/security-audit-baseline.json
 
       - name: Check UI contract diff baseline (trusted)
         env:
@@ -789,7 +789,7 @@ jobs:
           git cat-file -e 'refs/remotes/origin/main^{commit}'
 
       - name: Check security artifacts in reachable publish history
-        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main
+        run: node scripts/security-artifact-audit.mjs --repo . --mode check --refs HEAD --baseline-ref origin/main --baseline-config config/security-audit-baseline.json
 
       - name: Check project structure
         run: node scripts/check-project-structure.mjs
