@@ -58,10 +58,18 @@ function originHarness({
       return commandResult("true");
     }
     if (args[0] === "pr" && args[1] === "list") {
+      // 실제 gh 는 --head 에 "<owner>:<branch>" 형식을 지원하지 않는다(`gh pr list --help`).
+      // 그 형식을 넘기면 조용히 빈 목록을 준다. 스텁도 같게 동작해야 조회 인자 결함이 드러난다.
+      const head = args[args.indexOf("--head") + 1];
+      if (head !== task.branch.name) return commandResult("[]");
       return commandResult(JSON.stringify([{
         baseRefName: "main",
         headRefName: task.branch.name,
         headRefOid: prHead,
+        headRepository: {
+          name: "topik-project-v13",
+          nameWithOwner: "blackstarzck/topik-project-v13",
+        },
         mergedAt: NOW,
         mergeCommit: { oid: MAIN },
       }]));
@@ -156,6 +164,86 @@ describe("V3 production autocleanup adapter", () => {
     expect(ghCall.options.env).not.toHaveProperty("GIT_DIR");
   });
 
+  it("accepts a merged PR whose head branch lives in this repository and refuses an identical fork PR", async () => {
+    // --head 는 브랜치 이름만 받으므로 fork 의 동명 브랜치도 목록에 들어온다. 삭제 판단의
+    // 근거이므로 head 저장소가 이 저장소인지 확인해야 한다.
+    const forkHarness = (headRepositoryNameWithOwner) => {
+      const task = record();
+      let remoteExists = true;
+      const runCommand = vi.fn(async (file, args) => {
+        if (file !== "gh") throw new Error("unexpected async command");
+        if (args.join(" ") === "api user --jq .login") return commandResult("blackstarzck");
+        if (args[0] === "api" && args[1] === "repos/blackstarzck/topik-project-v13") {
+          return commandResult("true");
+        }
+        if (args[0] === "pr" && args[1] === "list") {
+          const head = args[args.indexOf("--head") + 1];
+          if (head !== task.branch.name) return commandResult("[]");
+          return commandResult(JSON.stringify([{
+            baseRefName: "main",
+            headRefName: task.branch.name,
+            headRefOid: HEAD,
+            mergedAt: NOW,
+            mergeCommit: { oid: MAIN },
+            headRepository: {
+              name: "topik-project-v13",
+              nameWithOwner: headRepositoryNameWithOwner,
+            },
+          }]));
+        }
+        throw new Error(`unexpected gh command: ${args.join(" ")}`);
+      });
+      const gitRunner = vi.fn((_cwd, args) => {
+        const command = args.join(" ");
+        if (command === "remote get-url origin") {
+          return { status: 0, stdout: "git@github.com:blackstarzck/topik-project-v13.git" };
+        }
+        if (command === "rev-parse --git-common-dir") {
+          return { status: 0, stdout: path.resolve("C:/repo/.git") };
+        }
+        if (command.startsWith("fetch --prune origin ")) return { status: 0, stdout: "" };
+        if (command === "rev-parse --verify origin/main^{commit}") {
+          return { status: 0, stdout: MAIN };
+        }
+        if (command.startsWith("merge-base --is-ancestor ")) return { status: 0, stdout: "" };
+        if (command === `ls-remote --heads origin refs/heads/${task.branch.name}`) {
+          return {
+            status: 0,
+            stdout: remoteExists ? `${HEAD}\trefs/heads/${task.branch.name}` : "",
+          };
+        }
+        if (command.startsWith("push --force-with-lease=")) {
+          remoteExists = false;
+          return { status: 0, stdout: "" };
+        }
+        return { status: 1, stdout: "" };
+      });
+      return { task, runCommand, gitRunner };
+    };
+
+    const run = async (nameWithOwner) => {
+      const harness = forkHarness(nameWithOwner);
+      return autoCleanupTaskV3Adapter({
+        repoPath: "C:/repo",
+        branch: harness.task.branch.name,
+        now: NOW,
+        readRecord: () => harness.task,
+        runCommand: harness.runCommand,
+        gitRunner: harness.gitRunner,
+        withAuth: async ({ operation }) => ({
+          result: "AUTHENTICATED",
+          value: await operation({}),
+        }),
+        cleanupRecord: () => ({ result: "CLEANED", blocker: null }),
+      });
+    };
+
+    expect(await run("blackstarzck/topik-project-v13"))
+      .toEqual({ result: "CLEANED", blocker: null });
+    expect(await run("attacker/topik-project-v13"))
+      .toMatchObject({ result: "PRESERVED", blocker: "MERGED_MAIN_PR_NOT_FOUND" });
+  });
+
   it("uses a released PromotionRun as mandatory production evidence for collab/main", async () => {
     const task = record({
       repoProfile: {
@@ -177,6 +265,10 @@ describe("V3 production autocleanup adapter", () => {
           baseRefName: "main",
           headRefName: "stg",
           headRefOid: STG,
+          headRepository: {
+            name: "topik-project-v13",
+            nameWithOwner: "keduall/topik-project-v13",
+          },
           mergedAt: NOW,
           mergeCommit: { oid: MAIN },
         }]));

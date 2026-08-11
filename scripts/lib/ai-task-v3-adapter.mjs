@@ -201,13 +201,17 @@ function parsePrList(result) {
   }
 }
 
-function validMergedPr(entry, { headName, headSha }) {
+function validMergedPr(entry, { headName, headSha, repository }) {
   return (
     entry &&
     Object.keys(entry).every((key) =>
-      ["baseRefName", "headRefName", "headRefOid", "mergedAt", "mergeCommit"].includes(key)) &&
+      ["baseRefName", "headRefName", "headRefOid", "headRepository", "mergedAt", "mergeCommit"]
+        .includes(key)) &&
     entry.baseRefName === "main" &&
     entry.headRefName === headName &&
+    // --head 는 브랜치 이름만 좁히므로 fork 의 동명 브랜치도 목록에 들어온다. head 저장소가
+    // 이 저장소여야 한다. head SHA 까지 같은 fork PR 이 삭제 근거가 되는 것을 막는다.
+    entry.headRepository?.nameWithOwner === repository &&
     entry.headRefOid === headSha &&
     SHA_PATTERN.test(entry.mergeCommit?.oid ?? "") &&
     typeof entry.mergedAt === "string" &&
@@ -235,10 +239,13 @@ async function resolveMainPr({
       "merged",
       "--base",
       "main",
+      // gh 는 --head 에 "<owner>:<branch>" 형식을 지원하지 않고(`gh pr list --help`)
+      // 그 형식을 넘기면 조용히 빈 목록을 반환한다. 소유자는 아래 validMergedPr 의
+      // headRepository.nameWithOwner 검사로 좁힌다.
       "--head",
-      `${repositoryProfile.owner}:${headName}`,
+      headName,
       "--json",
-      "baseRefName,headRefName,headRefOid,mergedAt,mergeCommit",
+      "baseRefName,headRefName,headRefOid,headRepository,mergedAt,mergeCommit",
       "--limit",
       "100",
     ],
@@ -246,7 +253,8 @@ async function resolveMainPr({
   );
   const entries = parsePrList(result);
   if (entries === null) return { blocker: "MERGED_MAIN_PR_QUERY_FAILED" };
-  const exact = entries.filter((entry) => validMergedPr(entry, { headName, headSha }));
+  const exact = entries.filter((entry) =>
+    validMergedPr(entry, { headName, headSha, repository }));
   if (exact.length !== 1) return { blocker: "MERGED_MAIN_PR_NOT_FOUND" };
   return { pr: exact[0] };
 }

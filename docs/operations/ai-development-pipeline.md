@@ -418,6 +418,14 @@ pipeline이 도구 사이에서 공유해야 하는 상태는 **공유 pipeline 
 | `host` / `adopted` | task 산출물과 claim만 해제하고 workspace·Git ref는 보존 |
 | Keduall promotion | Production 성공 뒤 candidate branch와 임시 checkout만 정리. `stg`·`main`은 절대 삭제하지 않음 |
 
+#### 병합 PR 조회는 브랜치 이름으로 하고 소유자는 head 저장소로 좁힌다 (2026-08-11)
+
+정리 판단의 근거인 merged PR 조회는 `gh pr list --head <브랜치 이름>`으로 한다. `--head`에 `<owner>:<branch>` 형식을 넘기면 안 된다. `gh`는 그 형식을 지원하지 않으면서(`gh pr list --help`에 명시) 오류 대신 **빈 목록**을 반환하기 때문에, 정상 병합된 PR도 찾지 못하고 항상 `MERGED_MAIN_PR_NOT_FOUND`로 보존된다. 2026-08-11 이 결함으로 병합 후 자동 정리가 전혀 동작하지 않았고 워크트리를 수동 제거해야 했다.
+
+브랜치 이름만으로는 소유자를 좁히지 못하므로 조회 결과에서 `headRepository.nameWithOwner`가 이 저장소와 같은지 확인한다. fork 의 동명 브랜치가 같은 head SHA 로 목록에 들어오면 워크트리·브랜치 삭제 근거가 잘못 성립할 수 있어, 이 확인이 없으면 조회 인자만 고치는 것으로는 안전하지 않다.
+
+테스트 스텁은 `--head` 인자를 실제 `gh`처럼 판정해야 한다. 인자를 무시하고 언제나 같은 목록을 돌려주는 스텁은 이 결함을 통과시킨다. 실제로 그렇게 돼 있어 결함이 오래 남았다.
+
 원격 task branch가 남아 있으면 repository profile에 맞는 계정으로 전환하고 remote identity와 ref가 merged PR head SHA와 정확히 같을 때만 `--force-with-lease=<remote-ref>:<expected-sha>`를 사용한 exact-SHA lease로 삭제한다. 이 옵션은 임의 SHA로 원격을 덮어쓰는 강제 push가 아니라, 원격 ref가 방금 검증한 SHA 그대로일 때만 삭제를 허용하는 TOCTOU 보호 장치다. 삭제 직후 전체 snapshot을 다시 계산하며 조금이라도 달라지면 worktree와 로컬 branch는 보존한다. 인증·identity·SHA 확인 실패도 로컬 항목을 그대로 보존한다.
 
 Black 또는 Keduall `main` 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 `task:autocleanup`을 즉시 실행한다. 에이전트 밖에서 병합됐거나 즉시 실행이 끊긴 작업은 다음 코드 작업의 `task:prepare`가 숨김 일회성 `task:sweep`을 실행해 따라잡는다. `task:start`도 이전 호출 경로와의 호환을 위해 같은 일회성 sweep을 실행한다. 질문·조사·리뷰에 쓰는 `task:prepare --intent read-only`는 네트워크나 sweep을 시작하지 않는다.
