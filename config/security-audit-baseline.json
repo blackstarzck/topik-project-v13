@@ -1,18 +1,881 @@
 {
-  "schemaVersion": 1,
-  "recordType": "SecurityAuditBaselineV1",
+  "approvedAt": "2026-08-11T07:16:30.087Z",
   "baselineSha": "e91e4aa3acfb8610d0ec413c3dfc206408d1f4ad",
-  "approvedAt": "2026-07-30T23:55:11.800Z",
-  "refs": [
-    "collab/main",
-    "collab/stg",
-    "origin/main"
-  ],
   "exceptions": [
     {
       "path": ".env.example",
       "rule": "TRACKED_ENV_FILE",
       "reason": "값이 없는 환경 변수 템플릿이다. tests/scripts/no-supabase-remote-apply-surface.test.ts가 이 파일에 token류가 없음을 검사한다."
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/apply-data-fixes.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/capture-evidence.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/capture-manifest.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/evidence.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/gen-report.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/inspect-q52.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-2026-06-09/probe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-err.txt",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/audit-out.txt",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/auth-email-ui/playwright.config.ts",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/auth-probe/dashboard.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/check-library-problem-rpc.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/clean-check.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/commit-msg.txt",
+      "reason": "커밋 메시지 초안이다. 검출된 이메일은 Co-authored-by 트레일러의 도구 주소이며 회원 개인정보가 아니다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴은 이 항목 외 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/conn-test.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/dedup-verify.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/diag.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/e2e-google-oauth-evidence/2026-06-10T23-29-17-001Z/report.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/extract-audit.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/gap-probe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/growth-trend-shot.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/insert-history.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/inspect-mig.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/lang-locale-check.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/lang-restore-ko.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/lang-restore-measure.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/lang-shot.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/msg-shadow-probe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/nickname-ui-states/capture.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/notif-probe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/notif-shot.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase2-probe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase2-visual-evidence/phase2-a01-sign-up.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase2-visual-evidence/phase2-a02-login.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase2-visual-evidence/phase2-a03-learning-goal.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase2-visual-evidence/phase2-x01-product-landing.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-b01-home-dashboard.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-c01-problem-type-recommendations.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-c02-problem-list.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-d01-short-answer-writing-51.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-d02-answer-writing-52.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-d03-long-form-writing-53.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-d04-essay-writing-54.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-e01-short-answer-feedback.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-e02-long-form-feedback.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-f01-library.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-g01-language-settings.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-r02-next-problem.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x02-growth-dashboard.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x03-paywall.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x04-subscription.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x05-profile-editing.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x06-password-reset.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x07-weakness-recommendations.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x09-notification-settings.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x11-auth-error-otp.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x11-auth-error-ratelimit.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x12-auth-verify-email.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x13-terms.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x14-privacy.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x16-password-reset-confirm.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/phase3-visual-evidence/phase3-x17-auth-callback-fragment.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/probe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/capture-routes.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/commit-msg.txt",
+      "reason": "커밋 메시지 초안이다. 검출된 이메일은 Co-authored-by 트레일러의 도구 주소이며 회원 개인정보가 아니다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴은 이 항목 외 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/commitmsg.txt",
+      "reason": "커밋 메시지 초안이다. 검출된 이메일은 Co-authored-by 트레일러의 도구 주소이며 회원 개인정보가 아니다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴은 이 항목 외 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/g6-and-security.mjs",
+      "reason": "누출 탐지용 점검 스크립트다. access_token 은 리터럴이 아니라 process.env.SUPABASE_ACCESS_TOKEN 참조이며 값이 파일에 없다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/library-debug.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/manual-checks-20260612.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/modal-title-diag.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/notfound-observe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/pdf-manual-check.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/scenario-batch2.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/scenario-observe.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/state-s3-refine.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/qa-diag/tagcheck.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/_env.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/capture-findings.md",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/capture-matrix.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/inspect-db.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/modal-capture-v2.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/render-report.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/review-workflow.js",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/seed-and-interact.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/review-2026-06-09/teardown-seed.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/run-sql.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/terms-after/terms-after.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/terms-before/terms-before.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/terms-latest/terms-latest.json",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/ui-check/shot-closeup.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/ui-check/shot-problems.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/ui-screenshots/signup-cooldown-2026-06-14/evidence.md",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/verify-applied.sql",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/verify-layout.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/warm.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/weakness-shot.mjs",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".scratch/writing-51-54-review.html",
+      "reason": "작업용 scratch 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_SCRATCH_PATH"
+    },
+    {
+      "path": ".tmp/staged-global.css",
+      "reason": "작업 중 생성된 임시 파일이다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_TMP_PATH"
+    },
+    {
+      "path": "artifacts/admin-transfer-session-report-2026-06-18.html",
+      "reason": "추적된 작업 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_ARTIFACT_PATH"
+    },
+    {
+      "path": "artifacts/signup-qa-20260623-030224/summary.json",
+      "reason": "추적된 작업 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_ARTIFACT_PATH"
+    },
+    {
+      "path": "artifacts/signup-qa-fixes-20260623-041900/summary.json",
+      "reason": "추적된 작업 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_ARTIFACT_PATH"
+    },
+    {
+      "path": "artifacts/signup-qa-fixes-20260623-042032/summary.json",
+      "reason": "추적된 작업 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_ARTIFACT_PATH"
+    },
+    {
+      "path": "artifacts/signup-qa-fixes-20260623-133611/summary.json",
+      "reason": "추적된 작업 산출물이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TRACKED_ARTIFACT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/01-A-01-sign-up/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/01-A-01-sign-up/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/02-A-02-login/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/02-A-02-login/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/03-A-03-learning-goal-setup/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/03-A-03-learning-goal-setup/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/05-C-01-problem-type-recommendations/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/05-C-01-problem-type-recommendations/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/06-C-02-problem-list/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/06-C-02-problem-list/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/07-C-03-retry-modal/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/07-C-03-retry-modal/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/09-D-02-answer-writing-52/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/09-D-02-answer-writing-52/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/10-D-03-long-form-writing-53/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/10-D-03-long-form-writing-53/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/11-D-04-essay-writing-54/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/11-D-04-essay-writing-54/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/12-D-M1-submission-confirmation-modal/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/12-D-M1-submission-confirmation-modal/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/13-D-M2-ai-analysis-loading/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/13-D-M2-ai-analysis-loading/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/14-E-01-short-answer-feedback/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/14-E-01-short-answer-feedback/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/15-E-02-long-form-feedback/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/15-E-02-long-form-feedback/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/16-R-01-comparison-report/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/16-R-01-comparison-report/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/17-R-02-next-problem-recommendation/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/17-R-02-next-problem-recommendation/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/18-F-01-my-library/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/19-F-M1-pdf-export-modal/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/20-G-01-language-settings/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/22-D-M3-autosave-warning/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/22-D-M3-autosave-warning/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/24-X-02-growth-dashboard/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/25-X-03-paywall/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/26-X-04-subscription-management/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/26-X-04-subscription-management/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/27-X-05-profile-editing/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/28-X-06-password-reset/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/29-X-07-weakness-based-recommendations/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/31-X-09-notification-settings/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/33-X-11-auth-error/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/34-X-12-auth-verify-email/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/35-X-13-terms/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/36-X-14-privacy-policy/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/38-X-16-password-reset-confirm/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/39-X-17-auth-callback-fragment/current.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/design-review-result/wireframe-ui-audit/2026-06-10/screenshots/39-X-17-auth-callback-fragment/findings.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "docs/qa/reports/2026-07-07-institution-invitation-ux/screenshot-manifest.json",
+      "reason": "화면 캡처 회차의 부속 메타 파일이다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "INTERMEDIATE_SCREENSHOT_PATH"
+    },
+    {
+      "path": "scripts/_tmp-antd-audit.mjs",
+      "reason": "일회성 codemod·점검 스크립트다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TEMPORARY_SCRIPT_PATH"
+    },
+    {
+      "path": "scripts/_tmp-antd-codemod.mjs",
+      "reason": "일회성 codemod·점검 스크립트다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TEMPORARY_SCRIPT_PATH"
+    },
+    {
+      "path": "scripts/_tmp-antd-props.mjs",
+      "reason": "일회성 codemod·점검 스크립트다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TEMPORARY_SCRIPT_PATH"
+    },
+    {
+      "path": "scripts/_tmp-antd-smoke.mjs",
+      "reason": "일회성 codemod·점검 스크립트다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TEMPORARY_SCRIPT_PATH"
+    },
+    {
+      "path": "scripts/_tmp-antd-warnsweep.mjs",
+      "reason": "일회성 codemod·점검 스크립트다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TEMPORARY_SCRIPT_PATH"
+    },
+    {
+      "path": "scripts/_tmp-lib-stack.mjs",
+      "reason": "일회성 codemod·점검 스크립트다. 현재 트리에서 이미 삭제됐고 이력에만 남는다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "TEMPORARY_SCRIPT_PATH"
+    },
+    {
+      "path": "supabase/migrations/down/20260527113000_storage_email_confirmed_hardening.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
     {
       "path": "supabase/migrations/down/20260612190000_notification_email_pipeline.sql",
@@ -30,12 +893,52 @@
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
     {
+      "path": "supabase/migrations/down/20260612200000_user_marketing_consent.sql",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다.",
+      "rule": "UNAPPROVED_SQL_PATH"
+    },
+    {
       "path": "supabase/migrations/down/20260612200100_marketing_consent_in_dispatch.sql",
       "rule": "UNAPPROVED_SQL_PATH",
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
     {
+      "path": "supabase/migrations/down/20260619140000_profiles_affiliation_code.sql",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다.",
+      "rule": "UNAPPROVED_SQL_PATH"
+    },
+    {
+      "path": "supabase/migrations/down/20260622120000_account_deletion_soft_delete.sql",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다.",
+      "rule": "UNAPPROVED_SQL_PATH"
+    },
+    {
+      "path": "supabase/migrations/down/20260622150000_legal_documents_projection.sql",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다.",
+      "rule": "UNAPPROVED_SQL_PATH"
+    },
+    {
+      "path": "supabase/migrations/down/20260624110000_sync_available_writing_problems.sql",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다.",
+      "rule": "UNAPPROVED_SQL_PATH"
+    },
+    {
+      "path": "supabase/migrations/down/20260701140000_accept_affiliation_invite.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
       "path": "supabase/migrations/down/20260707120000_pdf_export_quota.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260710093000_revoke_anon_superseded_auth_gate.sql",
+      "rule": "UNAPPROVED_SQL_PATH",
+      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
+    },
+    {
+      "path": "supabase/migrations/down/20260710095000_profiles_country_code_iso_check.sql",
       "rule": "UNAPPROVED_SQL_PATH",
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
@@ -80,26 +983,6 @@
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
     {
-      "path": "supabase/migrations/down/20260527113000_storage_email_confirmed_hardening.sql",
-      "rule": "UNAPPROVED_SQL_PATH",
-      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
-    },
-    {
-      "path": "supabase/migrations/down/20260701140000_accept_affiliation_invite.sql",
-      "rule": "UNAPPROVED_SQL_PATH",
-      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
-    },
-    {
-      "path": "supabase/migrations/down/20260710093000_revoke_anon_superseded_auth_gate.sql",
-      "rule": "UNAPPROVED_SQL_PATH",
-      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
-    },
-    {
-      "path": "supabase/migrations/down/20260710095000_profiles_country_code_iso_check.sql",
-      "rule": "UNAPPROVED_SQL_PATH",
-      "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
-    },
-    {
       "path": "supabase/migrations/down/20260718120000_auth_gate_exact_consent_snapshots.sql",
       "rule": "UNAPPROVED_SQL_PATH",
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
@@ -135,10 +1018,22 @@
       "reason": "승인된 migration의 되돌리기 SQL이다. 임시 산출물이 아니며 migration 폴더 규칙이 하위 폴더를 승인하지 않아 걸린다."
     },
     {
+      "path": "supabase/seed.sql",
+      "reason": "저장소 정본 seed 파일이며 임시 산출물이 아니다. migration 폴더 밖의 .sql 이라 규칙에 걸린다. 2026-08-11 전수 내용 검사에서 자격증명·개인정보 패턴 미검출(JWT·Supabase 키·bcrypt·DB 접속 문자열·세션 저장 파일·이메일·전화번호·주민등록번호 기준).",
+      "rule": "UNAPPROVED_SQL_PATH"
+    },
+    {
       "path": "tests/e2e/_tmp-seed-notif.mjs",
       "rule": "TEMPORARY_SCRIPT_PATH",
       "reason": "알림 E2E가 쓰는 seed helper다. 파일명에 임시 표시가 있지만 tracked 테스트 자산이다."
     }
   ],
-  "fingerprint": "c9a410240b7022340b8decc24f6fbbc38bc0088bcd4b203835024bcdcd8ad19a"
+  "fingerprint": "c98916a8f93c9999d5a4e56db85ef4ee2fb72b9698f564261c375bd0c357193b",
+  "recordType": "SecurityAuditBaselineV1",
+  "refs": [
+    "collab/main",
+    "collab/stg",
+    "origin/main"
+  ],
+  "schemaVersion": 1
 }
