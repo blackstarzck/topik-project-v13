@@ -16,7 +16,9 @@ import {
   validatePromotionRunV1,
 } from "./ai-release-promotion.mjs";
 import {
+  V3_BLOCKER_PATTERN,
   autoCleanupTaskRecordV3,
+  mergeDelegatedCleanupBlockers,
   readTaskRecordV3ByBranch,
   reconcileDelegatedCleanupV3,
   sweepTaskRecordsV3,
@@ -48,7 +50,13 @@ function preserved(blocker) {
     recordType: "TaskAutoCleanupAdapterResultV3",
     result: "PRESERVED",
     blocker,
+    blockers: [blocker],
   };
+}
+
+// V2 가 던진 예외에서 보고 가능한 코드만 뽑는다. 형식에 맞지 않으면 일반 코드로 대체한다.
+function safeV2Blocker(error) {
+  return V3_BLOCKER_PATTERN.test(error?.code ?? "") ? error.code : "V2_CLEANUP_THREW";
 }
 
 function sanitizedEnvironment(source = process.env) {
@@ -470,8 +478,10 @@ async function resolveAndCleanup({
         trigger,
         now,
       });
-    } catch {
-      v2Result = null;
+    } catch (error) {
+      // 예외를 삼키면 정리 실패 원인이 사라진다. 안전한 코드로 바꿔 blocker 병합 경로에
+      // 넘겨 보고에 남긴다.
+      v2Result = { result: "V2_THREW", blockers: [safeV2Blocker(error)] };
     }
     const v3Task = reconcileIsolated({
       repoPath,
@@ -479,11 +489,23 @@ async function resolveAndCleanup({
       v2Result,
       now,
     });
+    const cleaned = v3Task.state === "CLEANED";
+    // record 의 blocker 와 방금 받은 V2 이유를 합친다. PRESERVED 는 종단 상태라
+    // reconcileDelegatedCleanupV3 가 조기 반환하고 record 의 blocker 를 갱신하지 않으므로,
+    // 이미 막힌 task 를 재시도할 때는 record 만 읽으면 옛 이유가 그대로 보고된다.
+    // blocker 단일 문자열 계약은 기존 호출자를 위해 유지한다.
+    const blockers = cleaned
+      ? []
+      : [...new Set([
+        ...(Array.isArray(v3Task.blockers) ? v3Task.blockers : []),
+        ...mergeDelegatedCleanupBlockers(v2Result),
+      ])];
     return {
       schemaVersion: 3,
       recordType: "TaskAutoCleanupAdapterResultV3",
-      result: v3Task.state === "CLEANED" ? "CLEANED" : "PRESERVED",
-      blocker: v3Task.state === "CLEANED" ? null : "V2_CLEANUP_NOT_CONFIRMED",
+      result: cleaned ? "CLEANED" : "PRESERVED",
+      blocker: cleaned ? null : blockers[0],
+      blockers,
       v3Task,
     };
   }

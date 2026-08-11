@@ -1178,9 +1178,11 @@ describe("claim and cleanup", () => {
       now: LATER,
       v2StatusReader: () => ({ task: { state: "ACTIVE", branch: unresolved.branch.name } }),
     });
+    // 위임 실패 사실만 남기면 운영자가 무엇을 고쳐야 하는지 알 수 없다. V2 가 준 실제
+    // 이유를 함께 남긴다.
     expect(preserved).toMatchObject({
       state: "PRESERVED",
-      blockers: ["V2_CLEANUP_NOT_CONFIRMED"],
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED", "RUNTIME_ACTIVE"],
     });
   });
 

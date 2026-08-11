@@ -2368,6 +2368,19 @@ export function runTaskCommandV3({
   return { handled: false, result: null, v3Task: record };
 }
 
+// 위임 실패 사실(V2_CLEANUP_NOT_CONFIRMED)만 남기면 운영자가 무엇을 고쳐야 하는지 알 수
+// 없다. V2 가 보고한 실제 이유를 함께 남긴다. V2 결과는 이 모듈이 검증하지 않는 입력이라
+// record schema 가 허용하는 형식만 통과시키고 개수 상한도 지킨다.
+export const V3_BLOCKER_PATTERN = /^[A-Z0-9_:-]{1,128}$/u;
+const V3_BLOCKER_LIMIT = 32;
+
+export function mergeDelegatedCleanupBlockers(v2Result) {
+  const reported = Array.isArray(v2Result?.blockers) ? v2Result.blockers : [];
+  const safe = reported.filter((item) =>
+    typeof item === "string" && V3_BLOCKER_PATTERN.test(item));
+  return [...new Set(["V2_CLEANUP_NOT_CONFIRMED", ...safe])].slice(0, V3_BLOCKER_LIMIT);
+}
+
 export function reconcileDelegatedCleanupV3({
   repoPath,
   branch,
@@ -2398,7 +2411,7 @@ export function reconcileDelegatedCleanupV3({
     pendingActor: null,
     handoffFromActor: null,
     runtimeRef: v2ConfirmsCleaned ? null : current.runtimeRef,
-    blockers: v2ConfirmsCleaned ? [] : ["V2_CLEANUP_NOT_CONFIRMED"],
+    blockers: v2ConfirmsCleaned ? [] : mergeDelegatedCleanupBlockers(v2Result),
   }, now);
 }
 

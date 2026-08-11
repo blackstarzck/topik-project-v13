@@ -426,6 +426,17 @@ pipeline이 도구 사이에서 공유해야 하는 상태는 **공유 pipeline 
 
 테스트 스텁은 `--head` 인자를 실제 `gh`처럼 판정해야 한다. 인자를 무시하고 언제나 같은 목록을 돌려주는 스텁은 이 결함을 통과시킨다. 실제로 그렇게 돼 있어 결함이 오래 남았다.
 
+#### 정리 실패 보고는 실제 이유를 담는다 (2026-08-11)
+
+isolated managed workspace의 정리는 V2 정리기에 위임한다. 위임이 확인되지 않으면 `V2_CLEANUP_NOT_CONFIRMED`가 남는데, 이 코드만으로는 운영자가 무엇을 고쳐야 하는지 알 수 없다. 그래서 V2가 보고한 실제 blocker를 함께 남긴다.
+
+- `TaskAutoCleanupAdapterResultV3`는 단일 `blocker` 문자열과 함께 `blockers` 배열을 보고한다. `blocker`는 기존 호출자를 위해 유지하며 배열의 첫 항목과 같다. 결과를 만드는 세 지점이 모두 같은 형태를 내보내므로 호출자가 `blockers` 유무를 분기하지 않아도 된다.
+- V3 record의 `blockers`에도 위임 실패 사실과 V2 이유를 함께 기록한다. V2 결과는 검증되지 않은 입력이므로 record schema가 허용하는 형식(`^[A-Z0-9_:-]{1,128}$`)만 통과시키고 개수 상한 32를 지킨다.
+- **`PRESERVED`는 종단 상태다.** 이미 보존된 task를 다시 정리 시도하면 `reconcileDelegatedCleanupV3`가 조기 반환해 record의 `blockers`를 갱신하지 않는다. 그래서 어댑터 결과는 record의 값과 **방금 받은 V2 이유를 합쳐** 보고한다. record만 읽으면 재시도 때 옛 이유가 그대로 나온다.
+- V2가 예외를 던지면 그 정보를 버리지 않는다. 예외의 코드가 위 형식에 맞으면 그대로, 아니면 `V2_CLEANUP_THREW`를 blocker로 남긴다. 예외를 조용히 삼키면 정리가 왜 막혔는지 추적할 수 없다.
+
+이 보고가 없던 동안 정리 실패 원인을 찾으려면 V2 정리기를 직접 호출해야 했다. 정리 실패는 워크트리가 쌓이는 결과로 이어지므로 보고만으로 조치할 수 있어야 한다.
+
 원격 task branch가 남아 있으면 repository profile에 맞는 계정으로 전환하고 remote identity와 ref가 merged PR head SHA와 정확히 같을 때만 `--force-with-lease=<remote-ref>:<expected-sha>`를 사용한 exact-SHA lease로 삭제한다. 이 옵션은 임의 SHA로 원격을 덮어쓰는 강제 push가 아니라, 원격 ref가 방금 검증한 SHA 그대로일 때만 삭제를 허용하는 TOCTOU 보호 장치다. 삭제 직후 전체 snapshot을 다시 계산하며 조금이라도 달라지면 worktree와 로컬 branch는 보존한다. 인증·identity·SHA 확인 실패도 로컬 항목을 그대로 보존한다.
 
 Black 또는 Keduall `main` 병합에 성공한 에이전트는 대상 worktree 밖의 안전한 기준 checkout에서 `task:autocleanup`을 즉시 실행한다. 에이전트 밖에서 병합됐거나 즉시 실행이 끊긴 작업은 다음 코드 작업의 `task:prepare`가 숨김 일회성 `task:sweep`을 실행해 따라잡는다. `task:start`도 이전 호출 경로와의 호환을 위해 같은 일회성 sweep을 실행한다. 질문·조사·리뷰에 쓰는 `task:prepare --intent read-only`는 네트워크나 sweep을 시작하지 않는다.
