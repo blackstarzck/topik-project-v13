@@ -418,7 +418,7 @@ pipeline이 도구 사이에서 공유해야 하는 상태는 **공유 pipeline 
 | `host` / `adopted` | task 산출물과 claim만 해제하고 workspace·Git ref는 보존 |
 | Keduall promotion | Production 성공 뒤 candidate branch와 임시 checkout만 정리. `stg`·`main`은 절대 삭제하지 않음 |
 
-##### 병합 PR 조회는 브랜치 이름으로 하고 소유자는 head 저장소로 좁힌다 (2026-08-11)
+#### 병합 PR 조회는 브랜치 이름으로 하고 소유자는 head 저장소로 좁힌다 (2026-08-11)
 
 정리 판단의 근거인 merged PR 조회는 `gh pr list --head <브랜치 이름>`으로 한다. `--head`에 `<owner>:<branch>` 형식을 넘기면 안 된다. `gh`는 그 형식을 지원하지 않으면서(`gh pr list --help`에 명시) 오류 대신 **빈 목록**을 반환하기 때문에, 정상 병합된 PR도 찾지 못하고 항상 `MERGED_MAIN_PR_NOT_FOUND`로 보존된다. 2026-08-11 이 결함으로 병합 후 자동 정리가 전혀 동작하지 않았고 워크트리를 수동 제거해야 했다.
 
