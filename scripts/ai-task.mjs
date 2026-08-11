@@ -175,6 +175,8 @@ function preservedV3Autocleanup(blocker) {
     recordType: "TaskAutoCleanupAdapterResultV3",
     result: "PRESERVED",
     blocker,
+    // 결과 생성 지점이 셋이므로 형태를 맞춘다. 호출자가 blockers 유무를 분기하지 않게 한다.
+    blockers: [blocker],
   };
 }
 

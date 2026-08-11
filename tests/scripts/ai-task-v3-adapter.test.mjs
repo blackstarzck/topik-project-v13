@@ -469,6 +469,147 @@ describe("V3 production autocleanup adapter", () => {
       v3Task: reconciled,
     });
   });
+
+  it("surfaces the V2 blockers so the report names the real reason", async () => {
+    const task = record({ workspace: { kind: "isolated", ownership: "managed" } });
+    const harness = originHarness({ task, remoteSha: null });
+    const v2AutoCleanup = vi.fn(async () => ({
+      result: "PRESERVED",
+      blockers: ["RUNTIME_REGISTRATION_REQUIRED"],
+    }));
+    const reconcileIsolated = vi.fn(() => ({
+      state: "PRESERVED",
+      taskId: task.taskId,
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED", "RUNTIME_REGISTRATION_REQUIRED"],
+    }));
+
+    const result = await autoCleanupTaskV3Adapter({
+      repoPath: "C:/repo",
+      branch: task.branch.name,
+      now: NOW,
+      readRecord: () => task,
+      runCommand: harness.runCommand,
+      gitRunner: harness.gitRunner,
+      withAuth: async ({ operation }) => ({
+        result: "AUTHENTICATED",
+        value: await operation({}),
+      }),
+      v2AutoCleanup,
+      reconcileIsolated,
+    });
+
+    // 단일 blocker 계약은 유지하고, 실제 이유는 배열로 함께 보고한다.
+    expect(result).toMatchObject({
+      result: "PRESERVED",
+      blocker: "V2_CLEANUP_NOT_CONFIRMED",
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED", "RUNTIME_REGISTRATION_REQUIRED"],
+    });
+  });
+
+  it("reports the fresh V2 reason even when the record is already terminal", async () => {
+    // PRESERVED 는 종단 상태라 reconcileDelegatedCleanupV3 가 조기 반환하고 blocker 를
+    // 다시 계산하지 않는다. 이미 막힌 record 를 재시도할 때도 운영자가 현재 이유를 봐야 한다.
+    const task = record({ workspace: { kind: "isolated", ownership: "managed" } });
+    const harness = originHarness({ task, remoteSha: null });
+    const v2AutoCleanup = vi.fn(async () => ({
+      result: "PRESERVED",
+      blockers: ["RUNTIME_REGISTRATION_REQUIRED"],
+    }));
+    const reconcileIsolated = vi.fn(() => ({
+      state: "PRESERVED",
+      taskId: task.taskId,
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED"],
+    }));
+
+    const result = await autoCleanupTaskV3Adapter({
+      repoPath: "C:/repo",
+      branch: task.branch.name,
+      now: NOW,
+      readRecord: () => task,
+      runCommand: harness.runCommand,
+      gitRunner: harness.gitRunner,
+      withAuth: async ({ operation }) => ({
+        result: "AUTHENTICATED",
+        value: await operation({}),
+      }),
+      v2AutoCleanup,
+      reconcileIsolated,
+    });
+
+    expect(result.blockers).toContain("RUNTIME_REGISTRATION_REQUIRED");
+    expect(result.blocker).toBe("V2_CLEANUP_NOT_CONFIRMED");
+  });
+
+  it("caps the reported blockers at the record limit without dropping the fresh V2 reason", async () => {
+    // record blocker 는 최대 32개다. 여기에 V2 이유를 그냥 이어붙이면 상한을 넘고,
+    // 뒤에서 자르면 정작 필요한 최신 이유가 사라진다.
+    const task = record({ workspace: { kind: "isolated", ownership: "managed" } });
+    const harness = originHarness({ task, remoteSha: null });
+    const staleBlockers = Array.from({ length: 32 }, (_, index) => `STALE_${index}`);
+    const v2AutoCleanup = vi.fn(async () => ({
+      result: "PRESERVED",
+      blockers: ["RUNTIME_REGISTRATION_REQUIRED"],
+    }));
+    const reconcileIsolated = vi.fn(() => ({
+      state: "PRESERVED",
+      taskId: task.taskId,
+      blockers: staleBlockers,
+    }));
+
+    const result = await autoCleanupTaskV3Adapter({
+      repoPath: "C:/repo",
+      branch: task.branch.name,
+      now: NOW,
+      readRecord: () => task,
+      runCommand: harness.runCommand,
+      gitRunner: harness.gitRunner,
+      withAuth: async ({ operation }) => ({
+        result: "AUTHENTICATED",
+        value: await operation({}),
+      }),
+      v2AutoCleanup,
+      reconcileIsolated,
+    });
+
+    expect(result.blockers.length).toBeLessThanOrEqual(32);
+    expect(result.blockers).toContain("RUNTIME_REGISTRATION_REQUIRED");
+    expect(result.blocker).toBe("V2_CLEANUP_NOT_CONFIRMED");
+    expect(new Set(result.blockers).size).toBe(result.blockers.length);
+  });
+
+  it("keeps a thrown V2 failure visible instead of discarding it", async () => {
+    const task = record({ workspace: { kind: "isolated", ownership: "managed" } });
+    const harness = originHarness({ task, remoteSha: null });
+    const v2AutoCleanup = vi.fn(async () => {
+      throw Object.assign(new Error("boom"), { code: "TASK_RECORD_CHANGED" });
+    });
+    const reconcileIsolated = vi.fn(({ v2Result }) => ({
+      state: "PRESERVED",
+      taskId: task.taskId,
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED", ...(v2Result?.blockers ?? [])],
+    }));
+
+    const result = await autoCleanupTaskV3Adapter({
+      repoPath: "C:/repo",
+      branch: task.branch.name,
+      now: NOW,
+      readRecord: () => task,
+      runCommand: harness.runCommand,
+      gitRunner: harness.gitRunner,
+      withAuth: async ({ operation }) => ({
+        result: "AUTHENTICATED",
+        value: await operation({}),
+      }),
+      v2AutoCleanup,
+      reconcileIsolated,
+    });
+
+    // 예외를 삼키지 않고 안전한 코드로 바꿔 병합 경로에 넘긴다.
+    expect(reconcileIsolated).toHaveBeenCalledWith(expect.objectContaining({
+      v2Result: expect.objectContaining({ blockers: ["TASK_RECORD_CHANGED"] }),
+    }));
+    expect(result.blockers).toContain("TASK_RECORD_CHANGED");
+  });
 });
 
 describe("V3 sweep and CLI routing", () => {
@@ -627,6 +768,28 @@ describe("V3 sweep and CLI routing", () => {
       repoPath: "C:/repo",
       branch: "fix/v2-only",
       now: NOW,
+    });
+  });
+
+  it("reports the V2 copy failure code in both blocker fields", async () => {
+    const runV3Autocleanup = vi.fn(async () => ({ handled: false }));
+    const migrateStartedTask = vi.fn(() => {
+      throw Object.assign(new Error("invalid"), { code: "V2_RECORD_INVALID" });
+    });
+
+    const result = await runTaskLifecycleCommand(
+      {
+        command: "autocleanup",
+        values: { repo: "C:/repo", branch: "fix/v2-copy-failed", now: NOW },
+      },
+      { runV3Autocleanup, migrateStartedTask },
+    );
+
+    // 세 곳의 결과 생성 지점이 같은 형태를 내보내야 호출자가 blockers 를 믿고 읽을 수 있다.
+    expect(result).toMatchObject({
+      result: "PRESERVED",
+      blocker: "V2_RECORD_INVALID",
+      blockers: ["V2_RECORD_INVALID"],
     });
   });
 
