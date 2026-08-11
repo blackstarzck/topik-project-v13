@@ -428,12 +428,29 @@ pipeline이 도구 사이에서 공유해야 하는 상태는 **공유 pipeline 
 
 #### 정리 실패 보고는 실제 이유를 담는다 (2026-08-11)
 
-isolated managed workspace의 정리는 V2 정리기에 위임한다. 위임이 확인되지 않으면 `V2_CLEANUP_NOT_CONFIRMED`가 남는데, 이 코드만으로는 운영자가 무엇을 고쳐야 하는지 알 수 없다. 그래서 V2가 보고한 실제 blocker를 함께 남긴다.
+isolated managed workspace의 정리는 V2 정리기에 위임한다. 위임이 확인되지 않으면 `V2_CLEANUP_NOT_CONFIRMED`가 남는데, 이 코드만으로는 운영자가 무엇을 고쳐야 하는지 알 수 없다. 그래서 V2가 보고한 실제 이유를 함께 남긴다. 보고되는 blocker가 어디서 오는지는 다음 세 경로다.
+
+```mermaid
+flowchart TD
+  A[V2 정리기 위임] -->|CLEANED 확인| B[blockers 없음]
+  A -->|미확인| C[V2 blockers 수집]
+  A -->|예외| D[예외 코드 검증]
+  D -->|형식 적합| C
+  D -->|형식 부적합| E[V2_CLEANUP_THREW]
+  E --> C
+  C --> F{record 가 종단 PRESERVED 인가}
+  F -->|예| G[record 값 + 방금 받은 V2 이유]
+  F -->|아니오| H[record 에 병합 기록]
+  G --> I[보고: V2_CLEANUP_NOT_CONFIRMED 우선, 최신 이유, 기존 record 순]
+  H --> I
+```
+
+핵심은 **정리가 막힌 실제 이유가 항상 보고에 남는다**는 것이다. 위 경로가 지키는 계약은 다음과 같다.
 
 - `TaskAutoCleanupAdapterResultV3`는 단일 `blocker` 문자열과 함께 `blockers` 배열을 보고한다. `blocker`는 기존 호출자를 위해 유지하며 배열의 첫 항목과 같다. 결과를 만드는 세 지점이 모두 같은 형태를 내보내므로 호출자가 `blockers` 유무를 분기하지 않아도 된다.
-- V3 record의 `blockers`에도 위임 실패 사실과 V2 이유를 함께 기록한다. V2 결과는 검증되지 않은 입력이므로 record schema가 허용하는 형식(`^[A-Z0-9_:-]{1,128}$`)만 통과시키고 개수 상한 32를 지킨다.
-- **`PRESERVED`는 종단 상태다.** 이미 보존된 task를 다시 정리 시도하면 `reconcileDelegatedCleanupV3`가 조기 반환해 record의 `blockers`를 갱신하지 않는다. 그래서 어댑터 결과는 record의 값과 **방금 받은 V2 이유를 합쳐** 보고한다. record만 읽으면 재시도 때 옛 이유가 그대로 나온다.
-- V2가 예외를 던지면 그 정보를 버리지 않는다. 예외의 코드가 위 형식에 맞으면 그대로, 아니면 `V2_CLEANUP_THREW`를 blocker로 남긴다. 예외를 조용히 삼키면 정리가 왜 막혔는지 추적할 수 없다.
+- V2 결과는 이 파이프라인이 검증하지 않는 입력이다. record schema가 허용하는 형식(`^[A-Z0-9_:-]{1,128}$`)만 통과시킨다.
+- **상한 32와 우선순위를 함께 지킨다.** record의 blocker와 V2 이유는 각각 최대 32개라 단순히 이어붙이면 상한을 넘는다. 뒤에서 자르면 정작 필요한 최신 이유가 사라지므로 순서를 고정한다 — 위임 실패 사실, 방금 받은 V2 이유, record의 기존 blocker. 상한에 걸리면 오래된 record 항목부터 잘린다.
+- **`PRESERVED`는 종단 상태다.** 이미 보존된 task를 다시 정리 시도하면 `reconcileDelegatedCleanupV3`가 조기 반환해 record의 `blockers`를 갱신하지 않는다. record만 읽으면 재시도 때 옛 이유가 그대로 나오므로, 어댑터 결과가 방금 받은 V2 이유를 합쳐 보고한다.
 
 이 보고가 없던 동안 정리 실패 원인을 찾으려면 V2 정리기를 직접 호출해야 했다. 정리 실패는 워크트리가 쌓이는 결과로 이어지므로 보고만으로 조치할 수 있어야 한다.
 

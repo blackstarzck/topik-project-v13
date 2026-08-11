@@ -540,6 +540,43 @@ describe("V3 production autocleanup adapter", () => {
     expect(result.blocker).toBe("V2_CLEANUP_NOT_CONFIRMED");
   });
 
+  it("caps the reported blockers at the record limit without dropping the fresh V2 reason", async () => {
+    // record blocker 는 최대 32개다. 여기에 V2 이유를 그냥 이어붙이면 상한을 넘고,
+    // 뒤에서 자르면 정작 필요한 최신 이유가 사라진다.
+    const task = record({ workspace: { kind: "isolated", ownership: "managed" } });
+    const harness = originHarness({ task, remoteSha: null });
+    const staleBlockers = Array.from({ length: 32 }, (_, index) => `STALE_${index}`);
+    const v2AutoCleanup = vi.fn(async () => ({
+      result: "PRESERVED",
+      blockers: ["RUNTIME_REGISTRATION_REQUIRED"],
+    }));
+    const reconcileIsolated = vi.fn(() => ({
+      state: "PRESERVED",
+      taskId: task.taskId,
+      blockers: staleBlockers,
+    }));
+
+    const result = await autoCleanupTaskV3Adapter({
+      repoPath: "C:/repo",
+      branch: task.branch.name,
+      now: NOW,
+      readRecord: () => task,
+      runCommand: harness.runCommand,
+      gitRunner: harness.gitRunner,
+      withAuth: async ({ operation }) => ({
+        result: "AUTHENTICATED",
+        value: await operation({}),
+      }),
+      v2AutoCleanup,
+      reconcileIsolated,
+    });
+
+    expect(result.blockers.length).toBeLessThanOrEqual(32);
+    expect(result.blockers).toContain("RUNTIME_REGISTRATION_REQUIRED");
+    expect(result.blocker).toBe("V2_CLEANUP_NOT_CONFIRMED");
+    expect(new Set(result.blockers).size).toBe(result.blockers.length);
+  });
+
   it("keeps a thrown V2 failure visible instead of discarding it", async () => {
     const task = record({ workspace: { kind: "isolated", ownership: "managed" } });
     const harness = originHarness({ task, remoteSha: null });

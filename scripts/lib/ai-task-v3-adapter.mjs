@@ -18,7 +18,7 @@ import {
 import {
   V3_BLOCKER_PATTERN,
   autoCleanupTaskRecordV3,
-  mergeDelegatedCleanupBlockers,
+  mergeReportedCleanupBlockers,
   readTaskRecordV3ByBranch,
   reconcileDelegatedCleanupV3,
   sweepTaskRecordsV3,
@@ -496,10 +496,7 @@ async function resolveAndCleanup({
     // blocker 단일 문자열 계약은 기존 호출자를 위해 유지한다.
     const blockers = cleaned
       ? []
-      : [...new Set([
-        ...(Array.isArray(v3Task.blockers) ? v3Task.blockers : []),
-        ...mergeDelegatedCleanupBlockers(v2Result),
-      ])];
+      : mergeReportedCleanupBlockers({ recordBlockers: v3Task.blockers, v2Result });
     return {
       schemaVersion: 3,
       recordType: "TaskAutoCleanupAdapterResultV3",

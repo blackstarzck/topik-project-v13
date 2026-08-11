@@ -2381,6 +2381,20 @@ export function mergeDelegatedCleanupBlockers(v2Result) {
   return [...new Set(["V2_CLEANUP_NOT_CONFIRMED", ...safe])].slice(0, V3_BLOCKER_LIMIT);
 }
 
+// 보고용 목록. record 의 blocker 와 방금 받은 V2 이유를 합치면 각각 상한이 32 라 그냥
+// 이어붙이면 상한을 넘는다. 뒤에서 자르면 최신 이유가 사라지므로 순서를 고정한다:
+// 위임 실패 사실(단일 blocker 계약) -> 방금 받은 V2 이유 -> record 의 기존 blocker.
+// 상한에 걸리면 오래된 record 항목부터 잘린다.
+export function mergeReportedCleanupBlockers({ recordBlockers, v2Result }) {
+  const stored = Array.isArray(recordBlockers) ? recordBlockers : [];
+  const safeStored = stored.filter((item) =>
+    typeof item === "string" && V3_BLOCKER_PATTERN.test(item));
+  return [...new Set([
+    ...mergeDelegatedCleanupBlockers(v2Result),
+    ...safeStored,
+  ])].slice(0, V3_BLOCKER_LIMIT);
+}
+
 export function reconcileDelegatedCleanupV3({
   repoPath,
   branch,
