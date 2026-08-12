@@ -8,11 +8,17 @@ const readProjectFile = (relativePath) =>
 describe("agent workflow runtime contract", () => {
   it("makes AGENTS.md the common Codex and Claude workflow owner", () => {
     const agents = readProjectFile("AGENTS.md");
-    const claude = readProjectFile("CLAUDE.md");
+    const claude = readProjectFile(".claude/CLAUDE.md");
+    const gitignore = readProjectFile(".gitignore");
 
     expect(agents).toContain("Codex와 Claude를 포함한 모든 AI 에이전트");
-    expect(claude).toContain("AGENTS.md");
-    expect(agents).toContain("한 task = 한 의미 있는 slug = 한 branch = 한 worktree");
+    expect(claude).toContain("@../AGENTS.md");
+    expect(gitignore).toContain("!.claude/CLAUDE.md");
+    expect(() => readProjectFile("CLAUDE.md")).toThrow();
+    expect(agents).toContain("먼저 `task:prepare`로 요청을 분류한다");
+    expect(agents).toContain(
+      "작은 순차 코드 작업은 task branch 하나와 `.worktrees/shared-dev` 공용 slot을 재사용한다",
+    );
   });
 
   it("requires safe worktree env preparation before runtime verification", () => {
@@ -32,6 +38,13 @@ describe("agent workflow runtime contract", () => {
     expect(agents).toContain("Playwright CLI와 Playwright MCP 직접 브라우저 확인");
     expect(agents).toContain("desktop/mobile");
     expect(agents).toContain("현재 worktree runtime임을 증명하지 못하면 해당 UI 검증은 미완료");
+  });
+
+  it("requires every completion report to state remaining work", () => {
+    const agents = readProjectFile("AGENTS.md");
+
+    expect(agents).toContain("모든 작업 완료 보고에는 남은 작업을 반드시 명시한다");
+    expect(agents).toContain("남은 작업 없음");
   });
 
   it("wires prebuild to the project structure checker and removes retired gates", () => {

@@ -25,24 +25,52 @@ const uuid = z.string().regex(UUID_PATTERN, "must be a uuid");
 
 export const pdfExportRequestSchema = z.discriminatedUnion("sourceType", [
   z.object({
+    requestId: uuid,
     sourceType: z.literal("submission"),
     sourceId: uuid,
     options: pdfExportOptionsSchema,
   }),
   z.object({
+    requestId: uuid,
     sourceType: z.literal("report"),
     sourceId: uuid,
     options: pdfExportOptionsSchema,
   }),
   z.object({
+    requestId: uuid,
     sourceType: z.literal("library_selection"),
     // library_items.id 목록 — RLS가 본인 소유만 돌려주므로 서버에서 재검증된다.
-    itemIds: z.array(uuid).min(1).max(PDF_EXPORT_MAX_ITEMS),
+    itemIds: z
+      .array(uuid)
+      .min(1)
+      .max(PDF_EXPORT_MAX_ITEMS)
+      .refine((itemIds) => new Set(itemIds).size === itemIds.length, {
+        message: "library item ids must be unique",
+      }),
     options: pdfExportOptionsSchema,
   }),
 ]);
 
 export type PdfExportRequest = z.infer<typeof pdfExportRequestSchema>;
+export type PdfExportRequestInput =
+  | {
+      sourceType: "submission" | "report";
+      sourceId: string;
+      options: PdfExportOptions;
+    }
+  | {
+      sourceType: "library_selection";
+      itemIds: string[];
+      options: PdfExportOptions;
+    };
+
+export function withPdfExportRequestId(
+  input: PdfExportRequestInput | PdfExportRequest,
+  requestId = crypto.randomUUID(),
+): PdfExportRequest {
+  if ("requestId" in input) return input;
+  return { ...input, requestId } as PdfExportRequest;
+}
 
 export const PDF_EXPORT_DEFAULT_OPTIONS: Omit<PdfExportOptions, "filename"> = {
   includeAnswers: true,

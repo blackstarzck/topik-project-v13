@@ -62,7 +62,11 @@ describe("i18n locale rendering (en/vi actually resolve)", () => {
   it("renders AppError in English and NOT the ko baseline", () => {
     renderAt("en", <AppError />);
     expect(screen.getByText("Something went wrong")).toBeTruthy();
-    expect(screen.getByText("Please try again.")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "The service is temporarily unavailable. Please try again shortly.",
+      ),
+    ).toBeTruthy();
     // proves it switched away from the ko baseline, not a fallback
     expect(screen.queryByText("문제가 발생했어요")).toBeNull();
   });
@@ -70,7 +74,11 @@ describe("i18n locale rendering (en/vi actually resolve)", () => {
   it("renders AppError in Vietnamese", () => {
     renderAt("vi", <AppError />);
     expect(screen.getByText("Đã xảy ra sự cố")).toBeTruthy();
-    expect(screen.getByText("Vui lòng thử lại.")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Dịch vụ tạm thời không ổn định. Vui lòng thử lại sau ít phút.",
+      ),
+    ).toBeTruthy();
     expect(screen.queryByText("문제가 발생했어요")).toBeNull();
   });
 

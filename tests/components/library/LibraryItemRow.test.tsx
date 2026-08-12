@@ -21,7 +21,12 @@ afterEach(() => {
 describe("LibraryItemRow actions", () => {
   it("keeps tags readable without exposing the old tag edit control", () => {
     renderWithIntl(
-      <LibraryItemRow itemId="item-1" tab="submissions" tags={["grammar"]}>
+      <LibraryItemRow
+        userId="user-1"
+        itemId="item-1"
+        tab="submissions"
+        tags={["grammar"]}
+      >
         <span>Saved answer row</span>
       </LibraryItemRow>,
     );
@@ -39,7 +44,12 @@ describe("LibraryItemRow actions", () => {
 
   it("renders delete as a flat icon-only danger button with a label", () => {
     renderWithIntl(
-      <LibraryItemRow itemId="item-1" tab="submissions" tags={[]}>
+      <LibraryItemRow
+        userId="user-1"
+        itemId="item-1"
+        tab="submissions"
+        tags={[]}
+      >
         <span>Saved answer row</span>
       </LibraryItemRow>,
     );

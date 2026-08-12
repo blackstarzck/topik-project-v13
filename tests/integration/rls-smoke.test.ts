@@ -1,4 +1,5 @@
 import { describe, it } from "vitest";
+import { assertLocalPublicMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 /**
  * RLS smoke test against a Supabase CLI local stack.
@@ -7,7 +8,7 @@ import { describe, it } from "vitest";
  *
  *     supabase start
  *     supabase db reset
- *     SUPABASE_LOCAL_STACK=1 pnpm test tests/integration/rls-smoke.test.ts
+ *     SUPABASE_LOCAL_STACK=1 E2E_ALLOW_DEV_DB_MUTATION=1 pnpm test tests/integration/rls-smoke.test.ts
  *
  * Asserts the three core RLS contracts for Phase 2:
  *   1. Anon cannot read `problem_attempts` rows.
@@ -16,6 +17,10 @@ import { describe, it } from "vitest";
  */
 
 const ENABLED = process.env.SUPABASE_LOCAL_STACK === "1";
+
+if (ENABLED) {
+  assertLocalPublicMutationTarget(process.env);
+}
 
 describe.skipIf(!ENABLED)("RLS smoke", () => {
   it("denies anon access to user-owned tables", async () => {

@@ -53,7 +53,8 @@ function makeClient(options: {
         return query;
       },
       order: () => query,
-      maybeSingle: () => Promise.resolve({ data: rows[0] ?? null, error: null }),
+      maybeSingle: () =>
+        Promise.resolve({ data: rows[0] ?? null, error: null }),
       then: (resolve: (value: { data: Row[]; error: null }) => unknown) =>
         Promise.resolve({ data: rows, error: null }).then(resolve),
     };
@@ -75,17 +76,27 @@ describe("computeFallbackRecommendations", () => {
         canonicalRow("p53", 53),
         canonicalRow("p54", 54),
       ],
-      submissions: [{
-        problem_id: "p51",
-        question_no: 51,
-        submitted_at: "2026-07-12T00:00:00.000Z",
-        user_id: "user-1",
-      }],
+      submissions: [
+        {
+          problem_id: "p51",
+          question_no: 51,
+          submitted_at: "2026-07-12T00:00:00.000Z",
+          user_id: "user-1",
+        },
+      ],
     });
 
-    const result = await computeFallbackRecommendations(client as never, "user-1", null);
+    const result = await computeFallbackRecommendations(
+      client as never,
+      "user-1",
+      null,
+    );
 
-    expect(result.items.map((item) => item.problemId)).toEqual(["p52", "p53", "p54"]);
+    expect(result.items.map((item) => item.problemId)).toEqual([
+      "p52",
+      "p53",
+      "p54",
+    ]);
     expect(result.availableTypes).toEqual([52, 53, 54]);
     expect(result.summaryCode).toBe("history");
     expect(client.from).not.toHaveBeenCalledWith("problems");
@@ -96,7 +107,11 @@ describe("computeFallbackRecommendations", () => {
       canonical: [canonicalRow("p53a", 53), canonicalRow("p53b", 53)],
     });
 
-    const result = await computeFallbackRecommendations(client as never, "user-1", 53);
+    const result = await computeFallbackRecommendations(
+      client as never,
+      "user-1",
+      53,
+    );
 
     expect(result.items).toHaveLength(2);
     expect(result.items.every((item) => item.questionNo === 53)).toBe(true);
@@ -107,7 +122,10 @@ describe("computeFallbackRecommendations", () => {
   });
 
   it("surfaces canonical read failures instead of falling back to mirror rows", async () => {
-    const client = makeClient({ canonical: [], canonicalError: "catalog unavailable" });
+    const client = makeClient({
+      canonical: [],
+      canonicalError: "catalog unavailable",
+    });
 
     await expect(
       computeFallbackRecommendations(client as never, "user-1", null),
@@ -117,10 +135,38 @@ describe("computeFallbackRecommendations", () => {
 
 describe("rankFallbackCandidates", () => {
   const candidates: FallbackCandidate[] = [
-    { id: "p51", title: "51", questionNo: 51, topikLevel: 2, difficulty: 3, tags: [] },
-    { id: "p52", title: "52", questionNo: 52, topikLevel: 2, difficulty: 3, tags: ["grammar"] },
-    { id: "p53", title: "53", questionNo: 53, topikLevel: 2, difficulty: 3, tags: [] },
-    { id: "p54", title: "54", questionNo: 54, topikLevel: 2, difficulty: 3, tags: [] },
+    {
+      id: "p51",
+      title: "51",
+      questionNo: 51,
+      topikLevel: 2,
+      difficulty: 3,
+      tags: [],
+    },
+    {
+      id: "p52",
+      title: "52",
+      questionNo: 52,
+      topikLevel: 2,
+      difficulty: 3,
+      tags: ["grammar"],
+    },
+    {
+      id: "p53",
+      title: "53",
+      questionNo: 53,
+      topikLevel: 2,
+      difficulty: 3,
+      tags: [],
+    },
+    {
+      id: "p54",
+      title: "54",
+      questionNo: 54,
+      topikLevel: 2,
+      difficulty: 3,
+      tags: [],
+    },
   ];
 
   it("selects the next question type after the latest attempt", () => {
@@ -131,7 +177,9 @@ describe("rankFallbackCandidates", () => {
       goal: null,
     };
 
-    expect(rankFallbackCandidates(candidates, signals, null)[0]?.candidate.id).toBe("p52");
+    expect(
+      rankFallbackCandidates(candidates, signals, null)[0]?.candidate.id,
+    ).toBe("p52");
   });
 
   it("records only weakness tags that actually overlap the candidate", () => {
@@ -143,9 +191,11 @@ describe("rankFallbackCandidates", () => {
     };
 
     const ranked = rankFallbackCandidates(candidates, signals, 52);
-    expect(ranked[0]).toEqual(expect.objectContaining({
-      reasonCode: "WEAK_AREA_TAG_MATCH",
-      weaknessTags: ["grammar"],
-    }));
+    expect(ranked[0]).toEqual(
+      expect.objectContaining({
+        reasonCode: "WEAK_AREA_TAG_MATCH",
+        weaknessTags: ["grammar"],
+      }),
+    );
   });
 });

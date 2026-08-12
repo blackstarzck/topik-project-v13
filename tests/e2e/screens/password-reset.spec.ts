@@ -42,9 +42,7 @@ async function fulfillRecover(route: Route) {
 function readRecoverRedirectTo(request: Request): string | null {
   const urlValue = new URL(request.url()).searchParams.get("redirect_to");
   if (urlValue) return urlValue;
-  let payload:
-    | { redirect_to?: unknown; redirectTo?: unknown }
-    | undefined;
+  let payload: { redirect_to?: unknown; redirectTo?: unknown } | undefined;
   try {
     payload = request.postDataJSON() as
       | { redirect_to?: unknown; redirectTo?: unknown }
@@ -181,9 +179,7 @@ test("X-06 password reset request renders prefilled email and confirms success",
   expect(recoverRedirects).toHaveLength(1);
   const redirectUrl = new URL(recoverRedirects[0]);
   expect(redirectUrl.pathname).toBe("/auth/callback");
-  expect(redirectUrl.searchParams.get("next")).toBe(
-    "/password-reset/confirm",
-  );
+  expect(redirectUrl.searchParams.get("next")).toBe("/password-reset/confirm");
 
   expect(errors).toEqual([]);
 });

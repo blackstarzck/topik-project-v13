@@ -65,9 +65,7 @@ describe("canonical writing source", () => {
       submissionMode: "blocked",
       submissionContractState: "unverified",
     });
-    expect(supabase.rpc).toHaveBeenCalledWith(
-      "get_writing_submission_control",
-    );
+    expect(supabase.rpc).toHaveBeenCalledWith("get_writing_submission_control");
   });
 
   it("parses the operations-only verification submission mode", async () => {
@@ -114,5 +112,4 @@ describe("canonical writing source", () => {
     expect(problem?.canonicalImportId).toBe("321");
     expect(supabase.rpc).toHaveBeenCalledTimes(1);
   });
-
 });

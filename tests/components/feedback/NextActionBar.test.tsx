@@ -67,7 +67,9 @@ describe("NextActionBar PDF export quota notice", () => {
     fireEvent.click(screen.getByTestId("feedback-action-pdf"));
 
     expect(
-      await screen.findByText(koMessages.feedback.actions.pdfQuotaExceededTitle),
+      await screen.findByText(
+        koMessages.feedback.actions.pdfQuotaExceededTitle,
+      ),
     ).toBeTruthy();
     expect(
       await screen.findByText(

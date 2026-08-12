@@ -28,16 +28,10 @@ import {
   isSupportedCountryCode,
   normalizeCountryCode,
 } from "@/components/shared/CountryRegionSelect";
-import {
-  buildAffiliationMetadata,
-  clearStoredAffiliationCode,
-  readStoredAffiliationCode,
-} from "@/lib/auth/affiliation-code";
 import { POST_AUTH_SIGN_UP_PATH } from "@/lib/auth/completion-routes";
 import { buildAuthRedirectUrl } from "@/lib/auth/redirect-url";
 import { mapSupabaseErrorCode } from "@/lib/auth/error-mapping";
 import {
-  buildInstitutionInvitePath,
   isGoogleOAuthUnsupportedBrowserError,
   startGoogleOAuth,
   type GoogleOAuthEmbeddedBrowser,
@@ -336,7 +330,6 @@ export function SignUpForm({
     setSubmitting(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const affiliationMetadata = buildAffiliationMetadata();
       const optionalProfileMetadata = normalizeOptionalProfileInput({
         gender: values.gender,
         phone_country_code: phoneCountryCode,
@@ -363,7 +356,6 @@ export function SignUpForm({
               : {}),
             ui_locale: locale,
             ui_locale_source: hasSupportedLocaleCookie() ? "manual" : "auto",
-            ...affiliationMetadata,
           },
           emailRedirectTo: buildAuthRedirectUrl(
             `/auth/callback?next=${encodeURIComponent(POST_AUTH_SIGN_UP_PATH)}`,
@@ -400,7 +392,6 @@ export function SignUpForm({
         showDuplicateEmailGuidance();
         return;
       }
-      clearStoredAffiliationCode();
       router.push(
         `/auth/verify-email?email=${encodeURIComponent(values.email)}`,
       );
@@ -418,10 +409,10 @@ export function SignUpForm({
     setGoogleSubmitting(true);
     setBlockedOAuthBrowser(null);
     try {
-      const nextPath = readStoredAffiliationCode()
-        ? buildInstitutionInvitePath(POST_AUTH_SIGN_UP_PATH)
-        : POST_AUTH_SIGN_UP_PATH;
-      const { error } = await startGoogleOAuth("sign-up", nextPath);
+      const { error } = await startGoogleOAuth(
+        "sign-up",
+        POST_AUTH_SIGN_UP_PATH,
+      );
       if (error) {
         message.error(t("socialAuthFailed"));
         setGoogleSubmitting(false);

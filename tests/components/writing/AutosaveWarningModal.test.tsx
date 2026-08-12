@@ -39,6 +39,7 @@ function renderModal(props: Partial<ModalProps> = {}) {
     <AutosaveWarningModal
       trigger="save_failure"
       lastSavedAt={null}
+      recoveryState="impossible"
       {...handlers}
       {...props}
     />,
@@ -57,6 +58,7 @@ describe("AutosaveWarningModal", () => {
       <AutosaveWarningModal
         trigger={null}
         lastSavedAt={null}
+        recoveryState="impossible"
         onKeep={vi.fn()}
         onRetry={vi.fn()}
         onProceed={vi.fn()}
@@ -69,19 +71,21 @@ describe("AutosaveWarningModal", () => {
     renderModal({
       trigger: "save_failure",
       lastSavedAt: "2026-05-26T08:30:00Z",
+      recoveryState: "possible",
     });
 
     const modal = screen.getByTestId("autosave-warning-modal");
     expect(screen.getByText("자동 저장 실패")).toBeTruthy();
-    expect(screen.getByTestId("autosave-warning-alert").textContent).toContain(
-      "네트워크가 끊겼다면",
+    expect(screen.getByTestId("autosave-warning-body").textContent).toBe(
+      "저장이 지연되고 있습니다. 작성 내용은 이 기기에 임시 보관되었습니다.",
     );
     expect(
       within(modal).getByTestId("autosave-warning-last-saved").textContent,
     ).toContain("2026");
     expect(
       within(modal).getByTestId("autosave-warning-recovery-state").textContent,
-    ).toContain("복구 가능");
+    ).toContain("이 기기에 임시 보관됨");
+    expect(screen.queryByTestId("autosave-warning-alert")).toBeNull();
     expect(modalButton("autosave-warning-retry").disabled).toBe(false);
   });
 
@@ -89,9 +93,10 @@ describe("AutosaveWarningModal", () => {
     const handlers = renderModal({ trigger: "disable_attempt" });
 
     expect(screen.queryByTestId("autosave-warning-alert")).toBeNull();
-    expect(
-      screen.getByTestId("autosave-warning-no-backup").textContent,
-    ).toContain("복구할 수 있는 임시 저장본이 없어요");
+    expect(screen.queryByTestId("autosave-warning-no-backup")).toBeNull();
+    expect(screen.getByTestId("autosave-warning-body").textContent).toContain(
+      "이 기기 임시 보관은 계속됩니다",
+    );
 
     const retryButton = modalButton("autosave-warning-retry");
     expect(retryButton.disabled).toBe(true);
@@ -109,12 +114,21 @@ describe("AutosaveWarningModal", () => {
     });
 
     expect(screen.getByTestId("autosave-warning-body").textContent).toContain(
-      "페이지를 나가면",
+      "서버에 반영되지 않습니다",
     );
     expect(
       screen.getByTestId("autosave-warning-recovery-state").textContent,
     ).toContain("확인 중");
     expect(screen.queryByTestId("autosave-warning-no-backup")).toBeNull();
+    expect(modalButton("autosave-warning-keep").textContent).toContain(
+      "현재 페이지에 머물기",
+    );
+    expect(modalButton("autosave-warning-retry").textContent).toContain(
+      "저장 후 이동",
+    );
+    expect(modalButton("autosave-warning-proceed").textContent).toContain(
+      "저장하지 않고 이동",
+    );
 
     fireEvent.click(modalButton("autosave-warning-proceed"));
     expect(handlers.onProceed).toHaveBeenCalledTimes(1);

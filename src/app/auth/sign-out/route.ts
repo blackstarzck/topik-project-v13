@@ -31,11 +31,7 @@ export async function POST(request: NextRequest) {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    console.error("[auth/sign-out] signOut error", {
-      code: error.code,
-      message: error.message,
-      status: error.status,
-    });
+    console.error("auth_sign_out_failed", { stage: "server_sign_out" });
   }
 
   return NextResponse.redirect(new URL("/login", request.url), {

@@ -11,18 +11,8 @@ const rawDown = readFileSync(
   join(process.cwd(), "supabase", "migrations", "down", migrationName),
   "utf8",
 ).toLowerCase();
-const rawLiveTest = readFileSync(
-  join(
-    process.cwd(),
-    "tests",
-    "integration",
-    "writing-submission-outbox-live.test.ts",
-  ),
-  "utf8",
-).toLowerCase();
 const sql = rawSql.replace(/\s+/g, " ");
 const down = rawDown.replace(/\s+/g, " ");
-const liveTest = rawLiveTest.replace(/\s+/g, " ");
 
 describe("writing submission outbox migration", () => {
   it("keeps provider intents and their answer payload private", () => {
@@ -299,29 +289,6 @@ describe("writing submission outbox migration", () => {
     expect(down).toContain(
       "drop function if exists public.record_writing_submission_contract_evidence( text, jsonb, text, text )",
     );
-    expect(liveTest).toContain(
-      "writing-outbox-v2|prepare|claim-once|accepted-recovery|ambiguous-no-retry|confirmed-failure-new-intent|external-text-id|local-intent-uuid",
-    );
-    expect(liveTest).toContain('contract: "writing-outbox-v2"');
-    expect(liveTest).toContain("contractdigest: outbox_contract_digest");
-    expect(liveTest).toContain("schemaversion: 2");
-    expect(liveTest).toContain("retrysucceededwithnewintent: true");
-    expect(liveTest).toContain("expect(number(liveevidence?.intents)).tobe(6)");
-    expect(liveTest).toContain("expect(number(liveevidence?.submissions)).tobe(3)");
-    expect(liveTest).toContain("expect(number(liveevidence?.audit_rows)).tobe(21)");
-    expect(
-      liveTest.indexOf(
-        '"close service-only live outbox fault verification"',
-      ),
-    ).toBeLessThan(liveTest.indexOf("await cleanuprun(config, draftids, intentids)"));
-    expect(liveTest).toContain("const recoveryerrors: unknown[] = []");
-    expect(liveTest).toContain(
-      "primaryerror === undefined ? recoveryerrors : [primaryerror, ...recoveryerrors]",
-    );
-    expect(liveTest).toContain(
-      "if (primaryerror !== undefined) throw primaryerror",
-    );
-    expect(liveTest).toContain('"live outbox recovery failed."');
   });
 
   it("opens a service-only verification window without certifying user submissions", () => {

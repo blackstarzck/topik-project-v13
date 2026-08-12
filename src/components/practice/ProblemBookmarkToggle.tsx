@@ -29,8 +29,8 @@ export function ProblemBookmarkToggle({
 }: Props) {
   const t = useTranslations("practice.problems");
   const { message } = App.useApp();
-  const save = useSaveLibraryItem();
-  const remove = useDeleteProblemLibraryItem();
+  const save = useSaveLibraryItem(userId);
+  const remove = useDeleteProblemLibraryItem(userId);
   const [savedOverride, setSavedOverride] = useState<{
     problemId: string;
     value: boolean;
@@ -57,14 +57,8 @@ export function ProblemBookmarkToggle({
             setSavedOverride({ problemId, value: false });
             message.success(t("removeProblemSuccess"));
           },
-          onError: (error: unknown) => {
-            const description =
-              error instanceof Error ? error.message : undefined;
-            message.error(
-              description
-                ? `${t("removeProblemFailed")} ${description}`
-                : t("removeProblemFailed"),
-            );
+          onError: () => {
+            message.error(t("removeProblemFailed"));
           },
         },
       );
@@ -88,13 +82,7 @@ export function ProblemBookmarkToggle({
             message.info(t("savedProblem"));
             return;
           }
-          const description =
-            error instanceof Error ? error.message : undefined;
-          message.error(
-            description
-              ? `${t("saveProblemFailed")} ${description}`
-              : t("saveProblemFailed"),
-          );
+          message.error(t("saveProblemFailed"));
         },
       },
     );

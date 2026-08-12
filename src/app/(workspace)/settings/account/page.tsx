@@ -66,8 +66,8 @@ export default async function AccountSettingsPage() {
               affiliationCode={profileMeta.affiliation_code}
             />
           ) : null}
-          <ProfileLogoutForm label={tNav("logout")} />
-          <AccountDeletionCard />
+          <ProfileLogoutForm label={tNav("logout")} userId={user.id} />
+          <AccountDeletionCard userId={user.id} />
         </div>
       </div>
     </WorkspaceBody>

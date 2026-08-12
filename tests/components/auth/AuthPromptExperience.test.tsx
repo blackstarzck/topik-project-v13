@@ -23,7 +23,9 @@ function decodedImageSrc(image: HTMLImageElement) {
 
 function getCssRule(selector: string) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = GLOBAL_CSS.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`));
+  const match = GLOBAL_CSS.match(
+    new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`),
+  );
 
   return match?.[1] ?? "";
 }
@@ -131,8 +133,8 @@ describe("AuthPromptExperience", () => {
     });
   });
 
-  it("does not overwrite an institution invite next target for authenticated login entry pages", async () => {
-    searchParamsMock = new URLSearchParams("next=/auth/institution-invite");
+  it("uses post-auth instead of a query next target for authenticated login entry pages", async () => {
+    searchParamsMock = new URLSearchParams("next=/settings/account");
     getUserMock.mockResolvedValueOnce({
       data: { user: { id: "user-123" } },
       error: null,
@@ -142,7 +144,7 @@ describe("AuthPromptExperience", () => {
 
     await waitFor(() => {
       expect(routerReplaceMock).toHaveBeenCalledWith(
-        "/auth/institution-invite",
+        "/auth/post-auth?intent=login",
       );
     });
   });

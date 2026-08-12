@@ -74,7 +74,6 @@ export function SubmissionFailedModal({
                     problemUnavailable
                       ? "submitUnavailableDescription"
                       : "submitFailedDescription",
-                    { submitError: submitError ?? "" },
                   )
           }
         />

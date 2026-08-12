@@ -32,8 +32,10 @@ export function AuthEntrySessionGuard({
         if (!cancelled && user) {
           router.replace(redirectTo);
         }
-      } catch (error) {
-        console.warn("[auth-entry-session-guard] session check failed", error);
+      } catch {
+        console.warn("auth_entry_session_check_failed", {
+          stage: "get_user",
+        });
       }
     }
 

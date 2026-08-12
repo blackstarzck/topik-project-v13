@@ -38,8 +38,8 @@ type WritingSubmissionHistoryRow = {
   title: string | null;
 };
 
-export function libraryItemsKey(tab: LibraryTab) {
-  return ["library-items", tab] as const;
+export function libraryItemsKey(userId: string, tab: LibraryTab) {
+  return ["library-items", userId, tab] as const;
 }
 
 /**
@@ -236,9 +236,9 @@ function uniqueIds(values: Array<string | null>): string[] {
   return Array.from(set);
 }
 
-export function useLibraryItems(tab: LibraryTab) {
+export function useLibraryItems(userId: string, tab: LibraryTab) {
   return useQuery({
-    queryKey: libraryItemsKey(tab),
+    queryKey: libraryItemsKey(userId, tab),
     queryFn: () => fetchLibraryItems(tab),
   });
 }

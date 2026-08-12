@@ -41,6 +41,9 @@
 .claude/*
 !.claude/CLAUDE.md
 !.claude/settings.json
+!.claude/output-styles/
+.claude/output-styles/*
+!.claude/output-styles/readable.md
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/*/
@@ -48,6 +51,7 @@
 !.claude/skills/*/SKILL.md
 
 # Local test/session artifacts (gitignored).
+.scratch/
 tests/e2e/auth-state/
 screenshots/
 test-results/
@@ -56,6 +60,7 @@ analysis/
 
 # Dependencies and build outputs
 node_modules/
+.worktrees/
 dist/
 build/
 .next/

@@ -39,7 +39,7 @@ vi.mock("@/lib/export/pdf-export-client", async (importOriginal) => {
  *   1. clicking calls `deps.trigger` with the bound sourceType/sourceId once;
  *   2. mode='file' → notifySuccess(downloadedMessage);
  *   3. mode='print' (인쇄 폴백) → notifyWarning(printFallbackMessage);
- *   4. on error → notifyError(err.message); non-Error → errorMessage;
+ *   4. on error → notifyError(errorMessage) without exposing raw details;
  *   5. the button does NOT log a study_events row itself
  *      (the export pipeline already does — double-log would skew KPI counts).
  */
@@ -131,7 +131,7 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     expect(deps.notifySuccess).not.toHaveBeenCalled();
   });
 
-  it("surfaces the trigger error message through notifyError (no rethrow)", async () => {
+  it("shows a stable error message without exposing the trigger failure", async () => {
     const trigger = vi.fn(async () => {
       throw new Error("network down");
     });
@@ -146,7 +146,10 @@ describe("ExportPdfButton — createExportPdfHandler", () => {
     // tree. Errors are surfaced through the toast bus instead.
     await expect(onClick()).resolves.toBeUndefined();
     expect(deps.notifyError).toHaveBeenCalledTimes(1);
-    expect(deps.notifyError).toHaveBeenCalledWith("network down");
+    expect(deps.notifyError).toHaveBeenCalledWith(ERROR_KO);
+    expect(JSON.stringify(deps.notifyError.mock.calls)).not.toContain(
+      "network down",
+    );
     expect(deps.notifySuccess).not.toHaveBeenCalled();
   });
 

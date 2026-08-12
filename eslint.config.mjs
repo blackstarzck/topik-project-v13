@@ -18,6 +18,10 @@ const eslintConfig = defineConfig([
     "docs/**",
     // Throwaway QA diagnostic scripts — mirrors the .prettierignore exclusion.
     ".scratch/**",
+    // Sibling task worktrees (gitignored checkouts of this same repo). Without this,
+    // `eslint .` lints every sibling worktree, including their nested `.scratch/`
+    // directories that the root-anchored `.scratch/**` pattern above cannot reach.
+    ".worktrees/**",
   ]),
 ]);
 

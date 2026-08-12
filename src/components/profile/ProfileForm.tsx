@@ -20,8 +20,12 @@ import {
 import { PHONE_NUMBER_DIGITS_PATTERN } from "@/lib/auth/profile-completion";
 import { NICKNAME_CHECK_DEBOUNCE_MS } from "@/lib/request-control/policies";
 import {
+  createClientOperationalEvent,
+  emitClientOperationalEvent,
+} from "@/lib/operations/client-operational-event";
+import {
   AvatarError,
-  avatarPublicUrl,
+  avatarSignedUrl,
   removeAvatar,
   squareCropImage,
   uploadAvatar,
@@ -31,6 +35,16 @@ import {
 const { Paragraph, Text } = Typography;
 
 const PROFILE_NAME_MIN_LENGTH = 2;
+
+function recordProfileSaveFailure() {
+  const created = createClientOperationalEvent({
+    code: "operation_failed",
+    feature: "profile_settings",
+    operation: "save",
+    result: "failure",
+  });
+  if (created.ok) void emitClientOperationalEvent(created.event);
+}
 
 type NicknameAvailability =
   | "idle"
@@ -121,20 +135,6 @@ function isTooShortProfileField(value: string | null) {
 }
 
 /**
- * Resolve a saved avatar path to its public URL, swallowing env-not-configured
- * errors (SSR/tests) so render/initialization never throws. Browser-only call
- * lives behind this guard.
- */
-function safeAvatarUrl(path: string | null): string | null {
-  if (!path) return null;
-  try {
-    return avatarPublicUrl(path);
-  } catch {
-    return null;
-  }
-}
-
-/**
  * `/profile` form (X-05). Avatar upload is intentionally shown as unavailable
  * until storage/upload behavior is implemented and verified.
  */
@@ -158,17 +158,26 @@ export function ProfileForm({
   // X-05 region 3 (아바타): real upload to the avatars bucket. Preview URL is
   // derived lazily on first selection so render never touches the client.
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  // 저장된 아바타의 public URL은 lazy initializer에서 한 번 안전하게 계산한다
-  // (effect 안에서 setState 동기 호출 금지). 업로드 성공 시에는
-  // handleAvatarSelect가 path와 url을 함께 갱신한다.
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(() =>
-    safeAvatarUrl(initialAvatarPath),
-  );
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(
     initialAvatarPath,
   );
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void avatarSignedUrl(avatarPath)
+      .then((url) => {
+        if (!cancelled) setAvatarUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setAvatarUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarPath]);
 
   async function handleAvatarSelect(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -192,7 +201,6 @@ export function ProfileForm({
       const { blob, ext } = await squareCropImage(file);
       const result = await uploadAvatar(userId, blob, ext);
       setAvatarPath(result.path);
-      setAvatarUrl(result.publicUrl);
       message.success(tAvatar("uploadSuccess"));
     } catch (err) {
       // AvatarError는 카탈로그 키를 들고 오므로 t()로 해석하고, 그 외(Supabase 등
@@ -428,9 +436,8 @@ export function ProfileForm({
         message.error(t("nicknameTaken"));
         return;
       }
-      // err.message 는 데이터 계층(useUpdateProfile, src/lib/settings)에서 온
-      // 서비스 메시지이므로 그대로 노출하고, 없으면 기본 저장 실패 문구로 대체.
-      message.error(err instanceof Error ? err.message : t("saveError"));
+      recordProfileSaveFailure();
+      message.error(t("saveError"));
     }
   }
 

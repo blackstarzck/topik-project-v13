@@ -41,7 +41,10 @@ describe("institution invitation RPC contract evidence", () => {
     expect(contract).toContain(
       "20260707141000_institution_invitation_respond.sql",
     );
-    expect(contract).toContain("v13 migration을 추가하지 않는다");
+    expect(contract).toContain(
+      "`20260724130000_institution_invite_trust_boundary.sql`",
+    );
+    expect(contract).toContain("raw-code RPC");
     expect(contract).toContain("`accepted`");
     expect(contract).toContain("`declined`");
     expect(contract).toContain("`code_inactive`");

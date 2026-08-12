@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, App, Badge, Button, Empty, Spin, Tag, Typography } from "antd";
+import { App, Badge, Button, Empty, Spin, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -9,6 +9,7 @@ import { PDF_EXPORT_DEFAULT_OPTIONS } from "@/lib/export/pdf-options";
 import { downloadStoredPdfExport } from "@/lib/export/pdf-export-client";
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryExportView, LibraryItemView } from "@/lib/library/types";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
@@ -17,6 +18,7 @@ import { matchesLibrarySearch } from "./library-tab-url";
 const { Text } = Typography;
 
 type Props = {
+  userId: string;
   initialItems: LibraryExportView[];
   searchTerm?: string;
   onResetSearch?: () => void;
@@ -109,8 +111,8 @@ function RetryPrintButton({ item }: RetryButtonProps) {
         },
       });
       message.success(t("printDialogOpened"));
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : t("reprintFailed"));
+    } catch {
+      message.error(t("reprintFailed"));
     } finally {
       setPending(false);
     }
@@ -162,8 +164,8 @@ function DownloadButton({ item }: { item: LibraryExportView }) {
         filename: exportFilename(item),
       });
       message.success(t("downloadStarted"));
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : t("downloadFailed"));
+    } catch {
+      message.error(t("downloadFailed"));
     } finally {
       setPending(false);
     }
@@ -182,13 +184,15 @@ function DownloadButton({ item }: { item: LibraryExportView }) {
 }
 
 export function LibraryExportsTab({
+  userId,
   initialItems,
   searchTerm = "",
   onResetSearch,
 }: Props) {
   const t = useTranslations("library.exports");
   const tCount = useTranslations("library.submissions");
-  const query = useLibraryItems("exports");
+  const errorT = useTranslations("shared.error");
+  const query = useLibraryItems(userId, "exports");
   const [page, setPage] = useState(1);
   const allItems: LibraryExportView[] = (query.data ?? initialItems).filter(
     isExport,
@@ -216,12 +220,16 @@ export function LibraryExportsTab({
   }
   if (query.error) {
     return (
-      <Alert
-        type="error"
-        title={t("loadError")}
-        description={
-          query.error instanceof Error ? query.error.message : undefined
-        }
+      <UnavailableState
+        variant="resource"
+        actions={[
+          {
+            key: "retry",
+            label: errorT("retry"),
+            onClick: () => void query.refetch(),
+            primary: true,
+          },
+        ]}
       />
     );
   }
@@ -262,6 +270,7 @@ export function LibraryExportsTab({
           const isPrint = isBrowserPrintExport(item);
           return (
             <LibraryItemRow
+              userId={userId}
               key={item.item_id}
               itemId={item.item_id}
               tab="exports"

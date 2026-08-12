@@ -13,16 +13,22 @@ import {
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  assertLocalPrivilegedMutationTarget,
+  assertPublicRemoteReadTarget,
+  hasPrivilegedEnvironment,
+  parseSupabaseTarget,
+  resolvePublicSupabaseKey,
+} from "./lib/supabase-target-safety.mjs";
 
 const profiles = new Set(["app", "e2e"]);
-const appRequiredKeys = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-];
-const e2eRequiredKeys = ["SUPABASE_SERVICE_ROLE_KEY", "E2E_STUDENT_EMAIL"];
+const appRequiredKeys = ["NEXT_PUBLIC_SUPABASE_URL"];
+const e2eRequiredKeys = ["E2E_STUDENT_EMAIL"];
+const e2ePrivilegedKeys = ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY"];
 const e2ePasswordKeys = ["E2E_STUDENT_PASSWORD", "SUPABASE_TEST_PASSWORD"];
 const appAllowedKeys = [
   ...appRequiredKeys,
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_GA_MEASUREMENT_ID",
@@ -33,6 +39,7 @@ const appAllowedKeys = [
 ];
 const e2eAllowedKeys = [
   ...appAllowedKeys,
+  "E2E_ALLOW_DEV_DB_MUTATION",
   "SUPABASE_SERVICE_ROLE_KEY",
   "SUPABASE_SECRET_KEY",
   "E2E_STUDENT_EMAIL",
@@ -282,7 +289,7 @@ function selectProfileEnvironment(content, profile) {
   return `${selected.join("\n")}\n`;
 }
 
-function validateEnvironment(content, profile) {
+function validateEnvironment(content, profile, { source = false } = {}) {
   const values = parseEnvironment(content);
   const missing = [
     ...appRequiredKeys,
@@ -291,6 +298,21 @@ function validateEnvironment(content, profile) {
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment keys: ${missing.join(", ")}.`,
+    );
+  }
+  try {
+    resolvePublicSupabaseKey(Object.fromEntries(values));
+  } catch {
+    throw new Error(
+      "Public Supabase key is not approved. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    );
+  }
+  if (
+    profile === "e2e" &&
+    !e2ePrivilegedKeys.some((key) => values.get(key)?.trim())
+  ) {
+    throw new Error(
+      `Missing required environment key alternative: ${e2ePrivilegedKeys.join(" or ")}.`,
     );
   }
   if (
@@ -302,30 +324,23 @@ function validateEnvironment(content, profile) {
     );
   }
 
-  let supabaseUrl;
-  try {
-    supabaseUrl = new URL(values.get("NEXT_PUBLIC_SUPABASE_URL"));
-  } catch {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL must be a valid URL.");
-  }
-  const normalizedHostname = supabaseUrl.hostname
-    .replace(/^\[|\]$/gu, "")
-    .toLowerCase();
-  const isLoopback = new Set(["localhost", "127.0.0.1", "::1"]).has(
-    normalizedHostname,
-  );
-  if (values.get("SUPABASE_LOCAL_STACK") === "1" && !isLoopback) {
+  const env = Object.fromEntries(values);
+  const target = parseSupabaseTarget(env.NEXT_PUBLIC_SUPABASE_URL);
+  if (profile === "e2e") {
+    assertLocalPrivilegedMutationTarget(env);
+  } else if (target.kind === "remote" && target.environment === "production") {
+    throw new Error("App environment rejects production Supabase targets.");
+  } else if (!source && hasPrivilegedEnvironment(env)) {
+    throw new Error("App environment forbids privileged credentials.");
+  } else if (
+    values.get("SUPABASE_LOCAL_STACK") === "1" &&
+    target.kind !== "local"
+  ) {
     throw new Error(
       "SUPABASE_LOCAL_STACK requires NEXT_PUBLIC_SUPABASE_URL to use a loopback host.",
     );
-  }
-  if (
-    supabaseUrl.protocol !== "https:" &&
-    !(supabaseUrl.protocol === "http:" && isLoopback)
-  ) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL must use HTTPS, except HTTP is allowed for a loopback host.",
-    );
+  } else if (target.kind === "remote" && !source) {
+    assertPublicRemoteReadTarget(env);
   }
 }
 
@@ -424,7 +439,7 @@ export async function prepareWorktreeEnvironment({
 
   const sourceBytes = readStableRegularFile(source, "Source");
   const sourceContent = sourceBytes.toString("utf8");
-  validateEnvironment(sourceContent, profile);
+  validateEnvironment(sourceContent, profile, { source: true });
   const profileBytes = Buffer.from(
     selectProfileEnvironment(sourceContent, profile),
     "utf8",

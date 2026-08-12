@@ -37,12 +37,29 @@ const {
   };
 });
 
+const avatarMocks = vi.hoisted(() => ({
+  avatarSignedUrl: vi.fn(),
+  removeAvatar: vi.fn(),
+}));
+
 vi.mock("@/lib/settings/mutations", () => ({
   checkNicknameAvailability: (...args: unknown[]) =>
     checkNicknameAvailabilityMock(...args),
   NicknameTakenError: MockNicknameTakenError,
   useUpdateProfile: (...args: unknown[]) => useUpdateProfileMock(...args),
 }));
+
+vi.mock("@/components/profile/avatar-upload", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("../../../src/components/profile/avatar-upload")
+    >();
+  return {
+    ...actual,
+    avatarSignedUrl: avatarMocks.avatarSignedUrl,
+    removeAvatar: avatarMocks.removeAvatar,
+  };
+});
 
 import {
   ProfileForm,
@@ -108,6 +125,10 @@ beforeEach(() => {
     mutateAsync: mutateAsyncMock,
     isPending: false,
   });
+  avatarMocks.avatarSignedUrl.mockReset();
+  avatarMocks.avatarSignedUrl.mockResolvedValue(null);
+  avatarMocks.removeAvatar.mockReset();
+  avatarMocks.removeAvatar.mockResolvedValue(undefined);
 
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
     (globalThis as Record<string, unknown>).ResizeObserver = class {
@@ -168,6 +189,40 @@ async function selectProfileCountryRegion(countryName: string) {
 }
 
 describe("ProfileForm", () => {
+  it("does not restore a stale signed avatar URL after a fast removal", async () => {
+    let resolveInitialUrl: ((value: string | null) => void) | undefined;
+    avatarMocks.avatarSignedUrl.mockImplementation((path) => {
+      if (path === "user-1/initial.png") {
+        return new Promise<string | null>((resolve) => {
+          resolveInitialUrl = resolve;
+        });
+      }
+      return Promise.resolve(null);
+    });
+
+    renderProfileForm({ initialAvatarPath: "user-1/initial.png" });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: koMessages.profile.avatar.removeImage,
+      }),
+    );
+    await waitFor(() =>
+      expect(avatarMocks.removeAvatar).toHaveBeenCalledWith(
+        "user-1",
+        "user-1/initial.png",
+      ),
+    );
+
+    await act(async () => {
+      resolveInitialUrl?.("https://storage.example/stale-initial.png");
+      await Promise.resolve();
+    });
+
+    expect(
+      screen.queryByAltText(koMessages.profile.avatar.imageAlt),
+    ).toBeNull();
+  });
+
   it("keeps Save disabled and does not submit when profile fields are unchanged", async () => {
     const { container } = renderProfileForm();
 

@@ -1,6 +1,6 @@
 # Evaluation API
 
-Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Source snapshot: generated from the former TALKPIK external API documentation on 2026-07-07. The original service and documentation routes are no longer available.
 Last synced: 2026-07-07
 
 Scope: Async writing evaluation status, SSE stream, and detailed feedback lookup
@@ -15,7 +15,7 @@ Scope: Async writing evaluation status, SSE stream, and detailed feedback lookup
 
 ## v13 Integration Notes
 
-- The live OpenAPI now registers both evaluation lookup paths. The previous spec gap is closed.
+- The 2026-07-07 OpenAPI snapshot registers both evaluation lookup paths. The previous snapshot gap was closed before capture.
 - Poll `GET /api/evaluation/{submission_id}` until `status` is `graded`.
 - Fetch full scoring details from `GET /api/evaluation/{submission_id}/feedback` after grading completes.
 - While grading is still running, the feedback endpoint can return HTTP 202 with `{ "status": "processing" }`.

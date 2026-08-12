@@ -22,6 +22,9 @@ vi.mock("@/lib/supabase/server", () => ({
       from: helpers.fromMock,
       rpc: helpers.rpcMock,
     }),
+}));
+
+vi.mock("@/lib/supabase/service-role.server", () => ({
   createSupabaseServiceRoleClient: helpers.createServiceClientMock,
 }));
 
@@ -54,7 +57,7 @@ describe("GET /api/writing/evaluation-status", () => {
       data: { session: { access_token: "learner-token" } },
     });
     helpers.fromMock.mockImplementation((table: string) => {
-      // 새 status 게이트: fetchProfileStatus(supabase, userId) 는 profiles 를 조회한다.
+      // 상태 게이트는 호출자 본인만 반환하는 최소 상태 RPC를 사용한다.
       if (table === "profiles") {
         return {
           select: () => ({
@@ -82,7 +85,11 @@ describe("GET /api/writing/evaluation-status", () => {
         }),
       };
     });
-    helpers.rpcMock.mockResolvedValue({ data: "complete", error: null });
+    helpers.rpcMock.mockImplementation(async (name: string) =>
+      name === "get_my_account_state"
+        ? { data: "active", error: null }
+        : { data: "complete", error: null },
+    );
     helpers.serviceRpcMock.mockResolvedValue({ data: "complete", error: null });
     helpers.createServiceClientMock.mockReturnValue({
       rpc: helpers.serviceRpcMock,
@@ -97,6 +104,15 @@ describe("GET /api/writing/evaluation-status", () => {
     const externalFeedback = {
       submission_id: EXTERNAL_SUBMISSION_ID,
       status: "graded",
+      trait_scores: [
+        { trait: "blank_1", score: 4, max_score: 5 },
+        { trait: "blank_2", score: 4, max_score: 5 },
+      ],
+      annotations: [
+        { original_text: "정리하지 않으면" },
+        { original_text: "꼼꼼하게" },
+        { original_text: "좋다" },
+      ],
     };
     helpers.getExternalEvaluationFeedbackMock.mockResolvedValue(
       externalFeedback,
@@ -113,6 +129,8 @@ describe("GET /api/writing/evaluation-status", () => {
       dimensions: [{ dimension: "grammar", score: 9, score_max: 10 }],
       sentences: [
         { sentence_index: 0, original_text: "A", corrected_text: "B" },
+        { sentence_index: 1, original_text: "C", corrected_text: "D" },
+        { sentence_index: 2, original_text: "E", corrected_text: "F" },
       ],
     });
 
@@ -147,6 +165,8 @@ describe("GET /api/writing/evaluation-status", () => {
         dimensions: [{ dimension: "grammar", score: 9, score_max: 10 }],
         sentences: [
           { sentence_index: 0, original_text: "A", corrected_text: "B" },
+          { sentence_index: 1, original_text: "C", corrected_text: "D" },
+          { sentence_index: 2, original_text: "E", corrected_text: "F" },
         ],
       },
     );

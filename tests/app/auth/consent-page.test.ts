@@ -18,7 +18,7 @@ describe("/auth/consent page", () => {
       "const consentLocale = await resolveLocaleForProfile(profile)",
     );
     expect(source).toContain(
-      "getMissingRequiredConsentDocuments(\n    user.id,\n    consentLocale,",
+      "getMissingRequiredConsentDocuments(\n      user.id,\n      consentLocale,",
     );
     expect(source).not.toContain(
       "getMissingRequiredConsentDocuments(\n    user.id,\n    profile.ui_locale,",
@@ -40,5 +40,13 @@ describe("/auth/consent page", () => {
 
     expect(source).toContain('<PageContainer size="default">');
     expect(source).not.toContain('<PageContainer size="narrow">');
+  });
+
+  it("renders a fail-closed unavailable state when legal documents cannot load", () => {
+    const source = readFileSync("src/app/auth/consent/page.tsx", "utf8");
+
+    expect(source).toContain("UnavailableState");
+    expect(source).toContain('variant="required-information"');
+    expect(source).toContain("catch");
   });
 });

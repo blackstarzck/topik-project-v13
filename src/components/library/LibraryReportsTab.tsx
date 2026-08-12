@@ -1,12 +1,13 @@
 "use client";
 
-import { Alert, Button, Empty, Spin, Typography } from "antd";
+import { Button, Empty, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
 import { useLibraryItems } from "@/lib/library/queries";
 import type { LibraryItemView, LibraryReportView } from "@/lib/library/types";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 
 import { LibraryItemRow } from "./LibraryItemRow";
 import { LIBRARY_PAGE_SIZE, LibraryPagination } from "./LibraryPagination";
@@ -15,6 +16,7 @@ import { matchesLibrarySearch } from "./library-tab-url";
 const { Text, Paragraph } = Typography;
 
 type Props = {
+  userId: string;
   initialItems: LibraryReportView[];
   searchTerm?: string;
   onResetSearch?: () => void;
@@ -29,13 +31,15 @@ function formatDate(iso: string): string {
 }
 
 export function LibraryReportsTab({
+  userId,
   initialItems,
   searchTerm = "",
   onResetSearch,
 }: Props) {
   const t = useTranslations("library.reports");
+  const errorT = useTranslations("shared.error");
   const tCount = useTranslations("library.submissions");
-  const query = useLibraryItems("reports");
+  const query = useLibraryItems(userId, "reports");
   const [page, setPage] = useState(1);
   const allItems: LibraryReportView[] = (query.data ?? initialItems).filter(
     isReport,
@@ -63,12 +67,16 @@ export function LibraryReportsTab({
   }
   if (query.error) {
     return (
-      <Alert
-        type="error"
-        title={t("loadError")}
-        description={
-          query.error instanceof Error ? query.error.message : undefined
-        }
+      <UnavailableState
+        variant="resource"
+        actions={[
+          {
+            key: "retry",
+            label: errorT("retry"),
+            onClick: () => void query.refetch(),
+            primary: true,
+          },
+        ]}
       />
     );
   }
@@ -98,6 +106,7 @@ export function LibraryReportsTab({
       <div data-testid="library-item-list" className="flex w-full flex-col">
         {pageItems.map((item) => (
           <LibraryItemRow
+            userId={userId}
             key={item.item_id}
             itemId={item.item_id}
             tab="reports"

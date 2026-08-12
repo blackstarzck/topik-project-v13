@@ -143,11 +143,15 @@ export function FeedbackActionGroup({
       ) {
         notification.warning({
           title: t("pdfQuotaExceededTitle"),
-          description: getPdfExportErrorMessage(err, t("pdfQuotaExceededDescription"), {
-            [PDF_EXPORT_ERROR_CODES.quotaExceeded]: t(
-              "pdfQuotaExceededDescription",
-            ),
-          }),
+          description: getPdfExportErrorMessage(
+            err,
+            t("pdfQuotaExceededDescription"),
+            {
+              [PDF_EXPORT_ERROR_CODES.quotaExceeded]: t(
+                "pdfQuotaExceededDescription",
+              ),
+            },
+          ),
         });
         return;
       }

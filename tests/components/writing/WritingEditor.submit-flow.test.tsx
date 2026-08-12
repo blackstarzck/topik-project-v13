@@ -1,12 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  cleanup,
-  fireEvent,
-  screen,
-  waitFor,
-  act,
-} from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 
 import koMessages from "../../../messages/ko.json";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -16,8 +10,34 @@ const helpers = vi.hoisted(() => ({
   pushMock: vi.fn(),
   replaceMock: vi.fn(),
   refreshMock: vi.fn(),
+  clearAfterSubmitSuccessMock: vi.fn(() => Promise.resolve()),
+  chooseRecoveryMock: vi.fn(),
+  editMock: vi.fn(),
+  getLatestSnapshotMock: vi.fn(),
+  intentPersistence: {
+    clear: vi.fn(),
+    find: vi.fn(),
+    markAmbiguous: vi.fn(),
+    persist: vi.fn(),
+  },
+  latestSnapshot: null as null | {
+    draft: Record<string, unknown>;
+    draftId: string | null;
+  },
+  manualSaveMock: vi.fn(),
+  prepareForSubmitMock: vi.fn(),
+  resilienceOptions: null as null | Record<string, unknown>,
+  resilienceState: {
+    conflict: null as null | Record<string, unknown>,
+    hydrated: true,
+    lastSavedAt: "2026-07-14T00:00:00.000Z" as string | null,
+    recoveryState: "possible" as const,
+    status: "clean" as const,
+  },
+  retryMock: vi.fn(),
+  submitHookOptions: null as null | Record<string, unknown>,
   submitMutateMock: vi.fn(),
-  upsertMutateMock: vi.fn(),
+  upsertMutateAsyncMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -36,12 +56,37 @@ vi.mock("@/lib/events/study-events", () => ({
 vi.mock("@/lib/writing/mutations", () => ({
   useUpsertDraft: () => ({
     isPending: false,
-    mutate: helpers.upsertMutateMock,
+    mutateAsync: helpers.upsertMutateAsyncMock,
   }),
-  useSubmitWriting: () => ({
-    isPending: false,
-    mutate: helpers.submitMutateMock,
-  }),
+  useSubmitWriting: (_action: unknown, options: Record<string, unknown>) => {
+    helpers.submitHookOptions = options;
+    return {
+      isPending: false,
+      mutate: helpers.submitMutateMock,
+    };
+  },
+}));
+
+vi.mock("@/lib/writing/use-writing-resilience", () => ({
+  useWritingResilience: (options: Record<string, unknown>) => {
+    helpers.resilienceOptions = options;
+    if (!helpers.latestSnapshot) {
+      helpers.latestSnapshot =
+        options.initialSnapshot as typeof helpers.latestSnapshot;
+    }
+    return {
+      chooseRecovery: helpers.chooseRecoveryMock,
+      clearAfterSubmitSuccess: helpers.clearAfterSubmitSuccessMock,
+      edit: helpers.editMock,
+      getLatestSnapshot: helpers.getLatestSnapshotMock,
+      intentPersistence: helpers.intentPersistence,
+      manualSave: helpers.manualSaveMock,
+      prepareForSubmit: helpers.prepareForSubmitMock,
+      retry: helpers.retryMock,
+      setServerAutosaveEnabled: vi.fn(),
+      state: helpers.resilienceState,
+    };
+  },
 }));
 
 vi.mock("@/lib/writing/queries", () => ({
@@ -50,13 +95,28 @@ vi.mock("@/lib/writing/queries", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  helpers.latestSnapshot = null;
+  helpers.resilienceOptions = null;
+  helpers.resilienceState.conflict = null;
+  helpers.resilienceState.lastSavedAt = "2026-07-14T00:00:00.000Z";
+  helpers.resilienceState.status = "clean";
+  helpers.submitHookOptions = null;
+  helpers.editMock.mockImplementation((snapshot) => {
+    helpers.latestSnapshot = snapshot;
+  });
+  helpers.getLatestSnapshotMock.mockImplementation(
+    () => helpers.latestSnapshot,
+  );
+  helpers.prepareForSubmitMock.mockResolvedValue({
+    id: "draft-from-latest-save",
+    last_saved_at: "2026-07-18T00:00:00.000Z",
+  });
   helpers.submitMutateMock.mockImplementation((_input, options) => {
     options?.onSuccess?.({ submissionId: "submission-51", questionNo: 51 });
   });
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   cleanup();
 });
 
@@ -93,14 +153,16 @@ function renderEditor({ withSavedDraft = false } = {}) {
 }
 
 describe("WritingEditor submit flow", () => {
-  it("submits with the draft id returned by autosave when the editor started without a draft", async () => {
-    vi.useFakeTimers();
-    helpers.upsertMutateMock.mockImplementation((_input, options) => {
-      options?.onSuccess?.({
-        id: "draft-from-autosave",
-        last_saved_at: "2026-06-25T00:00:00.000Z",
-      });
-    });
+  it("does not send the server-owned cutover snapshot in client draft saves", () => {
+    renderEditor({ withSavedDraft: true });
+
+    const initialSnapshot = helpers.resilienceOptions?.initialSnapshot as {
+      draft: Record<string, unknown>;
+    };
+    expect(initialSnapshot.draft).not.toHaveProperty("legacy_cutover_snapshot");
+  });
+
+  it("records every edit as an immutable resilience snapshot", () => {
     renderEditor();
 
     fireEvent.change(
@@ -108,10 +170,27 @@ describe("WritingEditor submit flow", () => {
       { target: { value: "1234567890" } },
     );
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000);
-    });
-    vi.useRealTimers();
+    expect(helpers.editMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        draft: expect.objectContaining({
+          answer_text: "1234567890",
+          char_count: 10,
+          problem_id: "problem-1",
+          question_no: 51,
+          user_id: "user-1",
+        }),
+        draftId: null,
+      }),
+    );
+  });
+
+  it("flushes the latest snapshot and submits with the returned draft id", async () => {
+    renderEditor();
+
+    fireEvent.change(
+      screen.getByPlaceholderText(koMessages.writing.editor.placeholderShort),
+      { target: { value: "1234567890" } },
+    );
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -120,10 +199,21 @@ describe("WritingEditor submit flow", () => {
     );
     fireEvent.click(await screen.findByTestId("submission-confirm-submit"));
 
-    expect(helpers.submitMutateMock).toHaveBeenCalledWith(
-      expect.objectContaining({ draft_id: "draft-from-autosave" }),
-      expect.any(Object),
-    );
+    await waitFor(() => {
+      expect(helpers.prepareForSubmitMock).toHaveBeenCalledTimes(1);
+      expect(helpers.submitMutateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          answer_text: "1234567890",
+          char_count: 10,
+          draft_id: "draft-from-latest-save",
+        }),
+        expect.any(Object),
+      );
+    });
+    expect(helpers.submitHookOptions).toEqual({
+      intentPersistence: helpers.intentPersistence,
+    });
+    expect(helpers.clearAfterSubmitSuccessMock).toHaveBeenCalledTimes(1);
   });
 
   it("shows page-level D-M2 analysis UI after submit succeeds", async () => {
@@ -141,7 +231,7 @@ describe("WritingEditor submit flow", () => {
     fireEvent.click(await screen.findByTestId("submission-confirm-submit"));
 
     expect(helpers.pushMock).not.toHaveBeenCalled();
-    expect(screen.getByTestId("analysis-loading-page")).toBeTruthy();
+    expect(await screen.findByTestId("analysis-loading-page")).toBeTruthy();
     expect(await screen.findByTestId("analysis-loading-panel")).toBeTruthy();
     const stateAsset = screen.getByTestId(
       "analysis-state-asset",
@@ -189,6 +279,65 @@ describe("WritingEditor submit flow", () => {
     expect(
       screen.getByText(koMessages.writing.submit.submitFailedTitle),
     ).toBeTruthy();
-    expect(screen.getByText(/network down/)).toBeTruthy();
+    expect(
+      screen.getByText(koMessages.writing.submit.submitFailedDescription),
+    ).toBeTruthy();
+    expect(screen.queryByText(/network down/)).toBeNull();
+    expect(helpers.clearAfterSubmitSuccessMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks submission when the latest draft cannot be flushed", async () => {
+    helpers.prepareForSubmitMock.mockRejectedValue(
+      new Error("latest save failed"),
+    );
+    renderEditor({ withSavedDraft: true });
+
+    fireEvent.change(
+      screen.getByPlaceholderText(koMessages.writing.editor.placeholderShort),
+      { target: { value: "1234567890" } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: koMessages.writing.editor.submit,
+      }),
+    );
+    fireEvent.click(await screen.findByTestId("submission-confirm-submit"));
+
+    expect(await screen.findByTestId("autosave-warning-modal")).toBeTruthy();
+    expect(helpers.submitMutateMock).not.toHaveBeenCalled();
+    expect(helpers.clearAfterSubmitSuccessMock).not.toHaveBeenCalled();
+  });
+
+  it("restores the full prior snapshot selected from a recovery conflict", async () => {
+    helpers.resilienceState.conflict = {
+      current: {
+        draft: { answer_text: "current content" },
+        draftId: "saved-draft-1",
+      },
+      currentSavedAt: "2026-07-18T01:00:00.000Z",
+      prior: { answerText: "prior recovered content" },
+      priorSavedAt: "2026-07-18T00:00:00.000Z",
+    };
+    helpers.chooseRecoveryMock.mockResolvedValue({
+      draft: {
+        answer_text: "prior recovered content",
+        char_count: 23,
+      },
+      draftId: "saved-draft-1",
+    });
+    renderEditor({ withSavedDraft: true });
+
+    fireEvent.click(await screen.findByTestId("writing-recovery-choose-prior"));
+
+    await waitFor(() => {
+      expect(helpers.chooseRecoveryMock).toHaveBeenCalledWith("prior");
+      expect(
+        (
+          screen.getByPlaceholderText(
+            koMessages.writing.editor.placeholderShort,
+          ) as HTMLTextAreaElement
+        ).value,
+      ).toBe("prior recovered content");
+    });
   });
 });

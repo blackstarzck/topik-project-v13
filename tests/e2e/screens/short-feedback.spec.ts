@@ -66,26 +66,26 @@ async function createCompletedShortFeedbackSubmission() {
     .from("problems")
     .select("id")
     .eq("domain", "writing")
-    .eq("question_no", 51)
+    .eq("question_no", 52)
     .eq("publish_status", "published")
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   if (problem.error) throw problem.error;
-  if (!problem.data?.id) throw new Error("No published q51 problem found");
+  if (!problem.data?.id) throw new Error("No published q52 problem found");
 
   const submissionId = randomUUID();
-  // 실제 51 제출과 동일하게 build51AnswerText 형식("ㄱ: …\nㄴ: …")으로 저장한다.
-  // 문장별 첨삭은 이 줄에 원문을 대조해 ㄱ/ㄴ 그룹으로 묶인다.
+  // 실제 52 제출과 동일하게 build52AnswerText 형식("ㄱ: …\nㄴ: …")으로 저장한다.
+  // provider annotation은 세 조각이지만 제출 답안은 두 빈칸 전체 문자열로 표시돼야 한다.
   const answerText = [
-    "ㄱ: 저는 회의 일정 때문에 금요일 오후 세 시에 만날 수 있습니다.",
-    "ㄴ: 장소는 회사 근처 카페가 좋겠습니다.",
+    "ㄱ: 정리하지 않으면",
+    "ㄴ: 꼼꼼하게 정리하는 것이 좋다",
   ].join("\n");
   const inserted = await sb.from("writing_submissions").insert({
     id: submissionId,
     user_id: user.id,
     problem_id: problem.data.id,
-    question_no: 51,
+    question_no: 52,
     answer_text: answerText,
     char_count: answerText.length,
     feedback_status: "complete",
@@ -96,15 +96,29 @@ async function createCompletedShortFeedbackSubmission() {
     submission_id: submissionId,
     user_id: user.id,
     status: "complete",
-    score_total: 82,
-    score_max: 100,
+    score_total: 8,
+    score_max: 10,
     overall_summary:
-      "요청한 시간과 장소가 명확합니다. 조사와 연결 표현을 조금 더 자연스럽게 다듬으면 좋습니다.",
+      "두 빈칸의 내용은 적절하며 문장 종결 표현을 보완하면 좋습니다.",
     ai_model: "e2e-fixture",
     ai_model_version: "E-01",
     raw_ai_result: {
       time_spent: 1127,
       processing_time_seconds: 14.32,
+      trait_scores: [
+        {
+          trait: "blank_1",
+          score: 4,
+          max_score: 5,
+          feedback: "첫 번째 빈칸은 문맥에 맞게 작성했습니다.",
+        },
+        {
+          trait: "blank_2",
+          score: 4,
+          max_score: 5,
+          feedback: "두 번째 빈칸은 종결 표현을 다듬어 보세요.",
+        },
+      ],
     },
   });
   if (feedback.error) throw feedback.error;
@@ -172,19 +186,25 @@ async function createCompletedShortFeedbackSubmission() {
       submission_id: submissionId,
       user_id: user.id,
       sentence_index: 0,
-      original_text:
-        "저는 회의 일정 때문에 금요일 오후 세 시에 만날 수 있습니다.",
-      corrected_text:
-        "저는 회의 일정 때문에 금요일 오후 3시에 만날 수 있습니다.",
-      comment: "시간 표현을 숫자로 정리하면 더 읽기 쉽습니다.",
+      original_text: "정리하지 않으면",
+      corrected_text: "정리하지 않으면",
+      comment: "첫 번째 빈칸 교정",
     },
     {
       submission_id: submissionId,
       user_id: user.id,
       sentence_index: 1,
-      original_text: "장소는 회사 근처 카페가 좋겠습니다.",
-      corrected_text: "장소는 회사 근처 카페로 하면 좋겠습니다.",
-      comment: "제안 표현을 더 자연스럽게 바꿨습니다.",
+      original_text: "꼼꼼하게",
+      corrected_text: "꼼꼼하게",
+      comment: "두 번째 빈칸 교정 1",
+    },
+    {
+      submission_id: submissionId,
+      user_id: user.id,
+      sentence_index: 2,
+      original_text: "좋다",
+      corrected_text: "좋습니다",
+      comment: "두 번째 빈칸 교정 2",
     },
   ]);
   if (sentences.error) throw sentences.error;
@@ -234,11 +254,11 @@ test("E-01 short feedback matches the wireframe constraints", async ({
     .getByRole("heading");
   await expect(headerTitle).toHaveCSS("margin-bottom", "0px");
   const headerQuestionNo = page.getByTestId("feedback-title-question-no");
-  await expect(headerQuestionNo).toHaveText("51");
+  await expect(headerQuestionNo).toHaveText("52");
   await expect(headerQuestionNo).toHaveCSS("font-family", /Space Grotesk/);
   await expect(headerQuestionNo).toHaveCSS(
     "background-image",
-    /neon-yellow\.png/,
+    /neon-blue\.png/,
   );
   await expect(page.getByTestId("feedback-report-overview")).toHaveCount(0);
   await expect(page.getByTestId("feedback-report-criteria-card")).toBeVisible();
@@ -259,7 +279,7 @@ test("E-01 short feedback matches the wireframe constraints", async ({
     page
       .getByTestId("feedback-summary")
       .locator(".ant-typography")
-      .filter({ hasText: "요청한 시간과 장소가 명확합니다." }),
+      .filter({ hasText: "두 빈칸의 내용은 적절하며" }),
   ).not.toHaveClass(/ant-typography-ellipsis/);
   await expect(
     page
@@ -288,18 +308,24 @@ test("E-01 short feedback matches the wireframe constraints", async ({
   expect(criteriaBox).not.toBeNull();
   expect(focusBox).not.toBeNull();
   expect(focusBox!.y).toBeGreaterThan(criteriaBox!.y + criteriaBox!.height - 1);
-  await expect(page.getByTestId("feedback-report-score-item")).toHaveCount(4);
+  const scoreItems = page.getByTestId("feedback-report-score-item");
+  await expect(scoreItems).toHaveCount(2);
+  await expect(scoreItems.nth(0)).toContainText("제출 답안");
+  await expect(scoreItems.nth(0)).toContainText("정리하지 않으면");
+  await expect(scoreItems.nth(1)).toContainText("제출 답안");
+  await expect(scoreItems.nth(1)).toContainText("꼼꼼하게 정리하는 것이 좋다");
   await expect(page.getByTestId("feedback-dimension-card")).toHaveCount(0);
   const sentenceCard = page.getByTestId("feedback-sentence-card");
   await expect(sentenceCard).toBeVisible();
   await expect(
-    page.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
+    sentenceCard.getByRole("heading", { level: 5, name: "문장별 첨삭" }),
   ).toBeVisible();
   await expect(
     sentenceCard.getByTestId("feedback-sentence-group-label"),
   ).toHaveText(["ㄱ", "ㄴ"]);
-  await expect(sentenceCard.getByText("ㄷ")).toHaveCount(0);
-  await expect(sentenceCard.getByText("빈칸")).toHaveCount(0);
+  await expect(
+    sentenceCard.getByTestId("feedback-sentence-before"),
+  ).toHaveCount(3);
   await expect(page.locator('[data-testid^="feedback-reco-"]')).toHaveCount(3);
   await expect(
     page.getByRole("heading", { level: 5, name: "추천 학습" }),
@@ -349,7 +375,7 @@ test("E-01 short feedback next action starts a fresh direct writing attempt", as
   await page.getByTestId("feedback-action-next").click();
   await page.waitForURL((url) => {
     return (
-      url.pathname === "/writing/short-answer-writing-51" &&
+      url.pathname === "/writing/answer-writing-52" &&
       Boolean(url.searchParams.get("problem")) &&
       url.searchParams.get("fresh") === "1" &&
       url.searchParams.get("retrySubmission") === null

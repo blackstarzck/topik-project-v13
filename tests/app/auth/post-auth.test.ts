@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+
+const { unavailableStateMock } = vi.hoisted(() => ({
+  unavailableStateMock: vi.fn(() => null),
+}));
 
 const redirectMock = vi.fn((url: string) => {
   throw new Error(`NEXT_REDIRECT:${url}`);
@@ -9,6 +14,27 @@ const getAuthCompletionStatusForSessionMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => redirectMock(url),
+  unstable_rethrow: (error: unknown) => {
+    if (error instanceof Error && error.message.startsWith("NEXT_REDIRECT:")) {
+      throw error;
+    }
+  },
+}));
+
+vi.mock("next-intl/server", () => ({
+  getTranslations: async () => (key: string) => key,
+}));
+
+vi.mock("@/components/shared/PublicShell", () => ({
+  PublicShell: ({ children }: { children: unknown }) => children,
+}));
+
+vi.mock("@/components/shared/PageContainer", () => ({
+  PageContainer: ({ children }: { children: unknown }) => children,
+}));
+
+vi.mock("@/components/shared/UnavailableState", () => ({
+  UnavailableState: unavailableStateMock,
 }));
 
 // post-auth now gates withdrawn/blocked accounts via requireActiveSession
@@ -39,6 +65,7 @@ async function renderPostAuth(intent?: string) {
 describe("/auth/post-auth", () => {
   beforeEach(() => {
     redirectMock.mockClear();
+    unavailableStateMock.mockClear();
     requireActiveSessionMock.mockReset();
     requireActiveSessionMock.mockResolvedValue({
       user: {
@@ -117,6 +144,53 @@ describe("/auth/post-auth", () => {
     await expect(renderPostAuth("sign-up")).rejects.toThrow(
       "NEXT_REDIRECT:/auth/consent?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
     );
+  });
+
+  it("shows a retryable unavailable state when the profile read fails", async () => {
+    requireActiveSessionMock.mockRejectedValueOnce(
+      new Error("temporary profile lookup failure"),
+    );
+
+    const page = await renderPostAuth("sign-up");
+    renderToStaticMarkup(page);
+
+    expect(unavailableStateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variant: "required-information",
+        actions: expect.arrayContaining([
+          expect.objectContaining({
+            key: "retry",
+            href: "/auth/post-auth?intent=sign-up",
+            primary: true,
+          }),
+        ]),
+      }),
+      undefined,
+    );
+    expect(backfillOAuthDisplayNameMock).not.toHaveBeenCalled();
+    expect(getAuthCompletionStatusForSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("shows the same retryable state when the OAuth profile backfill read fails", async () => {
+    backfillOAuthDisplayNameMock.mockRejectedValueOnce(
+      new Error("temporary profile refresh failure"),
+    );
+
+    const page = await renderPostAuth("login");
+    renderToStaticMarkup(page);
+
+    expect(unavailableStateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actions: expect.arrayContaining([
+          expect.objectContaining({
+            key: "retry",
+            href: "/auth/post-auth?intent=login",
+          }),
+        ]),
+      }),
+      undefined,
+    );
+    expect(getAuthCompletionStatusForSessionMock).not.toHaveBeenCalled();
   });
 
   it("sends users with missing required consent to the consent gate", async () => {

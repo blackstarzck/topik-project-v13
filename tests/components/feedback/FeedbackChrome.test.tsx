@@ -226,6 +226,23 @@ describe("DimensionCardGrid (i18n chrome)", () => {
     expect(screen.getByText("이 항목은 분석에 실패했어요.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "다시 분석하기" })).toBeTruthy();
   });
+
+  it("shows a long dimension summary in full without a line clamp", () => {
+    const longSummary =
+      "문법과 어휘 선택의 근거부터 문장 연결 방식과 다음 연습 방법까지 사용자가 확인해야 하는 정보를 끝까지 보여 주는 긴 피드백입니다.";
+
+    renderWithIntl(
+      <DimensionCardGrid
+        rows={[dim({ dimension: "grammar", summary: longSummary })]}
+        maxCards={1}
+      />,
+    );
+
+    const summary = screen.getByText(longSummary);
+    expect(summary.className).not.toMatch(/\bline-clamp-\d+\b/);
+    expect(summary.className).not.toContain("truncate");
+    expect(summary.getAttribute("style") ?? "").not.toContain("line-clamp");
+  });
 });
 
 describe("SentenceFeedbackList (i18n chrome)", () => {
@@ -443,6 +460,24 @@ describe("DetailedFeedbackPanel (i18n chrome)", () => {
     expect(screen.getByText("문법")).toBeTruthy();
     expect(screen.queryByText("논리")).toBeNull();
     expect(screen.queryByText("구조")).toBeNull();
+  });
+
+  it("shows detailed feedback in full without ellipsis or an expand action", () => {
+    const longSummary =
+      "이 상세 피드백은 사용자가 문법 문제의 원인과 수정 방향, 다음 연습 방법을 한 번에 확인할 수 있도록 마지막 문장까지 기본 상태에서 모두 보여 줍니다.";
+
+    renderWithIntl(
+      <DetailedFeedbackPanel
+        dimensions={[
+          dim({ dimension: "grammar", score: 70, summary: longSummary }),
+        ]}
+      />,
+    );
+
+    const summary = screen.getByText(longSummary);
+    expect(summary.className).not.toContain("ant-typography-ellipsis");
+    expect(summary.getAttribute("style") ?? "").not.toContain("line-clamp");
+    expect(screen.queryByText("더보기")).toBeNull();
   });
 });
 
@@ -1111,6 +1146,92 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     expect(
       screen.getAllByText("무의미한 문자 입력 금지").length,
     ).toBeGreaterThan(0);
+  });
+
+  it("renders two complete Q52 submitted answers and keeps three sentence corrections", () => {
+    const bundle: FeedbackBundle = {
+      feedback: feedback({
+        score_total: 8,
+        score_max: 10,
+        raw_ai_result: {
+          trait_scores: [
+            {
+              trait: "blank_1",
+              score: 4,
+              max_score: 5,
+              feedback: "첫 번째 빈칸 피드백",
+            },
+            {
+              trait: "blank_2",
+              score: 4,
+              max_score: 5,
+              feedback: "두 번째 빈칸 피드백",
+            },
+          ],
+        },
+      }),
+      dimensions: [],
+      sentences: [
+        sentence({
+          id: "annotation-1",
+          original_text: "정리하지 않으면",
+          corrected_text: "정리하지 않으면",
+          comment: "첫 번째 빈칸 교정",
+        }),
+        sentence({
+          id: "annotation-2",
+          original_text: "꼼꼼하게",
+          corrected_text: "꼼꼼하게",
+          comment: "두 번째 빈칸 교정 1",
+        }),
+        sentence({
+          id: "annotation-3",
+          original_text: "좋다",
+          corrected_text: "좋습니다",
+          comment: "두 번째 빈칸 교정 2",
+        }),
+      ],
+    };
+
+    renderWithIntl(
+      <FeedbackPageContent
+        submission={submission({
+          question_no: 52,
+          answer_text: "ㄱ: 정리하지 않으면\nㄴ: 꼼꼼하게 정리하는 것이 좋다",
+        })}
+        bundle={bundle}
+        withSentences
+        showDetailPanel={false}
+        dimensionCardLimit={4}
+        reloadHref="/writing/feedback/short/sub-1"
+        userId="user-1"
+      />,
+    );
+
+    const scoreItems = screen.getAllByTestId("feedback-report-score-item");
+    expect(scoreItems).toHaveLength(2);
+    expect(within(scoreItems[0]).getByText("제출 답안")).toBeTruthy();
+    expect(within(scoreItems[0]).getByText("정리하지 않으면")).toBeTruthy();
+    expect(within(scoreItems[1]).getByText("제출 답안")).toBeTruthy();
+    expect(
+      within(scoreItems[1]).getByText("꼼꼼하게 정리하는 것이 좋다"),
+    ).toBeTruthy();
+    const sentenceCard = screen.getByTestId("feedback-sentence-card");
+    expect(
+      within(sentenceCard).getByRole("heading", {
+        level: 5,
+        name: "문장별 첨삭",
+      }),
+    ).toBeTruthy();
+    expect(within(sentenceCard).getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      within(sentenceCard)
+        .getAllByTestId("feedback-sentence-group-label")
+        .map((node) => node.textContent),
+    ).toEqual(["ㄱ", "ㄴ"]);
+    expect(within(sentenceCard).getAllByText("Before (내 답안)")).toHaveLength(
+      3,
+    );
   });
 
   it("does not render report metadata above the score sections", () => {
