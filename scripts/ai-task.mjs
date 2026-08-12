@@ -520,7 +520,30 @@ export async function runTaskLifecycleCommand(
       lockPaths: commaList(values.locks),
       now,
     });
-    if (v3.handled) return v3.result;
+    if (v3.handled) {
+      // V3 가 runtime 을 가져가면 아래 V2 registerTaskRuntime 호출은 도달하지
+      // 않는다. 그런데 V3 정리는 V2 에 위임하고 그 게이트는 V2 runtime manifest
+      // 파일이 있어야 통과한다. 이 자리에서 함께 쓰지 않으면 게이트가 영구히
+      // RUNTIME_REGISTRATION_REQUIRED 를 보고해 CLEANED 에 도달할 수 없다.
+      //
+      // V3 를 먼저 쓰고 V2 를 뒤에 쓴다. V2 가 실패하면 manifest 가 없어 정리가
+      // 계속 막히는 쪽으로 닫힌다. 반대 순서는 manifest 만 남아 정리를 허용하는
+      // 열린 실패가 된다.
+      if (command === "runtime") {
+        return {
+          ...v3.result,
+          v2Runtime: registerTaskRuntime({
+            repoPath: values.repo,
+            branch: values.branch,
+            ports: integerList(values.ports, "PORTS"),
+            pids: integerList(values.pids, "PIDS"),
+            lockPaths: commaList(values.locks),
+            now,
+          }),
+        };
+      }
+      return v3.result;
+    }
     delegatedV3Task = v3.v3Task ?? null;
   }
   if (command === "status") {
