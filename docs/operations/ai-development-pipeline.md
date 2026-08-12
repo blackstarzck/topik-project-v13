@@ -115,9 +115,23 @@ pnpm task:runtime -- --repo <task-worktree> --branch feat/example-task
 
 runtime을 사용하지 않았어도 두 번째 예처럼 빈 상태를 명시적으로 등록한다. 포트·PID·lock은 task별 최대 32개다. lock 경로는 해당 worktree의 `.codex/work/<slug>/` 안의 절대 경로만 허용한다. worktree 자체가 포트나 프로세스를 격리하지 않으므로 병렬 runtime은 서로 다른 loopback port와 test data를 사용한다.
 
-**이 명령 한 번은 v3와 v2 registry를 함께 갱신한다.** v3는 선언한 포트·PID·lock을 불변 snapshot으로 저장하고 task record가 그것을 가리키게 한다. 빈 선언은 v3에서 그 참조를 해제하는 뜻이다. 같은 호출이 v2 runtime manifest도 쓴다. 정리는 v3가 v2에 위임하고 v2 게이트는 그 manifest 파일이 있어야 통과하므로, 한쪽만 쓰면 정리가 영구히 `RUNTIME_REGISTRATION_REQUIRED`로 막혀 `CLEANED`에 도달할 수 없다. 빈 선언에도 manifest를 쓰는 이유가 이것이다 — 게이트가 확인하는 것은 "실행 중인 것이 있는지"가 아니라 "운영자가 runtime 상태를 선언했는지"다. manifest가 없는 상태는 "없음"이 아니라 "모름"이므로 차단이 맞다.
+**이 명령 한 번은 v3와 v2 registry를 함께 갱신한다.** 정리는 v3가 v2에 위임하고 v2 게이트는 v2 manifest 파일이 있어야 통과하므로, 한쪽만 쓰면 `CLEANED`에 도달할 수 없다.
 
-v3를 먼저 쓰고 v2를 뒤에 쓴다. v2 쓰기가 실패하면 manifest가 없어 정리가 계속 막히는 쪽으로 닫힌다. 반대 순서는 manifest만 남아 정리를 허용하는 열린 실패가 된다.
+```mermaid
+flowchart TD
+  A["task:runtime"] --> B{"선언이 비었나"}
+  B -->|"비었음"| C["v3: runtimeRef 해제"]
+  B -->|"포트·PID·lock 있음"| D["v3: snapshot 기록 후 참조"]
+  C --> E["v2: manifest 기록"]
+  D --> E
+  E -->|"성공"| F["정리 게이트 통과 가능"]
+  E -->|"실패"| G["manifest 없음"]
+  G --> H["이후 정리가 RUNTIME_REGISTRATION_REQUIRED로 차단"]
+```
+
+도식의 결론은 빈 선언이든 아니든 v2 manifest 기록까지 끝나야 정리가 열린다는 것이다.
+
+빈 선언에도 manifest를 쓰는 이유는 게이트가 확인하는 것이 "실행 중인 것이 있는지"가 아니라 "운영자가 runtime 상태를 선언했는지"이기 때문이다. manifest가 없는 상태는 "없음"이 아니라 "모름"이므로 차단이 맞다. v2를 v3 뒤에 두는 것도 같은 판단이다 — 쓰기가 실패하면 정리가 막히는 쪽으로 닫힌다. 반대 순서는 manifest만 남아 정리를 허용하는 열린 실패가 된다.
 
 ### GitHub 계정 profile
 
