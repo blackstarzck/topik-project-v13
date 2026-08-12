@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>한글 단어 음절별 자모 색상 생성기 — 안정 분리형</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:light;--page:#f2f3f5;--panel:#fff;--line:#dfe3e8;--text:#17191c;--muted:#666d76;--blue:#1d4ed8;--dark:#15171a;--radius:18px}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--page);color:var(--text);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+    .app{width:min(1280px,calc(100% - 32px));margin:30px auto 64px}
+    h1{margin:0;font-size:clamp(25px,3vw,38px);letter-spacing:-.045em}
+    h2{margin:0;font-size:18px;letter-spacing:-.03em}
+    .intro{max-width:1000px;margin:10px 0 22px;color:var(--muted);line-height:1.75}
+    .badge{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:7px 11px;border:1px solid #d6e6fb;border-radius:999px;background:#f2f7ff;color:var(--blue);font-size:12px;font-weight:900}
+    .dot{width:8px;height:8px;border-radius:50%;background:#2864e8}
+    .controls,.panel{padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);box-shadow:0 12px 34px rgba(18,25,34,.06)}
+    .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px}
+    .panel{margin-top:16px}
+    .field{display:flex;min-width:0;flex-direction:column;gap:7px}.wide{grid-column:span 2}
+    label{color:#454b53;font-size:13px;font-weight:800}
+    input,select,button{min-height:44px;border-radius:11px;font:inherit}
+    input,select{width:100%;padding:0 12px;border:1px solid #cfd4da;outline:none;background:#fff;color:var(--text)}
+    input:focus,select:focus{border-color:#191c20;box-shadow:0 0 0 3px rgba(20,24,28,.09)}
+    input[type="color"]{padding:5px;cursor:pointer}input:disabled{cursor:not-allowed;opacity:.42}
+    .toggle{display:flex;align-items:center;gap:9px;min-height:44px;padding:0 12px;border:1px solid #cfd4da;border-radius:11px;background:#fff;user-select:none}
+    .toggle input{width:18px;height:18px;min-height:auto;margin:0}
+    .actions{display:flex;align-items:end}.primary{width:100%;padding:0 18px;border:0;background:var(--dark);color:#fff;font-weight:900;cursor:pointer}.primary:hover{opacity:.88}
+    .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+    .help{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.55}
+    .recent-target{display:inline-flex;align-items:center;min-height:30px;margin-bottom:10px;padding:5px 9px;border:1px solid #d8dde3;border-radius:999px;background:#f8fafc;color:#454b53;font-size:12px;font-weight:800}
+    .recent-list{display:flex;flex-wrap:wrap;gap:8px;min-height:38px;align-items:center}
+    .swatch{width:36px;height:36px;min-height:36px;padding:0;border:2px solid #fff;border-radius:8px;outline:1px solid #c8ced6;box-shadow:0 1px 3px rgba(15,23,42,.12);cursor:pointer}.swatch:hover,.swatch:focus-visible{outline:3px solid rgba(29,78,216,.28);transform:translateY(-1px)}
+    .empty{color:var(--muted);font-size:13px}.clear{min-height:34px;padding:0 11px;border:1px solid #cfd4da;background:#fff;color:#3f4650;font-size:12px;font-weight:800;cursor:pointer}
+    input[type="color"].active-target{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.14)}
+    .syllable-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:12px}
+    .syllable-card{padding:14px;border:1px solid var(--line);border-radius:14px;background:#fafbfc}
+    .syllable-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}.syllable-char{font-size:27px;font-weight:900;line-height:1}.syllable-parts{color:#525963;font-size:12px;font-weight:700}
+    .role-colors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.role-field{display:grid;gap:5px}.role-field span{color:#555c65;font-size:11px;font-weight:900;text-align:center}.role-field input{min-height:38px;padding:4px}
+    .summary{margin:18px 2px 12px;color:var(--muted);font-size:14px}
+    .result{width:min(100%,980px);margin:0 auto;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);box-shadow:0 12px 34px rgba(18,25,34,.06)}
+    .canvas-wrap{position:relative;min-height:240px;background:linear-gradient(45deg,#f5f5f5 25%,transparent 25%) 0 0/18px 18px,linear-gradient(45deg,transparent 75%,#f5f5f5 75%) 0 0/18px 18px,linear-gradient(45deg,transparent 75%,#f5f5f5 75%) 9px -9px/18px 18px,linear-gradient(45deg,#f5f5f5 25%,#fff 25%) 9px 9px/18px 18px}
+    canvas{display:block;width:100%;height:100%}.meta{display:grid;gap:10px;padding:16px}.title-line{display:flex;align-items:center;justify-content:space-between;gap:12px}.result-title{font-size:19px;font-weight:900;letter-spacing:-.03em}.size{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.mode{color:var(--blue);font-size:12px;font-weight:900}.download{width:100%;border:1px solid #cfd4da;background:#fff;color:#1d2024;font-weight:900;cursor:pointer}.download:hover{border-color:#17191c;background:#f7f7f7}
+    .note{margin-top:18px;padding:15px 17px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.72);color:#4e555e;font-size:13px;line-height:1.75}
+    @media(max-width:720px){.app{width:min(100% - 20px,1280px);margin-top:20px}.wide{grid-column:span 1}.panel-head{display:block}.title-line{align-items:flex-start}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <h1>한글 단어 음절별 자모 색상 생성기</h1>
+  <p class="intro">이 버전은 완성형 글자의 붙어 있는 픽셀을 억지로 나누지 않습니다. 각 음절을 <strong>초성·중성·종성 자모로 먼저 분해한 뒤 서로 독립적으로 그리기</strong> 때문에, ‘오·와·워·의’처럼 자음과 모음이 맞닿는 글자도 색이 섞이지 않습니다.<br><span class="badge"><span class="dot"></span>안정 분리형 렌더링 + 나눔고딕 기본</span></p>
+
+  <section class="controls" aria-label="이미지 설정">
+    <div class="field wide"><label for="characters">단어 또는 문구</label><input id="characters" value="와" maxlength="30" spellcheck="false"></div>
+    <div class="field"><label for="fontFamily">글꼴</label><select id="fontFamily">
+      <option value="'Nanum Gothic', sans-serif" selected>나눔고딕 — 분리 권장</option>
+      <option value="'Gothic A1', sans-serif">Gothic A1 — 분리 권장</option>
+      <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+      <option value="'Noto Serif KR', serif">Noto Serif KR</option>
+      <option value="'Malgun Gothic', sans-serif">맑은 고딕</option>
+      <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+    </select></div>
+    <div class="field"><label for="fontWeight">굵기</label><select id="fontWeight"><option value="400">Regular 400</option><option value="700" selected>Bold 700</option><option value="800">Extra Bold 800</option><option value="900">Black 900</option></select></div>
+    <div class="field"><label for="textColor">기본 글자색</label><input id="textColor" type="color" value="#111111"></div>
+    <div class="field"><label for="backgroundColor">배경색</label><input id="backgroundColor" type="color" value="#ffffff"></div>
+    <div class="field"><label>초성 색상 사용</label><label class="toggle"><input id="useInitialColor" type="checkbox" checked>초성 별도 색상</label></div>
+    <div class="field"><label for="initialColor">전체 초성 기본색</label><input id="initialColor" type="color" value="#111111"></div>
+    <div class="field"><label>중성 색상 사용</label><label class="toggle"><input id="useMedialColor" type="checkbox" checked>중성 별도 색상</label></div>
+    <div class="field"><label for="medialColor">전체 중성 기본색</label><input id="medialColor" type="color" value="#16a34a"></div>
+    <div class="field"><label>종성 색상 사용</label><label class="toggle"><input id="useFinalColor" type="checkbox" checked>종성 별도 색상</label></div>
+    <div class="field"><label for="finalColor">전체 종성 기본색</label><input id="finalColor" type="color" value="#87336f"></div>
+    <div class="actions"><button id="renderButton" class="primary" type="button">이미지 만들기</button></div>
+  </section>
+
+  <section class="panel" aria-labelledby="recent-heading">
+    <div class="panel-head"><div><h2 id="recent-heading">최근에 사용한 색</h2><p class="help">색상 칸을 먼저 누른 뒤 아래 색을 선택하면 바로 적용됩니다. 최근 색은 브라우저에 저장됩니다.</p></div><button id="clearRecent" class="clear" type="button">기록 지우기</button></div>
+    <div id="activeTarget" class="recent-target">적용 대상: 전체 초성 기본색</div><div id="recentColors" class="recent-list"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="syllable-heading"><div class="panel-head"><div><h2 id="syllable-heading">음절별 색상</h2><p class="help">각 음절의 초성·중성·종성을 독립적으로 설정합니다. 이중모음은 전체가 하나의 중성 색으로 표시됩니다.</p></div></div><div id="syllableSettings" class="syllable-grid"></div></section>
+
+  <p id="summary" class="summary" aria-live="polite"></p><section id="output"></section>
+  <p class="note"><strong>오류 원인과 수정:</strong> 이전 파일은 완성형 글자를 먼저 그린 뒤 연결된 픽셀 덩어리를 분류했습니다. 폰트에서 ㅇ과 ㅗ, 또는 초성과 이중모음이 맞닿으면 하나의 덩어리가 되어 오분류되었습니다. 이번 파일은 자모를 각각 별도의 그리기 명령으로 렌더링하므로 획이 가까워도 색상 정보가 합쳐지지 않습니다.</p>
+</main>
+<script>
+"use strict";
+const SIZE=1080,CELL=820,MAX_TEXT=30,MAX_RECENT=12,STATE_KEY="hangul-jamo-separated-generator-v2";
+const CHOSEONG=["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+const JUNGSEONG=["ㅏ","ㅐ","ㅑ","ㅒ","ㅓ","ㅔ","ㅕ","ㅖ","ㅗ","ㅘ","ㅙ","ㅚ","ㅛ","ㅜ","ㅝ","ㅞ","ㅟ","ㅠ","ㅡ","ㅢ","ㅣ"];
+const JONGSEONG=["","ㄱ","ㄲ","ㄳ","ㄴ","ㄵ","ㄶ","ㄷ","ㄹ","ㄺ","ㄻ","ㄼ","ㄽ","ㄾ","ㄿ","ㅀ","ㅁ","ㅂ","ㅄ","ㅅ","ㅆ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+const VERTICAL=new Set(["ㅏ","ㅐ","ㅑ","ㅒ","ㅓ","ㅔ","ㅕ","ㅖ","ㅣ"]);
+const HORIZONTAL=new Set(["ㅗ","ㅛ","ㅜ","ㅠ","ㅡ"]);
+const $=s=>document.querySelector(s);
+let recentColors=[],activeColorInput=null,renderTimer=null;
+function isHex(v){return typeof v==="string"&&/^#[0-9a-f]{6}$/i.test(v)}
+function wholeText(v){return Array.from(v.trim().replace(/\s+/gu," ")).slice(0,MAX_TEXT).join("")}
+function parts(ch){const c=ch.codePointAt(0);if(c<0xAC00||c>0xD7A3)return null;const i=c-0xAC00;return{initial:CHOSEONG[Math.floor(i/588)],medial:JUNGSEONG[Math.floor((i%588)/28)],final:JONGSEONG[i%28]}}
+function settings(){return{fontFamily:$("#fontFamily").value,fontWeight:$("#fontWeight").value,textColor:$("#textColor").value,backgroundColor:$("#backgroundColor").value,useInitialColor:$("#useInitialColor").checked,initialColor:$("#initialColor").value,useMedialColor:$("#useMedialColor").checked,medialColor:$("#medialColor").value,useFinalColor:$("#useFinalColor").checked,finalColor:$("#finalColor").value}}
+function loadState(){try{return JSON.parse(localStorage.getItem(STATE_KEY)||"null")}catch{return null}}
+function saveState(){try{localStorage.setItem(STATE_KEY,JSON.stringify({settings:settings(),recentColors}))}catch{}}
+function applyState(state){if(!state?.settings)return;const s=state.settings;["fontFamily","fontWeight","textColor","backgroundColor","initialColor","medialColor","finalColor"].forEach(id=>{const el=$("#"+id);if(!el||s[id]==null)return;if(el.type==="color"){if(isHex(s[id]))el.value=s[id]}else if([...el.options].some(o=>o.value===String(s[id])))el.value=String(s[id])});["useInitialColor","useMedialColor","useFinalColor"].forEach(id=>{if(typeof s[id]==="boolean")$("#"+id).checked=s[id]});recentColors=Array.isArray(state.recentColors)?[...new Set(state.recentColors.filter(isHex).map(c=>c.toLowerCase()))].slice(0,MAX_RECENT):[]}
+function setActive(input){if(!(input instanceof HTMLInputElement)||input.type!=="color")return;document.querySelectorAll("input.active-target").forEach(x=>x.classList.remove("active-target"));activeColorInput=input;input.classList.add("active-target");$("#activeTarget").textContent="적용 대상: "+(input.dataset.label||"선택한 색상")}
+function renderRecent(){const box=$("#recentColors");if(!recentColors.length){const e=document.createElement("span");e.className="empty";e.textContent="아직 사용한 색이 없습니다.";box.replaceChildren(e);return}const f=document.createDocumentFragment();recentColors.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="swatch";b.style.backgroundColor=c;b.title=c+" 적용";b.onclick=()=>{const target=activeColorInput&&!activeColorInput.disabled?activeColorInput:$("#initialColor");target.value=c;setActive(target);target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}))};f.appendChild(b)});box.replaceChildren(f)}
+function addRecent(c){if(!isHex(c))return;c=c.toLowerCase();recentColors=[c,...recentColors.filter(x=>x!==c)].slice(0,MAX_RECENT);renderRecent();saveState()}
+function registerColor(input,label){input.dataset.label=label;if(input.dataset.registered)return;input.dataset.registered="1";["focus","click"].forEach(ev=>input.addEventListener(ev,()=>setActive(input)));input.addEventListener("change",()=>{setActive(input);addRecent(input.value)})}
+function registerStatic(){const map={textColor:"기본 글자색",backgroundColor:"배경색",initialColor:"전체 초성 기본색",medialColor:"전체 중성 기본색",finalColor:"전체 종성 기본색"};Object.entries(map).forEach(([id,label])=>registerColor($("#"+id),label))}
+function updateDisabled(){const a=$("#useInitialColor").checked,m=$("#useMedialColor").checked,f=$("#useFinalColor").checked;document.querySelectorAll('[data-role="initial"]').forEach(x=>x.disabled=!a);document.querySelectorAll('[data-role="medial"]').forEach(x=>x.disabled=!m);document.querySelectorAll('[data-role="final"]').forEach(x=>x.disabled=!f||x.dataset.hasFinal!=="true")}
+function paletteAt(index,s){const card=document.querySelector(`.syllable-card[data-text-index="${index}"]`);return card?{initial:card.querySelector('[data-role="initial"]').value,medial:card.querySelector('[data-role="medial"]').value,final:card.querySelector('[data-role="final"]').value}:{initial:s.initialColor,medial:s.medialColor,final:s.finalColor}}
+function syncSyllables(){const text=wholeText($("#characters").value),s=settings(),f=document.createDocumentFragment();let number=0;Array.from(text).forEach((ch,textIndex)=>{const p=parts(ch);if(!p)return;number++;const card=document.createElement("article");card.className="syllable-card";card.dataset.textIndex=String(textIndex);const title=document.createElement("div");title.className="syllable-title";const c=document.createElement("div");c.className="syllable-char";c.textContent=ch;const info=document.createElement("div");info.className="syllable-parts";info.textContent=`${number}음절 · ${p.initial} + ${p.medial}${p.final?` + ${p.final}`:""}`;title.append(c,info);const roles=document.createElement("div");roles.className="role-colors";[["initial","초성",s.initialColor,true],["medial","중성",s.medialColor,true],["final",p.final?"종성":"종성 없음",s.finalColor,!!p.final]].forEach(([role,label,value,enabled])=>{const field=document.createElement("label");field.className="role-field";const span=document.createElement("span");span.textContent=label;const input=document.createElement("input");input.type="color";input.value=value;input.dataset.role=role;input.dataset.hasFinal=String(!!p.final);input.disabled=!enabled;registerColor(input,`${number}음절 ‘${ch}’ ${label}`);input.addEventListener("input",scheduleRender);input.addEventListener("change",scheduleRender);field.append(span,input);roles.appendChild(field)});card.append(title,roles);f.appendChild(card)});const box=$("#syllableSettings");if(!number){const e=document.createElement("div");e.className="empty";e.textContent="완성형 한글 음절을 입력하면 색상 선택이 나타납니다.";box.replaceChildren(e)}else box.replaceChildren(f);updateDisabled()}
+function measure(ctx,text,size,s){ctx.font=`${s.fontWeight} ${size}px ${s.fontFamily}`;const m=ctx.measureText(text);const left=m.actualBoundingBoxLeft||0,right=m.actualBoundingBoxRight||m.width,ascent=m.actualBoundingBoxAscent||size*.78,descent=m.actualBoundingBoxDescent||size*.18;return{left,right,ascent,descent,width:left+right,height:ascent+descent}}
+function drawJamo(ctx,jamo,box,color,s){let size=Math.min(box.h*1.15,box.w*1.15);for(let i=0;i<6;i++){const m=measure(ctx,jamo,size,s);size*=Math.min(box.w*.9/Math.max(m.width,1),box.h*.9/Math.max(m.height,1))}const m=measure(ctx,jamo,size,s);ctx.font=`${s.fontWeight} ${size}px ${s.fontFamily}`;ctx.fillStyle=color;ctx.textAlign="left";ctx.textBaseline="alphabetic";const x=box.x+box.w/2+(m.left-m.right)/2,y=box.y+box.h/2+(m.ascent-m.descent)/2;ctx.fillText(jamo,x,y)}
+function boxesFor(p){const has=!!p.final;if(VERTICAL.has(p.medial))return has?{initial:{x:55,y:45,w:355,h:470},medial:{x:450,y:35,w:310,h:500},final:{x:115,y:610,w:590,h:185}}:{initial:{x:55,y:80,w:360,h:620},medial:{x:455,y:60,w:305,h:650}};if(HORIZONTAL.has(p.medial))return has?{initial:{x:115,y:35,w:590,h:315},medial:{x:105,y:370,w:610,h:200},final:{x:115,y:625,w:590,h:170}}:{initial:{x:115,y:45,w:590,h:395},medial:{x:105,y:475,w:610,h:250}};return has?{initial:{x:55,y:40,w:330,h:340},medial:{x:285,y:220,w:475,h:355},final:{x:115,y:625,w:590,h:170}}:{initial:{x:55,y:55,w:340,h:410},medial:{x:275,y:255,w:490,h:465}}}
+function drawSyllable(ctx,ch,x,y,s,palette){const p=parts(ch);ctx.save();ctx.translate(x,y);if(!p){drawJamo(ctx,ch,{x:40,y:40,w:CELL-80,h:CELL-80},s.textColor,s);ctx.restore();return}const b=boxesFor(p),base=s.textColor;drawJamo(ctx,p.initial,b.initial,s.useInitialColor?palette.initial:base,s);drawJamo(ctx,p.medial,b.medial,s.useMedialColor?palette.medial:base,s);if(p.final)drawJamo(ctx,p.final,b.final,s.useFinalColor?palette.final:base,s);ctx.restore()}
+function canvasWidth(text){const count=Array.from(text).reduce((n,ch)=>n+(ch===" "?.38:1),0);return Math.min(3840,Math.max(1080,Math.ceil(count*CELL+220)))}
+async function drawWord(canvas,text,s){await document.fonts.ready;await document.fonts.load(`${s.fontWeight} 180px ${s.fontFamily}`,text+"ㄱㅏㅘㄶ");canvas.width=canvasWidth(text);canvas.height=SIZE;const ctx=canvas.getContext("2d",{alpha:false});ctx.fillStyle=s.backgroundColor;ctx.fillRect(0,0,canvas.width,canvas.height);const chars=Array.from(text),natural=chars.reduce((n,ch)=>n+(ch===" "?CELL*.38:CELL),0),scale=Math.min(1,(canvas.width-150)/Math.max(natural,1),(SIZE-150)/CELL),rendered=natural*scale;let x=(canvas.width-rendered)/2;const y=(SIZE-CELL*scale)/2;ctx.save();ctx.scale(scale,scale);for(let i=0;i<chars.length;i++){const ch=chars[i];if(ch===" "){x+=CELL*.38*scale;continue}drawSyllable(ctx,ch,x/scale,y/scale,s,paletteAt(i,s));x+=CELL*scale}ctx.restore();return{width:canvas.width,height:canvas.height}}
+function safeName(text){return(text.trim().replace(/[\\/:*?"<>|]+/gu,"_").replace(/\s+/gu,"_").slice(0,40)||"hangul_word")+".png"}
+async function render(){const text=wholeText($("#characters").value),out=$("#output"),summary=$("#summary");if(!text){out.replaceChildren();summary.textContent="단어나 문구를 입력해 주세요.";return}summary.textContent="자모를 각각 분리해서 그리는 중입니다…";try{const s=settings(),card=document.createElement("article");card.className="result";const wrap=document.createElement("div");wrap.className="canvas-wrap";const canvas=document.createElement("canvas");const info=await drawWord(canvas,text,s);wrap.style.aspectRatio=`${info.width} / ${info.height}`;wrap.appendChild(canvas);const meta=document.createElement("div");meta.className="meta";const line=document.createElement("div");line.className="title-line";const title=document.createElement("div");title.className="result-title";title.textContent=`전체 단어 ‘${text}’`;const size=document.createElement("div");size.className="size";size.textContent=`${info.width}×${info.height}px`;line.append(title,size);const mode=document.createElement("div");mode.className="mode";mode.textContent="초성·중성·종성을 독립적으로 그리는 안정 분리형";const button=document.createElement("button");button.type="button";button.className="download";button.textContent=`${info.width}×${info.height} PNG 한 장으로 저장`;button.onclick=()=>{const a=document.createElement("a");a.download=safeName(text);a.href=canvas.toDataURL("image/png");a.click()};meta.append(line,mode,button);card.append(wrap,meta);out.replaceChildren(card);summary.textContent=`‘${text}’의 자모를 분리해 PNG 한 장으로 만들었습니다.`}catch(error){console.error(error);summary.textContent="이미지를 만들지 못했습니다. 인터넷 연결 또는 글꼴 선택을 확인해 주세요."}}
+function scheduleRender(){clearTimeout(renderTimer);renderTimer=setTimeout(render,100)}
+$("#characters").addEventListener("input",()=>{syncSyllables();scheduleRender()});$("#characters").addEventListener("keydown",e=>{if(e.key==="Enter")render()});$("#renderButton").addEventListener("click",render);
+["initial","medial","final"].forEach(role=>{const global=$("#"+role+"Color");const apply=()=>{document.querySelectorAll(`[data-role="${role}"]`).forEach(x=>x.value=global.value);saveState();scheduleRender()};global.addEventListener("input",apply);global.addEventListener("change",apply)});
+["useInitialColor","useMedialColor","useFinalColor"].forEach(id=>$("#"+id).addEventListener("change",()=>{updateDisabled();saveState();scheduleRender()}));
+["fontFamily","fontWeight","textColor","backgroundColor"].forEach(id=>{const el=$("#"+id);["input","change"].forEach(ev=>el.addEventListener(ev,()=>{saveState();scheduleRender()}))});
+const state=loadState();if(state)applyState(state);registerStatic();renderRecent();setActive($("#initialColor"));$("#clearRecent").onclick=()=>{recentColors=[];renderRecent();saveState()};syncSyllables();render();
+</script>
+</body>
+</html>
