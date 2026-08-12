@@ -175,10 +175,6 @@ function normalizePrefs(raw: NotificationPrefs): NotificationPrefs {
   return next;
 }
 
-function errorMessage(err: unknown, fallback: string): string {
-  return err instanceof Error && err.message ? err.message : fallback;
-}
-
 /**
  * X-09 알림 설정 — notification_settings + profiles.notification_prefs.
  *
@@ -224,11 +220,11 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         setSavedSettings(value);
         setSettings(value);
         setSettingsLoad({ status: "ready" });
-      } catch (err) {
+      } catch {
         if (cancelled) return;
         setSettingsLoad({
           status: "error",
-          message: errorMessage(err, t("loadError")),
+          message: t("loadError"),
         });
       }
     })();
@@ -364,8 +360,8 @@ export function NotificationPrefsForm({ userId, initialPrefs }: Props) {
         setSavedSettings(settings);
       }
       message.success(t("saveSuccess"));
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : t("saveError"));
+    } catch {
+      message.error(t("saveError"));
     } finally {
       setSaving(false);
     }

@@ -55,10 +55,9 @@ export function OnboardingNavCta({ userId }: Props) {
       });
       message.success(t("skipSuccess"));
       router.push("/dashboard");
-    } catch (err) {
+    } catch {
       // 예외: 저장 실패 시 현재 화면 유지 후 재시도 안내(토스트 + 인라인).
-      const detail = err instanceof Error ? err.message : t("retryHint");
-      setSkipError(detail);
+      setSkipError(t("retryHint"));
       message.error(t("skipFailedToast"));
     }
   };

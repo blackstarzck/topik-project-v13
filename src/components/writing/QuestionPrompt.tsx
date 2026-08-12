@@ -4,6 +4,7 @@ import { Space, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import type { NormalizedWritingProblem } from "@/lib/writing/problem-normalizer";
+import { parseQ54PromptPresentation } from "@/lib/writing/q54-prompt-presentation";
 
 const { Title, Paragraph } = Typography;
 
@@ -11,18 +12,16 @@ type Props = {
   problem: NormalizedWritingProblem;
 };
 
-function firstPromptBlock(prompt: string) {
-  return prompt.split(/\n\s*\n/)[0] ?? prompt;
-}
-
 export function QuestionPrompt({ problem }: Props) {
   const t = useTranslations("writing.prompt");
-  const prompt =
-    problem.kind === "q54" ? firstPromptBlock(problem.prompt) : problem.prompt;
   const titlePrefix = problem.textType?.trim();
   const heading = titlePrefix
     ? `${titlePrefix} - ${problem.title}`
     : problem.title;
+  const q54Presentation =
+    problem.kind === "q54" ? parseQ54PromptPresentation(problem.prompt) : null;
+  const promptText = q54Presentation?.passage ?? problem.prompt;
+
   return (
     <AppCard size="small">
       <Title level={5}>{heading}</Title>
@@ -30,8 +29,15 @@ export function QuestionPrompt({ problem }: Props) {
         type="secondary"
         className="writing-question-prompt !m-0 whitespace-pre-line"
       >
-        {prompt}
+        {promptText}
       </Paragraph>
+      {q54Presentation && q54Presentation.questions.length === 3 ? (
+        <ol className="writing-question-task-list mt-3 grid list-decimal gap-2 ps-8 text-base">
+          {q54Presentation.questions.map((question, index) => (
+            <li key={`${index}-${question}`}>{question}</li>
+          ))}
+        </ol>
+      ) : null}
       {problem.kind === "q51" || problem.kind === "q52" ? (
         <Space orientation="vertical" size={4} className="w-full">
           <Typography.Text strong>{t("blanksLabel")}</Typography.Text>
@@ -53,34 +59,6 @@ export function QuestionPrompt({ problem }: Props) {
               <li key={task}>{task}</li>
             ))}
           </ul>
-        </Space>
-      ) : null}
-      {problem.kind === "q54" ? (
-        <Space orientation="vertical" size={8} className="w-full">
-          {problem.topicDefinition ? (
-            <Paragraph className="writing-question-prompt !m-0">
-              <Typography.Text strong>{t("definitionLabel")}</Typography.Text>{" "}
-              {problem.topicDefinition}
-            </Paragraph>
-          ) : null}
-          {problem.background ? (
-            <Paragraph className="writing-question-prompt !m-0">
-              <Typography.Text strong>{t("backgroundLabel")}</Typography.Text>{" "}
-              {problem.background}
-            </Paragraph>
-          ) : null}
-          {problem.requiredQuestions.length > 0 ? (
-            <div>
-              <Typography.Text strong>
-                {t("requiredQuestionsLabel")}
-              </Typography.Text>
-              <ul className="writing-guide-list writing-question-prompt mt-1">
-                {problem.requiredQuestions.map((question) => (
-                  <li key={question}>{question}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </Space>
       ) : null}
     </AppCard>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { assertLocalPrivilegedMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 /**
  * 중복 제출 방지(draft 단위) 통합 테스트 — Supabase CLI 로컬 스택 대상.
@@ -16,13 +17,17 @@ import { describe, expect, it } from "vitest";
  *
  *     supabase start
  *     supabase db reset
- *     SUPABASE_LOCAL_STACK=1 \
+ *     SUPABASE_LOCAL_STACK=1 E2E_ALLOW_DEV_DB_MUTATION=1 \
  *       NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=... \
  *       SUPABASE_SERVICE_ROLE_KEY=... \
  *       pnpm vitest run tests/integration/writing-submission-dedup.test.ts
  */
 
 const ENABLED = process.env.SUPABASE_LOCAL_STACK === "1";
+
+if (ENABLED) {
+  assertLocalPrivilegedMutationTarget(process.env);
+}
 
 describe.skipIf(!ENABLED)("writing submission dedup (draft-level)", () => {
   it("dedups same-draft resubmits, allows new-draft re-attempts and failed retries", async () => {

@@ -135,12 +135,11 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         setSavedContentPrefs(settings.content_prefs);
         setContentPrefs(settings.content_prefs);
         setContentLoad({ status: "ready" });
-      } catch (err) {
+      } catch {
         if (cancelled) return;
         setContentLoad({
           status: "error",
-          message:
-            err instanceof Error ? err.message : t("learningSettingsLoadError"),
+          message: t("learningSettingsLoadError"),
         });
       }
     })();
@@ -251,8 +250,8 @@ export function LanguageForm({ userId, initialLocale }: Props) {
         document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; SameSite=Lax`;
         router.refresh();
       }
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : t("saveError"));
+    } catch {
+      message.error(t("saveError"));
     } finally {
       setSaving(false);
     }

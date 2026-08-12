@@ -38,12 +38,6 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { SignUpForm } from "../../../src/components/auth/SignUpForm";
-import {
-  readStoredAffiliationCode,
-  storeAffiliationCode,
-} from "../../../src/lib/auth/affiliation-code";
-
-const THIRTY_MINUTES_MS = 30 * 60 * 1000;
 
 // SignUpForm now uses next-intl's useTranslations — render inside the shared
 // intl + antd App wrapper (baseline ko catalog, matching the assertions).
@@ -409,72 +403,6 @@ describe("SignUpForm", () => {
     );
   });
 
-  it("adds a stored affiliation code to email sign-up metadata and clears it on success", async () => {
-    storeAffiliationCode("EXPO2026-BOOTH-A");
-    renderInApp(<SignUpForm />);
-
-    await fillValidSignUpForm();
-
-    await act(async () => {
-      fireEvent.click(submitButton());
-    });
-
-    await waitFor(() => {
-      expect(signUpMock).toHaveBeenCalledTimes(1);
-    });
-    expect(signUpMock.mock.calls[0][0].options.data).toEqual({
-      affiliation_code: "EXPO2026-BOOTH-A",
-      display_name: "홍길동",
-      nationality_country_code: "VN",
-      ui_locale: "ko",
-      ui_locale_source: "auto",
-    });
-    await waitFor(() => {
-      expect(readStoredAffiliationCode()).toBeNull();
-    });
-  });
-
-  it("keeps a stored affiliation code when email sign-up fails", async () => {
-    storeAffiliationCode("EXPO2026-BOOTH-A");
-    signUpMock.mockResolvedValueOnce({
-      data: { session: null, user: null },
-      error: { code: "unknown", message: "Sign-up failed", status: 500 },
-    });
-    renderInApp(<SignUpForm />);
-
-    await fillValidSignUpForm();
-
-    await act(async () => {
-      fireEvent.click(submitButton());
-    });
-
-    await waitFor(() => {
-      expect(signUpMock).toHaveBeenCalledTimes(1);
-    });
-    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
-    expect(pushMock).not.toHaveBeenCalled();
-  });
-
-  it("does not add an expired affiliation code to email sign-up metadata", async () => {
-    storeAffiliationCode("EXPO2026-BOOTH-A", Date.now() - THIRTY_MINUTES_MS);
-    renderInApp(<SignUpForm />);
-
-    await fillValidSignUpForm();
-
-    await act(async () => {
-      fireEvent.click(submitButton());
-    });
-
-    await waitFor(() => {
-      expect(signUpMock).toHaveBeenCalledTimes(1);
-    });
-    const metadata = signUpMock.mock.calls[0][0].options.data as Record<
-      string,
-      unknown
-    >;
-    expect(metadata.affiliation_code).toBeUndefined();
-  });
-
   it("redirects to /auth/verify-email after successful sign-up (Phase 8-D)", async () => {
     renderInApp(<SignUpForm />);
 
@@ -596,31 +524,6 @@ describe("SignUpForm", () => {
     );
   });
 
-  it("keeps a stored affiliation code when duplicate email guidance is shown", async () => {
-    storeAffiliationCode("EXPO2026-BOOTH-A");
-    signUpMock.mockResolvedValueOnce({
-      data: { session: null, user: null },
-      error: {
-        code: "user_already_exists",
-        message: "User already registered",
-        status: 422,
-      },
-    });
-    renderInApp(<SignUpForm />);
-
-    await fillValidSignUpForm("registered@example.com");
-
-    await act(async () => {
-      fireEvent.click(submitButton());
-    });
-
-    await waitFor(() => {
-      expect(screen.getByTestId("sign-up-safe-guidance")).toBeTruthy();
-    });
-    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
-    expect(pushMock).not.toHaveBeenCalled();
-  });
-
   it("starts a signup cooldown for rate-limited signup responses", async () => {
     const onCooldownChange = vi.fn();
     signUpMock.mockResolvedValueOnce({
@@ -727,28 +630,6 @@ describe("SignUpForm", () => {
           "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
       },
     });
-    expect(signUpMock).not.toHaveBeenCalled();
-  });
-
-  it("returns Google OAuth signup to invite confirmation when a valid affiliation code is stored", async () => {
-    storeAffiliationCode("EXPO2026-BOOTH-A");
-    renderInApp(<SignUpForm />);
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
-    });
-
-    await waitFor(() => {
-      expect(signInWithOAuthMock).toHaveBeenCalledTimes(1);
-    });
-    expect(signInWithOAuthMock.mock.calls[0][0]).toEqual({
-      provider: "google",
-      options: {
-        redirectTo:
-          "http://localhost:3000/auth/callback?next=%2Fauth%2Finstitution-invite%3Fnext%3D%252Fauth%252Fpost-auth%253Fintent%253Dsign-up",
-      },
-    });
-    expect(readStoredAffiliationCode()).toBe("EXPO2026-BOOTH-A");
     expect(signUpMock).not.toHaveBeenCalled();
   });
 

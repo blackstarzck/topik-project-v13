@@ -1,4 +1,5 @@
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -28,6 +29,21 @@ const retiredFixturePath = path.join(
   "project-structure-retired-references.json",
 );
 const retiredFixtures = JSON.parse(readFileSync(retiredFixturePath, "utf8"));
+const operationsReadme = "docs/operations/README.md";
+const operationsPolicyPaths = [
+  operationsReadme,
+  "docs/operations/ai-development-pipeline.md",
+  "docs/operations/client-resilience-policy.md",
+  "docs/operations/cross-repo-recovery-boundary.md",
+  "docs/operations/environment-and-agent-safety.md",
+  "docs/operations/system-reporting-handoff.md",
+  "docs/operations/topik-ai-migration-evidence-handoff.md",
+  "docs/operations/topik-ai-operations-handoff.md",
+  "docs/operations/topik-ai-notification-migration-order-handoff.md",
+  "docs/operations/topik-ai-pdf-request-identity-cutover-handoff.md",
+  "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
+  "docs/operations/writing-submission-gate-runbook.md",
+];
 
 function tempRoot() {
   const root = mkdtempSync(path.join(tmpdir(), "talkpik-structure-"));
@@ -76,6 +92,121 @@ afterEach(() => {
 });
 
 describe("project structure allowlist", () => {
+  it("uses .claude/CLAUDE.md as the only required Claude entrypoint", () => {
+    expect(requiredOwnerPaths).toContain(".claude/CLAUDE.md");
+    expect(requiredOwnerPaths).not.toContain("CLAUDE.md");
+  });
+
+  it("registers every approved operations policy as a required owner", () => {
+    expect(requiredOwnerPaths).toEqual(
+      expect.arrayContaining(operationsPolicyPaths),
+    );
+  });
+
+  it("accepts the canonical operations owner tree", () => {
+    const root = createValidTree();
+    for (const policy of operationsPolicyPaths) write(root, policy);
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
+  it("requires pipeline implementation and owner documentation to change together", () => {
+    const root = createValidTree();
+    for (const policy of operationsPolicyPaths) write(root, policy);
+
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["scripts/lib/ai-task-lifecycle-v3.mjs"],
+      }).errors,
+    ).toEqual(
+      expect.arrayContaining([
+        "Pipeline v3.1 implementation and owner documentation must change together.",
+      ]),
+    );
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["scripts/check-project-structure.mjs"],
+      }).errors,
+    ).toEqual(
+      expect.arrayContaining([
+        "Pipeline v3.1 implementation and owner documentation must change together.",
+      ]),
+    );
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["AGENTS.md"],
+      }).errors,
+    ).toEqual([]);
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: [
+          "scripts/lib/ai-task-lifecycle-v3.mjs",
+          "docs/operations/ai-development-pipeline.md",
+        ],
+      }).errors,
+    ).toEqual([]);
+  });
+
+  it.each(operationsPolicyPaths)(
+    "rejects a missing operations policy: %s",
+    (policy) => {
+      const root = createValidTree();
+      for (const approvedPolicy of operationsPolicyPaths)
+        write(root, approvedPolicy);
+      rmSync(path.join(root, policy));
+
+      expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            new RegExp(
+              `missing required owner.*${policy.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&",
+              )}`,
+              "i",
+            ),
+          ),
+        ]),
+      );
+    },
+  );
+
+  it("rejects an unapproved operations policy", () => {
+    const root = createValidTree();
+    for (const policy of operationsPolicyPaths) write(root, policy);
+    write(root, "docs/operations/unapproved-policy.md");
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /unknown docs\/operations.*unapproved-policy\.md/i,
+        ),
+      ]),
+    );
+  });
+
+  it("rejects the operations root when it is a junction", () => {
+    const root = createValidTree();
+    const outside = tempRoot();
+    const target = path.join(root, "docs", "operations");
+    rmSync(target, { recursive: true, force: true });
+    symlinkSync(
+      outside,
+      target,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/operations.*symbolic|operations.*reparse/i),
+      ]),
+    );
+  });
+
   it("accepts the minimal canonical owner tree", () => {
     const root = createValidTree();
     expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
@@ -185,6 +316,24 @@ describe("docs/qa root allowlist", () => {
 });
 
 describe("active reference scan", () => {
+  it("scans active operations policy files for retired docs references", () => {
+    const root = createValidTree();
+    write(root, operationsReadme);
+    write(
+      root,
+      "docs/operations/client-resilience-policy.md",
+      `Retired owner: ${retiredDocsPath}\n`,
+    );
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /forbidden docs reference.*client-resilience-policy/i,
+        ),
+      ]),
+    );
+  });
+
   it.each([
     [".github/workflows/ci.yml", retiredFixtures.ciCommand],
     [".github/CODEOWNERS", retiredFixtures.codeowners],
@@ -573,6 +722,52 @@ describe("active reference scan", () => {
     },
   );
 
+  it.each(["tracked", "untracked-nonignored"])(
+    "reports a %s .scratch session artifact without reading its content",
+    (mode) => {
+      const root = createValidTree();
+      const sentinel = `SCRATCH_${mode}_SECRET_MUST_NOT_LEAK`;
+      write(
+        root,
+        ".scratch/student-state.json",
+        `${retiredDocsPath}=${sentinel}\n`,
+      );
+      if (mode === "tracked") {
+        git(root, "add", "--force", ".scratch/student-state.json");
+      }
+
+      const errors = evaluateProjectStructure({ rootDir: root }).errors;
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            /sensitive runtime path.*\.scratch\/student-state\.json/i,
+          ),
+        ]),
+      );
+      expect(errors.join("\n")).not.toContain(sentinel);
+      expect(errors).not.toEqual(
+        expect.arrayContaining([expect.stringMatching(/forbidden docs/i)]),
+      );
+    },
+  );
+
+  it("does not report a tracked .scratch artifact after it is deleted from the worktree", () => {
+    const root = createValidTree();
+    write(root, ".scratch/student-state.json", "session artifact\n");
+    git(root, "add", "--force", ".scratch/student-state.json");
+    rmSync(path.join(root, ".scratch/student-state.json"));
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
+  it("allows an ordinary tracked .scratch QA artifact without reading it", () => {
+    const root = createValidTree();
+    write(root, ".scratch/ui-check/screenshot.png", "qa evidence\n");
+    git(root, "add", "--force", ".scratch/ui-check/screenshot.png");
+
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
   it("fails an active dangling symlink returned by Git inventory", () => {
     const root = createValidTree();
     const dangling = path.join(root, "src", "dangling.ts");
@@ -782,6 +977,52 @@ describe("package interface", () => {
     expect(packageJson.scripts["check:project-structure"]).toBe(
       "node scripts/check-project-structure.mjs",
     );
+    const lifecycleShards = [
+      "check:task-lifecycle:v2",
+      "check:task-lifecycle:cleanup-finalize",
+      "check:task-lifecycle:cleanup-locks",
+      "check:task-lifecycle:cleanup-mutate",
+      "check:task-lifecycle:cleanup-recovery",
+      "check:task-lifecycle:cleanup-contract",
+      "check:task-lifecycle:autocleanup-contract",
+      "check:task-lifecycle:autocleanup-remote",
+      "check:task-lifecycle:autocleanup-worker",
+      "check:task-lifecycle:autocleanup-recovery",
+      "check:task-lifecycle:metrics",
+      "check:task-lifecycle:v3",
+      "check:task-lifecycle:sweep",
+      "check:task-lifecycle:release",
+      "check:task-lifecycle:baseline-audit",
+      "check:task-lifecycle:executor",
+      "check:task-lifecycle:security",
+      "check:task-lifecycle:validation",
+    ];
+    expect(packageJson.scripts["check:task-lifecycle"]).toBe(
+      lifecycleShards.map((name) => `pnpm ${name}`).join(" && "),
+    );
+    for (const shard of lifecycleShards) {
+      expect(packageJson.scripts[shard]).toContain("vitest run");
+    }
+    expect(packageJson.scripts["validation:record"]).toBe(
+      "node scripts/ai-validation-evidence.mjs record",
+    );
+    expect(packageJson.scripts["validation:check"]).toBe(
+      "node scripts/ai-validation-evidence.mjs check",
+    );
+    expect(packageJson.scripts["task:sweep"]).toBe(
+      "node scripts/ai-task.mjs sweep",
+    );
+    expect(
+      Object.keys(packageJson.scripts).filter((name) => name.startsWith("scheduler:")),
+    ).toEqual([]);
+    expect(existsSync(path.join(process.cwd(), "scripts", "lib", "ai-task-sweep.mjs"))).toBe(true);
+    for (const retiredPath of [
+      path.join("scripts", "ai-pipeline-runner.mjs"),
+      path.join("scripts", "ai-pipeline-scheduler-cli.mjs"),
+      path.join("scripts", "lib", "ai-pipeline-scheduler.mjs"),
+    ]) {
+      expect(existsSync(path.join(process.cwd(), retiredPath))).toBe(false);
+    }
     expect(packageJson.scripts["test:supabase:local"]).toContain(
       "tests/integration/pdf-export-quota-rpc.test.ts",
     );

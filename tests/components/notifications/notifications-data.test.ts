@@ -53,7 +53,7 @@ describe("resolveNotificationDestination", () => {
     ).toBe("/dashboard?from=notification");
   });
 
-  it("accepts an institution invite link with aff and next query params", () => {
+  it("rejects a retired institution invite link with raw affiliation code", () => {
     expect(
       resolveNotificationDestination({
         ...baseNotification,
@@ -64,9 +64,30 @@ describe("resolveNotificationDestination", () => {
           kind: "institution_invite",
         },
       }),
-    ).toBe(
-      "/auth/institution-invite?aff=EXPO2026-BOOTH-A&next=/settings/account",
-    );
+    ).toBeNull();
+  });
+
+  it.each([
+    "/auth/institution-invite/",
+    "/auth/institution-invite/details?aff=LEGACY",
+    "/auth/claim-affiliation/",
+    "/auth/claim-affiliation/legacy",
+  ])("rejects retired affiliation route descendants (%s)", (routePath) => {
+    expect(
+      resolveNotificationDestination({
+        ...baseNotification,
+        route_path: routePath,
+      }),
+    ).toBeNull();
+  });
+
+  it("does not reject a similar non-retired route prefix", () => {
+    expect(
+      resolveNotificationDestination({
+        ...baseNotification,
+        route_path: "/auth/institution-invited",
+      }),
+    ).toBe("/auth/institution-invited");
   });
 
   it("does not resolve an empty or external destination", () => {
@@ -113,7 +134,7 @@ describe("resolveNotificationAction", () => {
     });
   });
 
-  it("keeps the legacy institution invite link as a route action", () => {
+  it("does not navigate to a removed raw affiliation-code invite route", () => {
     expect(
       resolveNotificationAction({
         ...baseNotification,
@@ -124,10 +145,7 @@ describe("resolveNotificationAction", () => {
           kind: "institution_invite",
         },
       }),
-    ).toEqual({
-      kind: "route",
-      href: "/auth/institution-invite?aff=EXPO2026-BOOTH-A&next=/settings/account",
-    });
+    ).toEqual({ kind: "none" });
   });
 
   it("returns an invalid institution invitation action when the id is missing", () => {

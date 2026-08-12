@@ -113,16 +113,54 @@ describe("QuestionPrompt", () => {
     expect(list?.classList.contains("writing-guide-list")).toBe(true);
   });
 
-  it("renders q54 required questions as a flush bullet list instead of an ordered list", () => {
+  it("renders q54 passage and canonical questions in one problem card", () => {
+    const prompt = [
+      "Write 600 to 700 characters about the following topic.",
+      "Digital citizenship means participating responsibly.",
+      "Its importance is increasing.",
+      "Use the following points to organize your response.",
+      "1) What role does digital citizenship play?",
+      "2) What conflicts can occur?",
+      "3) What standards are needed?",
+    ].join("\n\n");
     const { container } = renderWithIntl(
-      <QuestionPrompt problem={q54Problem()} />,
+      <QuestionPrompt problem={q54Problem({ prompt })} />,
     );
 
-    const question = screen.getByText("State your position.");
-    const list = question.closest("ul");
+    const passage = container.querySelector(".writing-question-prompt");
+    const questions = container.querySelectorAll(
+      ".writing-question-task-list > li",
+    );
 
+    expect(passage?.textContent).toBe(
+      [
+        "Write 600 to 700 characters about the following topic.",
+        "Digital citizenship means participating responsibly.",
+        "Its importance is increasing.",
+        "Use the following points to organize your response.",
+      ].join("\n\n"),
+    );
+    expect(passage?.textContent).not.toContain("1)");
+    expect(questions).toHaveLength(3);
+    expect(Array.from(questions, (question) => question.textContent)).toEqual([
+      "What role does digital citizenship play?",
+      "What conflicts can occur?",
+      "What standards are needed?",
+    ]);
+    expect(container.querySelector("ol")).not.toBeNull();
+    expect(container.querySelector("ul")).toBeNull();
+  });
+
+  it("keeps an unstructured q54 prompt intact as a safe fallback", () => {
+    const prompt =
+      "Discuss the topic.\n1) Give one reason.\n2) Add an example.";
+    const { container } = renderWithIntl(
+      <QuestionPrompt problem={q54Problem({ prompt })} />,
+    );
+
+    expect(
+      container.querySelector(".writing-question-prompt")?.textContent,
+    ).toBe(prompt);
     expect(container.querySelector("ol")).toBeNull();
-    expect(list).not.toBeNull();
-    expect(list?.classList.contains("writing-guide-list")).toBe(true);
   });
 });

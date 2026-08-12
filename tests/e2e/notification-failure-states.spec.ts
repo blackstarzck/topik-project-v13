@@ -7,7 +7,11 @@ import { expect, test, type Page } from "@playwright/test";
 // (E2E_BASE_URL로 실행 중인 dev 서버를 지정 — webServer 기동 없음)
 
 const EMAIL = "ntf-user-optin@e2e-notification.test";
-const PASSWORD = process.env.E2E_NTF_PASSWORD ?? "Ntf-e2e-2026!seed";
+const PASSWORD = process.env.E2E_NTF_PASSWORD?.trim();
+if (!PASSWORD) {
+  throw new Error("E2E_NTF_PASSWORD must be set for notification e2e.");
+}
+const VERIFIED_PASSWORD: string = PASSWORD;
 
 async function login(page: Page) {
   await page.goto("/login");
@@ -15,7 +19,7 @@ async function login(page: Page) {
     .locator('input[type="email"], input#email, input:not([type="password"])')
     .first()
     .fill(EMAIL);
-  await page.locator('input[type="password"]').fill(PASSWORD);
+  await page.locator('input[type="password"]').fill(VERIFIED_PASSWORD);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL("**/dashboard", { timeout: 20_000 });
 }

@@ -1,6 +1,6 @@
 # Writing API
 
-Source: [Swagger UI](https://api.dotoretopik.com/docs) / [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Source snapshot: generated from the former TALKPIK external API documentation on 2026-07-07. The original service and documentation routes are no longer available.
 Last synced: 2026-07-07
 
 Scope: TOPIK writing submission, generation, tutor sessions, history, drafts, and PDF
@@ -25,13 +25,13 @@ Scope: TOPIK writing submission, generation, tutor sessions, history, drafts, an
 ## v13 Integration Notes
 
 - `POST /api/writing/submit` is an async API that returns HTTP 202 and `submission_id`.
-- The current live schema no longer accepts `task_id` in `WritingSubmitRequest`; do not send the old `task_id` field.
+- The captured schema does not accept `task_id` in `WritingSubmitRequest`.
 - Required submit fields are `task_type` and `text`.
 - `task_type` is the external TOPIK item code enum: `Q51`, `Q52`, `Q53`, or `Q54`.
 - `question_id` is optional. When the selected problem came from `GET /api/writing/tasks`, send that external rich question id, such as `topik-writing-54-0001`; otherwise omit it or send `null` for ad-hoc scoring.
-- `user_id` is optional in the live schema. Authenticated v13 requests may send the current learner id; guest-style submissions may use `null`.
-- `lang` and `passage_context` remain optional in the live component schema.
-- `POST /api/writing/submissions/start` is the live anchor for creating both a draft submission id and tutor session id when the user enters the write/chat step.
+- `user_id` is optional in the captured schema. Authenticated v13 requests may send the learner id; guest-style submissions may use `null`.
+- `lang` and `passage_context` are optional in the captured component schema.
+- In the captured contract, `POST /api/writing/submissions/start` creates both a draft submission id and tutor session id when the user enters the write/chat step.
 - `GET /api/writing/chat/sessions` and `GET /api/writing/chat/sessions/{session_id}` expose tutor session history and transcripts.
 
 ```json

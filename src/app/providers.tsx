@@ -5,6 +5,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { App as AntdApp, ConfigProvider } from "antd";
 import { useState } from "react";
 
+import { SystemReportLauncher } from "@/components/shared/SystemReportLauncher";
 import { ThemeProvider, useTheme } from "@/contexts/theme-context";
 import type { ThemeAppearance } from "@/theme";
 
@@ -70,7 +71,10 @@ export function AppProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider initialAppearance={initialAppearance}>
-        <AntdConfiguredProviders>{children}</AntdConfiguredProviders>
+        <AntdConfiguredProviders>
+          {children}
+          <SystemReportLauncher />
+        </AntdConfiguredProviders>
       </ThemeProvider>
     </QueryClientProvider>
   );

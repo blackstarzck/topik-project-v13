@@ -1,6 +1,6 @@
 # Writing Schemas
 
-Source: [OpenAPI JSON](https://api.dotoretopik.com/openapi.json)
+Source snapshot: generated from the former TALKPIK external API documentation on 2026-07-07. The original service and documentation routes are no longer available.
 Last synced: 2026-07-07
 
 ## Schema Index
@@ -518,7 +518,7 @@ Example:
 
 ### v13 Submit Notes
 
-The live schema requires only `task_type` and `text`. `task_id` is not part of the current OpenAPI component. Use optional `question_id` only for an external rich question id returned by `GET /api/writing/tasks`.
+The captured schema requires only `task_type` and `text`. `task_id` is not part of the captured OpenAPI component. Use optional `question_id` only for an external rich question id returned by `GET /api/writing/tasks` in that snapshot.
 
 ```json
 {

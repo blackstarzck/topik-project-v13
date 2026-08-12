@@ -1,7 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 
 import { isEmailVerified } from "@/lib/auth/access-gate";
-import { bootstrapProfile, getSessionAndProfile } from "@/lib/auth/profile";
+import { getSessionAndProfile, resolveProfile } from "@/lib/auth/profile";
 import type {
   AuthCompletionStatus,
   LandingAuthStatus,
@@ -22,6 +22,19 @@ export type AuthenticatedSession = {
   user: User;
   profile: Tables<"profiles">;
 };
+
+const SAFE_OPERATIONAL_ERROR_NAMES = new Set([
+  "AuthApiError",
+  "Error",
+  "TypeError",
+]);
+
+function safeOperationalErrorName(error: unknown): string {
+  if (!(error instanceof Error)) return "UnknownError";
+  return SAFE_OPERATIONAL_ERROR_NAMES.has(error.name)
+    ? error.name
+    : "UnknownError";
+}
 
 export async function hasCompletedRequiredConsent({
   user,
@@ -61,18 +74,26 @@ export async function getCurrentLandingAuthStatus(): Promise<LandingAuthStatus> 
   try {
     user = await getCurrentUser();
   } catch (error) {
-    console.warn("Failed to read auth user for landing CTA.", error);
+    console.warn("landing_auth_user_lookup_failed", {
+      name: safeOperationalErrorName(error),
+    });
     return "anonymous";
   }
 
   if (!user) return "anonymous";
   if (!isEmailVerified(user)) return "email-unverified";
 
+  const profileResolution = await resolveProfile(user.id);
+  if (profileResolution.status === "unavailable") {
+    return "profile-unavailable";
+  }
+
   try {
-    const profile = await bootstrapProfile(user.id);
-    return await getAuthCompletionStatusForSession({ user, profile });
-  } catch (error) {
-    console.warn("Failed to resolve landing auth completion status.", error);
+    return await getAuthCompletionStatusForSession({
+      user,
+      profile: profileResolution.profile,
+    });
+  } catch {
     return "authenticated-recovery";
   }
 }

@@ -145,10 +145,8 @@ export function ExamGoalForm({ userId, goal }: Props) {
         weak_areas: saved?.weak_areas ?? [],
       });
       message.success(t("saveSuccess"));
-    } catch (err) {
-      // err.message 는 데이터 계층(saveLearningGoal, src/lib/learning)에서 온
-      // 서비스 메시지이므로 그대로 노출하고, 없으면 기본 저장 실패 문구로 대체.
-      message.error(err instanceof Error ? err.message : t("saveError"));
+    } catch {
+      message.error(t("saveError"));
     } finally {
       setSaving(false);
     }

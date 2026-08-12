@@ -63,10 +63,7 @@ type WritingSubmissionControlRow = {
 
 type SubmissionControlRpcClient = {
   rpc: (name: "get_writing_submission_control") => Promise<{
-    data:
-      | WritingSubmissionControlRow[]
-      | WritingSubmissionControlRow
-      | null;
+    data: WritingSubmissionControlRow[] | WritingSubmissionControlRow | null;
     error: { message: string } | null;
   }>;
 };
@@ -119,9 +116,7 @@ function isWritingSubmissionControlRow(
   return (
     value !== null &&
     value !== undefined &&
-    ["blocked", "verification", "canonical"].includes(
-      value.submission_mode,
-    ) &&
+    ["blocked", "verification", "canonical"].includes(value.submission_mode) &&
     ["unverified", "provider_verified", "local_outbox_verified"].includes(
       value.submission_contract_state,
     )

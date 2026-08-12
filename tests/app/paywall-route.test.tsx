@@ -44,12 +44,17 @@ describe("PaywallPage", () => {
     {},
     { returnTo: "https://evil.example/practice/next" },
     { returnTo: ["/practice/next", "/dashboard"] },
-  ])("uses the dashboard for a missing or unsafe return target", async (searchParams) => {
-    const element = await PaywallPage({
-      searchParams: Promise.resolve(searchParams),
-    });
-    render(element);
+  ])(
+    "uses the dashboard for a missing or unsafe return target",
+    async (searchParams) => {
+      const element = await PaywallPage({
+        searchParams: Promise.resolve(searchParams),
+      });
+      render(element);
 
-    expect(paywallShellMock).toHaveBeenCalledWith({ returnHref: "/dashboard" });
-  });
+      expect(paywallShellMock).toHaveBeenCalledWith({
+        returnHref: "/dashboard",
+      });
+    },
+  );
 });

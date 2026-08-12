@@ -1,0 +1,112 @@
+.launcher:global(.ant-float-btn) {
+  inset-inline-end: max(24px, calc(16px + env(safe-area-inset-right)));
+  bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
+  z-index: 999;
+}
+
+.launcher:global(.ant-float-btn.ant-float-btn-individual) {
+  box-shadow: var(--app-shadow-elevated);
+}
+
+:global(body:has(.app-workspace-fixed-action-bar))
+  .launcher:global(.ant-float-btn) {
+  bottom: max(100px, calc(92px + env(safe-area-inset-bottom)));
+}
+
+:global(.app-system-report-popover.ant-popover) {
+  width: min(
+    440px,
+    calc(100% - max(48px, calc(40px + env(safe-area-inset-right))))
+  );
+}
+
+:global(.app-system-report-popover__container) {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: min(720px, calc(100dvh - 128px));
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+:global(.app-system-report-popover__container)::-webkit-scrollbar {
+  display: none;
+}
+
+:global(body:has(.app-workspace-fixed-action-bar))
+  :global(.app-system-report-popover__container) {
+  max-height: min(720px, calc(100dvh - 216px));
+}
+
+:global(.app-system-report-popover__body) {
+  min-width: 0;
+}
+
+.panel,
+.success {
+  display: grid;
+  gap: 20px;
+}
+
+.panel :global(.ant-form-item:last-of-type) {
+  margin-bottom: 16px;
+}
+
+.disclosure {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.successCopy {
+  display: grid;
+  gap: 8px;
+}
+
+.receipt {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius);
+  background: var(--app-color-bg-layout);
+}
+
+.receipt > div {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.receipt dt {
+  color: var(--app-color-text-secondary);
+}
+
+.receipt dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--app-color-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767.98px) {
+  .launcher:global(.ant-float-btn) {
+    inset-inline-end: max(16px, calc(12px + env(safe-area-inset-right)));
+  }
+
+  :global(.app-system-report-popover__container) {
+    max-height: calc(100dvh - 112px);
+  }
+
+  :global(body:has(.app-workspace-fixed-action-bar))
+    :global(.app-system-report-popover__container) {
+    max-height: calc(100dvh - 200px);
+  }
+
+  .receipt > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

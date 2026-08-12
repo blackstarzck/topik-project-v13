@@ -12,10 +12,22 @@ import { fileURLToPath } from "node:url";
 export const requiredOwnerPaths = [
   "AGENTS.md",
   "README.md",
-  "CLAUDE.md",
+  ".claude/CLAUDE.md",
   "DESIGN.md",
   "TESTING.md",
   "docs/prd.md",
+  "docs/operations/README.md",
+  "docs/operations/ai-development-pipeline.md",
+  "docs/operations/client-resilience-policy.md",
+  "docs/operations/cross-repo-recovery-boundary.md",
+  "docs/operations/environment-and-agent-safety.md",
+  "docs/operations/system-reporting-handoff.md",
+  "docs/operations/topik-ai-migration-evidence-handoff.md",
+  "docs/operations/topik-ai-operations-handoff.md",
+  "docs/operations/topik-ai-notification-migration-order-handoff.md",
+  "docs/operations/topik-ai-pdf-request-identity-cutover-handoff.md",
+  "docs/operations/topik-ai-writing-pdf-metrics-handoff.md",
+  "docs/operations/writing-submission-gate-runbook.md",
   "docs/swagger-api/",
   "docs/supabase/README.md",
   "docs/supabase/database-api-contract.md",
@@ -27,6 +39,7 @@ export const requiredOwnerPaths = [
 
 const docsAllowlist = new Map([
   ["prd.md", "file"],
+  ["operations", "directory"],
   ["swagger-api", "directory"],
   ["supabase", "directory"],
   ["qa", "directory"],
@@ -36,12 +49,27 @@ const qaAllowlist = new Map([
   ["plan", "directory"],
   ["reports", "directory"],
 ]);
+const operationsAllowlist = new Map([
+  ["README.md", "file"],
+  ["ai-development-pipeline.md", "file"],
+  ["client-resilience-policy.md", "file"],
+  ["cross-repo-recovery-boundary.md", "file"],
+  ["environment-and-agent-safety.md", "file"],
+  ["system-reporting-handoff.md", "file"],
+  ["topik-ai-migration-evidence-handoff.md", "file"],
+  ["topik-ai-operations-handoff.md", "file"],
+  ["topik-ai-notification-migration-order-handoff.md", "file"],
+  ["topik-ai-pdf-request-identity-cutover-handoff.md", "file"],
+  ["topik-ai-writing-pdf-metrics-handoff.md", "file"],
+  ["writing-submission-gate-runbook.md", "file"],
+]);
 const activeDirectoryRoots = [
   ".github",
   "config",
   "src",
   "scripts",
   "tests",
+  "docs/operations",
   "docs/supabase",
   ".codex/skills",
   ".claude/skills",
@@ -104,6 +132,232 @@ const referenceScanExemptions = new Set([
   "scripts/check-project-structure.mjs",
   "tests/fixtures/project-structure-retired-references.json",
 ]);
+const pipelineContractImplementationPaths = Object.freeze([
+  "config/artifact-hygiene-policy.json",
+  "config/security-audit-baseline.json",
+  "package.json",
+  "scripts/ai-pipeline-executor.mjs",
+  "scripts/ai-release.mjs",
+  "scripts/ai-task.mjs",
+  "scripts/ai-validation-evidence.mjs",
+  "scripts/check-project-structure.mjs",
+  "scripts/security-artifact-audit.mjs",
+  "scripts/lib/ai-release-executor.mjs",
+  "scripts/lib/ai-release-git.mjs",
+  "scripts/lib/ai-release-promotion.mjs",
+  "scripts/lib/ai-release-vercel.mjs",
+  "scripts/lib/ai-task-sweep.mjs",
+  "scripts/lib/ai-task-lifecycle-v3.mjs",
+  "scripts/lib/ai-task-v3-adapter.mjs",
+  "scripts/lib/ai-validation-evidence.mjs",
+  "scripts/lib/security-artifact-audit.mjs",
+]);
+const pipelineContractDocumentationPaths = Object.freeze([
+  ".codex/skills/finishing-a-development-branch/SKILL.md",
+  "README.md",
+  "TESTING.md",
+  "docs/operations/README.md",
+  "docs/operations/ai-development-pipeline.md",
+]);
+
+function inspectPipelineContractCoupling(changedPaths, errors) {
+  if (changedPaths === null) return;
+  if (
+    !Array.isArray(changedPaths) ||
+    changedPaths.some(
+      (entry) =>
+        typeof entry !== "string" ||
+        entry.length === 0 ||
+        entry.includes("\\") ||
+        path.isAbsolute(entry) ||
+        entry.split("/").some((segment) => segment === ".."),
+    )
+  ) {
+    errors.push("Pipeline contract changed-path inventory is invalid.");
+    return;
+  }
+  const changed = new Set(changedPaths);
+  const implementationChanged = pipelineContractImplementationPaths.some(
+    (entry) => changed.has(entry),
+  );
+  const documentationChanged = pipelineContractDocumentationPaths.some(
+    (entry) => changed.has(entry),
+  );
+  if (implementationChanged !== documentationChanged) {
+    errors.push(
+      "Pipeline v3.1 implementation and owner documentation must change together.",
+    );
+  }
+}
+
+// Learner migration authoring freeze.
+//
+// `supabase/migrations/*.sql` is frozen at this watermark. That history was adopted
+// byte for byte into topik-ai (`supabase/migrations-v13/`), which now owns both
+// authoring and remote apply for the learner namespace. Editing a frozen file here
+// breaks the parity proof adoption rests on; authoring a new one here splits
+// ownership again.
+//
+// Still allowed: `down/**` (rollback assets for pre-freeze migrations) and
+// `INDEX.md` (documentation of the existing history).
+//
+// There is deliberately no override switch. A violation is resolved by moving the
+// file to topik-ai, not by renegotiating the watermark.
+export const LEARNER_FREEZE_WATERMARK = "20260729120000";
+export const LEARNER_ARCHIVE_TARGET = "topik-ai supabase/migrations-v13/";
+
+const LEARNER_FORWARD_DIR = "supabase/migrations/";
+const LEARNER_FORWARD_FILE =
+  /^supabase\/migrations\/(\d{14})_[a-z0-9_]+\.sql$/u;
+
+export function isLearnerFreezeExemptPath(filePath) {
+  return (
+    filePath.startsWith(`${LEARNER_FORWARD_DIR}down/`) ||
+    filePath === `${LEARNER_FORWARD_DIR}INDEX.md`
+  );
+}
+
+export function parseNameStatusZ(stdout) {
+  const fields = String(stdout ?? "")
+    .split("\0")
+    .filter(Boolean);
+  const entries = [];
+  for (let index = 0; index < fields.length; ) {
+    const status = fields[index][0];
+    // With -z, renames and copies emit three fields: status, source, destination.
+    if (status === "R" || status === "C") {
+      entries.push({
+        status,
+        path: fields[index + 1],
+        renamedTo: fields[index + 2],
+      });
+      index += 3;
+      continue;
+    }
+    entries.push({ status, path: fields[index + 1] });
+    index += 2;
+  }
+  return entries;
+}
+
+export function evaluateLearnerMigrationFreeze(entries) {
+  const violations = [];
+  for (const entry of entries) {
+    if (!entry.path.startsWith(LEARNER_FORWARD_DIR)) continue;
+    if (isLearnerFreezeExemptPath(entry.path)) continue;
+
+    const match = LEARNER_FORWARD_FILE.exec(entry.path);
+    if (!match) {
+      violations.push(
+        `${entry.path}: unexpected file under ${LEARNER_FORWARD_DIR} (${entry.status}). ` +
+          "Only forward migrations, down/ rollbacks and INDEX.md belong here.",
+      );
+      continue;
+    }
+
+    if (entry.status === "A") {
+      violations.push(
+        `${entry.path}: new forward migration authored here. Learner authoring is frozen ` +
+          `at ${LEARNER_FREEZE_WATERMARK}; author it in ${LEARNER_ARCHIVE_TARGET} with a ` +
+          "timestamp above the watermark instead.",
+      );
+      continue;
+    }
+
+    if (entry.status === "R" || entry.status === "C") {
+      violations.push(
+        `${entry.path}: ${entry.status === "R" ? "renamed" : "copied"} to ${entry.renamedTo}. ` +
+          "Frozen history keeps its exact name — the adopted archive is matched by name and bytes.",
+      );
+      continue;
+    }
+
+    violations.push(
+      `${entry.path}: frozen history changed (${entry.status}). ` +
+        (match[1] <= LEARNER_FREEZE_WATERMARK
+          ? "This file is adopted byte for byte in the archive, so editing it breaks the parity proof. "
+          : "") +
+        "Fix it forward from topik-ai instead.",
+    );
+  }
+  return violations;
+}
+
+function inspectLearnerMigrationFreeze(changedEntries, errors) {
+  if (changedEntries === null) return;
+  for (const violation of evaluateLearnerMigrationFreeze(changedEntries)) {
+    errors.push(`Learner migration freeze: ${violation}`);
+  }
+}
+
+function learnerMigrationEntriesFromGit(rootDir) {
+  const baseRef = process.env.PROJECT_STRUCTURE_BASE_REF;
+  if (baseRef === undefined || baseRef.length === 0) return null;
+  if (!/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/iu.test(baseRef)) {
+    throw new Error("Learner migration freeze base ref is invalid.");
+  }
+  // -M so a rename of frozen history is reported as a rename, not add + delete.
+  const result = spawnSync(
+    "git",
+    [
+      "diff",
+      "--name-status",
+      "-z",
+      "-M",
+      `${baseRef}...HEAD`,
+      "--",
+      LEARNER_FORWARD_DIR,
+    ],
+    {
+      cwd: rootDir,
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "",
+        SystemRoot: process.env.SystemRoot ?? "",
+        WINDIR: process.env.WINDIR ?? "",
+      },
+      maxBuffer: 4 * 1024 * 1024,
+      shell: false,
+      timeout: 10_000,
+      windowsHide: true,
+    },
+  );
+  if (result.status !== 0 || result.error || result.signal) {
+    throw new Error("Learner migration freeze inventory failed.");
+  }
+  return parseNameStatusZ(result.stdout);
+}
+
+function pipelineChangedPathsFromGit(rootDir) {
+  const baseRef = process.env.PROJECT_STRUCTURE_BASE_REF;
+  if (baseRef === undefined || baseRef.length === 0) return null;
+  if (!/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/iu.test(baseRef)) {
+    throw new Error("Pipeline contract base ref is invalid.");
+  }
+  const result = spawnSync(
+    "git",
+    ["diff", "--name-only", "-z", `${baseRef}...HEAD`, "--"],
+    {
+      cwd: rootDir,
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "",
+        SystemRoot: process.env.SystemRoot ?? "",
+        WINDIR: process.env.WINDIR ?? "",
+      },
+      maxBuffer: 4 * 1024 * 1024,
+      shell: false,
+      timeout: 10_000,
+      windowsHide: true,
+    },
+  );
+  if (result.status !== 0 || result.error || result.signal) {
+    throw new Error("Pipeline contract changed-path inventory failed.");
+  }
+  return String(result.stdout ?? "")
+    .split("\0")
+    .filter(Boolean);
+}
 
 function normalizedPath(value) {
   const resolved = path.resolve(value);
@@ -222,6 +476,58 @@ function inspectQaRoot(rootDir, errors) {
   for (const required of qaAllowlist.keys()) {
     if (!seen.has(required)) {
       errors.push(`Missing required QA entry: docs/qa/${required}`);
+    }
+  }
+}
+
+function inspectOperationsRoot(rootDir, errors) {
+  const operationsRoot = path.join(rootDir, "docs", "operations");
+  if (!existsSync(operationsRoot)) {
+    errors.push("Missing required operations directory: docs/operations");
+    return;
+  }
+
+  const operationsStatus = lstatSync(operationsRoot);
+  if (
+    !operationsStatus.isDirectory() ||
+    isLinkOrReparse(operationsRoot, operationsStatus)
+  ) {
+    errors.push(
+      "docs/operations must be a regular directory, not a symbolic or reparse path.",
+    );
+    return;
+  }
+
+  const seen = new Set();
+  for (const entry of readdirSync(operationsRoot, { withFileTypes: true })) {
+    seen.add(entry.name);
+    const expectedType = operationsAllowlist.get(entry.name);
+    const target = path.join(operationsRoot, entry.name);
+    if (!expectedType) {
+      errors.push(
+        `Unknown docs/operations root entry: docs/operations/${entry.name}`,
+      );
+      continue;
+    }
+    const status = lstatSync(target);
+    if (isLinkOrReparse(target, status)) {
+      errors.push(
+        `docs/operations/${entry.name} must not be symbolic or reparse path.`,
+      );
+      continue;
+    }
+    if (!status.isFile()) {
+      errors.push(
+        `docs/operations/${entry.name} has the wrong filesystem type.`,
+      );
+    }
+  }
+
+  for (const required of operationsAllowlist.keys()) {
+    if (!seen.has(required)) {
+      errors.push(
+        `Missing required operations entry: docs/operations/${required}`,
+      );
     }
   }
 }
@@ -437,6 +743,7 @@ function isSensitiveRuntimePath(relative) {
   return (
     normalized === ".env.local" ||
     normalized === ".claude/settings.local.json" ||
+    normalized === ".scratch/student-state.json" ||
     normalized.startsWith("tests/e2e/auth-state/")
   );
 }
@@ -444,13 +751,13 @@ function isSensitiveRuntimePath(relative) {
 function gitActiveFiles(rootDir, errors, inventory) {
   const files = [];
   for (const relative of inventory.candidates) {
+    if (inventory.deleted.has(relative)) continue;
     if (isSensitiveRuntimePath(relative)) {
       errors.push(
         `Sensitive runtime path must not appear in Git inventory: ${relative}`,
       );
       continue;
     }
-    if (inventory.deleted.has(relative)) continue;
     if (!isActiveRelativePath(relative)) continue;
     const target = path.join(rootDir, relative);
     let status;
@@ -484,11 +791,18 @@ function activeFiles(rootDir, errors) {
   return gitActiveFiles(rootDir, errors, inventory);
 }
 
-export function evaluateProjectStructure({ rootDir = process.cwd() } = {}) {
+export function evaluateProjectStructure({
+  rootDir = process.cwd(),
+  changedPaths = null,
+  changedEntries = null,
+} = {}) {
   const errors = [];
   if (!existsSync(rootDir))
     return { errors: [`Project root does not exist: ${rootDir}`] };
+  inspectPipelineContractCoupling(changedPaths, errors);
+  inspectLearnerMigrationFreeze(changedEntries, errors);
   inspectDocsTopLevel(rootDir, errors);
+  inspectOperationsRoot(rootDir, errors);
   inspectQaRoot(rootDir, errors);
   for (const owner of requiredOwnerPaths)
     inspectRequiredOwner(rootDir, owner, errors);
@@ -505,7 +819,17 @@ export function evaluateProjectStructure({ rootDir = process.cwd() } = {}) {
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
 if (invokedPath === fileURLToPath(import.meta.url)) {
-  const result = evaluateProjectStructure();
+  let changedPaths = null;
+  let changedEntries = null;
+  let changedPathError = null;
+  try {
+    changedPaths = pipelineChangedPathsFromGit(process.cwd());
+    changedEntries = learnerMigrationEntriesFromGit(process.cwd());
+  } catch (error) {
+    changedPathError = error.message;
+  }
+  const result = evaluateProjectStructure({ changedPaths, changedEntries });
+  if (changedPathError !== null) result.errors.unshift(changedPathError);
   if (result.errors.length > 0) {
     for (const error of result.errors) process.stderr.write(`- ${error}\n`);
     process.exitCode = 1;

@@ -72,6 +72,7 @@ export function ComparisonTargetDrawer({
   onComparisonReportLoaded,
 }: Props) {
   const t = useTranslations("reports.comparison");
+  const unavailableT = useTranslations("shared.unavailable");
   const { notification } = App.useApp();
   const compare = useCreateComparisonReportWithView();
   const [draftSelectedId, setDraftSelectedId] = useState<string | null>(null);
@@ -132,10 +133,10 @@ export function ComparisonTargetDrawer({
             title: t("targetDrawerCompareSuccessTitle"),
           });
         },
-        onError: (error) => {
+        onError: () => {
           notification.error({
             title: t("targetDrawerCompareFailedTitle"),
-            description: error.message,
+            description: unavailableT("general"),
           });
         },
       },

@@ -17,6 +17,10 @@ type ClientFactory = () => Promise<SupabaseServerClient>;
 // supabase chain into a client bundle.
 export { ADMIN_ROLES, type AppRole };
 
+export type ProfileResolution =
+  | { status: "available"; profile: Tables<"profiles"> }
+  | { status: "unavailable" };
+
 /**
  * Idempotent profile lookup.
  *
@@ -63,6 +67,27 @@ export async function bootstrapProfile(
     );
   }
   return data;
+}
+
+/**
+ * Read-only profile resolution for UI routing decisions.
+ *
+ * Missing rows, RLS-hidden rows, and transient query failures intentionally
+ * collapse to the same unavailable state. Callers must not interpret that
+ * state as a new account or start profile creation.
+ */
+export async function resolveProfile(
+  userId: string,
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<ProfileResolution> {
+  try {
+    return {
+      status: "available",
+      profile: await bootstrapProfile(userId, createClient),
+    };
+  } catch {
+    return { status: "unavailable" };
+  }
 }
 
 /**
@@ -123,12 +148,35 @@ export async function fetchProfileStatus(
   supabase: SupabaseServerClient,
   userId: string,
 ): Promise<Tables<"profiles">["status"] | null> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("status")
-    .eq("id", userId)
-    .maybeSingle();
-  return data?.status ?? null;
+  // Keep the caller ID in the public helper contract so call sites pair the
+  // authenticated principal with this check. The RPC itself deliberately
+  // accepts no ID and resolves only auth.uid(), preventing cross-user lookup.
+  void userId;
+  const { data, error } = await supabase.rpc("get_my_account_state");
+  if (error) return null;
+  return data === "active" || data === "blocked" || data === "deleted"
+    ? data
+    : null;
+}
+
+/**
+ * Reads the authenticated principal and its minimal account state before any
+ * private profile row is loaded. Deleted profiles are intentionally hidden by
+ * RLS, so workspace routing must use this narrow RPC first.
+ */
+export async function getCurrentAccountState(
+  createClient: ClientFactory = createSupabaseServerClient,
+): Promise<{
+  user: User;
+  status: Tables<"profiles">["status"] | null;
+} | null> {
+  const supabase = await createClient();
+  const user = await getCurrentUser(async () => supabase);
+  if (!user) return null;
+  return {
+    user,
+    status: await fetchProfileStatus(supabase, user.id),
+  };
 }
 
 /**
@@ -152,10 +200,12 @@ export function isActiveStatus(
 export async function requireActiveSession(
   createClient: ClientFactory = createSupabaseServerClient,
 ): Promise<{ user: User; profile: Tables<"profiles"> }> {
+  const account = await getCurrentAccountState(createClient);
+  if (!account) redirect("/login");
+  if (!isActiveStatus(account.status)) {
+    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${account.status ?? "unknown"}`);
+  }
   const session = await getSessionAndProfile(createClient);
   if (!session) redirect("/login");
-  if (!isActiveStatus(session.profile.status)) {
-    redirect(`${ACCOUNT_INACTIVE_PATH}?status=${session.profile.status}`);
-  }
   return session;
 }

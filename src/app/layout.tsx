@@ -59,6 +59,9 @@ export const metadata: Metadata = {
       },
     ],
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default async function RootLayout({
@@ -81,6 +84,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      translate="no"
       className={pretendard.variable}
       style={{ ...cssVars, colorScheme: appearance } as React.CSSProperties}
     >

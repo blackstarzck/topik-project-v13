@@ -9,6 +9,7 @@ import {
 } from "@/components/auth/AuthConsentPanel";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PublicShell } from "@/components/shared/PublicShell";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 import { resolveLocaleForProfile } from "@/i18n/request";
 import { sanitizeAuthCompletionNext } from "@/lib/auth/completion-routes";
 import { getMissingRequiredProfileFields } from "@/lib/auth/profile-completion";
@@ -57,10 +58,40 @@ export default async function AuthConsentPage({
   const { user, profile } = await requireVerifiedActiveSession();
   const missingProfileFields = getMissingRequiredProfileFields(profile);
   const consentLocale = await resolveLocaleForProfile(profile);
-  const missingDocuments = await getMissingRequiredConsentDocuments(
-    user.id,
-    consentLocale,
-  );
+  let missingDocuments;
+  try {
+    missingDocuments = await getMissingRequiredConsentDocuments(
+      user.id,
+      consentLocale,
+    );
+  } catch {
+    const errorT = await getTranslations("shared.error");
+    const authErrorT = await getTranslations("auth.error");
+    const retryPath = `/auth/consent?${new URLSearchParams({ next }).toString()}`;
+
+    return (
+      <PublicShell>
+        <PageContainer size="default">
+          <UnavailableState
+            variant="required-information"
+            actions={[
+              {
+                key: "retry",
+                label: errorT("retry"),
+                href: retryPath,
+                primary: true,
+              },
+              {
+                key: "home",
+                label: authErrorT("escapeHome"),
+                href: "/",
+              },
+            ]}
+          />
+        </PageContainer>
+      </PublicShell>
+    );
+  }
 
   if (missingProfileFields.length === 0 && missingDocuments.length === 0) {
     redirect(next);

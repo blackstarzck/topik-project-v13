@@ -25,7 +25,6 @@ vi.mock("@/lib/supabase/server", () => ({
       rpc: helpers.rpcMock,
       from: helpers.fromMock,
     }),
-  createSupabaseServiceRoleClient: helpers.createServiceClientMock,
 }));
 
 vi.mock("../../../src/lib/supabase/server", () => ({
@@ -38,6 +37,9 @@ vi.mock("../../../src/lib/supabase/server", () => ({
       rpc: helpers.rpcMock,
       from: helpers.fromMock,
     }),
+}));
+
+vi.mock("@/lib/supabase/service-role.server", () => ({
   createSupabaseServiceRoleClient: helpers.createServiceClientMock,
 }));
 
@@ -224,7 +226,10 @@ function canonicalSubmitInput(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function mockSubmitTables(question = canonicalQuestionRow()) {
+function mockSubmitTables(
+  question = canonicalQuestionRow(),
+  uiLocale: unknown = "ko",
+) {
   helpers.fromMock.mockImplementation((table: string) => {
     const row =
       table === "writing_drafts"
@@ -246,7 +251,7 @@ function mockSubmitTables(question = canonicalQuestionRow()) {
               materials: question.materials,
             },
           }
-        : { status: "active", ui_locale: "ko" };
+        : { status: "active", ui_locale: uiLocale };
     const query = {
       eq: vi.fn(() => query),
       maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }),
@@ -435,47 +440,94 @@ describe("submitWritingAction", () => {
     expect(helpers.serviceRpcMock).not.toHaveBeenCalled();
   });
 
-  it("submits Q51 through the provider's required text contract", async () => {
-    setWritingSubmissionControlForTests({
-      submissionMode: "canonical",
-      submissionContractState: "local_outbox_verified",
-    });
-    const q51Question = canonicalQuestionRow({
-      question_id: "topik-writing-51-0001",
-      item_number: 51,
-    });
-    helpers.rpcMock.mockResolvedValue({
-      data: [q51Question],
-      error: null,
-    });
-    mockSubmitTables(q51Question);
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          submission_id: "provider-q51-id",
-          status: "processing",
-          message: "accepted",
+  it.each(["ko", "en", "vi"] as const)(
+    "submits Q51 with the selected %s locale through the provider text contract",
+    async (locale) => {
+      setWritingSubmissionControlForTests({
+        submissionMode: "canonical",
+        submissionContractState: "local_outbox_verified",
+      });
+      const q51Question = canonicalQuestionRow({
+        question_id: "topik-writing-51-0001",
+        item_number: 51,
+      });
+      helpers.rpcMock.mockResolvedValue({
+        data: [q51Question],
+        error: null,
+      });
+      mockSubmitTables(q51Question, locale);
+      const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            submission_id: "provider-q51-id",
+            status: "processing",
+            message: "accepted",
+          }),
+          { status: 202 },
+        ),
+      );
+
+      await submitWritingAction(
+        canonicalSubmitInput({
+          question_no: 51,
+          canonical_question_id: "topik-writing-51-0001",
+          answer_json: { blanks: { ㄱ: "첫째", ㄴ: "둘째" } },
         }),
-        { status: 202 },
-      ),
-    );
+      );
 
-    await submitWritingAction(
-      canonicalSubmitInput({
-        question_no: 51,
-        canonical_question_id: "topik-writing-51-0001",
-        answer_json: { blanks: { ㄱ: "첫째", ㄴ: "둘째" } },
-      }),
-    );
+      const providerBody = JSON.parse(
+        String(fetchMock.mock.calls[0]?.[1]?.body),
+      );
+      expect(providerBody).toMatchObject({
+        task_type: "Q51",
+        text: "Canonical answer",
+        lang: locale,
+      });
+      expect(providerBody).not.toHaveProperty("blanks");
+    },
+  );
 
-    const providerBody = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
-    expect(providerBody).toMatchObject({
-      task_type: "Q51",
-      text: "Canonical answer",
-      lang: "ko",
-    });
-    expect(providerBody).not.toHaveProperty("blanks");
-  });
+  it.each([null, undefined, "fr"])(
+    "falls back to Korean when the profile locale is %s",
+    async (uiLocale) => {
+      setWritingSubmissionControlForTests({
+        submissionMode: "canonical",
+        submissionContractState: "local_outbox_verified",
+      });
+      const q51Question = canonicalQuestionRow({
+        question_id: "topik-writing-51-0001",
+        item_number: 51,
+      });
+      helpers.rpcMock.mockResolvedValue({
+        data: [q51Question],
+        error: null,
+      });
+      mockSubmitTables(q51Question, uiLocale);
+      const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            submission_id: "provider-q51-id",
+            status: "processing",
+            message: "accepted",
+          }),
+          { status: 202 },
+        ),
+      );
+
+      await submitWritingAction(
+        canonicalSubmitInput({
+          question_no: 51,
+          canonical_question_id: "topik-writing-51-0001",
+          answer_json: { blanks: { ㄱ: "첫째", ㄴ: "둘째" } },
+        }),
+      );
+
+      const providerBody = JSON.parse(
+        String(fetchMock.mock.calls[0]?.[1]?.body),
+      );
+      expect(providerBody.lang).toBe("ko");
+    },
+  );
 });
 
 describe("createComparisonReportAction", () => {
@@ -486,10 +538,11 @@ describe("createComparisonReportAction", () => {
         user: { id: "user-1" },
       },
     });
-    helpers.rpcMock.mockResolvedValue({
-      data: "report-id",
-      error: null,
-    });
+    helpers.rpcMock.mockImplementation(async (name: string) =>
+      name === "get_my_account_state"
+        ? { data: "active", error: null }
+        : { data: "report-id", error: null },
+    );
   });
 
   it("uses the latest previous complete submission when previous_id is omitted", async () => {
@@ -572,7 +625,10 @@ describe("createComparisonReportAction", () => {
       }),
     ).rejects.toThrow("same problem_id");
 
-    expect(helpers.rpcMock).not.toHaveBeenCalled();
+    expect(helpers.rpcMock).not.toHaveBeenCalledWith(
+      "create_comparison_report_with_metrics",
+      expect.anything(),
+    );
   });
 
   it("prefers parent_submission_id over the latest previous complete submission", async () => {

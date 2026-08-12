@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  act,
   cleanup,
   fireEvent,
   screen,
@@ -27,7 +28,14 @@ const navMock = vi.hoisted(() => ({
   routerPush: vi.fn(),
   routerReplace: vi.fn(),
   pathname: "/dashboard",
-  authCallback: null as ((event: string) => void) | null,
+  authCallback: null as
+    | ((event: string, session?: { user: { id: string } } | null) => void)
+    | null,
+}));
+const recoveryCleanupMock = vi.hoisted(() => vi.fn());
+const sessionBoundaryMocks = vi.hoisted(() => ({
+  clearCache: vi.fn(),
+  replaceDocument: vi.fn(),
 }));
 type WritingAvailabilityMockValue = {
   data:
@@ -91,18 +99,36 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQueryClient: () => ({ clear: sessionBoundaryMocks.clearCache }),
+  };
+});
+
+vi.mock("@/lib/auth/workspace-session-navigation", () => ({
+  replaceWorkspaceDocument: sessionBoundaryMocks.replaceDocument,
+}));
+
 // WorkspaceShell mounts an onAuthStateChange listener for multi-tab session
 // sync. Stub the browser client so the effect has a no-op subscription and no
 // real Supabase env is required.
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
     auth: {
-      onAuthStateChange: (cb: (event: string) => void) => {
+      onAuthStateChange: (
+        cb: (event: string, session?: { user: { id: string } } | null) => void,
+      ) => {
         navMock.authCallback = cb;
         return { data: { subscription: { unsubscribe: () => {} } } };
       },
     },
   }),
+}));
+
+vi.mock("@/lib/writing/client-recovery-cleanup", () => ({
+  clearClientRecoveryForLogout: recoveryCleanupMock,
 }));
 
 vi.mock("@/components/practice/writing-availability-data", () => ({
@@ -131,6 +157,10 @@ describe("WorkspaceShell", () => {
     navMock.routerReplace.mockClear();
     navMock.pathname = "/dashboard";
     navMock.authCallback = null;
+    sessionBoundaryMocks.clearCache.mockReset();
+    sessionBoundaryMocks.replaceDocument.mockReset();
+    recoveryCleanupMock.mockReset();
+    recoveryCleanupMock.mockResolvedValue(true);
     window.sessionStorage.clear();
     writingAvailabilityMock.value = {
       data: {
@@ -147,7 +177,7 @@ describe("WorkspaceShell", () => {
     cleanup();
   });
 
-  it("redirects to /login on SIGNED_OUT (multi-tab/device sync) but ignores INITIAL_SESSION", () => {
+  it("clears cached user data before login navigation on SIGNED_OUT but ignores a matching initial session", () => {
     renderWithIntl(
       <WorkspaceShell
         role="learner"
@@ -155,16 +185,48 @@ describe("WorkspaceShell", () => {
         email={null}
         planLabel={null}
       >
-        <div>body</div>
+        <div data-testid="workspace-session-child">body</div>
       </WorkspaceShell>,
     );
 
     expect(navMock.authCallback).toBeTypeOf("function");
-    navMock.authCallback?.("INITIAL_SESSION");
+    navMock.authCallback?.("INITIAL_SESSION", { user: { id: "user-1" } });
     expect(navMock.routerReplace).not.toHaveBeenCalled();
+    expect(sessionBoundaryMocks.clearCache).not.toHaveBeenCalled();
 
-    navMock.authCallback?.("SIGNED_OUT");
+    act(() => {
+      navMock.authCallback?.("SIGNED_OUT", null);
+      expect(screen.queryByTestId("workspace-session-child")).toBeNull();
+    });
+    expect(sessionBoundaryMocks.clearCache).toHaveBeenCalledTimes(1);
     expect(navMock.routerReplace).toHaveBeenCalledWith("/login");
+    expect(
+      sessionBoundaryMocks.clearCache.mock.invocationCallOrder[0],
+    ).toBeLessThan(navMock.routerReplace.mock.invocationCallOrder[0]);
+  });
+
+  it("fails closed and reloads the full document when the browser session changes users", () => {
+    renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-a"
+        email={null}
+        planLabel={null}
+      >
+        <div data-testid="workspace-session-child">user A data</div>
+      </WorkspaceShell>,
+    );
+
+    expect(screen.getByTestId("workspace-session-child")).toBeTruthy();
+
+    act(() => {
+      navMock.authCallback?.("SIGNED_IN", { user: { id: "user-b" } });
+      expect(screen.queryByTestId("workspace-session-child")).toBeNull();
+    });
+
+    expect(sessionBoundaryMocks.clearCache).toHaveBeenCalledTimes(1);
+    expect(sessionBoundaryMocks.replaceDocument).toHaveBeenCalledTimes(1);
+    expect(navMock.routerReplace).not.toHaveBeenCalled();
   });
 
   it("renders the workspace sidebar while keeping AppHeader unused", () => {
@@ -343,6 +405,46 @@ describe("WorkspaceShell", () => {
       "z-index: 1",
     );
     expect(cssRule(".app-profile-popover-action--danger")).toBe("");
+  });
+
+  it("clears eligible local recovery data before profile-menu sign-out", async () => {
+    const nativeSubmit = vi
+      .spyOn(HTMLFormElement.prototype, "submit")
+      .mockImplementation(() => undefined);
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="student@example.com"
+        nickname="talkpik-chan"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    fireEvent.click(
+      within(container).getByRole("button", {
+        name: koMessages.app.userSummary,
+      }),
+    );
+    const logout = await waitFor(() => {
+      const item = Array.from(
+        document.body.querySelectorAll(
+          ".app-profile-popover-panel [role='menuitem']",
+        ),
+      ).find((candidate) =>
+        candidate.textContent?.includes(koMessages.nav.logout),
+      );
+      expect(item).toBeTruthy();
+      return item as HTMLElement;
+    });
+    fireEvent.click(logout);
+
+    await waitFor(() =>
+      expect(recoveryCleanupMock).toHaveBeenCalledWith("user-1"),
+    );
+    expect(nativeSubmit).toHaveBeenCalledOnce();
+    nativeSubmit.mockRestore();
   });
 
   it("renders Iconsax icons in the sidebar menu", () => {
@@ -1002,7 +1104,12 @@ describe("WorkspaceShell", () => {
     navMock.pathname = "/dashboard";
 
     renderWithIntl(
-      <WorkspaceShell role="learner" userId="user-1" email={null} planLabel={null}>
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email={null}
+        planLabel={null}
+      >
         <div>body</div>
       </WorkspaceShell>,
     );

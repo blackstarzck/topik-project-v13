@@ -117,11 +117,11 @@ vi.mock("@/lib/supabase/browser", () => ({
                           export_id: null,
                           problem_id:
                             typeof payload === "object" && payload !== null
-                              ? (
+                              ? ((
                                   payload as {
                                     problem_id?: string;
                                   }
-                                ).problem_id ?? null
+                                ).problem_id ?? null)
                               : null,
                           note: null,
                           tags: [],
@@ -665,9 +665,7 @@ describe("ProblemListView", () => {
     expect(
       container.querySelector(".problem-table__overflow-button"),
     ).toBeNull();
-    expect(savedButton.className).toContain(
-      "problem-table__bookmark-button",
-    );
+    expect(savedButton.className).toContain("problem-table__bookmark-button");
     expect(savedButton.disabled).toBe(false);
     expect(savedButton.getAttribute("aria-pressed")).toBe("true");
     expect(savedButton.querySelector("svg.lucide-bookmark")).toBeTruthy();
@@ -698,7 +696,8 @@ describe("ProblemListView", () => {
       code: "23505",
       message:
         'duplicate key value violates unique constraint "library_items_user_problem_uniq"',
-      details: "Key (user_id, problem_id)=(user-1, problem-dup-51) already exists.",
+      details:
+        "Key (user_id, problem_id)=(user-1, problem-dup-51) already exists.",
     };
     rpcMock.mockResolvedValueOnce({
       data: [
@@ -1050,7 +1049,7 @@ describe("ProblemListView", () => {
     await screen.findByTestId("retry-modal-compact-summary");
     expect(
       screen.getByTestId("retry-modal-compact-summary").textContent,
-    ).toContain(enMessages.practice.retry.statusFailed);
+    ).toContain(enMessages.practice.retry.statusSubmittedRecentFailure);
     fireEvent.click(
       screen.getByRole("button", {
         name: enMessages.practice.retry.viewFailedStatus,

@@ -22,7 +22,7 @@ function renderTab(initialItems: LibraryProblemView[]) {
   });
   return renderWithIntl(
     <QueryClientProvider client={queryClient}>
-      <LibrarySavedProblemsTab initialItems={initialItems} />
+      <LibrarySavedProblemsTab userId="user-1" initialItems={initialItems} />
     </QueryClientProvider>,
   );
 }

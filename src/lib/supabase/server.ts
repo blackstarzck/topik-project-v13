@@ -46,15 +46,3 @@ export function createSupabasePublicServerClient() {
 export type SupabasePublicServerClient = ReturnType<
   typeof createSupabasePublicServerClient
 >;
-
-export function createSupabaseServiceRoleClient() {
-  const env = getPublicEnv();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for server-side writes");
-  }
-
-  return createClient<Database, "public">(env.url, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
-}

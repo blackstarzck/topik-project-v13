@@ -26,6 +26,7 @@ function makeClient(result: {
       const query = {
         select: () => query,
         eq: () => query,
+        not: () => query,
         or: () => query,
         order: () => query,
         limit: () => Promise.resolve(result),
@@ -71,5 +72,19 @@ describe("legal document reads", () => {
           }) as never,
       ),
     ).rejects.toThrow("permission denied for table legal_documents");
+  });
+
+  it("never treats a published placeholder as an official document", async () => {
+    const doc = await getPublishedLegalDocument(
+      "terms",
+      "ko",
+      async () =>
+        makeClient({
+          data: [{ ...publishedTerms, is_placeholder: true }],
+          error: null,
+        }) as never,
+    );
+
+    expect(doc).toBeNull();
   });
 });

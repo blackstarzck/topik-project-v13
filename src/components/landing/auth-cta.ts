@@ -18,12 +18,14 @@ export type LandingCta = {
     | "ctaConsentContinue"
     | "ctaLearningGoal"
     | "ctaDashboard"
+    | "ctaRetry"
     | "ctaContinueSetup";
   heroLabelKey:
     | "heroCtaAuthCompletion"
     | "heroCtaConsentContinue"
     | "heroCtaLearningGoal"
     | "heroCtaDashboard"
+    | "heroCtaRetry"
     | "heroCtaContinueSetup";
 };
 
@@ -60,10 +62,11 @@ export function getLandingCta(status: AuthenticatedLandingStatus): LandingCta {
         heroLabelKey: "heroCtaContinueSetup",
       };
     case "authenticated-recovery":
+    case "profile-unavailable":
       return {
-        href: POST_AUTH_LOGIN_PATH,
-        headerLabelKey: "ctaContinueSetup",
-        heroLabelKey: "heroCtaContinueSetup",
+        href: "/",
+        headerLabelKey: "ctaRetry",
+        heroLabelKey: "heroCtaRetry",
       };
   }
 }

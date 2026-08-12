@@ -135,6 +135,9 @@ test("X-17 token fragment sets a browser session and redirects to sanitized next
 
   await userSeen;
   await expect(page.getByTestId("callback-fragment-status")).toBeVisible();
+  expect(page.url()).not.toContain("access_token");
+  expect(page.url()).not.toContain("refresh_token");
+  expect(new URL(page.url()).hash).toBe("");
   releaseUser?.();
 
   await expect(page).toHaveURL(/\/terms$/, { timeout: 10_000 });

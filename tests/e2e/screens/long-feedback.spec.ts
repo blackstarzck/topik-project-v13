@@ -34,6 +34,8 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 const createdSubmissionIds: string[] = [];
+const LONG_DIMENSION_SUMMARY =
+  "The sentence structure is generally clear, but several transitions need more precise connective expressions so that every reason and example remains easy to follow without hiding any part of this feedback.";
 
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -160,7 +162,7 @@ async function createCompletedLongFeedbackSubmission({
       dimension: "grammar",
       score: 70,
       score_max: 100,
-      summary: "문장 호응과 조사 사용을 더 정확히 점검하세요.",
+      summary: LONG_DIMENSION_SUMMARY,
       weakness_level: 4,
     },
     {
@@ -374,6 +376,24 @@ test("E-02 long feedback matches the wireframe constraints", async ({
   ).toBeVisible();
   const detailPanel = page.getByTestId("feedback-detail-panel");
   await expect(detailPanel.getByTestId("feedback-detail-item")).toHaveCount(3);
+  await detailPanel.getByRole("button").filter({ hasText: "70 / 100" }).click();
+  const longDetailSummary = detailPanel.getByText(LONG_DIMENSION_SUMMARY, {
+    exact: true,
+  });
+  await expect(longDetailSummary).toBeVisible();
+  await expect(longDetailSummary).not.toHaveClass(/ant-typography-ellipsis/);
+  expect(
+    await longDetailSummary.evaluate((element) => {
+      const styles = getComputedStyle(element);
+      return {
+        lineClamp: styles.webkitLineClamp,
+        overflow: styles.overflow,
+      };
+    }),
+  ).toEqual({
+    lineClamp: "none",
+    overflow: "visible",
+  });
   await expect(detailPanel.getByText("논리")).toHaveCount(0);
   await expect(detailPanel.getByText("구조")).toHaveCount(0);
   await expect(page.getByTestId("feedback-recommendation-card")).toBeVisible();

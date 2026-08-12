@@ -1,33 +1,37 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Input, Space, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
+
 import { logStudyEvent } from "@/lib/events/study-events";
-import {
-  isShortAnswer,
-  type AutosaveStatus,
-  type QuestionNo,
-  type WritingDraftRow,
-} from "@/lib/writing/types";
+import type { ClientRecoveryRecordV1 } from "@/lib/writing/client-recovery";
 import {
   getCharLimit,
   isCountInRecommendedRange,
   isCountSubmittable,
 } from "@/lib/writing/constants";
+import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
+import {
+  isShortAnswer,
+  type QuestionNo,
+  type WritingDraftRow,
+} from "@/lib/writing/types";
+import { useWritingResilience } from "@/lib/writing/use-writing-resilience";
+import type { WritingResilienceSnapshot } from "@/lib/writing/writing-resilience";
 import { AutosaveBadge } from "./AutosaveBadge";
-import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
-import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
-import { SubmissionFailedModal } from "./SubmissionFailedModal";
 import {
   AutosaveWarningModal,
   type WarningTrigger,
 } from "./AutosaveWarningModal";
+import { ConditionsPanel, type ProblemRubric } from "./ConditionsPanel";
+import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
+import { SubmissionFailedModal } from "./SubmissionFailedModal";
 import {
   SubmittedAnalysisPanel,
   type SubmittedAnalysisState,
 } from "./SubmittedAnalysisPanel";
+import { WritingRecoveryConflictModal } from "./WritingRecoveryConflictModal";
 
 const { Text } = Typography;
 
@@ -52,30 +56,94 @@ export function WritingEditor({
 }: Props) {
   const t = useTranslations("writing.editor");
   const [text, setText] = useState(initialDraft?.answer_text ?? "");
-  const [status, setStatus] = useState<AutosaveStatus>(
-    initialDraft?.autosave_status ?? "clean",
-  );
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(
-    initialDraft?.last_saved_at ?? null,
-  );
-  const [draftId, setDraftId] = useState<string | null>(
-    initialDraft?.id ?? null,
-  );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
     null,
   );
-  // D-01/D-02 §4 — blur 검증 메시지(글자수 미달/초과 즉시 안내).
   const [blurNotice, setBlurNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] =
     useState<SubmittedAnalysisState | null>(null);
-  // D-M3 §5 — 자동 저장 on/off. 끄면 수동 임시 저장만 가능.
   const [autosaveEnabled, setAutosaveEnabled] = useState(true);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const saveSeqRef = useRef(0);
+  const [recoveryChoice, setRecoveryChoice] = useState<
+    "prior" | "current" | null
+  >(null);
+  const draftIdRef = useRef<string | null>(initialDraft?.id ?? null);
+  const explicitSaveRef = useRef<"manual" | "submit" | null>(null);
   const upsert = useUpsertDraft();
-  const submit = useSubmitWriting();
+
+  const initialSnapshot = useMemo<WritingResilienceSnapshot>(
+    () => ({
+      draft: {
+        user_id: userId,
+        problem_id: problemId,
+        question_no: questionNo,
+        answer_text: initialDraft?.answer_text ?? "",
+        answer_json: initialDraft?.answer_json ?? null,
+        char_count: initialDraft?.char_count ?? 0,
+        canonical_question_id: initialDraft?.canonical_question_id ?? null,
+        canonical_import_id: initialDraft?.canonical_import_id ?? null,
+        canonical_payload_hash: initialDraft?.canonical_payload_hash ?? null,
+        question_snapshot: initialDraft?.question_snapshot ?? null,
+        autosave_status: initialDraft?.autosave_status ?? "clean",
+        last_saved_at: initialDraft?.last_saved_at ?? null,
+      },
+      draftId: initialDraft?.id ?? null,
+    }),
+    [initialDraft, problemId, questionNo, userId],
+  );
+  const saveServer = useCallback(
+    (nextDraft: WritingResilienceSnapshot["draft"]) =>
+      upsert.mutateAsync(nextDraft),
+    [upsert],
+  );
+  const onServerSaved = useCallback(
+    (row: WritingDraftRow, snapshot: WritingResilienceSnapshot) => {
+      draftIdRef.current = row.id;
+      if (explicitSaveRef.current === null) {
+        void logStudyEvent({
+          eventType: "draft_autosaved",
+          problemId,
+          payload: {
+            question_no: questionNo,
+            char_count:
+              snapshot.draft.char_count ??
+              (snapshot.draft.answer_text ?? "").length,
+          },
+        });
+      }
+    },
+    [problemId, questionNo],
+  );
+  const restorePrior = useCallback(
+    (
+      record: ClientRecoveryRecordV1,
+      current: WritingResilienceSnapshot,
+    ): WritingResilienceSnapshot => ({
+      draft: {
+        ...current.draft,
+        answer_text: record.answerText,
+        answer_json: record.answerJson,
+        char_count: record.answerText.length,
+        autosave_status: "dirty",
+      },
+      draftId: record.draftId ?? current.draftId,
+    }),
+    [],
+  );
+  const resilience = useWritingResilience({
+    debounceMs: DEBOUNCE_MS,
+    initialSnapshot,
+    onServerSaved,
+    restorePrior,
+    saveServer,
+    serverAutosaveEnabled: autosaveEnabled,
+  });
+  const submit = useSubmitWriting(undefined, {
+    intentPersistence: resilience.intentPersistence,
+  });
+  const status = resilience.state.status;
+  const lastSavedAt = resilience.state.lastSavedAt;
 
   const limit = getCharLimit(questionNo);
   const charCount = useMemo(() => text.length, [text]);
@@ -83,92 +151,54 @@ export function WritingEditor({
   const inRecommended = isCountInRecommendedRange(charCount, questionNo);
   const minChars = limit.hardMin;
 
-  // D §study_events — 작성 시작(practice_started) 1회 기록.
   useEffect(() => {
     void logStudyEvent({
       eventType: "practice_started",
       problemId,
       payload: { question_no: questionNo },
     });
+    // A writing surface records this only once per mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
-  // D-M3 / §1 예외 — 저장되지 않은 변경 상태에서 새로 고침/탭 닫기 시 브라우저
-  // 기본 이탈 경고로 손실 방지.
-  useEffect(() => {
     const hasUnsaved = status === "dirty" || status === "failed";
     if (!hasUnsaved) return;
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      e.preventDefault();
-      e.returnValue = "";
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
     }
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [status]);
 
-  function persist(next: string, isManual: boolean) {
-    setStatus("syncing");
-    const seq = ++saveSeqRef.current;
-    upsert.mutate(
-      {
-        user_id: userId,
-        problem_id: problemId,
-        question_no: questionNo,
+  const previousStatusRef = useRef(status);
+  useEffect(() => {
+    if (status === "failed" && previousStatusRef.current !== "failed") {
+      setWarningTrigger("save_failure");
+    }
+    previousStatusRef.current = status;
+  }, [status]);
+
+  function buildSnapshot(next: string): WritingResilienceSnapshot {
+    return {
+      draft: {
+        ...initialSnapshot.draft,
         answer_text: next,
         char_count: next.length,
-        autosave_status: "clean",
-        last_saved_at: new Date().toISOString(),
+        autosave_status: "dirty",
+        last_saved_at: resilience.state.lastSavedAt,
       },
-      {
-        onSuccess: (row) => {
-          if (seq !== saveSeqRef.current) return;
-          setStatus("clean");
-          setDraftId(row.id);
-          setLastSavedAt(row.last_saved_at ?? null);
-          // D §study_events — 자동저장 성공 기록(수동 저장 제외).
-          if (!isManual) {
-            void logStudyEvent({
-              eventType: "draft_autosaved",
-              problemId,
-              payload: { question_no: questionNo, char_count: next.length },
-            });
-          }
-        },
-        onError: () => {
-          if (seq !== saveSeqRef.current) return;
-          setStatus("failed");
-          setWarningTrigger("save_failure");
-        },
-      },
-    );
-  }
-
-  function scheduleSave(next: string) {
-    // D-M3 §5 — 자동 저장이 꺼져 있으면 dirty 표시만 하고 자동 저장은 안 한다.
-    if (!autosaveEnabled) {
-      setStatus("dirty");
-      return;
-    }
-    if (status !== "syncing") setStatus("dirty");
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => persist(next, false), DEBOUNCE_MS);
+      draftId: draftIdRef.current,
+    };
   }
 
   function onChange(next: string) {
     setText(next);
     setBlurNotice(null);
-    scheduleSave(next);
+    resilience.edit(buildSnapshot(next));
   }
 
-  // D-M3 §5 — '자동 저장 끄기' CTA → disable_attempt 경고. 사용자가 위험을
-  // 인지하고 진행(onProceed)하면 자동 저장을 끈다. 실패 없이 즉시 적용되지만
-  // 켜기 토글은 항상 가능.
   function onToggleAutosave() {
     if (autosaveEnabled) {
       setWarningTrigger("disable_attempt");
@@ -177,10 +207,15 @@ export function WritingEditor({
     }
   }
 
-  // D §5 — 임시 저장(수동)과 제출을 분리. 디바운스를 건너뛰고 즉시 저장.
-  function onManualSave() {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    persist(text, true);
+  async function onManualSave() {
+    explicitSaveRef.current = "manual";
+    try {
+      await resilience.manualSave();
+    } catch {
+      setWarningTrigger("save_failure");
+    } finally {
+      explicitSaveRef.current = null;
+    }
   }
 
   function onBlurValidate() {
@@ -194,27 +229,49 @@ export function WritingEditor({
     }
   }
 
-  function submitAnswer({
+  async function submitAnswer({
     clearFailure = true,
   }: { clearFailure?: boolean } = {}) {
     if (clearFailure) setSubmitError(null);
+    explicitSaveRef.current = "submit";
+
+    let savedDraft: WritingDraftRow;
+    let latest: WritingResilienceSnapshot | undefined;
+    try {
+      savedDraft = await resilience.prepareForSubmit();
+      latest = resilience.getLatestSnapshot();
+      if (!latest) throw new Error("The latest writing draft is unavailable.");
+    } catch {
+      setConfirmOpen(false);
+      setWarningTrigger("save_failure");
+      return;
+    } finally {
+      explicitSaveRef.current = null;
+    }
+
+    const submittedText = latest.draft.answer_text ?? "";
+    const submittedCharCount = latest.draft.char_count ?? submittedText.length;
     submit.mutate(
       {
-        draft_id: draftId,
+        draft_id: savedDraft.id,
         problem_id: problemId,
         question_no: questionNo,
-        answer_text: text,
-        char_count: charCount,
+        answer_text: submittedText,
+        char_count: submittedCharCount,
       },
       {
         onSuccess: (result) => {
+          void resilience.clearAfterSubmitSuccess();
           setConfirmOpen(false);
           setSubmitError(null);
           void logStudyEvent({
             eventType: "submission_submitted",
             problemId,
             submissionId: result.submissionId,
-            payload: { question_no: questionNo, char_count: charCount },
+            payload: {
+              question_no: questionNo,
+              char_count: submittedCharCount,
+            },
           });
           const next = isShortAnswer(result.questionNo)
             ? `/writing/feedback/short/${result.submissionId}`
@@ -222,14 +279,13 @@ export function WritingEditor({
           setSubmittedAnalysis({
             submissionId: result.submissionId,
             questionNo: result.questionNo,
-            answerText: text,
-            charCount,
+            answerText: submittedText,
+            charCount: submittedCharCount,
             submittedAt: new Date().toISOString(),
             feedbackHref: next,
           });
         },
         onError: (e) => {
-          // D-M1 -> failure: API 실패 후 확인 모달을 닫고 별도 실패 모달로 전환한다.
           setConfirmOpen(false);
           setSubmitError(e.message);
         },
@@ -237,12 +293,17 @@ export function WritingEditor({
     );
   }
 
-  function onConfirmSubmit() {
-    submitAnswer();
-  }
-
-  function onRetrySubmitFailure() {
-    submitAnswer({ clearFailure: false });
+  async function onChooseRecovery(choice: "prior" | "current") {
+    setRecoveryChoice(choice);
+    try {
+      const selected = await resilience.chooseRecovery(choice);
+      if (!selected) return;
+      draftIdRef.current = selected.draftId;
+      setText(selected.draft.answer_text ?? "");
+      setBlurNotice(null);
+    } finally {
+      setRecoveryChoice(null);
+    }
   }
 
   if (submittedAnalysis) {
@@ -251,7 +312,6 @@ export function WritingEditor({
 
   return (
     <Space orientation="vertical" size="middle" className="w-full">
-      {/* D-02 §2 — 작성 조건 카드 (52번만; 51번은 지문 자체가 조건). */}
       {questionNo === 52 ? (
         <ConditionsPanel
           questionNo={52}
@@ -276,7 +336,6 @@ export function WritingEditor({
             : t("minOnly", { min: limit.hardMin })}
           {inRecommended ? " ✓" : ""}
         </Text>
-        {/* D-M3 §5 — 자동 저장 끄기/켜기 CTA. */}
         <Button size="small" type="link" onClick={onToggleAutosave}>
           {autosaveEnabled ? t("autosaveOff") : t("autosaveOn")}
         </Button>
@@ -288,7 +347,7 @@ export function WritingEditor({
       ) : null}
       <Input.TextArea
         value={text}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         onBlur={onBlurValidate}
         autoSize={{ minRows: isShortAnswer(questionNo) ? 3 : 12 }}
         maxLength={limit.hardMax}
@@ -297,21 +356,28 @@ export function WritingEditor({
             ? t("placeholderShort")
             : t("placeholderLong")
         }
-        disabled={submit.isPending}
+        disabled={
+          submit.isPending ||
+          !resilience.state.hydrated ||
+          Boolean(resilience.state.conflict)
+        }
       />
-      {/* §4 예외 — 글자수 미달/초과 blur 즉시 안내. */}
       {blurNotice ? (
         <Text type="danger" className="text-xs">
           {blurNotice}
         </Text>
       ) : null}
 
-      {/* D §5 — 3-way: 임시 저장(수동) / 제출. (자동 저장은 상단 배지로 상시 노출) */}
       <Space>
         <Button
-          onClick={onManualSave}
-          loading={status === "syncing" && upsert.isPending}
-          disabled={submit.isPending || text.length === 0}
+          onClick={() => void onManualSave()}
+          loading={status === "syncing"}
+          disabled={
+            submit.isPending ||
+            text.length === 0 ||
+            !resilience.state.hydrated ||
+            Boolean(resilience.state.conflict)
+          }
         >
           {t("saveDraft")}
         </Button>
@@ -323,9 +389,10 @@ export function WritingEditor({
           }}
           disabled={
             !submittable ||
-            !draftId ||
             submit.isPending ||
-            Boolean(submitBlockedReason)
+            Boolean(submitBlockedReason) ||
+            !resilience.state.hydrated ||
+            Boolean(resilience.state.conflict)
           }
         >
           {t("submit")}
@@ -338,8 +405,8 @@ export function WritingEditor({
         minChars={minChars}
         questionNo={questionNo}
         lastSavedAt={lastSavedAt}
-        loading={submit.isPending}
-        onConfirm={onConfirmSubmit}
+        loading={submit.isPending || status === "syncing"}
+        onConfirm={() => void submitAnswer()}
         onCancel={() => {
           setSubmitError(null);
           setConfirmOpen(false);
@@ -349,27 +416,32 @@ export function WritingEditor({
         open={Boolean(submitError)}
         submitError={submitError}
         loading={submit.isPending}
-        onRetry={onRetrySubmitFailure}
+        onRetry={() => void submitAnswer({ clearFailure: false })}
         onClose={() => setSubmitError(null)}
       />
       <AutosaveWarningModal
         trigger={warningTrigger}
         lastSavedAt={lastSavedAt}
-        retrying={upsert.isPending}
+        retrying={status === "syncing"}
+        recoveryState={resilience.state.recoveryState}
         onKeep={() => setWarningTrigger(null)}
         onRetry={() => {
           setWarningTrigger(null);
-          // 자동 저장이 꺼져 있더라도 '지금 다시 시도'는 즉시 저장한다.
-          if (debounceRef.current) clearTimeout(debounceRef.current);
-          persist(text, false);
+          void resilience.retry().catch(() => {
+            setWarningTrigger("save_failure");
+          });
         }}
         onProceed={() => {
-          // disable_attempt 의 '위험을 알지만 끄기' → 자동 저장 끄기 확정.
           if (warningTrigger === "disable_attempt") {
             setAutosaveEnabled(false);
           }
           setWarningTrigger(null);
         }}
+      />
+      <WritingRecoveryConflictModal
+        choosing={recoveryChoice}
+        conflict={resilience.state.conflict}
+        onChoose={onChooseRecovery}
       />
     </Space>
   );

@@ -9,6 +9,7 @@ import {
   resolveEvidenceOutput,
   requireEvidenceSlug,
 } from "./evidence-paths.mjs";
+import { assertLocalPrivilegedMutationTarget } from "../lib/supabase-target-safety.mjs";
 
 const cwd = process.cwd();
 const evidenceSlug = requireEvidenceSlug(process.env.UI_EVIDENCE_SLUG);
@@ -58,10 +59,6 @@ function loadEnvLocal() {
 }
 
 const env = loadEnvLocal();
-const envLabel = String(env.SUPABASE_ENV_LABEL || "").toLowerCase();
-if (envLabel === "prod" || envLabel === "production") {
-  throw new Error("Production Supabase environment detected; capture fixture creation is blocked.");
-}
 if (!fsSync.existsSync(authStatePath)) {
   throw new Error(`Missing auth storage state: ${authStatePath}`);
 }
@@ -70,6 +67,7 @@ const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY;
 if (!supabaseUrl || !serviceKey) {
   throw new Error("Missing Supabase service credentials for dynamic capture fixtures.");
 }
+assertLocalPrivilegedMutationTarget(env);
 const studentEmail = env.E2E_STUDENT_EMAIL;
 if (!studentEmail) throw new Error("Missing E2E_STUDENT_EMAIL.");
 const sb = createClient(supabaseUrl, serviceKey, {
@@ -90,9 +88,9 @@ const cleanup = {
   userId: null,
 };
 
-async function must(label, promise) {
+async function must(_label, promise) {
   const result = await promise;
-  if (result.error) throw new Error(`${label}: ${result.error.message}`);
+  if (result.error) throw new Error("fixture_operation_failed");
   return result.data;
 }
 
@@ -112,7 +110,7 @@ async function getUserId() {
     }
   }
   const users = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (users.error) throw new Error(`list users: ${users.error.message}`);
+  if (users.error) throw new Error("fixture_user_lookup_failed");
   const user = users.data.users.find(
     (candidate) => candidate.email?.toLowerCase() === studentEmail.toLowerCase(),
   );
@@ -148,7 +146,7 @@ async function snapshotDraft(problemId) {
     .eq("problem_id", problemId)
     .neq("autosave_status", "superseded")
     .maybeSingle();
-  if (res.error) throw new Error(`snapshot draft: ${res.error.message}`);
+  if (res.error) throw new Error("fixture_draft_snapshot_failed");
   cleanup.draftSnapshots.set(problemId, res.data ?? null);
   return res.data ?? null;
 }
@@ -163,7 +161,7 @@ async function chooseProblem(questionNo = null) {
     .eq("user_id", userId)
     .neq("autosave_status", "superseded")
     .in("problem_id", ids);
-  if (draftRes.error) throw new Error(`choose problem drafts: ${draftRes.error.message}`);
+  if (draftRes.error) throw new Error("fixture_draft_lookup_failed");
   const drafted = new Set((draftRes.data ?? []).map((d) => d.problem_id));
   const selected = problems.find((p) => !drafted.has(p.id)) ?? problems[0];
   await snapshotDraft(selected.id);
@@ -598,12 +596,12 @@ async function createLibraryFixture() {
 
 async function cleanupFixtures() {
   const cleanupErrors = [];
-  async function attempt(label, fn) {
+  async function attempt(_label, fn) {
     try {
       const result = await fn();
-      if (result?.error) cleanupErrors.push(`${label}: ${result.error.message}`);
-    } catch (error) {
-      cleanupErrors.push(`${label}: ${error?.message || String(error)}`);
+      if (result?.error) cleanupErrors.push("fixture_cleanup_failed");
+    } catch {
+      cleanupErrors.push("fixture_cleanup_failed");
     }
   }
   for (const runIdFixture of cleanup.runIds) {
@@ -983,12 +981,16 @@ async function captureItem(browser, item, viewport, fixtures) {
   const pageErrors = [];
   const consoleErrors = [];
   const responseErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("pageerror", () => pageErrors.push("page_error"));
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
   });
   page.on("response", (response) => {
-    if (response.status() >= 500) responseErrors.push(`${response.status()} ${response.url()}`);
+    if (response.status() >= 500) {
+      responseErrors.push(
+        `${response.status()} ${new URL(response.url()).pathname}`,
+      );
+    }
   });
   const started = Date.now();
   let status = "ok";
@@ -1000,9 +1002,9 @@ async function captureItem(browser, item, viewport, fixtures) {
     await runPreAction(page, item, fixtures);
     await page.waitForTimeout(500);
     await page.screenshot({ path: screenshotPath, fullPage: true, animations: "disabled" });
-  } catch (error) {
+  } catch {
     status = "failed";
-    errorMessage = error?.message || String(error);
+    errorMessage = "capture_failed";
     try {
       await page.screenshot({ path: screenshotPath, fullPage: true, animations: "disabled" });
     } catch {}
@@ -1024,7 +1026,7 @@ async function captureItem(browser, item, viewport, fixtures) {
   );
   if (status === "ok" && fatalConsoleError) {
     status = "failed";
-    errorMessage = fatalConsoleError.split("\n")[0] || "Fatal console error during capture.";
+    errorMessage = "fatal_console_error";
   }
   const title = await page.title().catch(() => null);
   const headings = await page
@@ -1054,7 +1056,12 @@ async function captureItem(browser, item, viewport, fixtures) {
     headings,
     screenshotPath: path.relative(cwd, screenshotPath).replaceAll("\\", "/"),
     durationMs: Date.now() - started,
-    errors: { pageErrors, consoleErrors, responseErrors, errorMessage },
+    errors: {
+      pageErrors,
+      consoleErrors: consoleErrors.map(() => "console_error"),
+      responseErrors,
+      errorMessage,
+    },
   };
   await fs.writeFile(sidecarPath, JSON.stringify(sidecar, null, 2));
   await context.close();

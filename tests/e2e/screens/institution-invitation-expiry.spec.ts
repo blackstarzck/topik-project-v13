@@ -1,6 +1,8 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const NOTIFICATIONS_ROUTE = "**/rest/v1/user_notifications**";
+const INVITATION_RESPONSE_ROUTE =
+  "**/rest/v1/rpc/respond_institution_invitation";
 const INVITATION_ID = "2a2ff7b8-cc31-4f4d-a455-283aaad28f30";
 const DAY_MS = 86_400_000;
 
@@ -104,6 +106,14 @@ async function openNotifications(page: Page) {
 }
 
 async function openNotificationPopover(page: Page) {
+  const sessionOnlyReminderClose = page.locator(
+    ".ant-modal:visible .ant-modal-close",
+  );
+  if (await sessionOnlyReminderClose.isVisible().catch(() => false)) {
+    await sessionOnlyReminderClose.click();
+    await expect(sessionOnlyReminderClose).toBeHidden();
+  }
+
   await expect(page.locator(".app-notification-bell")).toBeVisible({
     timeout: 15_000,
   });
@@ -191,6 +201,69 @@ test("institution invitation expiry states work in the list and modal", async ({
       ".ant-modal-footer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous)",
     ),
   ).toBeEnabled();
+  expect(errors).toEqual([]);
+});
+
+test("active institution invitation is accepted by UUID through the user RPC", async ({
+  page,
+}) => {
+  test.setTimeout(45_000);
+  const errors = collectErrors(page);
+  const rows = [makeInvitationRow(new Date(Date.now() + DAY_MS).toISOString())];
+  let rpcRequest:
+    | {
+        method: string;
+        body: unknown;
+      }
+    | undefined;
+
+  await page.route(NOTIFICATIONS_ROUTE, (route) =>
+    fulfillNotifications(route, rows),
+  );
+  await page.route(INVITATION_RESPONSE_ROUTE, async (route) => {
+    rpcRequest = {
+      method: route.request().method(),
+      body: route.request().postDataJSON(),
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: "accepted",
+        code: "CAMPAIGN-01",
+        code_label: "Campaign",
+      }),
+    });
+  });
+
+  await openNotifications(page);
+  const invitationItem = page
+    .locator(".app-notification-panel:visible .app-notification-item")
+    .filter({ hasText: "Institution invitation" });
+  await expect(invitationItem).toBeVisible();
+  await invitationItem
+    .getByRole("button")
+    .evaluate((button) => (button as HTMLButtonElement).click());
+
+  const invitationModal = getInvitationModal(page);
+  await expect(invitationModal).toBeVisible();
+  const acceptButton = invitationModal.locator(
+    ".ant-modal-footer .ant-btn-primary",
+  );
+  await expect(acceptButton).toBeEnabled();
+  await acceptButton.click();
+
+  await expect
+    .poll(() => rpcRequest)
+    .toEqual({
+      method: "POST",
+      body: {
+        p_invitation_id: INVITATION_ID,
+        p_accept: true,
+      },
+    });
+  await expect(invitationModal.locator(".ant-alert-success")).toBeVisible();
+  await expect(acceptButton).toBeDisabled();
   expect(errors).toEqual([]);
 });
 

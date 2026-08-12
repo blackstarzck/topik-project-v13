@@ -36,7 +36,7 @@ test("D-M3 autosave warning modal blocks disabling autosave until confirmed", as
   await expect(page.locator(".ant-modal-mask")).toBeVisible();
   await expect(page.getByText("자동 저장을 끄시겠어요?")).toBeVisible();
   await expect(page.getByTestId("autosave-warning-body")).toContainText(
-    "새로 고침이나 페이지 이동 시",
+    "이 기기 임시 보관은 계속됩니다",
   );
   await expect(page.getByTestId("autosave-warning-state")).toBeVisible();
   await expect(page.getByTestId("autosave-warning-last-saved")).toBeVisible();
