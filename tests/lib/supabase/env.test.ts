@@ -100,6 +100,20 @@ describe("supabase env validation", () => {
     expect(env.publishableKey).toBe("sb_publishable_xxxxx");
   });
 
+  // \uBC30\uD3EC \uD658\uACBD \uBCC0\uC218\uC5D0 BOM\u00B7\uAC1C\uD589\uC774 \uC11E\uC5EC \uB4E4\uC5B4\uC628 \uC0AC\uACE0\uC5D0\uC11C \uC628 \uD68C\uADC0 \uD14C\uC2A4\uD2B8\uB2E4. URL \uC740
+  // \uC2B9\uC778\uB41C project ref \uB85C \uACE0\uC815\uD55C\uB2E4 \u2014 \uC774 checkout \uC740 runtime target \uB3C4 \uD568\uAED8 \uAC80\uC0AC\uD55C\uB2E4.
+  it("removes a leading BOM and surrounding whitespace from public values", async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = `\uFEFF ${DEV_URL} \r\n`;
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
+      "\uFEFFsb_publishable_xxxxx\r\n";
+
+    const { getPublicEnv } = await loadEnvModule();
+    const env = getPublicEnv();
+
+    expect(env.url).toBe(DEV_URL);
+    expect(env.publishableKey).toBe("sb_publishable_xxxxx");
+  });
+
   it("getPublicEnv throws a descriptive error when URL is missing", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_xxxxx";
 
