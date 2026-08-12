@@ -38,6 +38,7 @@ import {
   writeTaskRecordV3,
 } from "../../scripts/lib/ai-task-lifecycle-v3.mjs";
 import { runTaskLifecycleCommand } from "../../scripts/ai-task.mjs";
+import { finalizeTask } from "../../scripts/lib/ai-task-cleanup.mjs";
 
 const NOW = "2026-07-23T01:00:00.000Z";
 const LATER = "2026-07-23T01:01:00.000Z";
@@ -1302,5 +1303,87 @@ describe("claim and cleanup", () => {
       blocker: "RUNTIME_ACTIVE",
       now: LATER,
     })).toMatchObject({ state: "PRESERVED", blockers: ["RUNTIME_ACTIVE"] });
+  });
+});
+
+// V3 가 runtime 명령을 가져가면서 V2 manifest 를 쓰지 않으면, V3 정리가 위임하는
+// V2 게이트가 영구히 RUNTIME_REGISTRATION_REQUIRED 를 보고해 CLEANED 에 도달할 수
+// 없다. 기존 테스트는 runTaskCommandV3 를 직접 호출해 이 경계를 건너뛰었으므로
+// 여기서는 CLI 진입점으로 두 레지스트리가 함께 갱신되는지 확인한다.
+describe("runtime registration keeps the delegated V2 cleanup gate satisfiable", () => {
+  function v2RuntimeManifest(repository, branch) {
+    // V2 taskId 는 branch 를 그대로 평탄화한 값이다 (feat/x -> feat-x).
+    return path.join(
+      commonDir(repository.base),
+      "talkpik-task-lifecycle",
+      "v2",
+      "runtimes",
+      `${branch.replace("/", "-")}.json`,
+    );
+  }
+
+  async function startedTask(repository, branch) {
+    await runTaskLifecycleCommand({
+      command: "start",
+      values: { repo: repository.base, branch, actor: "codex", now: NOW },
+    }, { launchSweep: () => false });
+    return branch;
+  }
+
+  it("writes the V2 runtime manifest for an empty declaration", async () => {
+    const repository = makeRepository();
+    const branch = await startedTask(repository, "feat/runtime-bridge-empty");
+
+    const result = await runTaskLifecycleCommand({
+      command: "runtime",
+      values: { repo: repository.base, branch, actor: "codex", now: LATER },
+    });
+
+    // 빈 선언은 V3 에서 runtimeRef 해제를 뜻하지만, 운영자가 "실행 중인 것이
+    // 없다"고 선언한 사실 자체는 V2 게이트가 요구하는 증거다.
+    expect(result.task.runtimeRef).toBeNull();
+    expect(existsSync(v2RuntimeManifest(repository, branch))).toBe(true);
+    expect(JSON.parse(readFileSync(v2RuntimeManifest(repository, branch), "utf8")))
+      .toMatchObject({ recordType: "RuntimeManifest", ports: [], pids: [], lockPaths: [] });
+  });
+
+  it("mirrors declared ports and pids into the V2 runtime manifest", async () => {
+    const repository = makeRepository();
+    const branch = await startedTask(repository, "feat/runtime-bridge-ports");
+
+    const result = await runTaskLifecycleCommand({
+      command: "runtime",
+      values: {
+        repo: repository.base,
+        branch,
+        actor: "codex",
+        ports: "3401",
+        pids: "1234",
+        now: LATER,
+      },
+    });
+
+    expect(result.task.runtimeRef).toMatch(/^runtime:[a-f0-9]{64}$/u);
+    expect(JSON.parse(readFileSync(v2RuntimeManifest(repository, branch), "utf8")))
+      .toMatchObject({ recordType: "RuntimeManifest", ports: [3401], pids: [1234] });
+  });
+
+  // V3 정리가 위임하는 실제 게이트는 V2 finalizeTask 다. CLI 의 finalize 는 V3 가
+  // 가져가 report-only 계획만 돌려주므로 이 blocker 를 볼 수 없다.
+  it("clears RUNTIME_REGISTRATION_REQUIRED from the delegated V2 cleanup gate", async () => {
+    const repository = makeRepository();
+    const unregistered = await startedTask(repository, "feat/runtime-bridge-gate-off");
+    const registered = await startedTask(repository, "feat/runtime-bridge-gate-on");
+
+    await runTaskLifecycleCommand({
+      command: "runtime",
+      values: { repo: repository.base, branch: registered, actor: "codex", now: LATER },
+    });
+
+    const withoutRuntime = await finalizeTask({ repoPath: repository.base, branch: unregistered });
+    const withRuntime = await finalizeTask({ repoPath: repository.base, branch: registered });
+
+    expect(withoutRuntime.blockers ?? []).toContain("RUNTIME_REGISTRATION_REQUIRED");
+    expect(withRuntime.blockers ?? []).not.toContain("RUNTIME_REGISTRATION_REQUIRED");
   });
 });
