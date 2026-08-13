@@ -1042,3 +1042,46 @@ describe("package interface", () => {
     );
   });
 });
+
+// Vercel's build container stopped shipping the .git directory (builder 56 -> 58),
+// so the inventory-based contract cannot run there and prebuild killed every
+// deployment - including redeploys of the current production sha. The contract's
+// enforcement home is CI and the promotion gate, which pin the exact sha being
+// built, so the build container adds no protection. The skip is scoped to
+// VERCEL=1 AND a missing inventory; every other environment keeps failing closed.
+describe("Vercel build container without git", () => {
+  const script = path.join(process.cwd(), "scripts", "check-project-structure.mjs");
+
+  function runCli(extraEnv) {
+    const root = mkdtempSync(path.join(tmpdir(), "structure-no-git-"));
+    try {
+      return spawnSync(process.execPath, [script], {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          PATH: process.env.PATH ?? "",
+          SystemRoot: process.env.SystemRoot ?? "",
+          WINDIR: process.env.WINDIR ?? "",
+          ...extraEnv,
+        },
+        timeout: 30_000,
+        windowsHide: true,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }
+
+  it("skips with a notice inside the Vercel build when the inventory is unavailable", () => {
+    const result = runCli({ VERCEL: "1" });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("skipped");
+    expect(result.stdout).toContain("Vercel");
+  });
+
+  it("keeps failing closed outside Vercel when the inventory is unavailable", () => {
+    const result = runCli({});
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unable to produce Git inventory");
+  });
+});
