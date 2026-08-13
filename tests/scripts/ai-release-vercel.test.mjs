@@ -429,8 +429,10 @@ describe("vercel adapter request safety", () => {
     );
     const [call] = recorded.calls;
     expect(call.url.pathname).toBe(`/v9/projects/${PROJECT}/env`);
-    expect([...call.url.searchParams.keys()].sort()).toEqual(["gitBranch", "teamId"]);
-    expect(call.url.searchParams.get("gitBranch")).toBe("stg");
+    // Scope is asked by preview target; the branch decision happens on the returned
+    // entries because Vercel's gitBranch filter drops unpinned Preview variables.
+    expect([...call.url.searchParams.keys()].sort()).toEqual(["target", "teamId"]);
+    expect(call.url.searchParams.get("target")).toBe("preview");
     for (const forbidden of ["decrypt", "source", "value", "values"]) {
       expect(call.url.searchParams.has(forbidden)).toBe(false);
     }
@@ -1278,5 +1280,62 @@ describe("credential lookup never depends on the real filesystem", () => {
     });
 
     expect(provider.source()).toBe("file");
+  });
+});
+
+// Vercel's `gitBranch` filter returns only variables scoped to that exact branch.
+// Variables registered for Preview without a branch - the normal setup - are
+// filtered out server-side, so the adapter received an empty list and reported no
+// scope even though the project had them. Measured on this project: ?target=preview
+// returned 8 entries while ?gitBranch=stg returned 0. The branch decision has to
+// happen in our code, on the returned entries, not in the query.
+describe("preview environment scope query", () => {
+  function envRoutes(envs) {
+    return [
+      {
+        match: (url) => url.pathname === `/v9/projects/${PROJECT}/env`,
+        body: { envs },
+      },
+    ];
+  }
+
+  it("asks by preview target and lets unscoped variables count", async () => {
+    const { adapter, recorded } = await readOnlyAdapter(
+      envRoutes([
+        { key: "NEXT_PUBLIC_SUPABASE_URL", target: ["preview"], gitBranch: undefined },
+      ]),
+    );
+
+    expect(await adapter.verifyPreviewEnvironmentScope({ projectId: PROJECT, branch: "stg" }))
+      .toEqual({ environmentScope: "topik-dev" });
+
+    const [call] = recorded.calls;
+    expect(call.url.searchParams.get("target")).toBe("preview");
+    expect(call.url.searchParams.has("gitBranch")).toBe(false);
+    for (const forbidden of ["decrypt", "source", "value", "values"]) {
+      expect(call.url.searchParams.has(forbidden)).toBe(false);
+    }
+  });
+
+  it("counts a variable pinned to the same branch", async () => {
+    const { adapter } = await readOnlyAdapter(
+      envRoutes([
+        { key: "NEXT_PUBLIC_SUPABASE_URL", target: ["preview"], gitBranch: "stg" },
+      ]),
+    );
+    expect(await adapter.verifyPreviewEnvironmentScope({ projectId: PROJECT, branch: "stg" }))
+      .toEqual({ environmentScope: "topik-dev" });
+  });
+
+  it("ignores another branch and production-only variables", async () => {
+    for (const envs of [
+      [{ key: "NEXT_PUBLIC_SUPABASE_URL", target: ["preview"], gitBranch: "other" }],
+      [{ key: "PRODUCTION_ONLY", target: ["production"], gitBranch: null }],
+      [],
+    ]) {
+      const { adapter } = await readOnlyAdapter(envRoutes(envs));
+      expect(await adapter.verifyPreviewEnvironmentScope({ projectId: PROJECT, branch: "stg" }))
+        .toEqual({ environmentScope: null });
+    }
   });
 });
