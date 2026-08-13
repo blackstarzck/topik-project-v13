@@ -869,7 +869,13 @@ export function validateVercelPreviewEvidence(
     evidence.commitSha === expectedStgSha &&
     (expectedProject === null || evidence.project === expectedProject) &&
     evidence.state === "READY" &&
-    evidence.target === "preview" &&
+    // Vercel fills `target` only for production deployments. Git-connected preview
+    // builds report null, measured on this project: every stg and feature-branch
+    // deployment came back null while every main deployment came back "production".
+    // Requiring the literal "preview" blocked a healthy stg Preview from ever
+    // passing. Null is therefore proof of "not production", and the branch check
+    // below carries the rest - a production deployment still fails on both counts.
+    (evidence.target === "preview" || evidence.target === null) &&
     evidence.branch === "stg" &&
     evidence.environmentScope === "topik-dev" &&
     typeof evidence.deploymentId === "string" &&
