@@ -1412,16 +1412,17 @@ describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", (
     return { branch, worktree: prepared.task.workspace.path };
   }
 
+  // 임시 저장소로 상대 경로를 만들지 않는다. Windows CI 는 checkout 과 temp 가
+  // 서로 다른 drive 라 path.relative 가 절대 경로를 돌려주고, 그러면 이 테스트가
+  // 검사하려던 조건 자체가 성립하지 않는다. cwd 만 가리키는 "." 은 어디서나
+  // 상대 경로다.
   it("resolves a relative --repo before handing it to the cleanup adapter", async () => {
-    const repository = makeRepository();
-    const { branch } = await preparedTask(repository, "feat/cli-relative-repo");
-    const relative = path.relative(process.cwd(), repository.base);
-    expect(path.isAbsolute(relative)).toBe(false);
+    expect(path.isAbsolute(".")).toBe(false);
 
     let seen;
     await runTaskLifecycleCommand({
       command: "autocleanup",
-      values: { repo: relative, branch },
+      values: { repo: ".", branch: "feat/cli-relative-repo" },
     }, {
       runV3Autocleanup: (input) => {
         seen = input.repoPath;
@@ -1429,8 +1430,9 @@ describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", (
       },
     });
 
-    // v2 위임은 절대 경로만 받는다. CLI 가 resolve 하지 않으면 그 자리에서
+    // v2 위임은 절대 경로만 받는다. 진입점이 resolve 하지 않으면 그 자리에서
     // REPOSITORY_REQUIRED 로 막힌다.
+    expect(seen).toBe(path.resolve("."));
     expect(path.isAbsolute(seen)).toBe(true);
   });
 
