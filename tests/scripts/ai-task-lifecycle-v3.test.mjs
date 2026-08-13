@@ -1387,3 +1387,97 @@ describe("runtime registration keeps the delegated V2 cleanup gate satisfiable",
     expect(withRuntime.blockers ?? []).not.toContain("RUNTIME_REGISTRATION_REQUIRED");
   });
 });
+
+// The CLI forwarded --repo untouched. v3 resolves it internally while v2 requires
+// path.isAbsolute, so the same command passed v3 and failed the v2 delegation with
+// REPOSITORY_REQUIRED.
+//
+// Separately, the legacy v2 branch runs before the v3 delegation and intercepts
+// finish. Inside that branch handoff and resume reconcile v3 at the end, but finish
+// returned immediately, so the v3 record kept its prepare-time headSha and the
+// merged PR lookup then failed the sha comparison.
+describe("task CLI resolves --repo and keeps the v3 record current on finish", () => {
+  async function preparedTask(repository, branch) {
+    const prepared = await runTaskLifecycleCommand({
+      command: "prepare",
+      values: {
+        repo: repository.base,
+        intent: "code",
+        branch,
+        actor: "codex",
+        workspace: "isolated",
+        now: NOW,
+      },
+    }, { launchSweep: () => false });
+    return { branch, worktree: prepared.task.workspace.path };
+  }
+
+  // Do not build the relative path from the temporary repository. On Windows CI
+  // the checkout and the temp directory sit on different drives, so path.relative
+  // returns an absolute path and the condition under test stops holding. "." is
+  // relative everywhere.
+  it("resolves a relative --repo before handing it to the cleanup adapter", async () => {
+    expect(path.isAbsolute(".")).toBe(false);
+
+    let seen;
+    await runTaskLifecycleCommand({
+      command: "autocleanup",
+      values: { repo: ".", branch: "feat/cli-relative-repo" },
+    }, {
+      runV3Autocleanup: (input) => {
+        seen = input.repoPath;
+        return { handled: true, result: { result: "PRESERVED", blockers: [] } };
+      },
+    });
+
+    // The v2 delegation accepts absolute paths only. Without the entry point
+    // resolving first, it stops right there with REPOSITORY_REQUIRED.
+    expect(seen).toBe(path.resolve("."));
+    expect(path.isAbsolute(seen)).toBe(true);
+  });
+
+  it("routes finish through v3 even when --repo resolves a legacy v2 task", async () => {
+    const repository = makeRepository();
+    const { branch, worktree } = await preparedTask(repository, "feat/cli-finish-routing");
+    writeFileSync(path.join(worktree, "finish-routing.txt"), "work\n");
+    git(worktree, ["add", "finish-routing.txt"]);
+    git(worktree, ["commit", "-m", "work"]);
+    const head = git(worktree, ["rev-parse", "HEAD"]);
+    expect(head).not.toBe(repository.sha);
+
+    // v2 finish requires --repo to be the task worktree, and that is exactly the
+    // condition where the legacy branch finds the task through readTaskStatus and
+    // intercepts before the v3 delegation. The report shape stays v2 per the public
+    // CLI contract while the v3 record must still be updated.
+    const result = await runTaskLifecycleCommand({
+      command: "finish",
+      values: { repo: worktree, branch, actor: "codex", now: LATER },
+    });
+
+    expect(result.recordType).toBe("FinishReportV1");
+    // Without the update, headSha stays at the prepare-time base and auto cleanup
+    // then misses the merged PR on the sha comparison.
+    expect(readTaskRecordV3ByBranch({ repoPath: repository.base, branch }).headSha).toBe(head);
+  });
+
+  it("keeps the legacy v2 path for a task that has no v3 record", async () => {
+    const repository = makeRepository();
+    const { branch, worktree } = await preparedTask(repository, "feat/cli-legacy-fallback");
+    const record = readTaskRecordV3ByBranch({ repoPath: repository.base, branch });
+    expect(record).not.toBeNull();
+    unlinkSync(path.join(
+      commonDir(repository.base),
+      "talkpik-task-lifecycle",
+      "v3",
+      "tasks",
+      `${record.taskId}.json`,
+    ));
+
+    const result = await runTaskLifecycleCommand({
+      command: "finish",
+      values: { repo: worktree, branch, actor: "codex", now: LATER },
+    });
+
+    expect(result.recordType).toBe("FinishReportV1");
+  });
+});

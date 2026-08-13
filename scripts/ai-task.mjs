@@ -323,6 +323,13 @@ export async function runTaskLifecycleCommand(
     reconcileV3 = reconcileTaskRecordsV3WithV2,
   } = {},
 ) {
+  // v2 accepts absolute paths only while v3 resolves on its own. Without one
+  // normalization at the entry point, the same command passes v3 and fails the
+  // v2 delegation with REPOSITORY_REQUIRED. This lives here rather than in the
+  // argument parser so direct callers of this function get the same contract.
+  if (typeof values.repo === "string" && values.repo.length > 0) {
+    values = { ...values, repo: path.resolve(values.repo) };
+  }
   const common = { repoPath: values.repo, branch: values.branch };
   const now = values.now ?? new Date().toISOString();
   if (command === "prepare") {
@@ -441,11 +448,25 @@ export async function runTaskLifecycleCommand(
     }
     if (legacyTask?.branch === values.branch) {
       if (command === "finish") {
-        return createFinishReport({
-          ...common,
-          actor: required(values, "actor"),
+        const actor = required(values, "actor");
+        // The public CLI contract keeps the v2 report shape on this path. But
+        // leaving the v3 record untouched pins headSha to the prepare-time value,
+        // and auto cleanup then misses the merged PR on the sha comparison and
+        // stops at MERGED_MAIN_PR_NOT_FOUND. Tasks without a v3 record get
+        // handled=false back, so the v2-only path is unchanged.
+        runTaskCommandV3({
+          command: "finish",
+          repoPath: values.repo,
+          branch: values.branch,
+          actor,
+          toActor: null,
+          action: null,
+          ports: [],
+          pids: [],
+          lockPaths: [],
           now,
         });
+        return createFinishReport({ ...common, actor, now });
       }
       let result;
       if (command === "resume") {
