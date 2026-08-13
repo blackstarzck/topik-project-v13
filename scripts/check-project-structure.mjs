@@ -819,6 +819,19 @@ export function evaluateProjectStructure({
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
 if (invokedPath === fileURLToPath(import.meta.url)) {
+  // Vercel's build container stopped shipping the .git directory (builder 56 -> 58
+  // in 2026-08), so the inventory-based contract cannot run there and prebuild
+  // killed every deployment - including redeploys of the production sha. The
+  // contract is enforced in CI and by the promotion gate, which pin the exact sha
+  // the build receives, so re-checking inside the build container adds nothing.
+  // The skip requires BOTH VERCEL=1 and a missing inventory; every other
+  // environment keeps failing closed exactly as before.
+  if (process.env.VERCEL === "1" && gitInventory(process.cwd()) === null) {
+    process.stdout.write(
+      "Project structure contract skipped: Git inventory is unavailable in the Vercel build container; the contract is enforced in CI and the promotion gate.\n",
+    );
+    process.exit(0);
+  }
   let changedPaths = null;
   let changedEntries = null;
   let changedPathError = null;
