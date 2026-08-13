@@ -56,6 +56,8 @@ flowchart LR
 
 모든 예시는 기준 checkout 또는 해당 task worktree의 절대 경로를 사용한다. `--actor`는 `codex`, `claude`, `manual` 중 하나다.
 
+`--repo`는 진입점에서 한 번 절대 경로로 정규화한다. v3 registry는 스스로 정규화하지만 v2 정리기는 절대 경로만 받으므로, 정규화하지 않으면 같은 명령에서 v3만 통과하고 v2 위임이 `REPOSITORY_REQUIRED`로 막힌다. 상대 경로를 넘겨도 되지만 예시는 오해를 줄이려고 절대 경로로 유지한다.
+
 ### 준비·시작·상태 확인
 
 ```bash
@@ -114,6 +116,24 @@ pnpm task:runtime -- --repo <task-worktree> --branch feat/example-task
 ```
 
 runtime을 사용하지 않았어도 두 번째 예처럼 빈 상태를 명시적으로 등록한다. 포트·PID·lock은 task별 최대 32개다. lock 경로는 해당 worktree의 `.codex/work/<slug>/` 안의 절대 경로만 허용한다. worktree 자체가 포트나 프로세스를 격리하지 않으므로 병렬 runtime은 서로 다른 loopback port와 test data를 사용한다.
+
+**이 명령 한 번은 v3와 v2 registry를 함께 갱신한다.** 정리는 v3가 v2에 위임하고 v2 게이트는 v2 manifest 파일이 있어야 통과하므로, 한쪽만 쓰면 `CLEANED`에 도달할 수 없다.
+
+```mermaid
+flowchart TD
+  A["task:runtime"] --> B{"선언이 비었나"}
+  B -->|"비었음"| C["v3: runtimeRef 해제"]
+  B -->|"포트·PID·lock 있음"| D["v3: snapshot 기록 후 참조"]
+  C --> E["v2: manifest 기록"]
+  D --> E
+  E -->|"성공"| F["정리 게이트 통과 가능"]
+  E -->|"실패"| G["manifest 없음"]
+  G --> H["이후 정리가 RUNTIME_REGISTRATION_REQUIRED로 차단"]
+```
+
+도식의 결론은 빈 선언이든 아니든 v2 manifest 기록까지 끝나야 정리가 열린다는 것이다.
+
+빈 선언에도 manifest를 쓰는 이유는 게이트가 확인하는 것이 "실행 중인 것이 있는지"가 아니라 "운영자가 runtime 상태를 선언했는지"이기 때문이다. manifest가 없는 상태는 "없음"이 아니라 "모름"이므로 차단이 맞다. v2를 v3 뒤에 두는 것도 같은 판단이다 — 쓰기가 실패하면 정리가 막히는 쪽으로 닫힌다. 반대 순서는 manifest만 남아 정리를 허용하는 열린 실패가 된다.
 
 ### GitHub 계정 profile
 
@@ -395,6 +415,8 @@ pnpm task:autocleanup -- --repo <기준-checkout> --branch feat/example-task
 pnpm task:sweep -- --repo <기준-checkout>
 ```
 
+`task:finish`는 v2 형태의 `FinishReportV1`을 돌려주면서 v3 record의 `headSha`도 함께 갱신한다. v3 record가 없는 v2 전용 task는 그대로 v2만 처리한다. 보고 형태를 v2로 유지하는 것은 공개 CLI 계약이고, v3를 갱신하는 것은 자동 정리가 병합 PR을 정확한 SHA로 찾기 위해서다. 갱신하지 않으면 `headSha`가 준비 시점 값에 머물러 정리가 `MERGED_MAIN_PR_NOT_FOUND`로 막힌다.
+
 `task:finish`는 구현을 끝낼 때 빠르게 실행하는 로컬 report-only 명령이다. 현재 실행자와 worktree branch·HEAD, 일반 Git status, upstream과 로컬 ahead/behind만 읽고 `FinishReportV1`을 저장한다. `node_modules`, `.next` 같은 ignored dependency tree를 열거하거나 해시하지 않으며 fetch, push, PR 조회·생성·merge, Git 수정, 파일 삭제를 하지 않는다. dirty 상태면 검증·커밋 준비를, clean이지만 미게시 상태면 게시 승인을 안내한다. 원격만 앞서면 fast-forward 한 명령을, 양쪽이 갈라졌으면 기록을 먼저 비교하고 사람이 merge·rebase 방식을 결정하는 한 명령을 제공한다. 정확한 `origin/<task-branch>`가 ahead 0·behind 0일 때만 게시 완료로 판단한다. 공백이 있는 Windows 경로도 복사 실행할 수 있도록 경로 인자를 안전하게 quote한다.
 
 `task:finalize`는 삭제하지 않는 report-only 명령이다. `origin` fetch, task·worktree 소유권, clean 상태, HEAD와 branch·PR 일치, 게시하지 않은 commit, `main` 대상의 최신 merged PR, `origin/main` 포함 여부, remote task branch 부재, runtime 포트·PID·lock, operation lock, 정리 후보 경로를 확인한다. 확인할 수 없으면 준비 완료로 추정하지 않는다. 네트워크를 쓰는 `git fetch`, `git ls-remote`, `gh pr view`에만 각각 30초의 hard timeout을 적용하며, 시간 초과는 해당 원격 증거를 확인하지 못한 blocker로 처리한다. 로컬 Git 명령에는 이 timeout을 적용하지 않는다.
@@ -451,6 +473,7 @@ flowchart TD
 - V2 결과는 이 파이프라인이 검증하지 않는 입력이다. record schema가 허용하는 형식(`^[A-Z0-9_:-]{1,128}$`)만 통과시킨다.
 - **상한 32와 우선순위를 함께 지킨다.** record의 blocker와 V2 이유는 각각 최대 32개라 단순히 이어붙이면 상한을 넘는다. 뒤에서 자르면 정작 필요한 최신 이유가 사라지므로 순서를 고정한다 — 위임 실패 사실, 방금 받은 V2 이유, record의 기존 blocker. 상한에 걸리면 오래된 record 항목부터 잘린다.
 - **`PRESERVED`는 종단 상태다.** 이미 보존된 task를 다시 정리 시도하면 `reconcileDelegatedCleanupV3`가 조기 반환해 record의 `blockers`를 갱신하지 않는다. record만 읽으면 재시도 때 옛 이유가 그대로 나오므로, 어댑터 결과가 방금 받은 V2 이유를 합쳐 보고한다.
+- **예외는 하나뿐이다 — 정리가 실제로 끝난 경우의 교정.** 위임한 V2 정리가 record를 쓴 뒤에 성공을 확인해 주면 `PRESERVED`를 `CLEANED`로 올린다. 자원이 이미 사라졌는데 record만 막힌 상태로 남으면 사실과 어긋나기 때문이다. V2 결과와 V2 record가 **둘 다** 정리 완료를 말할 때만 움직이며, 그 밖의 결과에서는 revision과 `blockers`를 건드리지 않고 그대로 둔다. 자동 정리 대상 상태 목록과 `preserve-only` 계획은 바뀌지 않는다.
 
 이 보고가 없던 동안 정리 실패 원인을 찾으려면 V2 정리기를 직접 호출해야 했다. 정리 실패는 워크트리가 쌓이는 결과로 이어지므로 보고만으로 조치할 수 있어야 한다.
 
@@ -523,7 +546,10 @@ stateDiagram-v2
   MERGED --> CLEANED: managed 비강제 정리
   MERGED --> RELEASED: host/adopted claim 해제
   MERGED --> PRESERVED: 위험·소유권 불명
+  PRESERVED --> CLEANED: 위임한 정리의 성공이 확인됨
 ```
+
+`PRESERVED`에서 나가는 전이는 위 하나뿐이다. 다른 사유로는 상태가 바뀌지 않는다.
 
 `task:finalize`는 상태를 바꾸지 않는다. legacy v2 cleanup 중 일부 단계 이후 실패하면 `CLEANING` journal, 후보별 `candidateProgress`, 완료 단계가 남는다. 이 필드는 기존 manifest와 호환되는 선택 필드이며 같은 승인으로만 재개한다. 원래 경로와 quarantine이 동시에 존재하거나 quarantine identity가 달라졌거나 새 미승인·ignored root가 생기면 두 객체를 모두 보존하고 중단한다.
 

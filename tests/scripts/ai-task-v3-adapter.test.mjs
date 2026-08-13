@@ -764,8 +764,10 @@ describe("V3 sweep and CLI routing", () => {
 
     expect(result).toEqual({ result: "CLEANED" });
     expect(calls).toEqual(["v3", "copy", "v3"]);
+    // The entry point resolves --repo once because the v2 delegation accepts
+    // absolute paths only. This asserts the normalized value is forwarded as is.
     expect(migrateStartedTask).toHaveBeenCalledWith({
-      repoPath: "C:/repo",
+      repoPath: path.resolve("C:/repo"),
       branch: "fix/v2-only",
       now: NOW,
     });
