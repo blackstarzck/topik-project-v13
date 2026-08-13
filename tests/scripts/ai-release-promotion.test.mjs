@@ -1186,3 +1186,32 @@ describe("fail-closed promotion state machine", () => {
     }
   });
 });
+
+// Vercel populates `target` only for production deployments. Git-connected preview
+// builds come back with target=null, measured on this project: every stg and
+// feature-branch deployment reported null while every main deployment reported
+// "production". Requiring the literal "preview" therefore blocked a healthy stg
+// Preview from ever satisfying the gate. Accepting null keeps the protection
+// because "production" is still rejected and branch must still be stg.
+describe("Vercel preview evidence with an unset target", () => {
+  it("accepts a null target when the branch still proves it is the stg preview", async () => {
+    const { validateVercelPreviewEvidence } =
+      await import("../../scripts/lib/ai-release-promotion.mjs");
+    expect(validateVercelPreviewEvidence(previewEvidence({ target: null }), SHA.candidate, {
+      expectedProject: "topik-project-v13",
+    })).toMatchObject({ ok: true, code: "STG_PREVIEW_READY" });
+  });
+
+  it("still rejects a production deployment and a non-stg branch", async () => {
+    const { validateVercelPreviewEvidence } =
+      await import("../../scripts/lib/ai-release-promotion.mjs");
+    for (const evidence of [
+      previewEvidence({ target: "production" }),
+      previewEvidence({ target: null, branch: "main" }),
+      previewEvidence({ target: undefined }),
+      previewEvidence({ target: "" }),
+    ]) {
+      expect(validateVercelPreviewEvidence(evidence, SHA.candidate).ok).toBe(false);
+    }
+  });
+});

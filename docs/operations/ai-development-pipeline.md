@@ -352,6 +352,7 @@ executor가 Vercel을 조회하는 경로는 `scripts/lib/ai-release-vercel.mjs`
 
 - 배포 조회, `READY` 대기, alias 대상 조회, 이전 `READY` production 조회, Preview 환경 범위 확인은 모두 읽기 전용이다. 유일한 쓰기 동작은 smoke 실패 뒤 이전 `READY` deployment로 alias만 되돌리는 alias 재지정이며, 재지정 뒤 alias 대상을 다시 읽어 기대한 deployment와 같은지 확인한다. 다르면 `VERCEL_ALIAS_MISMATCH`로 중단한다. 어떤 경우에도 DB는 되돌리지 않으므로 rollback 관측값의 DB 변경 여부는 항상 거짓 상수다.
 - Preview 환경 범위 확인은 환경 변수의 이름과 적용 범위만 조회하고 값은 요청하지 않는다. `stg`는 유료 custom environment 없이 branch Preview로 동작하므로 `topik-dev` 범위의 환경 key 존재만 확인한다.
+- **Preview 증거의 `target`은 비어 있어도 통과한다.** Vercel은 `target`을 Production 배포에만 채운다. 이 프로젝트에서 실측하면 `main` 배포는 모두 `production`이고 `stg`·기능 branch 배포는 모두 비어 있다. 그래서 문자 `preview`를 요구하면 정상 Preview가 게이트를 통과할 수 없다. 비어 있음 자체가 "Production이 아님"의 증거이고, `stg` branch 일치 검사가 나머지를 담당한다. `production`은 계속 거부되며 branch가 `stg`가 아닌 경우도 거부되므로 두 겹의 보호가 유지된다.
 - production 읽기 전용 smoke test는 `GET`만 보내고 응답 본문을 보관하지 않으며 상태 코드만 비교한다. redirect는 따라가지 않는다. smoke 실행 경로에는 인증 헤더를 붙일 인자 자체가 없어 코드 수준에서 인증된 요청을 만들 수 없다.
 - 응답은 곧바로 닫힌 모양으로 사상하고 원문을 보관하지 않는다. 실패는 `VERCEL_TOKEN_MISSING`, `VERCEL_API_UNAVAILABLE`, `VERCEL_DEPLOYMENT_NOT_FOUND`, `VERCEL_NOT_READY`, `VERCEL_ALIAS_MISMATCH` 같은 대문자 코드 하나로만 보고하고 공급자 응답 본문·헤더 원문은 오류·반환값·기록·로그에 담지 않는다.
 - 조회 주소는 암호화된 `https` 연결만 허용한다. 평문 `http`나 다른 방식의 주소는 요청을 보내기 전에 `VERCEL_API_UNAVAILABLE`로 거부하므로, 접근 자격이 담긴 인증 헤더가 암호화되지 않은 연결로 나가는 조합이 없다. 로컬 주소도 예외로 두지 않는다.
