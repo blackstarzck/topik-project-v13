@@ -56,6 +56,8 @@ flowchart LR
 
 모든 예시는 기준 checkout 또는 해당 task worktree의 절대 경로를 사용한다. `--actor`는 `codex`, `claude`, `manual` 중 하나다.
 
+`--repo`는 진입점에서 한 번 절대 경로로 정규화한다. v3 registry는 스스로 정규화하지만 v2 정리기는 절대 경로만 받으므로, 정규화하지 않으면 같은 명령에서 v3만 통과하고 v2 위임이 `REPOSITORY_REQUIRED`로 막힌다. 상대 경로를 넘겨도 되지만 예시는 오해를 줄이려고 절대 경로로 유지한다.
+
 ### 준비·시작·상태 확인
 
 ```bash
@@ -412,6 +414,8 @@ pnpm task:cleanup -- --repo <기준-checkout-or-worktree> --branch feat/example-
 pnpm task:autocleanup -- --repo <기준-checkout> --branch feat/example-task
 pnpm task:sweep -- --repo <기준-checkout>
 ```
+
+`task:finish`는 v2 형태의 `FinishReportV1`을 돌려주면서 v3 record의 `headSha`도 함께 갱신한다. v3 record가 없는 v2 전용 task는 그대로 v2만 처리한다. 보고 형태를 v2로 유지하는 것은 공개 CLI 계약이고, v3를 갱신하는 것은 자동 정리가 병합 PR을 정확한 SHA로 찾기 위해서다. 갱신하지 않으면 `headSha`가 준비 시점 값에 머물러 정리가 `MERGED_MAIN_PR_NOT_FOUND`로 막힌다.
 
 `task:finish`는 구현을 끝낼 때 빠르게 실행하는 로컬 report-only 명령이다. 현재 실행자와 worktree branch·HEAD, 일반 Git status, upstream과 로컬 ahead/behind만 읽고 `FinishReportV1`을 저장한다. `node_modules`, `.next` 같은 ignored dependency tree를 열거하거나 해시하지 않으며 fetch, push, PR 조회·생성·merge, Git 수정, 파일 삭제를 하지 않는다. dirty 상태면 검증·커밋 준비를, clean이지만 미게시 상태면 게시 승인을 안내한다. 원격만 앞서면 fast-forward 한 명령을, 양쪽이 갈라졌으면 기록을 먼저 비교하고 사람이 merge·rebase 방식을 결정하는 한 명령을 제공한다. 정확한 `origin/<task-branch>`가 ahead 0·behind 0일 때만 게시 완료로 판단한다. 공백이 있는 Windows 경로도 복사 실행할 수 있도록 경로 인자를 안전하게 quote한다.
 

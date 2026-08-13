@@ -323,6 +323,12 @@ export async function runTaskLifecycleCommand(
     reconcileV3 = reconcileTaskRecordsV3WithV2,
   } = {},
 ) {
+  // v2 는 절대 경로만 받고 v3 는 스스로 resolve 한다. 진입점에서 한 번 정규화하지
+  // 않으면 같은 명령에서 v3 는 통과하고 v2 위임만 REPOSITORY_REQUIRED 로 막힌다.
+  // CLI 뿐 아니라 이 함수를 직접 부르는 caller 도 같은 계약을 받도록 여기서 한다.
+  if (typeof values.repo === "string" && values.repo.length > 0) {
+    values = { ...values, repo: path.resolve(values.repo) };
+  }
   const common = { repoPath: values.repo, branch: values.branch };
   const now = values.now ?? new Date().toISOString();
   if (command === "prepare") {
@@ -441,11 +447,24 @@ export async function runTaskLifecycleCommand(
     }
     if (legacyTask?.branch === values.branch) {
       if (command === "finish") {
-        return createFinishReport({
-          ...common,
-          actor: required(values, "actor"),
+        const actor = required(values, "actor");
+        // 공개 CLI 계약상 이 경로는 v2 보고 형태를 그대로 돌려준다. 다만 v3 record
+        // 를 갱신하지 않으면 headSha 가 준비 시점 값에 머물고, 이후 자동 정리가
+        // 병합 PR 을 SHA 대조에서 놓쳐 MERGED_MAIN_PR_NOT_FOUND 로 막힌다.
+        // v3 record 가 없으면 handled=false 만 돌아오므로 v2 전용 task 는 그대로다.
+        runTaskCommandV3({
+          command: "finish",
+          repoPath: values.repo,
+          branch: values.branch,
+          actor,
+          toActor: null,
+          action: null,
+          ports: [],
+          pids: [],
+          lockPaths: [],
           now,
         });
+        return createFinishReport({ ...common, actor, now });
       }
       let result;
       if (command === "resume") {

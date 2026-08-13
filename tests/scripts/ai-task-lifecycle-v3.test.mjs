@@ -1387,3 +1387,94 @@ describe("runtime registration keeps the delegated V2 cleanup gate satisfiable",
     expect(withRuntime.blockers ?? []).not.toContain("RUNTIME_REGISTRATION_REQUIRED");
   });
 });
+
+// CLI 는 --repo 를 그대로 넘긴다. v3 는 내부에서 path.resolve 하지만 v2 는
+// path.isAbsolute 를 요구해 거부하므로, 같은 명령에서 v3 만 통과하고 v2 위임이
+// REPOSITORY_REQUIRED 로 실패했다.
+//
+// 그리고 legacy v2 분기가 v3 위임보다 먼저 실행돼 finish 를 가로챈다. 그 분기를
+// 건너뛰는 유일한 경우가 잘못된 경로로 readTaskStatus 가 던진 예외를 catch 가
+// 삼킬 때였다. v3 처리가 우연한 오류에 얹혀 있었고, 정상 경로에서는 v3 record 의
+// headSha 가 갱신되지 않아 병합 PR 조회가 SHA 대조에서 탈락했다.
+describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", () => {
+  async function preparedTask(repository, branch) {
+    const prepared = await runTaskLifecycleCommand({
+      command: "prepare",
+      values: {
+        repo: repository.base,
+        intent: "code",
+        branch,
+        actor: "codex",
+        workspace: "isolated",
+        now: NOW,
+      },
+    }, { launchSweep: () => false });
+    return { branch, worktree: prepared.task.workspace.path };
+  }
+
+  it("resolves a relative --repo before handing it to the cleanup adapter", async () => {
+    const repository = makeRepository();
+    const { branch } = await preparedTask(repository, "feat/cli-relative-repo");
+    const relative = path.relative(process.cwd(), repository.base);
+    expect(path.isAbsolute(relative)).toBe(false);
+
+    let seen;
+    await runTaskLifecycleCommand({
+      command: "autocleanup",
+      values: { repo: relative, branch },
+    }, {
+      runV3Autocleanup: (input) => {
+        seen = input.repoPath;
+        return { handled: true, result: { result: "PRESERVED", blockers: [] } };
+      },
+    });
+
+    // v2 위임은 절대 경로만 받는다. CLI 가 resolve 하지 않으면 그 자리에서
+    // REPOSITORY_REQUIRED 로 막힌다.
+    expect(path.isAbsolute(seen)).toBe(true);
+  });
+
+  it("routes finish through v3 even when --repo resolves a legacy v2 task", async () => {
+    const repository = makeRepository();
+    const { branch, worktree } = await preparedTask(repository, "feat/cli-finish-routing");
+    writeFileSync(path.join(worktree, "finish-routing.txt"), "work\n");
+    git(worktree, ["add", "finish-routing.txt"]);
+    git(worktree, ["commit", "-m", "work"]);
+    const head = git(worktree, ["rev-parse", "HEAD"]);
+    expect(head).not.toBe(repository.sha);
+
+    // v2 finish 는 --repo 가 task worktree 여야 한다. 바로 그 조건에서 legacy
+    // 분기가 readTaskStatus 로 task 를 찾아 v3 위임 전에 가로챈다. 보고 형태는
+    // 공개 CLI 계약대로 v2 를 유지하되 v3 record 는 함께 갱신돼야 한다.
+    const result = await runTaskLifecycleCommand({
+      command: "finish",
+      values: { repo: worktree, branch, actor: "codex", now: LATER },
+    });
+
+    expect(result.recordType).toBe("FinishReportV1");
+    // 갱신되지 않으면 headSha 가 준비 시점 base 에 머물고, 이후 자동 정리가 병합
+    // PR 을 SHA 대조에서 놓친다.
+    expect(readTaskRecordV3ByBranch({ repoPath: repository.base, branch }).headSha).toBe(head);
+  });
+
+  it("keeps the legacy v2 path for a task that has no v3 record", async () => {
+    const repository = makeRepository();
+    const { branch, worktree } = await preparedTask(repository, "feat/cli-legacy-fallback");
+    const record = readTaskRecordV3ByBranch({ repoPath: repository.base, branch });
+    expect(record).not.toBeNull();
+    unlinkSync(path.join(
+      commonDir(repository.base),
+      "talkpik-task-lifecycle",
+      "v3",
+      "tasks",
+      `${record.taskId}.json`,
+    ));
+
+    const result = await runTaskLifecycleCommand({
+      command: "finish",
+      values: { repo: worktree, branch, actor: "codex", now: LATER },
+    });
+
+    expect(result.recordType).toBe("FinishReportV1");
+  });
+});

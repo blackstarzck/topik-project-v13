@@ -764,8 +764,10 @@ describe("V3 sweep and CLI routing", () => {
 
     expect(result).toEqual({ result: "CLEANED" });
     expect(calls).toEqual(["v3", "copy", "v3"]);
+    // 진입점이 --repo 를 한 번 resolve 한다. v2 위임이 절대 경로만 받기 때문이며,
+    // 아래는 그 정규화된 값이 그대로 전달되는지를 본다.
     expect(migrateStartedTask).toHaveBeenCalledWith({
-      repoPath: "C:/repo",
+      repoPath: path.resolve("C:/repo"),
       branch: "fix/v2-only",
       now: NOW,
     });
