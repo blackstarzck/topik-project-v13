@@ -18,7 +18,7 @@ import {
 import {
   V3_BLOCKER_PATTERN,
   autoCleanupTaskRecordV3,
-  mergeReportedCleanupBlockers,
+  mergeDelegatedCleanupBlockers,
   readTaskRecordV3ByBranch,
   reconcileDelegatedCleanupV3,
   sweepTaskRecordsV3,
@@ -28,7 +28,9 @@ import { autoCleanupTask } from "./ai-task-cleanup.mjs";
 const SHA_PATTERN = /^[a-f0-9]{40}$/u;
 const SAFE_BRANCH_PATTERN =
   /^(?:feat|fix|refactor|test|docs|chore|ci)\/[a-z0-9]+(?:-[a-z0-9]+)*$/u;
-const ELIGIBLE_STATES = new Set(["ACTIVE", "PR_OPEN", "MERGED"]);
+// PRESERVED is retryable, so sweep must keep discovering it. Otherwise the
+// catch-up sweep silently skips exactly the tasks that still need cleanup.
+const ELIGIBLE_STATES = new Set(["ACTIVE", "PR_OPEN", "MERGED", "PRESERVED"]);
 const COMMAND_TIMEOUT_MS = 30_000;
 
 const ADAPTER_PROFILES = Object.freeze({
@@ -490,13 +492,12 @@ async function resolveAndCleanup({
       now,
     });
     const cleaned = v3Task.state === "CLEANED";
-    // record 의 blocker 와 방금 받은 V2 이유를 합친다. PRESERVED 는 종단 상태라
-    // reconcileDelegatedCleanupV3 가 조기 반환하고 record 의 blocker 를 갱신하지 않으므로,
-    // 이미 막힌 task 를 재시도할 때는 record 만 읽으면 옛 이유가 그대로 보고된다.
-    // blocker 단일 문자열 계약은 기존 호출자를 위해 유지한다.
-    const blockers = cleaned
-      ? []
-      : mergeReportedCleanupBlockers({ recordBlockers: v3Task.blockers, v2Result });
+    // Report the reasons this run produced. An earlier revision also merged the
+    // record's stored blockers, because PRESERVED was terminal and the reconcile
+    // short-circuited without refreshing them. PRESERVED is retryable now and the
+    // reconcile rewrites the record every run, so merging stored values only echoes
+    // reasons that no longer hold. The single blocker string stays for callers.
+    const blockers = cleaned ? [] : mergeDelegatedCleanupBlockers(v2Result);
     return {
       schemaVersion: 3,
       recordType: "TaskAutoCleanupAdapterResultV3",

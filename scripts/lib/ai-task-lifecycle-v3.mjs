@@ -31,7 +31,13 @@ const STATES = new Set(["ACTIVE", "PR_OPEN", "MERGED", "CLEANED", "RELEASED", "P
 const WORKSPACE_KINDS = new Set(["shared-slot", "isolated", "adopted", "host"]);
 const OWNERSHIP_KINDS = new Set(["managed", "adopted", "host"]);
 const CLEANUP_POLICIES = new Set(["auto-after-merge", "release-only", "preserve"]);
-const TERMINAL_STATES = new Set(["CLEANED", "RELEASED", "PRESERVED"]);
+// Only CLEANED and RELEASED are final: their resources are gone and nothing can
+// change that. PRESERVED means "could not clean up yet" and every documented
+// reason for it is transient - dirty worktree, live runtime, unknown files, sha or
+// ownership mismatch. Autocleanup already schedules a retry through retryAt, so
+// treating PRESERVED as final made that scheduled retry unreachable.
+export const TERMINAL_TASK_STATES_V3 = Object.freeze(new Set(["CLEANED", "RELEASED"]));
+const TERMINAL_STATES = TERMINAL_TASK_STATES_V3;
 const REUSABLE_STATES = new Set(["CLEANED", "RELEASED"]);
 const MAX_RECORD_BYTES = 64 * 1024;
 const UNSAFE_KEY_PATTERN =
@@ -97,7 +103,10 @@ const MERGE_EVIDENCE_KEYS = new Set([
 ]);
 const REMOTE_BRANCH_EVIDENCE_KEYS = new Set(["exists", "sha"]);
 const PRODUCTION_EVIDENCE_KEYS = new Set(["ready", "commitSha"]);
-const AUTOCLEANUP_ELIGIBLE_STATES = new Set(["ACTIVE", "PR_OPEN", "MERGED"]);
+// PRESERVED belongs here because autocleanup writes retryAt when it preserves.
+// Without it the scheduled retry re-enters the same precheck, reports
+// TASK_STATE_NOT_ELIGIBLE, schedules another retry, and never progresses.
+const AUTOCLEANUP_ELIGIBLE_STATES = new Set(["ACTIVE", "PR_OPEN", "MERGED", "PRESERVED"]);
 const AUTOCLEANUP_COOLDOWN_MS = 15 * 60 * 1000;
 
 class TaskLifecycleV3Error extends Error {
@@ -2381,19 +2390,10 @@ export function mergeDelegatedCleanupBlockers(v2Result) {
   return [...new Set(["V2_CLEANUP_NOT_CONFIRMED", ...safe])].slice(0, V3_BLOCKER_LIMIT);
 }
 
-// 보고용 목록. record 의 blocker 와 방금 받은 V2 이유를 합치면 각각 상한이 32 라 그냥
-// 이어붙이면 상한을 넘는다. 뒤에서 자르면 최신 이유가 사라지므로 순서를 고정한다:
-// 위임 실패 사실(단일 blocker 계약) -> 방금 받은 V2 이유 -> record 의 기존 blocker.
-// 상한에 걸리면 오래된 record 항목부터 잘린다.
-export function mergeReportedCleanupBlockers({ recordBlockers, v2Result }) {
-  const stored = Array.isArray(recordBlockers) ? recordBlockers : [];
-  const safeStored = stored.filter((item) =>
-    typeof item === "string" && V3_BLOCKER_PATTERN.test(item));
-  return [...new Set([
-    ...mergeDelegatedCleanupBlockers(v2Result),
-    ...safeStored,
-  ])].slice(0, V3_BLOCKER_LIMIT);
-}
+// mergeReportedCleanupBlockers used to sit here. It merged the record's stored
+// blockers into the report because PRESERVED was terminal and the reconcile never
+// refreshed them. PRESERVED is retryable now, every run rewrites the record, and
+// merging stored values only echoed reasons that no longer held.
 
 export function reconcileDelegatedCleanupV3({
   repoPath,

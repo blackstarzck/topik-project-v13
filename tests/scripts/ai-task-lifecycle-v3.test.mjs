@@ -1481,3 +1481,51 @@ describe("task CLI resolves --repo and keeps the v3 record current on finish", (
     expect(result.recordType).toBe("FinishReportV1");
   });
 });
+
+// PRESERVED means "could not clean up yet", not "finished". The documented reasons
+// are all transient - dirty worktree, live runtime, unknown files, sha or ownership
+// mismatch - and autocleanup already schedules a retry through retryAt with a
+// 15 minute cooldown. But PRESERVED sat in TERMINAL_STATES and outside the
+// autocleanup eligibility set, so the scheduled retry hit TASK_STATE_NOT_ELIGIBLE
+// forever and the record could never reach CLEANED even after the blocker cleared.
+describe("PRESERVED is retryable rather than final", () => {
+  it("keeps PRESERVED out of the terminal states", async () => {
+    const { TERMINAL_TASK_STATES_V3 } = await import("../../scripts/lib/ai-task-lifecycle-v3.mjs");
+    expect([...TERMINAL_TASK_STATES_V3].sort()).toEqual(["CLEANED", "RELEASED"]);
+  });
+
+  it("lets a preserved record be re-evaluated instead of short-circuiting", () => {
+    const repository = makeRepository();
+    const preserved = validRecord(repository, {
+      state: "PRESERVED",
+      activeActor: null,
+      blockers: ["WORKTREE_DIRTY"],
+    });
+    writeTaskRecordV3({ repoPath: repository.base, record: preserved });
+
+    // The v2 result and the v2 record must both say CLEANED. That double check is
+    // deliberate, so the stub supplies the record side instead of weakening it.
+    // Treating PRESERVED as final short-circuited before either was read.
+    const reconciled = reconcileDelegatedCleanupV3({
+      repoPath: repository.base,
+      branch: preserved.branch.name,
+      v2Result: { result: "CLEANED", blockers: [] },
+      now: LATER,
+      v2StatusReader: () => ({ task: { state: "CLEANED", branch: preserved.branch.name } }),
+    });
+
+    expect(reconciled.state).toBe("CLEANED");
+    expect(reconciled.blockers).toEqual([]);
+  });
+
+  it("reports the current cleanup reasons without echoing stored ones", async () => {
+    const { mergeDelegatedCleanupBlockers } =
+      await import("../../scripts/lib/ai-task-lifecycle-v3.mjs");
+    expect(mergeDelegatedCleanupBlockers({ blockers: ["WORKTREE_DIRTY"] }))
+      .toEqual(["V2_CLEANUP_NOT_CONFIRMED", "WORKTREE_DIRTY"]);
+    // 낡은 record blocker 는 더 이상 보고에 섞이지 않는다. 재시도가 가능해졌으므로
+    // 매 실행이 그 시점의 이유를 스스로 만든다.
+    expect(mergeDelegatedCleanupBlockers({ blockers: [] }))
+      .toEqual(["V2_CLEANUP_NOT_CONFIRMED"]);
+  });
+});
