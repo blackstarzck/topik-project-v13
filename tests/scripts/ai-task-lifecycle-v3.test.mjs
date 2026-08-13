@@ -1388,15 +1388,15 @@ describe("runtime registration keeps the delegated V2 cleanup gate satisfiable",
   });
 });
 
-// CLI 는 --repo 를 그대로 넘긴다. v3 는 내부에서 path.resolve 하지만 v2 는
-// path.isAbsolute 를 요구해 거부하므로, 같은 명령에서 v3 만 통과하고 v2 위임이
-// REPOSITORY_REQUIRED 로 실패했다.
+// The CLI forwarded --repo untouched. v3 resolves it internally while v2 requires
+// path.isAbsolute, so the same command passed v3 and failed the v2 delegation with
+// REPOSITORY_REQUIRED.
 //
-// 그리고 legacy v2 분기가 v3 위임보다 먼저 실행돼 finish 를 가로챈다. 그 분기를
-// 건너뛰는 유일한 경우가 잘못된 경로로 readTaskStatus 가 던진 예외를 catch 가
-// 삼킬 때였다. v3 처리가 우연한 오류에 얹혀 있었고, 정상 경로에서는 v3 record 의
-// headSha 가 갱신되지 않아 병합 PR 조회가 SHA 대조에서 탈락했다.
-describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", () => {
+// Separately, the legacy v2 branch runs before the v3 delegation and intercepts
+// finish. Inside that branch handoff and resume reconcile v3 at the end, but finish
+// returned immediately, so the v3 record kept its prepare-time headSha and the
+// merged PR lookup then failed the sha comparison.
+describe("task CLI resolves --repo and keeps the v3 record current on finish", () => {
   async function preparedTask(repository, branch) {
     const prepared = await runTaskLifecycleCommand({
       command: "prepare",
@@ -1412,10 +1412,10 @@ describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", (
     return { branch, worktree: prepared.task.workspace.path };
   }
 
-  // 임시 저장소로 상대 경로를 만들지 않는다. Windows CI 는 checkout 과 temp 가
-  // 서로 다른 drive 라 path.relative 가 절대 경로를 돌려주고, 그러면 이 테스트가
-  // 검사하려던 조건 자체가 성립하지 않는다. cwd 만 가리키는 "." 은 어디서나
-  // 상대 경로다.
+  // Do not build the relative path from the temporary repository. On Windows CI
+  // the checkout and the temp directory sit on different drives, so path.relative
+  // returns an absolute path and the condition under test stops holding. "." is
+  // relative everywhere.
   it("resolves a relative --repo before handing it to the cleanup adapter", async () => {
     expect(path.isAbsolute(".")).toBe(false);
 
@@ -1430,8 +1430,8 @@ describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", (
       },
     });
 
-    // v2 위임은 절대 경로만 받는다. 진입점이 resolve 하지 않으면 그 자리에서
-    // REPOSITORY_REQUIRED 로 막힌다.
+    // The v2 delegation accepts absolute paths only. Without the entry point
+    // resolving first, it stops right there with REPOSITORY_REQUIRED.
     expect(seen).toBe(path.resolve("."));
     expect(path.isAbsolute(seen)).toBe(true);
   });
@@ -1445,17 +1445,18 @@ describe("task CLI resolves --repo and routes v3 before the legacy v2 branch", (
     const head = git(worktree, ["rev-parse", "HEAD"]);
     expect(head).not.toBe(repository.sha);
 
-    // v2 finish 는 --repo 가 task worktree 여야 한다. 바로 그 조건에서 legacy
-    // 분기가 readTaskStatus 로 task 를 찾아 v3 위임 전에 가로챈다. 보고 형태는
-    // 공개 CLI 계약대로 v2 를 유지하되 v3 record 는 함께 갱신돼야 한다.
+    // v2 finish requires --repo to be the task worktree, and that is exactly the
+    // condition where the legacy branch finds the task through readTaskStatus and
+    // intercepts before the v3 delegation. The report shape stays v2 per the public
+    // CLI contract while the v3 record must still be updated.
     const result = await runTaskLifecycleCommand({
       command: "finish",
       values: { repo: worktree, branch, actor: "codex", now: LATER },
     });
 
     expect(result.recordType).toBe("FinishReportV1");
-    // 갱신되지 않으면 headSha 가 준비 시점 base 에 머물고, 이후 자동 정리가 병합
-    // PR 을 SHA 대조에서 놓친다.
+    // Without the update, headSha stays at the prepare-time base and auto cleanup
+    // then misses the merged PR on the sha comparison.
     expect(readTaskRecordV3ByBranch({ repoPath: repository.base, branch }).headSha).toBe(head);
   });
 
