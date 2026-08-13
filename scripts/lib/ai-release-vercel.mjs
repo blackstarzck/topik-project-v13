@@ -455,8 +455,14 @@ export function createVercelAdapter({
     async verifyPreviewEnvironmentScope({ projectId, branch }) {
       const project = assertIdentifier(projectId);
       const gitBranch = assertBranch(branch);
+      // Ask by preview target, not by gitBranch. Vercel's gitBranch filter returns
+      // only variables pinned to that exact branch, so the normal setup - Preview
+      // variables with no branch pin - came back as an empty list and the scope read
+      // as absent even though the project had them. Measured on this project:
+      // ?target=preview returned 8 entries while ?gitBranch=stg returned 0. The
+      // branch decision belongs in the filter below, on the entries we received.
       const { payload } = await readJson(`/v9/projects/${encodeURIComponent(project)}/env`, {
-        gitBranch,
+        target: "preview",
       });
       if (payload === null || !Array.isArray(payload.envs)) fail("VERCEL_API_UNAVAILABLE");
       const scoped = payload.envs.filter((entry) => {
