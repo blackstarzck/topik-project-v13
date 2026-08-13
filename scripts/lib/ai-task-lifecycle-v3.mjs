@@ -2407,7 +2407,15 @@ export function reconcileDelegatedCleanupV3({
   if (current.workspace.kind !== "isolated" || current.workspace.ownership !== "managed") {
     fail("V3_CLEANUP_DELEGATION_INVALID");
   }
-  if (TERMINAL_STATES.has(current.state)) return current;
+  // CLEANED and RELEASED are final - their resources are gone and nothing can
+  // change that. PRESERVED is the one state worth revisiting here, because the
+  // delegated cleanup can finish after the record was written and a record that
+  // reports a blocked cleanup for resources that no longer exist is simply wrong.
+  // Only a confirmed cleanup moves it; every other outcome returns the record
+  // untouched below, so a preserved task never churns. Nothing else about
+  // PRESERVED changes - it stays outside the autocleanup eligibility set and keeps
+  // reporting preserve-only as its plan.
+  if (current.state === "CLEANED" || current.state === "RELEASED") return current;
   let v2Status = null;
   try {
     v2Status = v2StatusReader({ repoPath, branch });
@@ -2419,6 +2427,9 @@ export function reconcileDelegatedCleanupV3({
     resultClaimsCleaned &&
     v2Status?.task?.state === "CLEANED" &&
     v2Status?.task?.branch === branch;
+  // A preserved record only moves on a confirmed cleanup. Rewriting it on any
+  // other outcome would churn its revision and blockers without new information.
+  if (current.state === "PRESERVED" && !v2ConfirmsCleaned) return current;
   return updateTaskRecordV3(repoPath, current, {
     state: v2ConfirmsCleaned ? "CLEANED" : "PRESERVED",
     activeActor: null,

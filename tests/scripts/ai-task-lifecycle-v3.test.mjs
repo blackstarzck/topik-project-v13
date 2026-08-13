@@ -38,6 +38,7 @@ import {
   writeTaskRecordV3,
 } from "../../scripts/lib/ai-task-lifecycle-v3.mjs";
 import { runTaskLifecycleCommand } from "../../scripts/ai-task.mjs";
+import { finalizeTask } from "../../scripts/lib/ai-task-cleanup.mjs";
 
 const NOW = "2026-07-23T01:00:00.000Z";
 const LATER = "2026-07-23T01:01:00.000Z";
@@ -1302,5 +1303,265 @@ describe("claim and cleanup", () => {
       blocker: "RUNTIME_ACTIVE",
       now: LATER,
     })).toMatchObject({ state: "PRESERVED", blockers: ["RUNTIME_ACTIVE"] });
+  });
+});
+
+// V3 가 runtime 명령을 가져가면서 V2 manifest 를 쓰지 않으면, V3 정리가 위임하는
+// V2 게이트가 영구히 RUNTIME_REGISTRATION_REQUIRED 를 보고해 CLEANED 에 도달할 수
+// 없다. 기존 테스트는 runTaskCommandV3 를 직접 호출해 이 경계를 건너뛰었으므로
+// 여기서는 CLI 진입점으로 두 레지스트리가 함께 갱신되는지 확인한다.
+describe("runtime registration keeps the delegated V2 cleanup gate satisfiable", () => {
+  function v2RuntimeManifest(repository, branch) {
+    // V2 taskId 는 branch 를 그대로 평탄화한 값이다 (feat/x -> feat-x).
+    return path.join(
+      commonDir(repository.base),
+      "talkpik-task-lifecycle",
+      "v2",
+      "runtimes",
+      `${branch.replace("/", "-")}.json`,
+    );
+  }
+
+  async function startedTask(repository, branch) {
+    await runTaskLifecycleCommand({
+      command: "start",
+      values: { repo: repository.base, branch, actor: "codex", now: NOW },
+    }, { launchSweep: () => false });
+    return branch;
+  }
+
+  it("writes the V2 runtime manifest for an empty declaration", async () => {
+    const repository = makeRepository();
+    const branch = await startedTask(repository, "feat/runtime-bridge-empty");
+
+    const result = await runTaskLifecycleCommand({
+      command: "runtime",
+      values: { repo: repository.base, branch, actor: "codex", now: LATER },
+    });
+
+    // 빈 선언은 V3 에서 runtimeRef 해제를 뜻하지만, 운영자가 "실행 중인 것이
+    // 없다"고 선언한 사실 자체는 V2 게이트가 요구하는 증거다.
+    expect(result.task.runtimeRef).toBeNull();
+    expect(existsSync(v2RuntimeManifest(repository, branch))).toBe(true);
+    expect(JSON.parse(readFileSync(v2RuntimeManifest(repository, branch), "utf8")))
+      .toMatchObject({ recordType: "RuntimeManifest", ports: [], pids: [], lockPaths: [] });
+  });
+
+  it("mirrors declared ports and pids into the V2 runtime manifest", async () => {
+    const repository = makeRepository();
+    const branch = await startedTask(repository, "feat/runtime-bridge-ports");
+
+    const result = await runTaskLifecycleCommand({
+      command: "runtime",
+      values: {
+        repo: repository.base,
+        branch,
+        actor: "codex",
+        ports: "3401",
+        pids: "1234",
+        now: LATER,
+      },
+    });
+
+    expect(result.task.runtimeRef).toMatch(/^runtime:[a-f0-9]{64}$/u);
+    expect(JSON.parse(readFileSync(v2RuntimeManifest(repository, branch), "utf8")))
+      .toMatchObject({ recordType: "RuntimeManifest", ports: [3401], pids: [1234] });
+  });
+
+  // V3 정리가 위임하는 실제 게이트는 V2 finalizeTask 다. CLI 의 finalize 는 V3 가
+  // 가져가 report-only 계획만 돌려주므로 이 blocker 를 볼 수 없다.
+  it("clears RUNTIME_REGISTRATION_REQUIRED from the delegated V2 cleanup gate", async () => {
+    const repository = makeRepository();
+    const unregistered = await startedTask(repository, "feat/runtime-bridge-gate-off");
+    const registered = await startedTask(repository, "feat/runtime-bridge-gate-on");
+
+    await runTaskLifecycleCommand({
+      command: "runtime",
+      values: { repo: repository.base, branch: registered, actor: "codex", now: LATER },
+    });
+
+    const withoutRuntime = await finalizeTask({ repoPath: repository.base, branch: unregistered });
+    const withRuntime = await finalizeTask({ repoPath: repository.base, branch: registered });
+
+    expect(withoutRuntime.blockers ?? []).toContain("RUNTIME_REGISTRATION_REQUIRED");
+    expect(withRuntime.blockers ?? []).not.toContain("RUNTIME_REGISTRATION_REQUIRED");
+  });
+});
+
+// The CLI forwarded --repo untouched. v3 resolves it internally while v2 requires
+// path.isAbsolute, so the same command passed v3 and failed the v2 delegation with
+// REPOSITORY_REQUIRED.
+//
+// Separately, the legacy v2 branch runs before the v3 delegation and intercepts
+// finish. Inside that branch handoff and resume reconcile v3 at the end, but finish
+// returned immediately, so the v3 record kept its prepare-time headSha and the
+// merged PR lookup then failed the sha comparison.
+describe("task CLI resolves --repo and keeps the v3 record current on finish", () => {
+  async function preparedTask(repository, branch) {
+    const prepared = await runTaskLifecycleCommand({
+      command: "prepare",
+      values: {
+        repo: repository.base,
+        intent: "code",
+        branch,
+        actor: "codex",
+        workspace: "isolated",
+        now: NOW,
+      },
+    }, { launchSweep: () => false });
+    return { branch, worktree: prepared.task.workspace.path };
+  }
+
+  // Do not build the relative path from the temporary repository. On Windows CI
+  // the checkout and the temp directory sit on different drives, so path.relative
+  // returns an absolute path and the condition under test stops holding. "." is
+  // relative everywhere.
+  it("resolves a relative --repo before handing it to the cleanup adapter", async () => {
+    expect(path.isAbsolute(".")).toBe(false);
+
+    let seen;
+    await runTaskLifecycleCommand({
+      command: "autocleanup",
+      values: { repo: ".", branch: "feat/cli-relative-repo" },
+    }, {
+      runV3Autocleanup: (input) => {
+        seen = input.repoPath;
+        return { handled: true, result: { result: "PRESERVED", blockers: [] } };
+      },
+    });
+
+    // The v2 delegation accepts absolute paths only. Without the entry point
+    // resolving first, it stops right there with REPOSITORY_REQUIRED.
+    expect(seen).toBe(path.resolve("."));
+    expect(path.isAbsolute(seen)).toBe(true);
+  });
+
+  it("routes finish through v3 even when --repo resolves a legacy v2 task", async () => {
+    const repository = makeRepository();
+    const { branch, worktree } = await preparedTask(repository, "feat/cli-finish-routing");
+    writeFileSync(path.join(worktree, "finish-routing.txt"), "work\n");
+    git(worktree, ["add", "finish-routing.txt"]);
+    git(worktree, ["commit", "-m", "work"]);
+    const head = git(worktree, ["rev-parse", "HEAD"]);
+    expect(head).not.toBe(repository.sha);
+
+    // v2 finish requires --repo to be the task worktree, and that is exactly the
+    // condition where the legacy branch finds the task through readTaskStatus and
+    // intercepts before the v3 delegation. The report shape stays v2 per the public
+    // CLI contract while the v3 record must still be updated.
+    const result = await runTaskLifecycleCommand({
+      command: "finish",
+      values: { repo: worktree, branch, actor: "codex", now: LATER },
+    });
+
+    expect(result.recordType).toBe("FinishReportV1");
+    // Without the update, headSha stays at the prepare-time base and auto cleanup
+    // then misses the merged PR on the sha comparison.
+    expect(readTaskRecordV3ByBranch({ repoPath: repository.base, branch }).headSha).toBe(head);
+  });
+
+  it("keeps the legacy v2 path for a task that has no v3 record", async () => {
+    const repository = makeRepository();
+    const { branch, worktree } = await preparedTask(repository, "feat/cli-legacy-fallback");
+    const record = readTaskRecordV3ByBranch({ repoPath: repository.base, branch });
+    expect(record).not.toBeNull();
+    unlinkSync(path.join(
+      commonDir(repository.base),
+      "talkpik-task-lifecycle",
+      "v3",
+      "tasks",
+      `${record.taskId}.json`,
+    ));
+
+    const result = await runTaskLifecycleCommand({
+      command: "finish",
+      values: { repo: worktree, branch, actor: "codex", now: LATER },
+    });
+
+    expect(result.recordType).toBe("FinishReportV1");
+  });
+});
+
+// A task whose worktree and branch were actually removed stayed PRESERVED because
+// the reconcile short-circuits on every terminal state. The record then reported a
+// blocked cleanup that had in fact finished, and nothing could correct it.
+//
+// Only this one correction is allowed. PRESERVED keeps every other property: it
+// stays out of the autocleanup eligibility set, planTaskCleanupV3 still reports
+// preserve-only for it, and no retry cooldown is scheduled for it.
+describe("a preserved record is corrected to CLEANED when cleanup really finished", () => {
+  function preservedRecord(repository, overrides = {}) {
+    const record = validRecord(repository, {
+      state: "PRESERVED",
+      activeActor: null,
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED"],
+      ...overrides,
+    });
+    writeTaskRecordV3({ repoPath: repository.base, record });
+    return record;
+  }
+
+  it("promotes PRESERVED to CLEANED once both v2 signals confirm it", () => {
+    const repository = makeRepository();
+    const record = preservedRecord(repository);
+
+    const reconciled = reconcileDelegatedCleanupV3({
+      repoPath: repository.base,
+      branch: record.branch.name,
+      v2Result: { result: "CLEANED", blockers: [] },
+      now: LATER,
+      v2StatusReader: () => ({ task: { state: "CLEANED", branch: record.branch.name } }),
+    });
+
+    expect(reconciled.state).toBe("CLEANED");
+    expect(reconciled.blockers).toEqual([]);
+    expect(reconciled.runtimeRef).toBeNull();
+  });
+
+  it("leaves a preserved record untouched when cleanup did not finish", () => {
+    const repository = makeRepository();
+    const record = preservedRecord(repository);
+
+    const reconciled = reconcileDelegatedCleanupV3({
+      repoPath: repository.base,
+      branch: record.branch.name,
+      v2Result: { result: "PRESERVED", blockers: ["WORKTREE_DIRTY"] },
+      now: LATER,
+      v2StatusReader: () => ({ task: { state: "ACTIVE", branch: record.branch.name } }),
+    });
+
+    // No churn: same revision, same blockers. Only a confirmed cleanup may move it.
+    expect(reconciled.state).toBe("PRESERVED");
+    expect(reconciled.revision).toBe(record.revision);
+    expect(reconciled.blockers).toEqual(["V2_CLEANUP_NOT_CONFIRMED"]);
+  });
+
+  it("still short-circuits on CLEANED and RELEASED", () => {
+    for (const state of ["CLEANED", "RELEASED"]) {
+      const repository = makeRepository();
+      const record = preservedRecord(repository, { state, blockers: [] });
+      const reconciled = reconcileDelegatedCleanupV3({
+        repoPath: repository.base,
+        branch: record.branch.name,
+        v2Result: { result: "CLEANED", blockers: [] },
+        now: LATER,
+        v2StatusReader: () => ({ task: { state: "CLEANED", branch: record.branch.name } }),
+      });
+      expect(reconciled.state).toBe(state);
+      expect(reconciled.revision).toBe(record.revision);
+    }
+  });
+
+  it("keeps reporting preserve-only as the plan for a preserved record", () => {
+    const repository = makeRepository();
+    const record = preservedRecord(repository);
+    // The correction happens inside the reconcile only. The cleanup plan a
+    // preserved record reports must not change, or task:finalize would promise
+    // work that autocleanup will not do.
+    expect(planTaskCleanupV3(record)).toEqual({
+      strategy: "preserve-only",
+      preserveWorkspace: true,
+      actions: ["PRESERVE_ALL_RESOURCES"],
+    });
   });
 });

@@ -323,6 +323,13 @@ export async function runTaskLifecycleCommand(
     reconcileV3 = reconcileTaskRecordsV3WithV2,
   } = {},
 ) {
+  // v2 accepts absolute paths only while v3 resolves on its own. Without one
+  // normalization at the entry point, the same command passes v3 and fails the
+  // v2 delegation with REPOSITORY_REQUIRED. This lives here rather than in the
+  // argument parser so direct callers of this function get the same contract.
+  if (typeof values.repo === "string" && values.repo.length > 0) {
+    values = { ...values, repo: path.resolve(values.repo) };
+  }
   const common = { repoPath: values.repo, branch: values.branch };
   const now = values.now ?? new Date().toISOString();
   if (command === "prepare") {
@@ -441,11 +448,25 @@ export async function runTaskLifecycleCommand(
     }
     if (legacyTask?.branch === values.branch) {
       if (command === "finish") {
-        return createFinishReport({
-          ...common,
-          actor: required(values, "actor"),
+        const actor = required(values, "actor");
+        // The public CLI contract keeps the v2 report shape on this path. But
+        // leaving the v3 record untouched pins headSha to the prepare-time value,
+        // and auto cleanup then misses the merged PR on the sha comparison and
+        // stops at MERGED_MAIN_PR_NOT_FOUND. Tasks without a v3 record get
+        // handled=false back, so the v2-only path is unchanged.
+        runTaskCommandV3({
+          command: "finish",
+          repoPath: values.repo,
+          branch: values.branch,
+          actor,
+          toActor: null,
+          action: null,
+          ports: [],
+          pids: [],
+          lockPaths: [],
           now,
         });
+        return createFinishReport({ ...common, actor, now });
       }
       let result;
       if (command === "resume") {
@@ -520,7 +541,30 @@ export async function runTaskLifecycleCommand(
       lockPaths: commaList(values.locks),
       now,
     });
-    if (v3.handled) return v3.result;
+    if (v3.handled) {
+      // V3 가 runtime 을 가져가면 아래 V2 registerTaskRuntime 호출은 도달하지
+      // 않는다. 그런데 V3 정리는 V2 에 위임하고 그 게이트는 V2 runtime manifest
+      // 파일이 있어야 통과한다. 이 자리에서 함께 쓰지 않으면 게이트가 영구히
+      // RUNTIME_REGISTRATION_REQUIRED 를 보고해 CLEANED 에 도달할 수 없다.
+      //
+      // V3 를 먼저 쓰고 V2 를 뒤에 쓴다. V2 가 실패하면 manifest 가 없어 정리가
+      // 계속 막히는 쪽으로 닫힌다. 반대 순서는 manifest 만 남아 정리를 허용하는
+      // 열린 실패가 된다.
+      if (command === "runtime") {
+        return {
+          ...v3.result,
+          v2Runtime: registerTaskRuntime({
+            repoPath: values.repo,
+            branch: values.branch,
+            ports: integerList(values.ports, "PORTS"),
+            pids: integerList(values.pids, "PIDS"),
+            lockPaths: commaList(values.locks),
+            now,
+          }),
+        };
+      }
+      return v3.result;
+    }
     delegatedV3Task = v3.v3Task ?? null;
   }
   if (command === "status") {
