@@ -1481,3 +1481,87 @@ describe("task CLI resolves --repo and keeps the v3 record current on finish", (
     expect(result.recordType).toBe("FinishReportV1");
   });
 });
+
+// A task whose worktree and branch were actually removed stayed PRESERVED because
+// the reconcile short-circuits on every terminal state. The record then reported a
+// blocked cleanup that had in fact finished, and nothing could correct it.
+//
+// Only this one correction is allowed. PRESERVED keeps every other property: it
+// stays out of the autocleanup eligibility set, planTaskCleanupV3 still reports
+// preserve-only for it, and no retry cooldown is scheduled for it.
+describe("a preserved record is corrected to CLEANED when cleanup really finished", () => {
+  function preservedRecord(repository, overrides = {}) {
+    const record = validRecord(repository, {
+      state: "PRESERVED",
+      activeActor: null,
+      blockers: ["V2_CLEANUP_NOT_CONFIRMED"],
+      ...overrides,
+    });
+    writeTaskRecordV3({ repoPath: repository.base, record });
+    return record;
+  }
+
+  it("promotes PRESERVED to CLEANED once both v2 signals confirm it", () => {
+    const repository = makeRepository();
+    const record = preservedRecord(repository);
+
+    const reconciled = reconcileDelegatedCleanupV3({
+      repoPath: repository.base,
+      branch: record.branch.name,
+      v2Result: { result: "CLEANED", blockers: [] },
+      now: LATER,
+      v2StatusReader: () => ({ task: { state: "CLEANED", branch: record.branch.name } }),
+    });
+
+    expect(reconciled.state).toBe("CLEANED");
+    expect(reconciled.blockers).toEqual([]);
+    expect(reconciled.runtimeRef).toBeNull();
+  });
+
+  it("leaves a preserved record untouched when cleanup did not finish", () => {
+    const repository = makeRepository();
+    const record = preservedRecord(repository);
+
+    const reconciled = reconcileDelegatedCleanupV3({
+      repoPath: repository.base,
+      branch: record.branch.name,
+      v2Result: { result: "PRESERVED", blockers: ["WORKTREE_DIRTY"] },
+      now: LATER,
+      v2StatusReader: () => ({ task: { state: "ACTIVE", branch: record.branch.name } }),
+    });
+
+    // No churn: same revision, same blockers. Only a confirmed cleanup may move it.
+    expect(reconciled.state).toBe("PRESERVED");
+    expect(reconciled.revision).toBe(record.revision);
+    expect(reconciled.blockers).toEqual(["V2_CLEANUP_NOT_CONFIRMED"]);
+  });
+
+  it("still short-circuits on CLEANED and RELEASED", () => {
+    for (const state of ["CLEANED", "RELEASED"]) {
+      const repository = makeRepository();
+      const record = preservedRecord(repository, { state, blockers: [] });
+      const reconciled = reconcileDelegatedCleanupV3({
+        repoPath: repository.base,
+        branch: record.branch.name,
+        v2Result: { result: "CLEANED", blockers: [] },
+        now: LATER,
+        v2StatusReader: () => ({ task: { state: "CLEANED", branch: record.branch.name } }),
+      });
+      expect(reconciled.state).toBe(state);
+      expect(reconciled.revision).toBe(record.revision);
+    }
+  });
+
+  it("keeps reporting preserve-only as the plan for a preserved record", () => {
+    const repository = makeRepository();
+    const record = preservedRecord(repository);
+    // The correction happens inside the reconcile only. The cleanup plan a
+    // preserved record reports must not change, or task:finalize would promise
+    // work that autocleanup will not do.
+    expect(planTaskCleanupV3(record)).toEqual({
+      strategy: "preserve-only",
+      preserveWorkspace: true,
+      actions: ["PRESERVE_ALL_RESOURCES"],
+    });
+  });
+});
