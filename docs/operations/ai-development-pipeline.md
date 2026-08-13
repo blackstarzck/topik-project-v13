@@ -473,6 +473,7 @@ flowchart TD
 - V2 결과는 이 파이프라인이 검증하지 않는 입력이다. record schema가 허용하는 형식(`^[A-Z0-9_:-]{1,128}$`)만 통과시킨다.
 - **상한 32와 우선순위를 함께 지킨다.** record의 blocker와 V2 이유는 각각 최대 32개라 단순히 이어붙이면 상한을 넘는다. 뒤에서 자르면 정작 필요한 최신 이유가 사라지므로 순서를 고정한다 — 위임 실패 사실, 방금 받은 V2 이유, record의 기존 blocker. 상한에 걸리면 오래된 record 항목부터 잘린다.
 - **`PRESERVED`는 종단 상태다.** 이미 보존된 task를 다시 정리 시도하면 `reconcileDelegatedCleanupV3`가 조기 반환해 record의 `blockers`를 갱신하지 않는다. record만 읽으면 재시도 때 옛 이유가 그대로 나오므로, 어댑터 결과가 방금 받은 V2 이유를 합쳐 보고한다.
+- **예외는 하나뿐이다 — 정리가 실제로 끝난 경우의 교정.** 위임한 V2 정리가 record를 쓴 뒤에 성공을 확인해 주면 `PRESERVED`를 `CLEANED`로 올린다. 자원이 이미 사라졌는데 record만 막힌 상태로 남으면 사실과 어긋나기 때문이다. V2 결과와 V2 record가 **둘 다** 정리 완료를 말할 때만 움직이며, 그 밖의 결과에서는 revision과 `blockers`를 건드리지 않고 그대로 둔다. 자동 정리 대상 상태 목록과 `preserve-only` 계획은 바뀌지 않는다.
 
 이 보고가 없던 동안 정리 실패 원인을 찾으려면 V2 정리기를 직접 호출해야 했다. 정리 실패는 워크트리가 쌓이는 결과로 이어지므로 보고만으로 조치할 수 있어야 한다.
 
@@ -545,7 +546,10 @@ stateDiagram-v2
   MERGED --> CLEANED: managed 비강제 정리
   MERGED --> RELEASED: host/adopted claim 해제
   MERGED --> PRESERVED: 위험·소유권 불명
+  PRESERVED --> CLEANED: 위임한 정리의 성공이 확인됨
 ```
+
+`PRESERVED`에서 나가는 전이는 위 하나뿐이다. 다른 사유로는 상태가 바뀌지 않는다.
 
 `task:finalize`는 상태를 바꾸지 않는다. legacy v2 cleanup 중 일부 단계 이후 실패하면 `CLEANING` journal, 후보별 `candidateProgress`, 완료 단계가 남는다. 이 필드는 기존 manifest와 호환되는 선택 필드이며 같은 승인으로만 재개한다. 원래 경로와 quarantine이 동시에 존재하거나 quarantine identity가 달라졌거나 새 미승인·ignored root가 생기면 두 객체를 모두 보존하고 중단한다.
 
