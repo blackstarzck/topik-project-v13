@@ -356,9 +356,21 @@ jobs:
             local remote_url="$1"
             printf '%s\n' "${remote_url%.git}"
           }
-          [[ "$(normalize_github_remote "$(git remote get-url origin)")" == "https://github.com/blackstarzck/topik-project-v13" ]] || {
-            echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH" >&2; exit 3;
-          }
+          # The baseline comes from origin, so origin has to be one of this
+          # pipeline's two sanctioned repositories before it can be trusted.
+          # Keduall is not a lesser origin here: on a Keduall pull request its own
+          # main is the correct baseline. Any other remote still fails closed, and
+          # the URL is echoed because the bare code alone made this failure hard to
+          # read when the job died in setup.
+          origin_url="$(normalize_github_remote "$(git remote get-url origin)")"
+          case "${origin_url}" in
+            https://github.com/blackstarzck/topik-project-v13) ;;
+            https://github.com/keduall/topik-project-v13) ;;
+            *)
+              echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH: ${origin_url}" >&2
+              exit 3
+              ;;
+          esac
           git fetch --no-tags --prune origin \
             '+refs/heads/main:refs/remotes/origin/main'
           git cat-file -e 'HEAD^{commit}'
@@ -780,9 +792,21 @@ jobs:
             local remote_url="$1"
             printf '%s\n' "${remote_url%.git}"
           }
-          [[ "$(normalize_github_remote "$(git remote get-url origin)")" == "https://github.com/blackstarzck/topik-project-v13" ]] || {
-            echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH" >&2; exit 3;
-          }
+          # The baseline comes from origin, so origin has to be one of this
+          # pipeline's two sanctioned repositories before it can be trusted.
+          # Keduall is not a lesser origin here: on a Keduall pull request its own
+          # main is the correct baseline. Any other remote still fails closed, and
+          # the URL is echoed because the bare code alone made this failure hard to
+          # read when the job died in setup.
+          origin_url="$(normalize_github_remote "$(git remote get-url origin)")"
+          case "${origin_url}" in
+            https://github.com/blackstarzck/topik-project-v13) ;;
+            https://github.com/keduall/topik-project-v13) ;;
+            *)
+              echo "SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH: ${origin_url}" >&2
+              exit 3
+              ;;
+          esac
           git fetch --no-tags --prune origin \
             '+refs/heads/main:refs/remotes/origin/main'
           git cat-file -e 'HEAD^{commit}'
