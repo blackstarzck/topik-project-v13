@@ -1565,3 +1565,61 @@ describe("a preserved record is corrected to CLEANED when cleanup really finishe
     });
   });
 });
+
+// The V2 cleanup gate refuses to clean a workspace whose runtime footprint was
+// never declared, and `task:runtime` — the only writer of that declaration —
+// refuses once the record leaves ACTIVE. Ending the task here therefore made the
+// gate permanently unsatisfiable: no cleanup path, automatic or manual, could run
+// again, because `task:cleanup --approval` demands the same declaration.
+describe("a missing runtime declaration does not end the task", () => {
+  function activeRecord(repository) {
+    const record = validRecord(repository, { state: "ACTIVE", activeActor: "claude" });
+    writeTaskRecordV3({ repoPath: repository.base, record });
+    return record;
+  }
+
+  function reconcile(repository, record, blockers) {
+    return reconcileDelegatedCleanupV3({
+      repoPath: repository.base,
+      branch: record.branch.name,
+      v2Result: { result: "PRESERVED", blockers },
+      now: LATER,
+      v2StatusReader: () => ({ task: { state: "ACTIVE", branch: record.branch.name } }),
+    });
+  }
+
+  it("leaves the record ACTIVE so the declaration can still be made", () => {
+    const repository = makeRepository();
+    const record = activeRecord(repository);
+
+    const reconciled = reconcile(repository, record, ["RUNTIME_REGISTRATION_REQUIRED"]);
+
+    expect(reconciled.state).toBe("ACTIVE");
+    expect(reconciled.activeActor).toBe("claude");
+    expect(reconciled.revision).toBe(record.revision);
+  });
+
+  it("applies even when other blockers are reported alongside it", () => {
+    const repository = makeRepository();
+    const record = activeRecord(repository);
+
+    const reconciled = reconcile(repository, record, [
+      "V2_CLEANUP_NOT_CONFIRMED",
+      "RUNTIME_REGISTRATION_REQUIRED",
+    ]);
+
+    expect(reconciled.state).toBe("ACTIVE");
+    expect(reconciled.activeActor).toBe("claude");
+  });
+
+  it("still ends the task for a blocker the operator cannot clear this way", () => {
+    const repository = makeRepository();
+    const record = activeRecord(repository);
+
+    const reconciled = reconcile(repository, record, ["WORKTREE_DIRTY"]);
+
+    expect(reconciled.state).toBe("PRESERVED");
+    expect(reconciled.activeActor).toBeNull();
+    expect(reconciled.blockers).toContain("WORKTREE_DIRTY");
+  });
+});
