@@ -245,9 +245,7 @@ describe("WritingExamShell", () => {
       name: "저장됨",
     });
 
-    expect(bookmarkButton.className).toContain(
-      "problem-bookmark-toggle",
-    );
+    expect(bookmarkButton.className).toContain("problem-bookmark-toggle");
     expect(
       container.querySelector(
         ".writing-exam-header__title-row .writing-exam-header__bookmark-button",

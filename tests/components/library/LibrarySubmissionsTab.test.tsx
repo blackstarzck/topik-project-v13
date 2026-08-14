@@ -57,6 +57,7 @@ function Harness() {
   );
   return (
     <LibrarySubmissionsTab
+      userId="user-1"
       initialItems={items}
       onSelectionChange={onSelectionChange}
     />
@@ -114,6 +115,7 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
         <NextIntlClientProvider locale="ko" messages={koMessages}>
           <AntdApp>
             <LibrarySubmissionsTab
+              userId="user-1"
               initialItems={[
                 {
                   ...items[0],
@@ -174,6 +176,7 @@ describe("LibrarySubmissionsTab — no render loop (regression)", () => {
         <NextIntlClientProvider locale="ko" messages={koMessages}>
           <AntdApp>
             <LibrarySubmissionsTab
+              userId="user-1"
               initialItems={[
                 {
                   ...items[0],

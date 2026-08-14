@@ -926,9 +926,14 @@ export interface Database {
           user_id: string;
           source_type: "submission" | "report" | "library_selection";
           source_id: string | null;
+          request_id: string | null;
+          attempt_id: string | null;
+          lease_expires_at: string | null;
           storage_path: string;
           options: Json | null;
           status: "queued" | "ready" | "failed";
+          failure_code: string | null;
+          failed_at: string | null;
           created_at: string;
           ready_at: string | null;
         };
@@ -937,9 +942,14 @@ export interface Database {
           user_id: string;
           source_type: "submission" | "report" | "library_selection";
           source_id?: string | null;
+          request_id?: string | null;
+          attempt_id?: string | null;
+          lease_expires_at?: string | null;
           storage_path: string;
           options?: Json | null;
           status?: "queued" | "ready" | "failed";
+          failure_code?: string | null;
+          failed_at?: string | null;
           created_at?: string;
           ready_at?: string | null;
         };
@@ -948,9 +958,14 @@ export interface Database {
           user_id?: string;
           source_type?: "submission" | "report" | "library_selection";
           source_id?: string | null;
+          request_id?: string | null;
+          attempt_id?: string | null;
+          lease_expires_at?: string | null;
           storage_path?: string;
           options?: Json | null;
           status?: "queued" | "ready" | "failed";
+          failure_code?: string | null;
+          failed_at?: string | null;
           created_at?: string;
           ready_at?: string | null;
         };
@@ -1009,6 +1024,7 @@ export interface Database {
           policy_id: string;
           user_id: string;
           problem_id: string;
+          request_id: string;
           export_file_id: string | null;
           period_start: string;
           period_end: string;
@@ -1024,6 +1040,7 @@ export interface Database {
           policy_id: string;
           user_id: string;
           problem_id: string;
+          request_id: string;
           export_file_id?: string | null;
           period_start: string;
           period_end: string;
@@ -1039,6 +1056,7 @@ export interface Database {
           policy_id?: string;
           user_id?: string;
           problem_id?: string;
+          request_id?: string;
           export_file_id?: string | null;
           period_start?: string;
           period_end?: string;
@@ -1076,6 +1094,51 @@ export interface Database {
             columns: ["export_file_id"];
             isOneToOne: false;
             referencedRelation: "export_files";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pdf_export_request_periods: {
+        Row: {
+          user_id: string;
+          request_id: string;
+          policy_id: string;
+          problem_ids: string[];
+          period_start: string;
+          period_end: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          request_id: string;
+          policy_id: string;
+          problem_ids: string[];
+          period_start: string;
+          period_end: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          request_id?: string;
+          policy_id?: string;
+          problem_ids?: string[];
+          period_start?: string;
+          period_end?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pdf_export_request_periods_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdf_export_request_periods_policy_id_fkey";
+            columns: ["policy_id"];
+            isOneToOne: false;
+            referencedRelation: "pdf_export_quota_policies";
             referencedColumns: ["id"];
           },
         ];
@@ -1554,6 +1617,9 @@ export interface Database {
           requires_consent: boolean;
           status: "draft" | "published" | "archived";
           effective_at: string | null;
+          source_policy_id: string | null;
+          source_policy_history_id: string | null;
+          source_synced_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1569,6 +1635,9 @@ export interface Database {
           requires_consent?: boolean;
           status?: "draft" | "published" | "archived";
           effective_at?: string | null;
+          source_policy_id?: string | null;
+          source_policy_history_id?: string | null;
+          source_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1584,6 +1653,9 @@ export interface Database {
           requires_consent?: boolean;
           status?: "draft" | "published" | "archived";
           effective_at?: string | null;
+          source_policy_id?: string | null;
+          source_policy_history_id?: string | null;
+          source_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1640,10 +1712,21 @@ export interface Database {
     };
     Views: Record<never, never>;
     Functions: {
+      acquire_pdf_export_attempt: {
+        Args: {
+          p_request_id: string;
+          p_source_type: string;
+          p_source_id: string | null;
+          p_request_options: Json;
+          p_render_source: string;
+        };
+        Returns: Json;
+      };
       claim_pdf_export_quota: {
         Args: {
           p_user_id: string;
           p_problem_ids: string[];
+          p_request_id: string;
         };
         Returns: Json;
       };
@@ -1654,6 +1737,30 @@ export interface Database {
           p_export_file_id: string;
         };
         Returns: undefined;
+      };
+      complete_pdf_export_attempt: {
+        Args: {
+          p_user_id: string;
+          p_usage_ids: string[];
+          p_export_file_id: string;
+          p_attempt_id: string;
+          p_storage_path: string;
+        };
+        Returns: boolean;
+      };
+      fail_pdf_export_attempt: {
+        Args: {
+          p_user_id: string;
+          p_usage_ids: string[];
+          p_export_file_id: string;
+          p_attempt_id: string;
+          p_failure_code: string;
+          p_reason: string;
+        };
+        Returns:
+          | "failed_current"
+          | "already_ready_current"
+          | "stale_attempt";
       };
       release_pdf_export_quota: {
         Args: {
@@ -1670,19 +1777,6 @@ export interface Database {
         };
         Returns: Json;
       };
-      accept_affiliation_invite: {
-        Args: {
-          p_code: string;
-          p_confirmed: boolean;
-        };
-        Returns: Json;
-      };
-      claim_affiliation_code: {
-        Args: {
-          p_code: string;
-        };
-        Returns: string | null;
-      };
       complete_auth_gate: {
         Args: {
           p_display_name: string | null;
@@ -1692,6 +1786,7 @@ export interface Database {
           p_phone_country_code: string | null;
           p_phone_number: string | null;
           p_accept_required_consents: boolean;
+          p_consent_documents: Json;
           p_ui_locale?: "ko" | "en" | "vi";
           p_ui_locale_source?: "auto" | "manual";
         };
@@ -1848,6 +1943,10 @@ export interface Database {
           streak_days: number;
         }[];
       };
+      get_my_account_state: {
+        Args: Record<string, never>;
+        Returns: "active" | "blocked" | "deleted" | null;
+      };
       list_user_library_problem_items: {
         Args: Record<string, never>;
         Returns: {
@@ -1880,6 +1979,29 @@ export interface Database {
         Args: Record<string, never>;
         Returns: undefined;
       };
+      submit_system_report: {
+        Args: {
+          p_idempotency_key: string;
+          p_user_id: string | null;
+          p_category: string;
+          p_email: string;
+          p_title: string;
+          p_message: string;
+          p_pathname: string;
+          p_browser: string;
+          p_os: string;
+          p_device_type: string;
+          p_viewport_width: number;
+          p_viewport_height: number;
+          p_locale: string;
+          p_app_version: string | null;
+        };
+        Returns: {
+          reference_code: string;
+          created_at: string;
+          inserted: boolean;
+        }[];
+      };
       list_user_problems: {
         Args: {
           filter?: Json;
@@ -1904,6 +2026,7 @@ export interface Database {
           has_draft: boolean;
           draft_status: string | null;
           writing_submission_count: number;
+          writing_submission_attempt_count: number;
           latest_submission_id: string | null;
           latest_submission_at: string | null;
           writing_feedback_status: string | null;

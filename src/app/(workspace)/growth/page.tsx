@@ -131,47 +131,40 @@ async function loadGrowthData(
     const recentVolumeSince = new Date(Date.now() - 30 * DAY_MS).toISOString();
 
     const goal = await getLearningGoal(userId);
-    const [
-      kpi,
-      weak,
-      recs,
-      feedbackRes,
-      eventsRes,
-      recentRes,
-      recentVolRes,
-    ] = await Promise.all([
-      getDashboardKpi(userId, supabase),
-      getWeakDimensions(userId),
-      getWeaknessRecommendations(userId),
-      supabase
-        .from("writing_feedback")
-        .select("generated_at, score_total, score_max")
-        .eq("user_id", userId)
-        .gte("generated_at", sinceIso)
-        .order("generated_at", { ascending: true }),
-      supabase
-        .from("study_events")
-        .select("occurred_at, event_type")
-        .eq("user_id", userId)
-        .gte("occurred_at", sinceIso),
-      supabase
-        .from("writing_feedback")
-        .select(
-          "submission_id, score_total, generated_at, writing_submissions!inner(question_no)",
-        )
-        .eq("user_id", userId)
-        // 분석 실패(failed) 행은 "최근 완료 문제"가 아니다. partial은 라이브러리와
-        // 같은 의미(피드백 대기)로 남겨 점수 "대기" 라벨을 유지한다.
-        .neq("status", "failed")
-        .order("generated_at", { ascending: false })
-        .limit(5),
-      supabase
-        .from("study_events")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .in("event_type", ["attempt_submitted", "submission_submitted"])
-        .gte("occurred_at", recentVolumeSince),
-    ]);
+    const [kpi, weak, recs, feedbackRes, eventsRes, recentRes, recentVolRes] =
+      await Promise.all([
+        getDashboardKpi(userId, supabase),
+        getWeakDimensions(userId),
+        getWeaknessRecommendations(userId),
+        supabase
+          .from("writing_feedback")
+          .select("generated_at, score_total, score_max")
+          .eq("user_id", userId)
+          .gte("generated_at", sinceIso)
+          .order("generated_at", { ascending: true }),
+        supabase
+          .from("study_events")
+          .select("occurred_at, event_type")
+          .eq("user_id", userId)
+          .gte("occurred_at", sinceIso),
+        supabase
+          .from("writing_feedback")
+          .select(
+            "submission_id, score_total, generated_at, writing_submissions!inner(question_no)",
+          )
+          .eq("user_id", userId)
+          // 분석 실패(failed) 행은 "최근 완료 문제"가 아니다. partial은 라이브러리와
+          // 같은 의미(피드백 대기)로 남겨 점수 "대기" 라벨을 유지한다.
+          .neq("status", "failed")
+          .order("generated_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("study_events")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .in("event_type", ["attempt_submitted", "submission_submitted"])
+          .gte("occurred_at", recentVolumeSince),
+      ]);
 
     // supabase-js는 쿼리 실패 시 throw하지 않고 error를 반환한다. 여기서 확인해
     // throw해야 아래 catch가 GrowthLoadError(재시도 화면)로 승격시킬 수 있다.

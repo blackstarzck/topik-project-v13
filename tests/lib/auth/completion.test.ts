@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionAndProfileMock = vi.fn();
-const bootstrapProfileMock = vi.fn();
+const resolveProfileMock = vi.fn();
 const getCurrentUserMock = vi.fn();
 const getMissingRequiredConsentDocumentsMock = vi.fn();
 const hasLearningGoalMock = vi.fn();
 
 vi.mock("@/lib/auth/profile", () => ({
-  bootstrapProfile: (...args: unknown[]) => bootstrapProfileMock(...args),
+  resolveProfile: (...args: unknown[]) => resolveProfileMock(...args),
   getSessionAndProfile: () => getSessionAndProfileMock(),
   isActiveStatus: (status: string | null | undefined) => status === "active",
   requireActiveSession: vi.fn(),
@@ -51,8 +51,11 @@ describe("auth completion state", () => {
   beforeEach(() => {
     getSessionAndProfileMock.mockReset();
     getSessionAndProfileMock.mockResolvedValue(null);
-    bootstrapProfileMock.mockReset();
-    bootstrapProfileMock.mockResolvedValue(session.profile);
+    resolveProfileMock.mockReset();
+    resolveProfileMock.mockResolvedValue({
+      status: "available",
+      profile: session.profile,
+    });
     getCurrentUserMock.mockReset();
     getCurrentUserMock.mockResolvedValue(null);
     getMissingRequiredConsentDocumentsMock.mockReset();
@@ -71,14 +74,18 @@ describe("auth completion state", () => {
 
   it("returns anonymous for the landing when auth lookup fails", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    getCurrentUserMock.mockRejectedValueOnce(new Error("auth unavailable"));
+    getCurrentUserMock.mockRejectedValueOnce(
+      new Error("private auth provider response"),
+    );
 
     await expect(getCurrentLandingAuthStatus()).resolves.toBe("anonymous");
 
-    expect(bootstrapProfileMock).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith(
-      "Failed to read auth user for landing CTA.",
-      expect.any(Error),
+    expect(resolveProfileMock).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith("landing_auth_user_lookup_failed", {
+      name: "Error",
+    });
+    expect(JSON.stringify(warnSpy.mock.calls)).not.toContain(
+      "private auth provider response",
     );
     warnSpy.mockRestore();
   });
@@ -110,7 +117,7 @@ describe("auth completion state", () => {
       "email-unverified",
     );
 
-    expect(bootstrapProfileMock).not.toHaveBeenCalled();
+    expect(resolveProfileMock).not.toHaveBeenCalled();
     expect(getMissingRequiredConsentDocumentsMock).not.toHaveBeenCalled();
   });
 
@@ -144,22 +151,26 @@ describe("auth completion state", () => {
     );
   });
 
-  it("returns authenticated-recovery for landing after authenticated downstream lookup fails", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  it("returns profile-unavailable instead of restarting sign-up when the profile read fails", async () => {
     getCurrentUserMock.mockResolvedValueOnce(session.user);
-    bootstrapProfileMock.mockRejectedValueOnce(
-      new Error("profile unavailable"),
+    resolveProfileMock.mockResolvedValueOnce({ status: "unavailable" });
+
+    await expect(getCurrentLandingAuthStatus()).resolves.toBe(
+      "profile-unavailable",
+    );
+
+    expect(resolveProfileMock).toHaveBeenCalledWith("user-1");
+    expect(getMissingRequiredConsentDocumentsMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps other authenticated dependency failures in a retry-only recovery state", async () => {
+    getCurrentUserMock.mockResolvedValueOnce(session.user);
+    getMissingRequiredConsentDocumentsMock.mockRejectedValueOnce(
+      new Error("legal documents unavailable"),
     );
 
     await expect(getCurrentLandingAuthStatus()).resolves.toBe(
       "authenticated-recovery",
     );
-
-    expect(bootstrapProfileMock).toHaveBeenCalledWith("user-1");
-    expect(warnSpy).toHaveBeenCalledWith(
-      "Failed to resolve landing auth completion status.",
-      expect.any(Error),
-    );
-    warnSpy.mockRestore();
   });
 });

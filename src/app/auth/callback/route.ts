@@ -141,12 +141,8 @@ export async function GET(request: NextRequest) {
 
   // 1. Provider error in query (some OAuth providers).
   const errorCode = searchParams.get("error_code");
-  const errorDescription = searchParams.get("error_description");
   if (errorCode) {
-    console.error("[auth/callback] provider error in query", {
-      errorCode,
-      errorDescription,
-    });
+    console.error("auth_callback_failed", { stage: "provider_query" });
     return NextResponse.redirect(
       buildErrorUrl(
         request,
@@ -164,12 +160,7 @@ export async function GET(request: NextRequest) {
   // 2a. token_hash 있지만 type이 invalid — malformed callback. Codex 후속:
   // fragment fallback으로 흘리지 말고 명시적으로 /auth/error?reason=unknown.
   if (tokenHash && !verifyType) {
-    console.error(
-      "[auth/callback] malformed callback: token_hash present but invalid type",
-      {
-        typeParam,
-      },
-    );
+    console.error("auth_callback_failed", { stage: "malformed_callback" });
     return NextResponse.redirect(buildErrorUrl(request, "unknown", null));
   }
 
@@ -182,11 +173,7 @@ export async function GET(request: NextRequest) {
       type: verifyType,
     });
     if (error) {
-      console.error("[auth/callback] verifyOtp error", {
-        code: error.code,
-        message: error.message,
-        status: error.status,
-      });
+      console.error("auth_callback_failed", { stage: "verify_otp" });
       return withAuthCookies(
         NextResponse.redirect(
           buildErrorUrl(
@@ -214,23 +201,13 @@ export async function GET(request: NextRequest) {
         data: { user: existingUser },
       } = await supabase.auth.getUser();
       if (existingUser) {
-        console.info(
-          "[auth/callback] stale OAuth callback revisited with active session",
-          {
-            code: error.code,
-            status: error.status,
-          },
-        );
+        console.info("auth_callback_reused", { stage: "exchange_code" });
         return withAuthCookies(
           NextResponse.redirect(buildBrowserVisibleAppUrl(next, request)),
         );
       }
 
-      console.error("[auth/callback] exchangeCodeForSession error", {
-        code: error.code,
-        message: error.message,
-        status: error.status,
-      });
+      console.error("auth_callback_failed", { stage: "exchange_code" });
       return withAuthCookies(
         NextResponse.redirect(
           buildErrorUrl(

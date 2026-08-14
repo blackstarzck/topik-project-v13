@@ -149,7 +149,7 @@ function configureQueries({
   isLoading?: boolean;
   error?: Error | null;
 } = {}) {
-  mockedUseLibraryItems.mockImplementation((tab) => {
+  mockedUseLibraryItems.mockImplementation((_userId, tab) => {
     if (tab === "submissions") {
       return { data: submissions, isLoading, error } as never;
     }
@@ -163,6 +163,7 @@ function configureQueries({
 function renderList(
   ui: ReactElement = (
     <LibraryProblemsList
+      userId="user-1"
       initialSubmissions={[submission]}
       initialProblems={[problem]}
       initialDrafts={[]}
@@ -217,8 +218,7 @@ describe("LibraryProblemsList", () => {
     const resultsColumn = screen.getByTestId("library-problems-results-column");
     const problemRow = rows[0];
     expect(
-      within(problemRow).getByTestId("library-problems-type-badge")
-        .textContent,
+      within(problemRow).getByTestId("library-problems-type-badge").textContent,
     ).toBe("북마크");
     expect(
       within(resultsColumn).queryByText(
@@ -299,6 +299,7 @@ describe("LibraryProblemsList", () => {
 
     renderList(
       <LibraryProblemsList
+        userId="user-1"
         initialSubmissions={[]}
         initialProblems={[
           { ...problem, title: problemTitleText, answer_text: answerText },
@@ -312,14 +313,14 @@ describe("LibraryProblemsList", () => {
       within(problemRow).getByText(problemTitleText, { selector: "strong" }),
     ).toBeTruthy();
     expect(
-      within(problemRow).getByTestId("library-problems-type-badge")
-        .textContent,
+      within(problemRow).getByTestId("library-problems-type-badge").textContent,
     ).toBe("북마크");
 
     const answer = within(problemRow).getByText(answerText);
     expect(answer.closest(".ant-typography-secondary")).toBeTruthy();
-    expect(within(problemRow).queryByText(answerText, { selector: "strong" }))
-      .toBeNull();
+    expect(
+      within(problemRow).queryByText(answerText, { selector: "strong" }),
+    ).toBeNull();
     expect(
       within(problemRow).queryByText(problemTitleText, {
         selector: ".ant-typography-secondary",
@@ -339,8 +340,9 @@ describe("LibraryProblemsList", () => {
     ).toBe("북마크");
     const cardAnswer = within(card).getByText(answerText);
     expect(cardAnswer.closest(".ant-typography-secondary")).toBeTruthy();
-    expect(within(card).queryByText(answerText, { selector: "strong" }))
-      .toBeNull();
+    expect(
+      within(card).queryByText(answerText, { selector: "strong" }),
+    ).toBeNull();
   });
 
   it("shows the four-item action menu for completed submissions", async () => {
@@ -568,6 +570,7 @@ describe("LibraryProblemsList", () => {
 
     renderList(
       <LibraryProblemsList
+        userId="user-1"
         initialSubmissions={[]}
         initialProblems={[]}
         initialDrafts={[]}
@@ -590,6 +593,7 @@ describe("LibraryProblemsList", () => {
 
     renderList(
       <LibraryProblemsList
+        userId="user-1"
         initialSubmissions={[]}
         initialProblems={problems}
         initialDrafts={[]}
@@ -759,6 +763,7 @@ describe("LibraryProblemsList", () => {
   it("filters temporary drafts separately from saved answers and bookmarked problems", async () => {
     renderList(
       <LibraryProblemsList
+        userId="user-1"
         initialSubmissions={[submission]}
         initialProblems={[problem]}
         initialDrafts={[draft]}
@@ -938,6 +943,7 @@ describe("LibraryProblemsList", () => {
 
     renderList(
       <LibraryProblemsList
+        userId="user-1"
         initialSubmissions={[]}
         initialProblems={[]}
         initialDrafts={[]}

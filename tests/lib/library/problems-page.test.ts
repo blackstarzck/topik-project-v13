@@ -38,9 +38,14 @@ function draft(overrides: Row = {}): Row {
   };
 }
 
-function makeClient(rows: Row[], canonicalRows: Row[], canonicalError?: string) {
+function makeClient(
+  rows: Row[],
+  canonicalRows: Row[],
+  canonicalError?: string,
+) {
   const from = vi.fn((table: string) => {
-    if (table !== "writing_drafts") throw new Error(`unexpected table ${table}`);
+    if (table !== "writing_drafts")
+      throw new Error(`unexpected table ${table}`);
     let current = rows;
     const query = {
       select: () => query,
@@ -72,7 +77,10 @@ describe("listLibraryProblemDrafts", () => {
       [canonicalRow("problem-51", 51, "Canonical question 51")],
     );
 
-    const result = await listLibraryProblemDrafts("user-1", async () => client as never);
+    const result = await listLibraryProblemDrafts(
+      "user-1",
+      async () => client as never,
+    );
 
     expect(result).toEqual([
       expect.objectContaining({
@@ -93,13 +101,18 @@ describe("listLibraryProblemDrafts", () => {
   it("preserves an existing draft when its question is no longer in the current catalog", async () => {
     const client = makeClient([draft()], []);
 
-    const result = await listLibraryProblemDrafts("user-1", async () => client as never);
+    const result = await listLibraryProblemDrafts(
+      "user-1",
+      async () => client as never,
+    );
 
-    expect(result[0]).toEqual(expect.objectContaining({
-      problem_title: null,
-      question_no: 51,
-      answer_text: "saved answer",
-    }));
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        problem_title: null,
+        question_no: 51,
+        answer_text: "saved answer",
+      }),
+    );
   });
 
   it("surfaces canonical catalog failures and never queries public.problems", async () => {

@@ -4,6 +4,8 @@
 
 실제 SQL 파일은 **Supabase CLI 호환을 위해 `supabase/migrations/` 디렉토리 바로 아래에 flat 으로 위치**합니다 (CLI는 하위 폴더 SQL을 스캔하지 않음). 본 문서는 가독성을 위한 메타 정리입니다.
 
+> **저작 동결(2026-07-30)**: 이 인덱스가 담는 forward 이력은 워터마크 `20260729120000`에서 동결됐다. 이하 파일은 불변이며 신규 learner 마이그레이션은 topik-ai `supabase/migrations-v13/`에 작성한다. 이 문서와 `down/`은 예외로 계속 갱신한다 — 상세는 [`../README.md`](../README.md)의 "저작 동결" 절.
+
 명명 규칙·idempotency·CLI 적용 명령은 [`../README.md`](../README.md) 참조.
 테이블 컬럼·RLS·RPC의 실행 가능한 정본은 timestamp 순으로 재생한 migration SQL 본문이다. 사람이 읽는 도메인·보안 계약은 `docs/supabase/`를 함께 참조한다.
 
@@ -133,13 +135,13 @@
 | # | timestamp | 파일 | 영역 |
 | ---:| --- | --- | --- |
 | 39 | `16:00:00` | [`20260612160000_user_notifications.sql`](./20260612160000_user_notifications.sql) | `user_notifications` 인앱 수신함(벨 뱃지/알림센터/B-01 카드). owner select + `read_at` 단일 컬럼 grant update, insert/delete는 service_role 파이프라인 전용. `delivery_attempt_id`는 topik-ai 소유 `notification_delivery_attempts` soft 참조(FK 없음 — 소유권 계약). |
-| 40 | `18:00:00` | [`20260612180000_notification_dispatcher.sql`](./20260612180000_notification_dispatcher.sql) | v13 사용자 알림 dispatcher 함수. topik-ai 운영 스키마를 v13 migration에 만들지 않고, 공유 객체는 soft reference/contract 방식으로 연결한다. |
-| 41 | `18:01:00` | [`20260612180100_register_notification_cron.sql`](./20260612180100_register_notification_cron.sql) | 알림 dispatch cron 등록/정리용 migration. 실행 환경에서 `pg_cron` 사용 가능 여부에 따라 동작한다. |
-| 42 | `19:00:00` | [`20260612190000_notification_email_pipeline.sql`](./20260612190000_notification_email_pipeline.sql) | 이메일 알림 파이프라인 보강. `notification_email_config`와 이메일 처리 함수를 추가하되, 실제 provider/secret은 환경 설정에 둔다. |
-| 43 | `19:01:00` | [`20260612190100_email_transport_fail_user.sql`](./20260612190100_email_transport_fail_user.sql) | 이메일 전송 실패 시 사용자 알림 상태를 안전하게 실패 처리하도록 보강한다. |
-| 44 | `19:02:00` | [`20260612190200_email_live_defer.sql`](./20260612190200_email_live_defer.sql) | live 이메일 전송을 deferred 상태로 유지하는 안전장치. 실제 provider 활성화 전까지 운영 발송을 막는다. |
+| 40 | `18:00:00` | [`20260612180000_notification_dispatcher.sql`](./20260612180000_notification_dispatcher.sql) | 역사적 replay-safe no-op. dispatcher migration home은 topik-ai `supabase/migrations-admin/20260723011242_notification_pipeline_ownership_transfer.sql`로 이관됐다. |
+| 41 | `18:01:00` | [`20260612180100_register_notification_cron.sql`](./20260612180100_register_notification_cron.sql) | 역사적 replay-safe no-op. `dispatch_notifications` cron은 topik-ai admin migration이 소유한다. |
+| 42 | `19:00:00` | [`20260612190000_notification_email_pipeline.sql`](./20260612190000_notification_email_pipeline.sql) | 역사적 replay-safe no-op. `notification_email_config`와 이메일 파이프라인은 topik-ai admin migration이 소유한다. |
+| 43 | `19:01:00` | [`20260612190100_email_transport_fail_user.sql`](./20260612190100_email_transport_fail_user.sql) | 역사적 replay-safe no-op. fail-user 최종 정의는 topik-ai forward migration에 포함된다. |
+| 44 | `19:02:00` | [`20260612190200_email_live_defer.sql`](./20260612190200_email_live_defer.sql) | 역사적 replay-safe no-op. live defer 최종 정의는 topik-ai forward migration에 포함된다. |
 | 45 | `20:00:00` | [`20260612200000_user_marketing_consent.sql`](./20260612200000_user_marketing_consent.sql) | H-2 마케팅 동의 저장소. `user_marketing_consent`(가산형, profiles 미변경): `consented_at`/`unsubscribed_at`/`unsubscribe_token uuid unique`/`source`. 유효 동의 = `consented_at not null AND unsubscribed_at null`. owner select/insert/update RLS + force, service_role read. |
-| 46 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | H-2 dispatch consent 게이트. hard-coded marketing→`opted_out`를 `private.is_marketing_consented()` 조회로 교체(admin/event 함수). 동의 O+채널 on→eligible, 동의 O+채널 off→skipped, 동의 X→opted_out. 비-마케팅 동작 불변. |
+| 46 | `20:01:00` | [`20260612200100_marketing_consent_in_dispatch.sql`](./20260612200100_marketing_consent_in_dispatch.sql) | 역사적 replay-safe no-op. H-2 consent gate 함수는 topik-ai forward migration이 소유하며, v13은 `user_marketing_consent` 테이블 owner로 남는다. |
 | 47 | `22:10:00` | [`20260612221000_fix_legal_documents_public_read_policy.sql`](./20260612221000_fix_legal_documents_public_read_policy.sql) | `legal_documents_published_read` 정책에서 공개 published read와 `private.is_platform_admin()` admin helper를 분리. anon 공개 약관 조회가 helper 실행 권한 오류(42501)로 실패하지 않도록 `status='published'`만 평가. |
 
 #### 17 (Writing submission visibility guard)
@@ -269,3 +271,36 @@
 | 84 | `14:00:00` | [`20260714140000_writing_problem_identity_registry_cutover.sql`](./20260714140000_writing_problem_identity_registry_cutover.sql) | Replaces `public.problems` writing anchors with the private immutable `problem_identities` registry, preserves learner-safe history snapshots and rollback backups, retargets every audited FK with validation, removes writing catalog rows after proof gates, and makes canonical reads permanent while submissions stay fail-closed. |
 | 85 | `14:10:00` | [`20260714141000_writing_submission_outbox.sql`](./20260714141000_writing_submission_outbox.sql) | Adds a private durable submission intent/outbox with one-shot claims, explicit accepted/ambiguous/failed states, separate provider submission IDs, retry-safe accepted materialization, redacted service-only reconciliation/audit RPCs, and an independently verified evidence gate for enabling canonical submission. Installation alone never enables submission. |
 | 86 | `16:00:00` | [`20260714160000_writing_snapshot_constraint_execution_fix.sql`](./20260714160000_writing_snapshot_constraint_execution_fix.sql) | Grants authenticated and service-role writers execute permission on the immutable, table-free forbidden-key classifier used by writing snapshot CHECK constraints. Anonymous execution remains denied; the fix changes no data and exposes no snapshot constructor. |
+
+## 2026-07-18 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 87 | `12:00:00` | [`20260718120000_auth_gate_exact_consent_snapshots.sql`](./20260718120000_auth_gate_exact_consent_snapshots.sql) | Adds snapshot-aware `complete_auth_gate` overloads that lock the official legal-document set, compare the exact displayed `{id, version}` array inside the transaction, and insert only the captured missing rows. Restores the email-confirmed guard, rejects ambiguous/incomplete official sets, grants only the new JSONB signatures to `authenticated`, and revokes `PUBLIC`/`anon`/`authenticated` access from the unsafe boolean-only 4/7/9-argument overloads. Forward-only; remote apply and production evidence remain topik-ai operations work. |
+
+## 2026-07-22 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 88 | `12:00:00` | [`20260722120000_writing_completion_and_pdf_outcomes.sql`](./20260722120000_writing_completion_and_pdf_outcomes.sql) | Defines learner completion as a submission and linked feedback both reaching `complete`, separates materialized attempt counts from completed counts in `list_user_problems`, aligns dashboard KPI counts, and adds sanitized terminal `failure_code`/`failed_at` fields to the PDF export ledger. Forward-only; v13 does not apply it remotely. |
+
+## 2026-07-23 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 89 | `17:00:00` | [`20260723170000_system_reports.sql`](./20260723170000_system_reports.sql) | Adds a private, direct-access-denied system report ledger and a service-role-only idempotent submission RPC. Stores only approved contact, report, coarse diagnostics, optional authenticated user, and shortened app-version fields. |
+| 90 | `23:45:27` | [`20260723234527_consent_account_deletion_rls.sql`](./20260723234527_consent_account_deletion_rls.sql) | Makes `complete_auth_gate()` the only `user_consents` writer; adds active-profile restrictive policies to private user rows and quota reset targets; preserves published-public problem/asset reads while closing private catalog paths; guards seven authenticated `SECURITY DEFINER` user-data RPCs while preserving the active-user library list contract, and revokes the stale legacy submit RPC; makes profile lifecycle columns RPC-only through column privileges plus trigger context; adds `get_my_account_state()`; and makes `avatars` private with active-owner Storage policies shared by avatars and generated exports. Forward-only; remote apply is handled by the separate operations procedure, not v13. |
+
+## 2026-07-24 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 91 | `12:00:00` | [`20260724120000_user_data_reference_integrity.sql`](./20260724120000_user_data_reference_integrity.sql) | Keeps learner CRUD on publishable key + user JWT + owner RLS while narrowing authenticated UPDATE to the app's current state columns, preserving explicit system-job privileges, and adding an invoker trigger that rejects malformed, duplicate, or foreign `review_set_created` library item IDs. `problem-assets` remains unchanged for a separate private/signed-URL cross-app plan. |
+| 92 | `13:00:00` | [`20260724130000_institution_invite_trust_boundary.sql`](./20260724130000_institution_invite_trust_boundary.sql) | Stops `handle_new_user()` from trusting raw `affiliation_code` Auth metadata, revokes and drops the legacy `accept_affiliation_invite`/`claim_affiliation_code` browser RPCs, and preserves the transaction-local profile protection gate used by the topik-ai-owned JWT invitation response flow. Forward-only; v13 does not apply it remotely. |
+| 93 | `14:00:00` | [`20260724140000_pdf_export_request_idempotency.sql`](./20260724140000_pdf_export_request_idempotency.sql) | Adds a JWT-only atomic export-attempt acquisition RPC with active-user/source-ownership checks, strict bounded route-option validation, exportable submission/report library-target binding, DB-generated attempt leases, and same-request payload binding; removes authenticated direct INSERT/UPDATE/DELETE on `export_files`; requires a matching acquired export before quota binding; and adds service-only atomic current-attempt complete/fail functions. The cutover closes legacy NULL-request queued exports as `failed/legacy_unknown` and releases legacy reservations with `request_identity_cutover` before backfill. Remote rollout requires the linked topik-ai maintenance handoff; v13 does not apply it remotely. |
+
+## 2026-07-29 migration
+
+| # | timestamp | file | scope |
+| ---:| --- | --- | --- |
+| 94 | `12:00:00` | [`20260729120000_list_user_problems_canonical_catalog_fix.sql`](./20260729120000_list_user_problems_canonical_catalog_fix.sql) | Repairs the `list_user_problems` catalog CTE. Migration 88 was authored on top of the pre-cutover definition from `20260713083000` and calls `private.is_writing_canonical_read_enabled()` and `private.is_canonical_writing_problem_anchor(uuid)` in three places, both of which `20260714140000` dropped. PL/pgSQL resolves names at call time, so migration 88 installs cleanly and then raises `42883` on every problem-list request. This migration restores the post-cutover catalog CTE that `20260714140000` established: `public.problems` contributes non-writing rows only, and the canonical writing branch reads `public.get_available_writing_questions(null, null)` unconditionally. Signature, the 24 returned fields, completion versus attempt counts, sort tie-breaker, and grants are unchanged. A closing `do` block reads `pg_get_functiondef` and fails the transaction if either retired helper survives or the canonical reader is missing. Forward-only, no paired down; remote apply is topik-ai operations work and must run in the same transaction as migration 88 so the broken definition is never committed. |

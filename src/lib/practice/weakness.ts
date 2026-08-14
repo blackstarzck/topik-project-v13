@@ -327,50 +327,50 @@ async function fetchVisibleRecommendationItemRows(
   );
   const visibleRows: RecommendationItemJoined[] = [];
 
-    for (
-      let offset = 0;
-      offset < MAX_VISIBILITY_SCAN_ROWS &&
-      visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
-      offset += RECOMMENDATION_SCAN_PAGE_SIZE
-    ) {
-      const { data, error } = await supabase
-        .from("recommendation_items")
-        .select(
-          "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
-            " recommendation_runs!inner(expires_at)",
-        )
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
-          referencedTable: "recommendation_runs",
-        })
-        .order("rank", { ascending: true })
-        .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
-      if (error) {
-        throw new Error(`getWeaknessRecommendations(items): ${error.message}`);
-      }
-
-      const page = (data ?? []) as unknown as Array<
-        Omit<RecommendationItemJoined, "problems">
-      >;
-      for (const row of page) {
-        const problem = canonicalById.get(row.problem_id);
-        if (!problem) continue;
-        visibleRows.push({
-          ...row,
-          problems: {
-            id: problem.id,
-            title: problem.title,
-            domain: "writing",
-            question_no: problem.questionNo,
-            publish_status: "published",
-            lifecycle_status: "active",
-          },
-        });
-        if (visibleRows.length >= WEAKNESS_RECOMMENDATION_TARGET) break;
-      }
-      if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+  for (
+    let offset = 0;
+    offset < MAX_VISIBILITY_SCAN_ROWS &&
+    visibleRows.length < WEAKNESS_RECOMMENDATION_TARGET;
+    offset += RECOMMENDATION_SCAN_PAGE_SIZE
+  ) {
+    const { data, error } = await supabase
+      .from("recommendation_items")
+      .select(
+        "id, problem_id, rank, reason, estimated_minutes, weakness_tags," +
+          " recommendation_runs!inner(expires_at)",
+      )
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`, {
+        referencedTable: "recommendation_runs",
+      })
+      .order("rank", { ascending: true })
+      .range(offset, offset + RECOMMENDATION_SCAN_PAGE_SIZE - 1);
+    if (error) {
+      throw new Error(`getWeaknessRecommendations(items): ${error.message}`);
     }
+
+    const page = (data ?? []) as unknown as Array<
+      Omit<RecommendationItemJoined, "problems">
+    >;
+    for (const row of page) {
+      const problem = canonicalById.get(row.problem_id);
+      if (!problem) continue;
+      visibleRows.push({
+        ...row,
+        problems: {
+          id: problem.id,
+          title: problem.title,
+          domain: "writing",
+          question_no: problem.questionNo,
+          publish_status: "published",
+          lifecycle_status: "active",
+        },
+      });
+      if (visibleRows.length >= WEAKNESS_RECOMMENDATION_TARGET) break;
+    }
+    if (page.length < RECOMMENDATION_SCAN_PAGE_SIZE) break;
+  }
 
   return visibleRows;
 }

@@ -23,7 +23,7 @@ type Props = {
 
 /**
  * E-01/E-02 항목별 피드백 카드 (description region 2).
- * 제약: 카드 제목 14자, 본문 2줄.
+ * 제약: 카드 제목 14자, 피드백 본문은 줄 수 제한 없이 전체 노출.
  * 예외: 분석 실패 항목(점수 없음)은 회색 카드와 재분석 안내 표시.
  */
 export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
@@ -82,7 +82,7 @@ export function DimensionCardGrid({ rows, maxCards, onReanalyze }: Props) {
                 <Text
                   type="secondary"
                   title={row?.summary ?? undefined}
-                  className="mt-2 block line-clamp-2"
+                  className="mt-2 block"
                 >
                   {row?.summary ?? t("summaryFallback")}
                 </Text>

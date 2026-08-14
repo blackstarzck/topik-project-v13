@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { Input, Select } from "antd";
 
 import { AppProviders } from "../../src/app/providers";
+
+vi.mock("@/components/shared/SystemReportLauncher", () => ({
+  SystemReportLauncher: () => null,
+}));
 
 describe("AppProviders form control theming", () => {
   afterEach(() => {

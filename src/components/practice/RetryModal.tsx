@@ -198,14 +198,14 @@ export function RetryModal({
   function handleViewResult() {
     onClose();
     // caller 가 submissionId 를 주면 피드백으로 deep-link, 없으면 목록 폴백.
-    if (hasSubmission && submissionId) {
+    if (submissionId) {
       router.push(feedbackPathFor(questionNo, submissionId) as never);
       return;
     }
     router.push("/practice/problems" as never);
   }
 
-  const canViewResult = hasSubmission;
+  const canViewResult = hasSubmission || Boolean(submissionId);
   const rel = relativeDay(lastAttemptAt);
   const lastLabel = rel
     ? rel.kind === "today"
@@ -219,16 +219,23 @@ export function RetryModal({
 
   // §2 — 이전 풀이 상태 요약 라벨.
   const analysisFailed = feedbackStatus === "failed";
+  const analysisInProgress =
+    feedbackStatus === "pending" || feedbackStatus === "analyzing";
   const resultActionLabel = analysisFailed
     ? t("viewFailedStatus")
     : t("viewResult");
-  const statusLabel = analysisFailed
-    ? t("statusFailed")
-    : hasSubmission
-      ? t("statusSubmitted")
-      : hasAttempt
-        ? t("statusDrafting")
-        : t("statusNone");
+  const statusLabel =
+    analysisFailed && hasSubmission
+      ? t("statusSubmittedRecentFailure")
+      : analysisFailed
+        ? t("statusFailed")
+        : analysisInProgress
+          ? t("statusAnalyzing")
+          : hasSubmission
+            ? t("statusSubmitted")
+            : hasAttempt
+              ? t("statusDrafting")
+              : t("statusNone");
 
   const previousStatusMeta = [
     statusLabel,

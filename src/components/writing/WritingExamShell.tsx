@@ -1,11 +1,7 @@
 "use client";
 
 import { Button, Progress, Typography } from "antd";
-import {
-  Clock3,
-  PenLine,
-  SendHorizontal,
-} from "@/components/shared/AppIcons";
+import { Clock3, PenLine, SendHorizontal } from "@/components/shared/AppIcons";
 import { AppBackControl } from "@/components/shared/AppBackControl";
 import { useTranslations } from "next-intl";
 import { useMemo, type ReactNode } from "react";
@@ -52,7 +48,7 @@ function WritingProblemBookmark({
   userId: string;
   problemId: string;
 }) {
-  const savedProblems = useLibraryItems("problems");
+  const savedProblems = useLibraryItems(userId, "problems");
   const initiallySaved = useMemo(
     () =>
       (savedProblems.data ?? []).some(

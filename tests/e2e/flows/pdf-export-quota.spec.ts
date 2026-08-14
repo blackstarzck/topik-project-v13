@@ -382,11 +382,13 @@ test("feedback PDF quota warning UI does not invoke print fallback", async ({
 }) => {
   test.setTimeout(90_000);
   await page.addInitScript(() => {
-    (window as unknown as { __pdfQuotaPrintCalls: number }).__pdfQuotaPrintCalls =
-      0;
+    (
+      window as unknown as { __pdfQuotaPrintCalls: number }
+    ).__pdfQuotaPrintCalls = 0;
     window.print = () => {
-      (window as unknown as { __pdfQuotaPrintCalls: number }).__pdfQuotaPrintCalls +=
-        1;
+      (
+        window as unknown as { __pdfQuotaPrintCalls: number }
+      ).__pdfQuotaPrintCalls += 1;
     };
   });
 
@@ -454,11 +456,13 @@ test("feedback PDF export quota warning does not invoke print fallback", async (
   );
 
   await page.addInitScript(() => {
-    (window as unknown as { __pdfQuotaPrintCalls: number }).__pdfQuotaPrintCalls =
-      0;
+    (
+      window as unknown as { __pdfQuotaPrintCalls: number }
+    ).__pdfQuotaPrintCalls = 0;
     window.print = () => {
-      (window as unknown as { __pdfQuotaPrintCalls: number }).__pdfQuotaPrintCalls +=
-        1;
+      (
+        window as unknown as { __pdfQuotaPrintCalls: number }
+      ).__pdfQuotaPrintCalls += 1;
     };
   });
   const submission = await createCompletedFeedbackSubmission();

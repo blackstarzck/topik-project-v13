@@ -4,7 +4,8 @@ import {
   backfillOAuthDisplayName,
   generateRandomNickname,
   getMissingRequiredConsentDocuments,
-  recordRequiredConsents,
+  getRequiredConsentDocuments,
+  LegalDocumentsUnavailableError,
   type RequiredConsentDocument,
 } from "../../../src/lib/legal/consent";
 
@@ -28,7 +29,6 @@ function makeClient(db: {
   legalDocuments?: Row[];
   userConsents?: Row[];
   profile?: Row | null;
-  inserts?: Row[][];
   updates?: Row[];
 }) {
   return {
@@ -47,6 +47,9 @@ function makeClient(db: {
           inFilters.push([key, values]);
           return query;
         },
+        not() {
+          return query;
+        },
         or() {
           // Source-trust filter (source_policy_id / is_placeholder) is a DB-side
           // guard; this stub does not simulate it. Kept as a no-op so the query
@@ -60,10 +63,6 @@ function makeClient(db: {
             db.profile = { ...db.profile, ...nextPatch };
           }
           return query;
-        },
-        insert(rows: Row[]) {
-          db.inserts?.push(rows);
-          return Promise.resolve({ data: null, error: null });
         },
         maybeSingle() {
           if (table === "profiles") {
@@ -101,6 +100,8 @@ const termsDoc: RequiredConsentDocument = {
   body: "terms",
   effective_at: "2026-06-10T00:00:00.000Z",
   created_at: "2026-06-10T00:00:00.000Z",
+  is_placeholder: false,
+  source_policy_id: "policy-terms-1",
 };
 
 const privacyDoc: RequiredConsentDocument = {
@@ -113,6 +114,8 @@ const privacyDoc: RequiredConsentDocument = {
   body: "privacy",
   effective_at: "2026-06-10T00:00:00.000Z",
   created_at: "2026-06-10T00:00:00.000Z",
+  is_placeholder: false,
+  source_policy_id: "policy-privacy-1",
 };
 
 describe("legal consent helpers", () => {
@@ -141,6 +144,116 @@ describe("legal consent helpers", () => {
     );
 
     expect(missing.map((doc) => doc.id)).toEqual(["privacy-1"]);
+  });
+
+  it("fails closed when the complete terms and privacy set is unavailable", async () => {
+    const client = makeClient({
+      legalDocuments: [
+        { ...termsDoc, status: "published", requires_consent: true },
+      ],
+    });
+
+    await expect(
+      getRequiredConsentDocuments("ko", async () => client as never),
+    ).rejects.toBeInstanceOf(LegalDocumentsUnavailableError);
+  });
+
+  it("fails closed when only placeholder legal documents are published", async () => {
+    const client = makeClient({
+      legalDocuments: [
+        {
+          ...termsDoc,
+          is_placeholder: true,
+          status: "published",
+          requires_consent: true,
+        },
+        {
+          ...privacyDoc,
+          is_placeholder: true,
+          status: "published",
+          requires_consent: true,
+        },
+      ],
+    });
+
+    await expect(
+      getRequiredConsentDocuments("ko", async () => client as never),
+    ).rejects.toBeInstanceOf(LegalDocumentsUnavailableError);
+  });
+
+  it("fails closed when the database completion RPC could select a different document", async () => {
+    const client = makeClient({
+      legalDocuments: [
+        { ...termsDoc, status: "published", requires_consent: true },
+        { ...privacyDoc, status: "published", requires_consent: true },
+        {
+          ...termsDoc,
+          id: "terms-placeholder-newer",
+          version: "placeholder-v2",
+          effective_at: "2026-07-10T00:00:00.000Z",
+          created_at: "2026-07-10T00:00:00.000Z",
+          is_placeholder: true,
+          source_policy_id: null,
+          status: "published",
+          requires_consent: true,
+        },
+      ],
+    });
+
+    await expect(
+      getMissingRequiredConsentDocuments("user-1", "ko", async () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Promise.resolve(client as any),
+      ),
+    ).rejects.toBeInstanceOf(LegalDocumentsUnavailableError);
+  });
+
+  it("fails closed when two completion candidates share the latest effective time", async () => {
+    const client = makeClient({
+      legalDocuments: [
+        { ...termsDoc, status: "published", requires_consent: true },
+        { ...privacyDoc, status: "published", requires_consent: true },
+        {
+          ...termsDoc,
+          id: "terms-placeholder-tied",
+          version: "placeholder-tied",
+          is_placeholder: true,
+          source_policy_id: null,
+          status: "published",
+          requires_consent: true,
+        },
+      ],
+    });
+
+    await expect(
+      getMissingRequiredConsentDocuments("user-1", "ko", async () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Promise.resolve(client as any),
+      ),
+    ).rejects.toBeInstanceOf(LegalDocumentsUnavailableError);
+  });
+
+  it("fails closed for direct rows that do not have an admin policy source", async () => {
+    const client = makeClient({
+      legalDocuments: [
+        {
+          ...termsDoc,
+          source_policy_id: null,
+          status: "published",
+          requires_consent: true,
+        },
+        {
+          ...privacyDoc,
+          source_policy_id: null,
+          status: "published",
+          requires_consent: true,
+        },
+      ],
+    });
+
+    await expect(
+      getRequiredConsentDocuments("ko", async () => client as never),
+    ).rejects.toBeInstanceOf(LegalDocumentsUnavailableError);
   });
 
   it("requires consent to the newest required document version even when an older version was accepted", async () => {
@@ -172,38 +285,6 @@ describe("legal consent helpers", () => {
     );
 
     expect(missing.map((doc) => doc.id)).toEqual(["terms-2"]);
-  });
-
-  it("records consent rows for provided documents", async () => {
-    const inserts: Row[][] = [];
-    const client = makeClient({ inserts });
-
-    await recordRequiredConsents(
-      "user-1",
-      [termsDoc, privacyDoc],
-      "signup",
-      async () =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        client as any,
-    );
-
-    expect(inserts).toHaveLength(1);
-    expect(inserts[0]).toMatchObject([
-      {
-        user_id: "user-1",
-        document_id: "terms-1",
-        doc_type: "terms",
-        version: "v1",
-        source: "signup",
-      },
-      {
-        user_id: "user-1",
-        document_id: "privacy-1",
-        doc_type: "privacy",
-        version: "v1",
-        source: "signup",
-      },
-    ]);
   });
 
   it("backfills blank display_name from OAuth metadata and a random nickname", async () => {

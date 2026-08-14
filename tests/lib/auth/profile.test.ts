@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { bootstrapProfile } from "../../../src/lib/auth/profile";
+import {
+  bootstrapProfile,
+  resolveProfile,
+} from "../../../src/lib/auth/profile";
 
 function makeClient(result: {
   data: Record<string, unknown> | null;
@@ -57,5 +60,28 @@ describe("bootstrapProfile", () => {
     await expect(bootstrapProfile("user-1", create)).rejects.toThrow(
       /permission denied/,
     );
+  });
+});
+
+describe("resolveProfile", () => {
+  it("returns a typed unavailable state for a missing profile", async () => {
+    const create = async () => makeClient({ data: null, error: null }) as never;
+
+    await expect(resolveProfile("user-missing", create)).resolves.toEqual({
+      status: "unavailable",
+    });
+  });
+
+  it("does not expose database details in the unavailable result", async () => {
+    const create = async () =>
+      makeClient({
+        data: null,
+        error: { message: "permission denied SQL token=secret" },
+      }) as never;
+
+    const result = await resolveProfile("user-1", create);
+
+    expect(result).toEqual({ status: "unavailable" });
+    expect(JSON.stringify(result)).not.toMatch(/permission|SQL|secret/i);
   });
 });

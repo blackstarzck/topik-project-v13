@@ -68,10 +68,8 @@ async function fetchPublished(
     .eq("doc_type", docType)
     .eq("locale", locale)
     .eq("status", "published")
-    // Trust only admin-projected documents (source_policy_id set) or seeded
-    // placeholders; exclude rows inserted directly into legal_documents (e.g.
-    // E2E test seeds) so they never surface on /terms or /privacy.
-    .or("source_policy_id.not.is.null,is_placeholder.is.true")
+    .not("source_policy_id", "is", null)
+    .eq("is_placeholder", false)
     .order("effective_at", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1);
@@ -81,7 +79,8 @@ async function fetchPublished(
       `Failed to load published legal document: ${error.message}`,
     );
   }
-  return (data?.[0] as PublishedLegalDocument | undefined) ?? null;
+  const document = (data?.[0] as PublishedLegalDocument | undefined) ?? null;
+  return document?.is_placeholder === false ? document : null;
 }
 
 async function fetchPublishedWithLocaleFallback(
@@ -97,9 +96,9 @@ async function fetchPublishedWithLocaleFallback(
 }
 
 /**
- * Latest published legal document for a doc_type in the requested locale, falling
- * back to Korean when the requested locale has no published row (e.g. vi). Returns
- * null when nothing is published yet (caller renders the i18n placeholder).
+ * Latest trusted, non-placeholder legal document for a doc_type in the requested
+ * locale, falling back to Korean when the requested locale has no official row.
+ * Returns null when no official document is available so callers fail closed.
  */
 export async function getPublishedLegalDocument(
   docType: LegalDocType,

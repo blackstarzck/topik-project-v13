@@ -10,11 +10,12 @@ import {
 
 describe("e2e student fixture config", () => {
   const baseEnv = {
+    E2E_ALLOW_DEV_DB_MUTATION: "1",
     E2E_STUDENT_EMAIL: "student@example.com",
     E2E_STUDENT_PASSWORD: "Password123!",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_local",
     NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
-    SUPABASE_ENV_LABEL: "local",
+    SUPABASE_LOCAL_STACK: "1",
     SUPABASE_SERVICE_ROLE_KEY: "sb_secret_local",
   };
 
@@ -44,37 +45,72 @@ describe("e2e student fixture config", () => {
     });
   });
 
-  it("requires a service role key because setup creates the account directly", () => {
-    const env = { ...baseEnv, SUPABASE_SERVICE_ROLE_KEY: undefined };
+  it("requires a local service-role or secret key because setup mutates auth", () => {
+    const env = {
+      ...baseEnv,
+      SUPABASE_SECRET_KEY: undefined,
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+    };
 
     expect(() => resolveE2EStudentConfig(env)).toThrow(
-      /SUPABASE_SERVICE_ROLE_KEY/,
+      /SUPABASE_SERVICE_ROLE_KEY.*SUPABASE_SECRET_KEY/,
     );
   });
 
-  it("refuses production-labeled Supabase targets", () => {
-    expect(() =>
+  it("accepts a local Supabase secret key as the privileged-key alternative", () => {
+    expect(
       resolveE2EStudentConfig({
         ...baseEnv,
-        SUPABASE_ENV_LABEL: "prod",
+        SUPABASE_SECRET_KEY: "sb_secret_local_alternative",
+        SUPABASE_SERVICE_ROLE_KEY: undefined,
       }),
-    ).toThrow(/production/i);
+    ).toMatchObject({ serviceRoleKey: "sb_secret_local_alternative" });
   });
 
-  it("refuses unknown environment labels before creating accounts", () => {
+  it("uses the documented legacy anon key when the publishable key is absent", () => {
+    const encode = (value: unknown) =>
+      Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+    const anonKey = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ role: "anon" })}.signature`;
+
+    expect(
+      resolveE2EStudentConfig({
+        ...baseEnv,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey,
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined,
+      }),
+    ).toMatchObject({ publishableKey: anonKey });
+  });
+
+  it.each([
+    ["SUPABASE_LOCAL_STACK", { SUPABASE_LOCAL_STACK: undefined }],
+    ["E2E_ALLOW_DEV_DB_MUTATION", { E2E_ALLOW_DEV_DB_MUTATION: undefined }],
+  ])("refuses setup without %s", (_key, overrides) => {
     expect(() =>
       resolveE2EStudentConfig({
         ...baseEnv,
-        SUPABASE_ENV_LABEL: "customer-demo",
+        ...overrides,
       }),
-    ).toThrow(/known non-production label/i);
+    ).toThrow(/local privileged mutation is not approved/i);
+  });
+
+  it.each([
+    "https://fglggyfvzjdsbyckinqa.supabase.co",
+    "https://eymlabowhfgtxbiqwxqh.supabase.co",
+    "https://unknown.supabase.co",
+  ])("refuses a remote target even when its label claims local: %s", (url) => {
+    expect(() =>
+      resolveE2EStudentConfig({
+        ...baseEnv,
+        NEXT_PUBLIC_SUPABASE_URL: url,
+        SUPABASE_ENV_LABEL: "local",
+      }),
+    ).toThrow(/local privileged mutation is not approved/i);
   });
 });
 
 describe("e2e student fixture account setup", () => {
   const config: E2EStudentConfig = {
     email: "student@example.com",
-    envLabel: "local",
     password: "Password123!",
     publishableKey: "sb_publishable_local",
     serviceRoleKey: "sb_secret_local",

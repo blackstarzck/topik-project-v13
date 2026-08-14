@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { assertLocalPrivilegedMutationTarget } from "../../scripts/lib/supabase-target-safety.mjs";
 
 function loadEnvLocal() {
   try {
@@ -34,6 +35,11 @@ const HAS_SUPABASE_ENV = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
+
+if (ENABLED && HAS_SUPABASE_ENV) {
+  assertLocalPrivilegedMutationTarget(process.env);
+}
+
 type RpcResult = PromiseLike<{ data: unknown; error: unknown }>;
 type RpcClient = {
   rpc: (name: string, args: Record<string, unknown>) => RpcResult;

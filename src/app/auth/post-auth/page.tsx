@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { redirect, unstable_rethrow } from "next/navigation";
 
+import { PageContainer } from "@/components/shared/PageContainer";
+import { PublicShell } from "@/components/shared/PublicShell";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 import { requireVerifiedActiveSession } from "@/lib/auth/access-gate";
 import {
   GOOGLE_LINK_INTENT,
@@ -23,6 +27,35 @@ function parseIntent(value: string | undefined): AuthIntent {
   return "login";
 }
 
+async function renderProfileUnavailable(intent: AuthIntent) {
+  const errorT = await getTranslations("shared.error");
+  const authErrorT = await getTranslations("auth.error");
+  const retryPath = `/auth/post-auth?intent=${intent}`;
+
+  return (
+    <PublicShell>
+      <PageContainer size="default">
+        <UnavailableState
+          variant="required-information"
+          actions={[
+            {
+              key: "retry",
+              label: errorT("retry"),
+              href: retryPath,
+              primary: true,
+            },
+            {
+              key: "home",
+              label: authErrorT("escapeHome"),
+              href: "/",
+            },
+          ]}
+        />
+      </PageContainer>
+    </PublicShell>
+  );
+}
+
 export default async function PostAuthPage({
   searchParams,
 }: {
@@ -31,8 +64,20 @@ export default async function PostAuthPage({
   const params = await searchParams;
   const intent = parseIntent(pickFirst(params.intent));
   // 회원 탈퇴(deleted)/차단(blocked) 계정은 어떤 mutation(backfill 등) 전에 차단.
-  const { user } = await requireVerifiedActiveSession();
-  const profile = await backfillOAuthDisplayName(user);
+  let session: Awaited<ReturnType<typeof requireVerifiedActiveSession>>;
+  try {
+    session = await requireVerifiedActiveSession();
+  } catch (error) {
+    unstable_rethrow(error);
+    return renderProfileUnavailable(intent);
+  }
+  const { user } = session;
+  let profile: Awaited<ReturnType<typeof backfillOAuthDisplayName>>;
+  try {
+    profile = await backfillOAuthDisplayName(user);
+  } catch {
+    return renderProfileUnavailable(intent);
+  }
 
   const completionStatus = await getAuthCompletionStatusForSession({
     user,

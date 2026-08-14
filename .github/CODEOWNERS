@@ -1,22 +1,44 @@
-# Workflow policy and enforcement surfaces require repository-owner review.
-/.github/CODEOWNERS @blackstarzck
-/.github/workflows/ci.yml @blackstarzck
-/AGENTS.md @blackstarzck
-/docs/prd.md @blackstarzck
-/docs/supabase/ @blackstarzck
-/scripts/check-project-structure.mjs @blackstarzck
-/.codex/skills/ @blackstarzck
-/.claude/skills/ @blackstarzck
-/CLAUDE.md @blackstarzck
-/scripts/check-agent-skill-policy.mjs @blackstarzck
-/scripts/sync-agent-skills.mjs @blackstarzck
-/scripts/check-ui-contract.mjs @blackstarzck
-/scripts/run-trusted-ui-contract.mjs @blackstarzck
-/scripts/lib/ui-contract.mjs @blackstarzck
-/scripts/lib/ui-contract-trust.mjs @blackstarzck
-/scripts/lib/task-lifecycle-registry.mjs @blackstarzck
-/scripts/lib/task-lifecycle-schema.mjs @blackstarzck
-/scripts/lib/worktree-lifecycle.mjs @blackstarzck
-/scripts/report-worktree-lifecycle.mjs @blackstarzck
-/config/ui-contract-*.json @blackstarzck
-/config/ui-contract-runtime/ @blackstarzck
+# Workflow policy and enforcement surfaces require shared code-owner review.
+/.github/ @blackstarzck @guestkeduall-design
+/.github/CODEOWNERS @blackstarzck @guestkeduall-design
+/.github/workflows/ci.yml @blackstarzck @guestkeduall-design
+/AGENTS.md @blackstarzck @guestkeduall-design
+/docs/prd.md @blackstarzck @guestkeduall-design
+/docs/operations/ai-development-pipeline.md @blackstarzck @guestkeduall-design
+/docs/supabase/ @blackstarzck @guestkeduall-design
+/scripts/check-project-structure.mjs @blackstarzck @guestkeduall-design
+/scripts/ @blackstarzck @guestkeduall-design
+/.gitignore @blackstarzck @guestkeduall-design
+/.codex/skills/ @blackstarzck @guestkeduall-design
+/.claude/skills/ @blackstarzck @guestkeduall-design
+/.claude/CLAUDE.md @blackstarzck @guestkeduall-design
+/scripts/check-agent-skill-policy.mjs @blackstarzck @guestkeduall-design
+/scripts/sync-agent-skills.mjs @blackstarzck @guestkeduall-design
+/scripts/check-ui-contract.mjs @blackstarzck @guestkeduall-design
+/scripts/run-trusted-ui-contract.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/ui-contract.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/ui-contract-trust.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/task-lifecycle-registry.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/task-lifecycle-schema.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/worktree-lifecycle.mjs @blackstarzck @guestkeduall-design
+/scripts/report-worktree-lifecycle.mjs @blackstarzck @guestkeduall-design
+/scripts/run-trusted-artifact-hygiene.mjs @blackstarzck @guestkeduall-design
+/scripts/check-artifact-hygiene.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/artifact-hygiene.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/ai-task-lifecycle-v2.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/ai-task-cleanup.mjs @blackstarzck @guestkeduall-design
+/scripts/ai-task.mjs @blackstarzck @guestkeduall-design
+/scripts/check-github-owner-auth.mjs @blackstarzck @guestkeduall-design
+/scripts/lib/github-owner-auth.mjs @blackstarzck @guestkeduall-design
+/package.json @blackstarzck @guestkeduall-design
+/pnpm-lock.yaml @blackstarzck @guestkeduall-design
+/vitest.config.ts @blackstarzck @guestkeduall-design
+/config/ @blackstarzck @guestkeduall-design
+/tests/scripts/ @blackstarzck @guestkeduall-design
+/tests/scripts/ci-trust-boundary.test.mjs @blackstarzck @guestkeduall-design
+/tests/scripts/ai-task-*.test.mjs @blackstarzck @guestkeduall-design
+/tests/scripts/*worktree-lifecycle.test.mjs @blackstarzck @guestkeduall-design
+/tests/scripts/artifact-hygiene.test.mjs @blackstarzck @guestkeduall-design
+/config/artifact-hygiene-policy.json @blackstarzck @guestkeduall-design
+/config/ui-contract-*.json @blackstarzck @guestkeduall-design
+/config/ui-contract-runtime/ @blackstarzck @guestkeduall-design

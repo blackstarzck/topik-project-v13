@@ -50,14 +50,13 @@ export function useWritingTimeMetrics() {
     lastInputAtRef.current = Date.now();
   }, []);
 
-  const getTimeMetricsSnapshot =
-    useCallback((): WritingTimeMetricsSnapshot => {
-      return {
-        elapsedSeconds: elapsedRef.current,
-        activeSeconds: Math.min(activeSecondsRef.current, elapsedRef.current),
-        startedAt: startedAtRef.current ?? new Date().toISOString(),
-      };
-    }, []);
+  const getTimeMetricsSnapshot = useCallback((): WritingTimeMetricsSnapshot => {
+    return {
+      elapsedSeconds: elapsedRef.current,
+      activeSeconds: Math.min(activeSecondsRef.current, elapsedRef.current),
+      startedAt: startedAtRef.current ?? new Date().toISOString(),
+    };
+  }, []);
 
   return { elapsedSeconds, markInputActivity, getTimeMetricsSnapshot };
 }

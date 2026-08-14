@@ -5,74 +5,150 @@ import {
   deleteTalkpikAccountProfile,
   getTalkpikApiBaseUrl,
 } from "@/lib/talkpik-api/account";
+import {
+  ACCOUNT_DELETION_CONFIRMATION_FIELD,
+  isValidAccountDeletionConfirmation,
+} from "@/lib/auth/account-deletion";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function firstHeaderValue(value: string | null): string | null {
-  return value?.split(",")[0]?.trim() || null;
+function normalizeHttpOrigin(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.origin
+      : null;
+  } catch {
+    return null;
+  }
 }
 
-function requestProto(request: NextRequest): string {
+function isLoopbackOrigin(origin: string): boolean {
+  const hostname = new URL(origin).hostname;
   return (
-    firstHeaderValue(request.headers.get("x-forwarded-proto")) ??
-    new URL(request.url).protocol.replace(":", "")
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]"
   );
 }
 
-function requestPublicOrigin(request: NextRequest): string {
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      return new URL(origin).origin;
-    } catch {
-      // Fall through to host-based origin construction.
-    }
-  }
-
-  const host =
-    firstHeaderValue(request.headers.get("x-forwarded-host")) ??
-    firstHeaderValue(request.headers.get("host"));
-  if (host) {
-    return `${requestProto(request)}://${host}`;
-  }
-
-  return new URL(request.url).origin;
+function configuredSiteOrigin(): string | null {
+  return normalizeHttpOrigin(process.env.NEXT_PUBLIC_SITE_URL);
 }
 
+/**
+ * The authority the browser actually addressed, parsed from `Host`.
+ *
+ * `x-forwarded-*` is deliberately not consulted, so a forwarded header can
+ * never widen what this route accepts.
+ */
+function addressedAuthority(request: NextRequest): URL | null {
+  const host = request.headers.get("host")?.trim().toLowerCase();
+  if (!host) return null;
+
+  try {
+    const url = new URL(`http://${host}`);
+    // Only a bare authority may pass. A value carrying a path, query or
+    // userinfo is not a `Host` and must not be read as one — otherwise
+    // `127.0.0.1:3001/@evil.example` would parse as a loopback authority.
+    return url.host === host ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The browser-addressed origin, trusted outside production only, and only for a
+ * loopback authority.
+ *
+ * `request.url` must NOT be used here: the Next server pins its hostname to the
+ * server's own origin and ignores `Host` (verified on Next 16.2.6 — a probe
+ * with `Host: app.example.com` still reported `https://localhost:3001/...`, and
+ * only the protocol tracked `x-forwarded-proto`). A dev server on :3001
+ * therefore trusted `http://localhost:3001` no matter which host the browser
+ * addressed, so a browser at `http://127.0.0.1:3001` was refused its own
+ * account deletion. `Origin` supplies the scheme and `Host` proves the
+ * authority the browser addressed.
+ */
+function loopbackBrowserOrigin(request: NextRequest): string | null {
+  if (process.env.NODE_ENV === "production") return null;
+
+  const addressed = addressedAuthority(request);
+  if (!addressed || !isLoopbackOrigin(addressed.origin)) return null;
+
+  const origin = normalizeHttpOrigin(request.headers.get("origin"));
+  if (!origin) return null;
+
+  // Hosts are compared, not origins: `Host` carries no scheme. A scheme change
+  // is a different origin, which the `Origin` allowlist above still governs in
+  // production; here the pairing only has to prove the browser addressed
+  // exactly this loopback authority.
+  return new URL(origin).host === addressed.host ? origin : null;
+}
+
+/**
+ * `NEXT_PUBLIC_SITE_URL` stays the authoritative allowlist: in production it is
+ * the only accepted origin. Outside production the loopback fallback also
+ * accepts the loopback authority the browser actually addressed, so a dev
+ * server reached on a different loopback host or port than the configured one
+ * still works.
+ */
+function isTrustedBrowserOrigin(request: NextRequest, origin: string): boolean {
+  return (
+    origin === configuredSiteOrigin() ||
+    origin === loopbackBrowserOrigin(request)
+  );
+}
+
+/**
+ * Redirects are built on the origin the browser is actually on, so a dev server
+ * that booted on :3001 does not complete the deletion and then bounce the
+ * browser to a dead :3000. A dev port is assigned at boot — parallel worktrees
+ * each land on a different one — so no static `NEXT_PUBLIC_SITE_URL` can track
+ * it.
+ *
+ * Production is unaffected: `loopbackBrowserOrigin` is null there, leaving
+ * `NEXT_PUBLIC_SITE_URL` as the only possible base, so a rewritten `Host` can
+ * never redirect the browser elsewhere. Every caller runs after
+ * `isSameOriginPost`, so any origin reached here is already proven trusted.
+ */
 function redirectUrl(request: NextRequest, path: string) {
-  return new URL(path, requestPublicOrigin(request));
+  const baseOrigin = loopbackBrowserOrigin(request) ?? configuredSiteOrigin();
+
+  if (!baseOrigin) {
+    throw new Error("Trusted site origin is not configured");
+  }
+  return new URL(path, baseOrigin);
 }
 
 function isSameOriginPost(request: NextRequest): boolean {
   const secFetchSite = request.headers.get("sec-fetch-site");
   if (secFetchSite === "cross-site") return false;
 
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
+  // Rejects an absent, opaque (`null`) or non-http(s) `Origin` before any
+  // comparison.
+  const origin = normalizeHttpOrigin(request.headers.get("origin"));
+  if (!origin) return false;
 
-  try {
-    const expectedOrigins = new Set([new URL(request.url).origin]);
-    const forwardedProto = requestProto(request);
-    const forwardedHost = request.headers.get("x-forwarded-host");
-    const host = request.headers.get("host");
-
-    for (const candidateHost of [forwardedHost, host]) {
-      const firstHost = firstHeaderValue(candidateHost);
-      if (firstHost) {
-        expectedOrigins.add(`${forwardedProto}://${firstHost}`);
-      }
-    }
-
-    return expectedOrigins.has(new URL(origin).origin);
-  } catch {
-    return false;
-  }
+  return isTrustedBrowserOrigin(request, origin);
 }
 
 function redirectToDeleteError(request: NextRequest) {
+  if (request.headers.get("accept")?.includes("application/json")) {
+    return NextResponse.json({ ok: false }, { status: 503 });
+  }
   return NextResponse.redirect(
     redirectUrl(request, "/settings/account?delete=error"),
+    { status: 303 },
+  );
+}
+
+function accountDeletionSucceeded(request: NextRequest) {
+  if (request.headers.get("accept")?.includes("application/json")) {
+    return NextResponse.json({ ok: true });
+  }
+  return NextResponse.redirect(
+    redirectUrl(request, "/login?reason=withdrawn"),
     { status: 303 },
   );
 }
@@ -89,9 +165,31 @@ function errorStatus(error: unknown): number | undefined {
   return undefined;
 }
 
+function logAccountDeletionFailure(
+  stage:
+    | "external_configuration"
+    | "external_profile"
+    | "local_account"
+    | "session"
+    | "session_cleanup",
+) {
+  console.error("account_delete_failed", { stage });
+}
+
 export async function POST(request: NextRequest) {
   if (!isSameOriginPost(request)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  let confirmation: FormDataEntryValue | null;
+  try {
+    const formData = await request.formData();
+    confirmation = formData.get(ACCOUNT_DELETION_CONFIRMATION_FIELD);
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+  if (!isValidAccountDeletionConfirmation(confirmation)) {
+    return NextResponse.json({ ok: false }, { status: 400 });
   }
 
   const supabase = await createSupabaseServerClient();
@@ -99,6 +197,9 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
+    if (request.headers.get("accept")?.includes("application/json")) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
     return NextResponse.redirect(redirectUrl(request, "/login"), {
       status: 303,
     });
@@ -109,22 +210,20 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getSession();
   const accessToken = session?.access_token;
   if (!accessToken) {
-    console.error("[auth/account-delete] missing session access token");
+    logAccountDeletionFailure("session");
     return redirectToDeleteError(request);
   }
 
   let baseUrl: string | null = null;
   try {
     baseUrl = getTalkpikApiBaseUrl();
-  } catch (error) {
-    console.error("[auth/account-delete] external api base URL error", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
+  } catch {
+    logAccountDeletionFailure("external_configuration");
     return redirectToDeleteError(request);
   }
 
   if (!baseUrl) {
-    console.error("[auth/account-delete] external api base URL missing");
+    logAccountDeletionFailure("external_configuration");
     return redirectToDeleteError(request);
   }
 
@@ -133,20 +232,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const status = errorStatus(error);
     if (status !== 404) {
-      console.error("[auth/account-delete] external account deletion error", {
-        message: error instanceof Error ? error.message : "unknown",
-        status,
-      });
+      logAccountDeletionFailure("external_profile");
       return redirectToDeleteError(request);
     }
   }
 
   const { error: rpcError } = await supabase.rpc("request_account_deletion");
   if (rpcError) {
-    console.error("[auth/account-delete] rpc error", {
-      code: rpcError.code,
-      message: rpcError.message,
-    });
+    logAccountDeletionFailure("local_account");
     return redirectToDeleteError(request);
   }
 
@@ -154,17 +247,10 @@ export async function POST(request: NextRequest) {
     scope: "global",
   });
   if (signOutError) {
-    console.error("[auth/account-delete] signOut error", {
-      code: signOutError.code,
-      message: signOutError.message,
-      status: signOutError.status,
-    });
+    logAccountDeletionFailure("session_cleanup");
   }
 
-  return NextResponse.redirect(
-    redirectUrl(request, "/login?reason=withdrawn"),
-    { status: 303 },
-  );
+  return accountDeletionSucceeded(request);
 }
 
 export async function GET() {

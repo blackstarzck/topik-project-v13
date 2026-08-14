@@ -5,10 +5,19 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 
 import type { SupabaseServerClient } from "../supabase/server";
+import { normalizeWritingProblem } from "../writing/problem-normalizer";
 import { getFeedbackBundle, getSubmission } from "../writing/server";
 import { PDF_EXPORT_ERROR_CODES } from "./pdf-export-errors";
-import type { PdfExportItem, PdfSubmissionItem } from "./pdf-document";
-import { PDF_EXPORT_MAX_ITEMS, type PdfExportRequest } from "./pdf-options";
+import type {
+  PdfExportItem,
+  PdfProblemContext,
+  PdfSubmissionItem,
+} from "./pdf-document";
+import {
+  PDF_EXPORT_MAX_ITEMS,
+  type PdfExportRequest,
+  type PdfExportRequestInput,
+} from "./pdf-options";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -29,6 +38,11 @@ export type PdfExportQuotaDetails = {
 export type PdfExportQuotaClaim = PdfExportQuotaDetails & {
   usageIds: string[];
 };
+
+export type PdfExportAttemptFailureOutcome =
+  | "failed_current"
+  | "already_ready_current"
+  | "stale_attempt";
 
 type PdfExportQuotaRpcResult = {
   allowed?: boolean;
@@ -124,8 +138,11 @@ export async function claimPdfExportQuota(
   supabase: SupabaseServerClient,
   userId: string,
   problemIds: string[],
+  requestId: string,
 ): Promise<PdfExportQuotaClaim> {
-  const distinctProblemIds = Array.from(new Set(problemIds.filter(Boolean)));
+  const distinctProblemIds = Array.from(
+    new Set(problemIds.filter(Boolean)),
+  ).sort();
   if (distinctProblemIds.length === 0) {
     throw new PdfExportRequestError(
       400,
@@ -136,6 +153,7 @@ export async function claimPdfExportQuota(
   const { data, error } = await supabase.rpc("claim_pdf_export_quota", {
     p_user_id: userId,
     p_problem_ids: distinctProblemIds,
+    p_request_id: requestId,
   });
   if (error) throw new Error(`pdf export quota claim: ${error.message}`);
   if (!data || typeof data !== "object") {
@@ -194,17 +212,153 @@ export async function releasePdfExportQuota(
   if (error) throw new Error(`pdf export quota release: ${error.message}`);
 }
 
+export async function completePdfExportAttempt(
+  supabase: SupabaseServerClient,
+  userId: string,
+  usageIds: string[],
+  exportFileId: string,
+  attemptId: string,
+  storagePath: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("complete_pdf_export_attempt", {
+    p_user_id: userId,
+    p_usage_ids: usageIds,
+    p_export_file_id: exportFileId,
+    p_attempt_id: attemptId,
+    p_storage_path: storagePath,
+  });
+  if (error) throw new Error(`pdf export attempt complete: ${error.message}`);
+  return data === true;
+}
+
+export async function failPdfExportAttempt(
+  supabase: SupabaseServerClient,
+  userId: string,
+  usageIds: string[],
+  exportFileId: string,
+  attemptId: string,
+  failureCode: string,
+  reason: string,
+): Promise<PdfExportAttemptFailureOutcome> {
+  const { data, error } = await supabase.rpc("fail_pdf_export_attempt", {
+    p_user_id: userId,
+    p_usage_ids: usageIds,
+    p_export_file_id: exportFileId,
+    p_attempt_id: attemptId,
+    p_failure_code: failureCode,
+    p_reason: reason,
+  });
+  if (error) throw new Error(`pdf export attempt fail: ${error.message}`);
+  if (
+    data !== "failed_current" &&
+    data !== "already_ready_current" &&
+    data !== "stale_attempt"
+  ) {
+    throw new Error("pdf export attempt fail: invalid response");
+  }
+  return data;
+}
+
 function formatDate(value: string): string {
   const parsed = dayjs(value);
   return parsed.isValid() ? parsed.format("YYYY-MM-DD") : value;
 }
 
-function getSnapshotTitle(snapshot: unknown): string | null {
+function snapshotRecord(snapshot: unknown): Record<string, unknown> | null {
   if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
     return null;
   }
-  const title = (snapshot as Record<string, unknown>).title;
-  return typeof title === "string" && title.trim().length > 0 ? title : null;
+  return snapshot as Record<string, unknown>;
+}
+
+function snapshotString(
+  snapshot: Record<string, unknown>,
+  key: string,
+): string {
+  const value = snapshot[key];
+  return typeof value === "string" ? value : "";
+}
+
+function projectProblemContext(
+  snapshot: unknown,
+  problemId: string,
+  questionNo: number,
+): PdfProblemContext {
+  const source = snapshotRecord(snapshot);
+  if (!source || ![51, 52, 53, 54].includes(questionNo)) {
+    return { kind: "unavailable", questionNo };
+  }
+
+  const normalized = normalizeWritingProblem({
+    id: problemId,
+    canonicalQuestionId: snapshotString(source, "question_id") || null,
+    canonicalImportId: snapshotString(source, "canonical_import_id") || null,
+    payloadHash: snapshotString(source, "payload_hash") || null,
+    title: snapshotString(source, "title"),
+    prompt: snapshotString(source, "prompt"),
+    questionNo: questionNo as 51 | 52 | 53 | 54,
+    materials: source.materials ?? {},
+    tags: Array.isArray(source.tags)
+      ? source.tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
+    lifecycleStatus: "active",
+  });
+
+  if (normalized.kind === "q51" || normalized.kind === "q52") {
+    return {
+      kind: normalized.kind,
+      title: normalized.title,
+      prompt: normalized.prompt,
+      blankedPrompt: normalized.blankedPrompt,
+      blanks: normalized.blanks.map((blank) => ({
+        label: blank.label,
+        role: blank.role,
+        functionLabel: blank.functionLabel,
+        answerType: blank.answerType,
+      })),
+    };
+  }
+
+  if (normalized.kind === "q53") {
+    return {
+      kind: "q53",
+      title: normalized.title,
+      prompt: normalized.prompt,
+      writingTasks: normalized.writingTasks,
+      materialCards: normalized.materialCards.map((card) =>
+        card.kind === "chart"
+          ? {
+              id: card.id,
+              kind: "chart" as const,
+              title: card.title,
+              subtitle: card.subtitle,
+              chart: {
+                title: card.chart.title,
+                unit: card.chart.unit,
+                yearRange: card.chart.yearRange,
+                series: card.chart.series,
+              },
+            }
+          : {
+              id: card.id,
+              kind: "reference" as const,
+              title: card.title,
+              subtitle: card.subtitle,
+              rows: card.rows,
+            },
+      ),
+    };
+  }
+
+  return {
+    kind: "q54",
+    title: normalized.title,
+    prompt: normalized.prompt,
+    topicTitle: normalized.topicTitle,
+    topicDefinition: normalized.topicDefinition,
+    background: normalized.background,
+    requiredQuestions: normalized.requiredQuestions,
+  };
 }
 
 async function loadSubmissionItem(
@@ -225,20 +379,13 @@ async function loadSubmissionItem(
     );
   }
 
-  // Canonical submissions pin the learner-visible title in the immutable safe
-  // snapshot. Legacy-unversioned submissions use the owner-scoped retained
-  // mirror history repository, never the current canonical catalog.
-  let problemTitle = getSnapshotTitle(submission.question_snapshot);
-  if (!problemTitle) {
-    const { data: historyRows, error: historyError } = await supabase.rpc(
-      "get_writing_submission_history_context",
-      { p_submission_ids: [submission.id] },
-    );
-    if (historyError) {
-      throw new Error(`PDF submission history: ${historyError.message}`);
-    }
-    problemTitle = historyRows?.[0]?.title ?? null;
-  }
+  const pinnedSnapshot =
+    submission.question_snapshot ?? submission.legacy_cutover_snapshot;
+  const problemContext = projectProblemContext(
+    pinnedSnapshot,
+    submission.problem_id,
+    submission.question_no,
+  );
 
   const bundle = includeFeedback
     ? await getFeedbackBundle(submissionId, factory)
@@ -248,7 +395,7 @@ async function loadSubmissionItem(
     kind: "submission",
     problemId: submission.problem_id,
     questionNo: submission.question_no,
-    problemTitle,
+    problemContext,
     submittedAt: formatDate(submission.submitted_at),
     answerText: submission.answer_text,
     charCount: submission.char_count,
@@ -311,7 +458,7 @@ async function loadReportItem(
 
 export async function resolvePdfExportItems(
   supabase: SupabaseServerClient,
-  request: PdfExportRequest,
+  request: PdfExportRequest | PdfExportRequestInput,
 ): Promise<PdfExportItem[]> {
   if (request.sourceType === "submission") {
     return [
@@ -325,6 +472,12 @@ export async function resolvePdfExportItems(
 
   if (request.sourceType === "report") {
     return [await loadReportItem(supabase, request.sourceId)];
+  }
+  if (!("itemIds" in request)) {
+    throw new PdfExportRequestError(
+      400,
+      "PDF 내보내기 대상을 확인할 수 없어요.",
+    );
   }
 
   // library_selection: 본인 library_items(submission 항목) → 제출별 PDF 블록.

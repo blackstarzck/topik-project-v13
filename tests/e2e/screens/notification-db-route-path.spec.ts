@@ -47,7 +47,7 @@ async function findUserIdByEmail(client: SupabaseClient, email: string) {
       page,
       perPage: 200,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("notification_fixture_user_lookup_failed");
 
     const found = data.users.find((user) => user.email === email);
     if (found) return found.id;
@@ -92,9 +92,7 @@ async function insertRouteNotification(params: {
     if (!error) return field;
 
     if (field !== "link_url" && isMissingRouteColumnError(error)) continue;
-    throw new Error(
-      `Failed to insert route notification using ${field}: ${error.message}`,
-    );
+    throw new Error("notification_fixture_insert_failed");
   }
 
   throw new Error("No route field candidate could be inserted.");
@@ -130,7 +128,7 @@ async function seedNotifications(
     read_at: null,
     created_at: new Date(baseTime).toISOString(),
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("notification_fixture_read_failed");
 
   return {
     userId,
@@ -156,7 +154,7 @@ async function readAtFor(id: string) {
     .select("read_at")
     .eq("id", id)
     .single();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("notification_fixture_cleanup_failed");
   return data.read_at as string | null;
 }
 

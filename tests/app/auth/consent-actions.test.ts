@@ -46,10 +46,16 @@ const completeProfile = {
   ui_locale_source: "manual",
 };
 
-function makeForm(entries: Record<string, string>) {
+function makeForm(
+  entries: Record<string, string>,
+  consentDocuments: Array<{ id: string; version: string }> = [],
+) {
   const formData = new FormData();
   for (const [key, value] of Object.entries(entries)) {
     formData.set(key, value);
+  }
+  for (const document of consentDocuments) {
+    formData.append("consent_document", JSON.stringify(document));
   }
   return formData;
 }
@@ -172,23 +178,27 @@ describe("completeAuthGateAction", () => {
       },
     });
     getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
-      { id: "terms-1" },
+      { id: "terms-1", version: "v1" },
     ]);
 
     await expect(
       completeAuthGateAction(
-        makeForm({
-          accept: "on",
-          display_name: "  민준  ",
-          nationality_country_code: " kr ",
-          next: "/dashboard",
-          nickname: "  talkpik-min  ",
-        }),
+        makeForm(
+          {
+            accept: "on",
+            display_name: "  민준  ",
+            nationality_country_code: " kr ",
+            next: "/dashboard",
+            nickname: "  talkpik-min  ",
+          },
+          [{ id: "terms-1", version: "v1" }],
+        ),
       ),
     ).rejects.toThrow("NEXT_REDIRECT:/dashboard");
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
+      p_consent_documents: [{ id: "terms-1", version: "v1" }],
       p_display_name: "민준",
       p_gender: null,
       p_nationality_country_code: "KR",
@@ -216,6 +226,7 @@ describe("completeAuthGateAction", () => {
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: false,
+      p_consent_documents: [],
       p_display_name: null,
       p_gender: "female",
       p_nationality_country_code: null,
@@ -242,24 +253,34 @@ describe("completeAuthGateAction", () => {
       },
     });
     getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
-      { id: "terms-1" },
-      { id: "privacy-1" },
+      { id: "terms-1", version: "v1" },
+      { id: "privacy-1", version: "v1" },
     ]);
 
     await expect(
       completeAuthGateAction(
-        makeForm({
-          accept: "on",
-          display_name: "Minji",
-          nationality_country_code: "kr",
-          next: "/auth/post-auth?intent=sign-up",
-          nickname: "talkpik-minji",
-        }),
+        makeForm(
+          {
+            accept: "on",
+            display_name: "Minji",
+            nationality_country_code: "kr",
+            next: "/auth/post-auth?intent=sign-up",
+            nickname: "talkpik-minji",
+          },
+          [
+            { id: "terms-1", version: "v1" },
+            { id: "privacy-1", version: "v1" },
+          ],
+        ),
       ),
     ).rejects.toThrow("NEXT_REDIRECT:/auth/post-auth?intent=sign-up");
 
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: true,
+      p_consent_documents: [
+        { id: "privacy-1", version: "v1" },
+        { id: "terms-1", version: "v1" },
+      ],
       p_display_name: "Minji",
       p_gender: null,
       p_nationality_country_code: "KR",
@@ -297,6 +318,7 @@ describe("completeAuthGateAction", () => {
     );
     expect(rpc).toHaveBeenCalledWith("complete_auth_gate", {
       p_accept_required_consents: false,
+      p_consent_documents: [],
       p_display_name: null,
       p_gender: null,
       p_nationality_country_code: null,
@@ -388,37 +410,40 @@ describe("completeAuthGateAction", () => {
       profile: { ...completeProfile, display_name: null },
     });
     getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
-      { id: "terms-1" },
-      { id: "privacy-1" },
+      { id: "terms-1", version: "v1" },
+      { id: "privacy-1", version: "v1" },
     ]);
 
     await expect(
       completeAuthGateAction(
-        makeForm({
-          accept: "on",
-          display_name: "Chan",
-          next: "/dashboard",
-        }),
+        makeForm(
+          {
+            accept: "on",
+            display_name: "Chan",
+            next: "/dashboard",
+          },
+          [
+            { id: "terms-1", version: "v1" },
+            { id: "privacy-1", version: "v1" },
+          ],
+        ),
       ),
     ).rejects.toThrow(
       "NEXT_REDIRECT:/auth/consent?next=%2Fdashboard&error=save-failed",
     );
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "auth_consent_rpc_failed",
-      expect.objectContaining({
-        category: "auth_completion_rpc_missing_or_stale",
-        code: "PGRST202",
-        details:
-          "Searched for the function public.complete_auth_gate with parameters p_accept_required_consents, p_display_name, p_gender, p_nationality_country_code, p_nickname, p_phone_country_code, p_phone_number",
-        hint: "Try reloading the schema cache",
-        message:
-          "Could not find the function public.complete_auth_gate(...) in the schema cache",
-        missingConsentCount: 2,
-        missingProfileFieldCount: 1,
-        next: "/dashboard",
-        route: "/auth/consent",
-      }),
+    expect(consoleErrorSpy).toHaveBeenCalledWith("auth_consent_rpc_failed", {
+      category: "auth_completion_rpc_missing_or_stale",
+      code: "PGRST202",
+      missingConsentCount: 2,
+      missingProfileFieldCount: 1,
+      route: "/auth/consent",
+    });
+    expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain(
+      "public.complete_auth_gate",
+    );
+    expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain(
+      "schema cache",
     );
   });
 
@@ -426,5 +451,41 @@ describe("completeAuthGateAction", () => {
     await expect(
       completeAuthGateAction(makeForm({ next: "/login" })),
     ).rejects.toThrow("NEXT_REDIRECT:/auth/post-auth?intent=login");
+  });
+
+  it("refuses completion when required legal documents are unavailable", async () => {
+    getMissingRequiredConsentDocumentsMock.mockRejectedValueOnce(
+      new Error("permission denied SQL token=secret"),
+    );
+
+    await expect(
+      completeAuthGateAction(makeForm({ next: "/dashboard" })),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/consent?next=%2Fdashboard&error=save-failed",
+    );
+
+    const supabase =
+      await createSupabaseServerClientMock.mock.results[0]?.value;
+    expect(supabase?.rpc).not.toHaveBeenCalled();
+  });
+
+  it("refuses consent when the displayed document snapshot is stale", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    createSupabaseServerClientMock.mockResolvedValueOnce({ rpc });
+    getMissingRequiredConsentDocumentsMock.mockResolvedValueOnce([
+      { id: "terms-2", version: "v2" },
+    ]);
+
+    await expect(
+      completeAuthGateAction(
+        makeForm({ accept: "on", next: "/dashboard" }, [
+          { id: "terms-1", version: "v1" },
+        ]),
+      ),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/consent?next=%2Fdashboard&error=save-failed",
+    );
+
+    expect(rpc).not.toHaveBeenCalled();
   });
 });

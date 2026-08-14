@@ -74,11 +74,11 @@ export function PaywallShell({ returnHref }: { returnHref: string }) {
         const plans = await fetchActivePlans();
         if (cancelled) return;
         setState({ status: "ready", plans });
-      } catch (err) {
+      } catch {
         if (cancelled) return;
         setState({
           status: "error",
-          message: err instanceof Error ? err.message : t("loadError"),
+          message: t("loadError"),
         });
       }
     })();

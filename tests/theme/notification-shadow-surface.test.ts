@@ -137,9 +137,7 @@ describe("In-app notification inbox item styles", () => {
   });
 
   test("notification rows remove outer horizontal padding and add transitioned hover feedback", () => {
-    expect(
-      blockFor(".app-notification-item"),
-    ).toContain("padding-inline: 0");
+    expect(blockFor(".app-notification-item")).toContain("padding-inline: 0");
     expect(blockFor(".app-notification-item__button")).toContain(
       "background: transparent",
     );
@@ -281,9 +279,7 @@ describe("In-app notification inbox item styles", () => {
     expect(
       blockFor(".app-notification-feed-item__time.ant-typography"),
     ).toContain("flex: 0 0 auto");
-    expect(blockFor(".app-notification-feed-item__tag.ant-tag")).toBe(
-      "",
-    );
+    expect(blockFor(".app-notification-feed-item__tag.ant-tag")).toBe("");
     expect(
       blockFor(".app-notification-feed-item__time.ant-typography"),
     ).toContain("font-size: 14px");

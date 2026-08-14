@@ -69,6 +69,59 @@ describe("TermsDocument", () => {
     );
   });
 
+  it("renders the published title as the page heading when the body has no h1", () => {
+    renderTermsDocument({
+      ...publishedTerms,
+      title: "Official Terms",
+      body: "<p>Official terms body.</p>",
+    });
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Official Terms" }),
+    ).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByText("Official terms body.")).toBeTruthy();
+  });
+
+  it("replaces an empty body h1 with the published accessible title", () => {
+    renderTermsDocument({
+      ...publishedTerms,
+      title: "Official Terms",
+      body: "<h1><span>&nbsp;</span></h1><p>Official terms body.</p>",
+    });
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Official Terms" }),
+    ).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+
+  it("treats encoded and zero-width whitespace headings as empty", () => {
+    renderTermsDocument({
+      ...publishedTerms,
+      title: "Official Terms",
+      body: "<h1>&ensp;&#32;&#x200B;\u2060</h1><p>Official terms body.</p>",
+    });
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Official Terms" }),
+    ).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+
+  it("treats directional marks and soft hyphens in named entities as empty", () => {
+    renderTermsDocument({
+      ...publishedTerms,
+      title: "Official Terms",
+      body: "<h1>&lrm;&rlm;&shy;</h1><p>Official terms body.</p>",
+    });
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Official Terms" }),
+    ).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+
   it("renders admin-authored Markdown as document markup inside the legal card layout", () => {
     renderTermsDocument({
       ...publishedTerms,

@@ -447,10 +447,7 @@ async function ensureAuthedRoute(page: Page, url: string) {
   return true;
 }
 
-async function openFixtureProblemList(
-  page: Page,
-  fixture: SaveBackFixture,
-) {
+async function openFixtureProblemList(page: Page, fixture: SaveBackFixture) {
   const url = `/practice/problems?q=${encodeURIComponent(fixture.marker)}&sort=newest&page=1`;
   const deadline = Date.now() + REMOTE_FIXTURE_SYNC_TIMEOUT_MS;
   while (Date.now() < deadline) {
@@ -569,7 +566,9 @@ async function searchLibraryProblems(page: Page, query: string) {
 }
 
 async function selectSavedProblemFilter(page: Page) {
-  const desktopFilter = page.getByTestId("library-problems-filter-kind-problem");
+  const desktopFilter = page.getByTestId(
+    "library-problems-filter-kind-problem",
+  );
   if (await desktopFilter.isVisible()) {
     await desktopFilter.click();
     return;

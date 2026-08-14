@@ -1,11 +1,12 @@
 "use client";
 
-import { Alert, Button, Empty, Spin, Typography } from "antd";
+import { Button, Empty, Spin, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { AppCard } from "@/components/shared/AppCard";
+import { UnavailableState } from "@/components/shared/UnavailableState";
 import { useLocationHash } from "@/hooks/useLocationHash";
 import { useLibraryItems } from "@/lib/library/queries";
 import {
@@ -186,7 +187,7 @@ export function ProblemListView({ userId }: Props) {
     [filter, sort, page, userId],
   );
   const list = useUserProblemsRpc(rpcParams);
-  const savedProblems = useLibraryItems("problems");
+  const savedProblems = useLibraryItems(userId, "problems");
   const retry = useSingleFlightAction(() => list.refetch());
 
   const total = list.data?.total ?? 0;
@@ -243,22 +244,16 @@ export function ProblemListView({ userId }: Props) {
           <div className="min-h-20" />
         </Spin>
       ) : list.error ? (
-        // §예외 — 로딩 실패.
-        <Alert
-          type="error"
-          showIcon
-          title={t("loadErrorTitle")}
-          description={list.error instanceof Error ? list.error.message : ""}
-          action={
-            <Button
-              size="small"
-              loading={retry.pending}
-              disabled={retry.pending}
-              onClick={() => void retry.run()}
-            >
-              {t("retry")}
-            </Button>
-          }
+        <UnavailableState
+          variant="resource"
+          actions={[
+            {
+              key: "retry",
+              label: t("retry"),
+              onClick: () => void retry.run(),
+              primary: true,
+            },
+          ]}
         />
       ) : rows.length > 0 ? (
         <>

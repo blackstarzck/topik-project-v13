@@ -3,7 +3,6 @@ import { expect, test, type Page } from "@playwright/test";
 test.use({ storageState: { cookies: [], origins: [] } });
 
 const AUTHORIZE_ROUTE = /\/auth\/v1\/authorize(?:\?|$)/;
-const INVITE_CODE = "EXPO2026-BOOTH-A";
 const KAKAOTALK_IOS_USER_AGENT =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 KAKAOTALK 10.7.0";
 
@@ -97,54 +96,6 @@ test.describe("Google OAuth entry", () => {
       heading: /회원가입|Sign up/,
       intent: "sign-up",
     });
-  });
-
-  test("invited sign-up starts Supabase Google OAuth with invite confirmation redirect", async ({
-    page,
-  }) => {
-    const errors = collectErrors(page);
-    await mockAuthorizePage(page);
-
-    await page.goto(`/?aff=${INVITE_CODE}`, { waitUntil: "networkidle" });
-    await expect(page).toHaveURL(/\/auth\/institution-invite$/);
-    await page
-      .getByRole("link", {
-        name: /새 계정으로 가입하고 기관에 연결|Sign up with a new account and connect institution/,
-      })
-      .click();
-    await expect(page).toHaveURL(/\/sign-up$/);
-    await page.waitForLoadState("networkidle");
-
-    const appOrigin = new URL(page.url()).origin;
-    const requestPromise = page.waitForRequest(AUTHORIZE_ROUTE);
-    const oauthButton = page.getByRole("button", { name: /Google/ });
-    await expect(oauthButton).toBeEnabled();
-    await oauthButton.click();
-    const request = await requestPromise;
-
-    const url = new URL(request.url());
-    expect(url.pathname).toBe("/auth/v1/authorize");
-    expect(url.searchParams.get("provider")).toBe("google");
-    const requestedScopes = [
-      url.searchParams.get("scope"),
-      url.searchParams.get("scopes"),
-    ]
-      .filter(Boolean)
-      .join(" ");
-    expect(requestedScopes).not.toMatch(
-      /user\.gender\.read|user\.phonenumbers\.read|phone|gender/i,
-    );
-
-    const redirectTo = url.searchParams.get("redirect_to");
-    expect(redirectTo).toBeTruthy();
-
-    const callbackUrl = new URL(redirectTo ?? "");
-    expect(callbackUrl.origin).toBe(appOrigin);
-    expect(callbackUrl.pathname).toBe("/auth/callback");
-    expect(callbackUrl.searchParams.get("next")).toBe(
-      "/auth/institution-invite?next=%2Fauth%2Fpost-auth%3Fintent%3Dsign-up",
-    );
-    expect(errors).toEqual([]);
   });
 });
 

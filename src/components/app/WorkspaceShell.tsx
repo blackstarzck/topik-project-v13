@@ -1,17 +1,27 @@
 "use client";
 
 import { Avatar, Button, Grid, Layout, Popover, Typography } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { Menu as MenuIcon } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { flushSync } from "react-dom";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import { avatarPublicUrl } from "@/components/profile/avatar-upload";
+import { avatarSignedUrl } from "@/components/profile/avatar-upload";
 import type { AppRole } from "@/lib/auth/roles";
 import { APP_ROUTES } from "@/lib/routes";
+import { replaceWorkspaceDocument } from "@/lib/auth/workspace-session-navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { clearClientRecoveryForLogout } from "@/lib/writing/client-recovery-cleanup";
 import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
 
@@ -59,7 +69,11 @@ export function WorkspaceShell({
   const router = useRouter();
   const screens = useBreakpoint();
   const signOutFormRef = useRef<HTMLFormElement>(null);
+  const signingOutRef = useRef(false);
+  const sessionBoundaryClosedRef = useRef(false);
+  const [sessionBoundaryOpen, setSessionBoundaryOpen] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // 멀티 탭/기기 동기화: 다른 탭·기기에서 로그아웃되거나 회원 탈퇴로 세션이
   // 무효화되면 이 탭도 로그인 화면으로 보낸다. 권위 있는 차단은 서버측
@@ -69,13 +83,38 @@ export function WorkspaceShell({
     const supabase = createSupabaseBrowserClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const closeSessionBoundary = () => {
+        if (!sessionBoundaryClosedRef.current) {
+          sessionBoundaryClosedRef.current = true;
+          flushSync(() => setSessionBoundaryOpen(false));
+        }
+        try {
+          queryClient.clear();
+        } catch {
+          // The workspace is already hidden. Navigation still proceeds so the
+          // server can establish the next authoritative session.
+        }
+      };
+
       if (event === "SIGNED_OUT") {
+        closeSessionBoundary();
         router.replace("/login");
+        return;
+      }
+
+      if (session?.user.id && session.user.id !== userId) {
+        closeSessionBoundary();
+        try {
+          replaceWorkspaceDocument();
+        } catch {
+          // Fail closed: children stay unmounted even if browser navigation is
+          // unavailable. A later user action may retry a full navigation.
+        }
       }
     });
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [queryClient, router, userId]);
   const isMobile = screens.md === false;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const showDrawer = isMobile && drawerOpen;
@@ -119,13 +158,19 @@ export function WorkspaceShell({
       : cleanDisplayName && cleanDisplayName !== profileName
         ? cleanDisplayName
         : null;
-  const avatarUrl = useMemo(() => {
-    if (!avatarPath) return null;
-    try {
-      return avatarPublicUrl(avatarPath);
-    } catch {
-      return null;
-    }
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void avatarSignedUrl(avatarPath)
+      .then((url) => {
+        if (!cancelled) setAvatarUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setAvatarUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [avatarPath]);
   const avatarInitial = profileName?.charAt(0).toUpperCase() ?? "?";
   const profileActions: ProfileAction[] = [
@@ -146,6 +191,13 @@ export function WorkspaceShell({
     if (key === "logout") {
       signOutFormRef.current?.requestSubmit();
     }
+  };
+  const handleSignOutSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (signingOutRef.current) return;
+    signingOutRef.current = true;
+    const form = event.currentTarget;
+    void clearClientRecoveryForLogout(userId).finally(() => form.submit());
   };
   const profilePopoverContent = profileName ? (
     <div className="app-profile-popover-panel">
@@ -219,6 +271,17 @@ export function WorkspaceShell({
       <NotificationBell userId={userId} affiliationCode={affiliationCode} />
     </>
   );
+
+  if (!sessionBoundaryOpen) {
+    return (
+      <div
+        className="min-h-screen"
+        role="status"
+        aria-busy="true"
+        data-testid="workspace-session-boundary"
+      />
+    );
+  }
 
   return (
     <Layout
@@ -310,6 +373,7 @@ export function WorkspaceShell({
         method="post"
         action={APP_ROUTES.authSignOut}
         className="app-profile-menu-signout"
+        onSubmit={handleSignOutSubmit}
         hidden
       />
     </Layout>

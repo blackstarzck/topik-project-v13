@@ -47,6 +47,19 @@ describe("user-flow route contract", () => {
     }
   });
 
+  it("registers the system report endpoint as an excluded API route", () => {
+    expect(APP_ROUTES.apiSystemReports).toBe("/api/system-reports");
+    expect(APP_ROUTE_SPECS).toContainEqual(
+      expect.objectContaining({
+        id: "api-system-reports",
+        path: APP_ROUTES.apiSystemReports,
+        appPath: "src/app/api/system-reports/route.ts",
+        routeType: "api-route",
+        middleware: "excluded",
+      }),
+    );
+  });
+
   it("derives middleware public and protected route lists from real route specs", () => {
     const expectedPublic = APP_ROUTE_SPECS.filter(
       (route) => route.middleware === "public",

@@ -39,6 +39,8 @@ function response(status: number, body: Record<string, unknown>) {
 
 describe("triggerPdfExport", () => {
   it("reserves print export quota through the server endpoint before printing", async () => {
+    const requestId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    vi.spyOn(crypto, "randomUUID").mockReturnValue(requestId);
     const fetcher = vi.fn(async () => response(200, { exportId: "exp-1" }));
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => {
       /* noop */
@@ -51,7 +53,7 @@ describe("triggerPdfExport", () => {
     expect(fetcher).toHaveBeenCalledWith("/api/export/pdf/print", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ ...request, requestId }),
     });
     expect(printSpy).toHaveBeenCalledTimes(1);
   });

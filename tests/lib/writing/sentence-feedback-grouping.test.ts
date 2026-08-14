@@ -24,10 +24,7 @@ describe("groupSentenceFeedbackRows — short (51/52)", () => {
 
   it("buckets rows into the blanks whose answer line contains the original text", () => {
     const groups = groupSentenceFeedbackRows({
-      rows: [
-        row("s-1", "신청할 수"),
-        row("s-2", "알려 주시면"),
-      ],
+      rows: [row("s-1", "신청할 수"), row("s-2", "알려 주시면")],
       questionNo: 51,
       answerText,
       answerJson: null,
@@ -54,7 +51,11 @@ describe("groupSentenceFeedbackRows — short (51/52)", () => {
 
   it("puts empty and unmatched originals into the general group", () => {
     const groups = groupSentenceFeedbackRows({
-      rows: [row("s-1", ""), row("s-2", null), row("s-3", "완전히 다른 텍스트")],
+      rows: [
+        row("s-1", ""),
+        row("s-2", null),
+        row("s-3", "완전히 다른 텍스트"),
+      ],
       questionNo: 51,
       answerText,
       answerJson: null,

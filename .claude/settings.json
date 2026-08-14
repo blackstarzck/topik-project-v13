@@ -1,3 +1,4 @@
 {
-  "hooks": {}
+  "hooks": {},
+  "outputStyle": "Readable"
 }

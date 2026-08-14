@@ -7,10 +7,15 @@ import type { ReactNode } from "react";
 import { Trash2 } from "@/components/shared/AppIcons";
 import { useDeleteLibraryItem } from "@/lib/library/mutations";
 import type { LibraryTab } from "@/lib/library/types";
+import {
+  createClientOperationalEvent,
+  emitClientOperationalEvent,
+} from "@/lib/operations/client-operational-event";
 
 type LibraryRowTab = LibraryTab | "drafts";
 
 type Props = {
+  userId: string;
   children: ReactNode;
   className?: string;
   itemId: string;
@@ -25,6 +30,16 @@ type Props = {
   showDeleteAction?: boolean;
 };
 
+function recordLibraryDeleteFailure() {
+  const created = createClientOperationalEvent({
+    code: "operation_failed",
+    feature: "library_resource",
+    operation: "delete",
+    result: "failure",
+  });
+  if (created.ok) void emitClientOperationalEvent(created.event);
+}
+
 /**
  * Shared row chrome for every `Library{Submissions,Reports,SavedProblems,Exports}Tab`.
  *
@@ -35,6 +50,7 @@ type Props = {
  * against accidental loss and invalidate the active tab's query key.
  */
 export function LibraryItemRow({
+  userId,
   children,
   className,
   itemId,
@@ -45,7 +61,7 @@ export function LibraryItemRow({
 }: Props) {
   const t = useTranslations("library.item");
   const { message } = App.useApp();
-  const deleteItem = useDeleteLibraryItem();
+  const deleteItem = useDeleteLibraryItem(userId);
 
   function handleDelete() {
     if (tab === "drafts") return;
@@ -53,8 +69,10 @@ export function LibraryItemRow({
       { itemId, tab },
       {
         onSuccess: () => message.success(t("deleted")),
-        onError: (err) =>
-          message.error(err instanceof Error ? err.message : t("deleteFailed")),
+        onError: () => {
+          recordLibraryDeleteFailure();
+          message.error(t("deleteFailed"));
+        },
       },
     );
   }
