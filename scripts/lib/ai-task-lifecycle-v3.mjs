@@ -2430,13 +2430,26 @@ export function reconcileDelegatedCleanupV3({
   // A preserved record only moves on a confirmed cleanup. Rewriting it on any
   // other outcome would churn its revision and blockers without new information.
   if (current.state === "PRESERVED" && !v2ConfirmsCleaned) return current;
+  const blockers = v2ConfirmsCleaned ? [] : mergeDelegatedCleanupBlockers(v2Result);
+  // Ending the task is only correct for a blocker the operator can still clear
+  // afterwards. RUNTIME_REGISTRATION_REQUIRED cannot be: the V2 gate wants an
+  // explicit runtime declaration, and `task:runtime` - the only writer of one -
+  // refuses unless the record is ACTIVE with a matching actor. Preserving here
+  // cleared the actor and made the declaration impossible, so the gate stayed
+  // unsatisfiable forever and `task:cleanup --approval` could not help either,
+  // because its recovery path demands the same declaration. Leave the record
+  // alone instead; the blocker is still reported, and the retry can succeed once
+  // the operator declares the runtime.
+  if (!v2ConfirmsCleaned && blockers.includes("RUNTIME_REGISTRATION_REQUIRED")) {
+    return current;
+  }
   return updateTaskRecordV3(repoPath, current, {
     state: v2ConfirmsCleaned ? "CLEANED" : "PRESERVED",
     activeActor: null,
     pendingActor: null,
     handoffFromActor: null,
     runtimeRef: v2ConfirmsCleaned ? null : current.runtimeRef,
-    blockers: v2ConfirmsCleaned ? [] : mergeDelegatedCleanupBlockers(v2Result),
+    blockers,
   }, now);
 }
 
