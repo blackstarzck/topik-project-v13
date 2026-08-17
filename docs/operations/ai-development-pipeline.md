@@ -494,6 +494,26 @@ flowchart TD
 - **`PRESERVED`는 종단 상태다.** 이미 보존된 task를 다시 정리 시도하면 `reconcileDelegatedCleanupV3`가 조기 반환해 record의 `blockers`를 갱신하지 않는다. record만 읽으면 재시도 때 옛 이유가 그대로 나오므로, 어댑터 결과가 방금 받은 V2 이유를 합쳐 보고한다.
 - **예외는 하나뿐이다 — 정리가 실제로 끝난 경우의 교정.** 위임한 V2 정리가 record를 쓴 뒤에 성공을 확인해 주면 `PRESERVED`를 `CLEANED`로 올린다. 자원이 이미 사라졌는데 record만 막힌 상태로 남으면 사실과 어긋나기 때문이다. V2 결과와 V2 record가 **둘 다** 정리 완료를 말할 때만 움직이며, 그 밖의 결과에서는 revision과 `blockers`를 건드리지 않고 그대로 둔다. 자동 정리 대상 상태 목록과 `preserve-only` 계획은 바뀌지 않는다.
 
+##### 런타임 선언 누락으로 task를 끝내지 않는다 (2026-08-14)
+
+`PRESERVED`로 확정하는 것은 **운영자가 그 뒤에도 고칠 수 있는 사유**일 때만 옳다. `RUNTIME_REGISTRATION_REQUIRED`는 그렇지 않다.
+
+```mermaid
+flowchart TD
+  A[task:autocleanup] --> B{V2 게이트: 런타임 선언 있나}
+  B -->|없음| C[RUNTIME_REGISTRATION_REQUIRED]
+  C --> D[record 를 PRESERVED 로 확정하고<br/>실행자를 비움]
+  D --> E[task:runtime 은 ACTIVE + 실행자 일치만 받음]
+  E --> F[선언을 만들 수단이 사라짐]
+  F --> B
+```
+
+- V2 정리 게이트는 워크스페이스의 런타임 발자국이 **명시적으로 선언**돼야 정리를 허용한다. 선언이 없으면 실행 중인 dev server를 모르고 지우는 것을 막기 위해 닫힌다. 이 판단은 유지한다.
+- 그런데 선언을 쓰는 유일한 명령 `task:runtime`은 record가 `ACTIVE`이고 실행자가 일치할 때만 받는다. 위임 실패를 `PRESERVED`로 확정하면 실행자가 비워지므로 **선언 자체가 불가능해진다.** `task:cleanup --approval`의 복구 경로도 같은 선언을 요구하므로 자동·수동 어느 쪽으로도 되돌릴 수 없었다.
+- 그래서 V2가 보고한 이유에 `RUNTIME_REGISTRATION_REQUIRED`가 있으면 record를 **그대로 둔다.** 사유는 어댑터 결과로 계속 보고되므로 운영자는 `task:runtime`으로 선언한 뒤 재시도해 정리를 끝낼 수 있다.
+- **다른 사유는 그대로 확정한다.** 워크트리 dirty처럼 운영자가 워크스페이스를 손보고 다시 시작할 수 있는 사유는 기존 동작을 유지한다. 이 완화는 "선언을 만들 수단이 사라지는" 한 가지 경우에만 적용된다.
+- 이미 `PRESERVED`로 확정된 기존 record는 이 수정으로 되살아나지 않는다. 종단 상태에서 나가는 전이는 정리 완료 확인 하나뿐이라는 계약을 유지하기 때문이다. 그런 record의 워크스페이스는 병합이 확인됐다면 운영자가 직접 정리한다.
+
 이 보고가 없던 동안 정리 실패 원인을 찾으려면 V2 정리기를 직접 호출해야 했다. 정리 실패는 워크트리가 쌓이는 결과로 이어지므로 보고만으로 조치할 수 있어야 한다.
 
 원격 task branch가 남아 있으면 repository profile에 맞는 계정으로 전환하고 remote identity와 ref가 merged PR head SHA와 정확히 같을 때만 `--force-with-lease=<remote-ref>:<expected-sha>`를 사용한 exact-SHA lease로 삭제한다. 이 옵션은 임의 SHA로 원격을 덮어쓰는 강제 push가 아니라, 원격 ref가 방금 검증한 SHA 그대로일 때만 삭제를 허용하는 TOCTOU 보호 장치다. 삭제 직후 전체 snapshot을 다시 계산하며 조금이라도 달라지면 worktree와 로컬 branch는 보존한다. 인증·identity·SHA 확인 실패도 로컬 항목을 그대로 보존한다.
