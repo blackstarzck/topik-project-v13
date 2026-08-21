@@ -194,12 +194,14 @@ describe("PromotionRunV1 profiles and schema", () => {
   });
 
   it("creates a closed, fingerprinted, secret-safe record", async () => {
-    const { createPromotionRun, validatePromotionRunV1 } =
+    const { createPromotionRun, PROMOTION_STATES, validatePromotionRunV1 } =
       await import("../../scripts/lib/ai-release-promotion.mjs");
     const record = createPromotionRun(runInput());
 
     expect(record.recordType).toBe("PromotionRunV1");
     expect(record.contractVersion).toBe("3.1");
+    expect(PROMOTION_STATES).toContain("SECURITY_INCIDENT_BLOCKED");
+    expect(PROMOTION_STATES).not.toContain("SECURITY_AUDIT_BLOCKED");
     expect(record.profileFingerprint).toMatch(/^[a-f0-9]{64}$/);
     expect(record.state).toBe("PLANNED");
     expect(record.vercel).toMatchObject({
@@ -224,28 +226,73 @@ describe("PromotionRunV1 profiles and schema", () => {
   });
 });
 
-describe("security incident gate", () => {
-  it("blocks missing, finding, malformed, and wrong-ref evidence before adapters run", async () => {
-    const { createPromotionRun, startPromotion } =
-      await import("../../scripts/lib/ai-release-promotion.mjs");
-    const mutationAdapter = vi.fn();
+describe("security audit gate", () => {
+  it.each([
+    ["missing evidence", { securityAudit: null }, "SECURITY_AUDIT_REQUIRED"],
+    [
+      "malformed evidence",
+      { securityAudit: { schemaVersion: 1 } },
+      "SECURITY_AUDIT_SCHEMA_INVALID",
+    ],
+    [
+      "legacy full-history evidence",
+      { securityAudit: legacySecurityAudit() },
+      "SECURITY_AUDIT_BASELINE_REQUIRED",
+    ],
+    [
+      "wrong refs",
+      {
+        securityAudit: securityAudit({
+          refs: ["origin/main"],
+          snapshots: [{ ref: "origin/main", commitHash: digest(SHA.source) }],
+          summary: { refCount: 1, scannedPathCount: 24, findingCount: 0 },
+        }),
+      },
+      "SECURITY_AUDIT_REFS_MISMATCH",
+    ],
+    ["missing baseline", { expectedBaselineSha: null }, "SECURITY_AUDIT_BASELINE_REQUIRED"],
+    ["wrong baseline", { expectedBaselineSha: SHA.previous }, "SECURITY_AUDIT_BASELINE_MISMATCH"],
+    [
+      "artifact findings",
+      {
+        securityAudit: securityAudit({
+          findings: [
+            {
+              ref: "origin/main",
+              path: ".scratch/a",
+              rule: "TRACKED_SCRATCH_PATH",
+              pathHash: digest(".scratch/a"),
+              historyCommitCount: 1,
+              commitHashes: [digest("commit")],
+            },
+          ],
+          summary: { refCount: 3, scannedPathCount: 24, findingCount: 1 },
+        }),
+      },
+      "SECURITY_ARTIFACT_FINDINGS_BLOCKED",
+    ],
+  ])(
+    "returns a non-persistent audit block for %s",
+    async (_label, overrides, blocker) => {
+      const { startPromotion } = await import(
+        "../../scripts/lib/ai-release-promotion.mjs"
+      );
 
-    for (const securityAuditValue of [
-      null,
-      securityAudit({
-        findings: [{ ref: "origin/main", path: ".scratch/a", rule: "R", pathHash: digest("x"), historyCommitCount: 1 }],
-        summary: { refCount: 3, scannedPathCount: 24, findingCount: 1 },
-      }),
-      { schemaVersion: 1 },
-      securityAudit({ refs: ["origin/main"] }),
-    ]) {
-      const result = startPromotion({
-        ...runInput({ securityAudit: securityAuditValue }),
-        mutationAdapter,
+      const result = startPromotion(runInput(overrides));
+
+      expect(result).toEqual({
+        schemaVersion: 1,
+        recordType: "PromotionStartResultV1",
+        state: "SECURITY_AUDIT_BLOCKED",
+        blocker,
+        mutationAttempted: false,
       });
-      expect(result.state).toBe("SECURITY_INCIDENT_BLOCKED");
-    }
-    expect(mutationAdapter).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps createPromotionRun fail-closed for missing evidence", async () => {
+    const { createPromotionRun } = await import("../../scripts/lib/ai-release-promotion.mjs");
+
     expect(() => createPromotionRun(runInput({ securityAudit: null }))).toThrowError(
       "SECURITY_AUDIT_REQUIRED",
     );
@@ -277,7 +324,7 @@ describe("security incident gate", () => {
   });
 
   it("creates a promotion record only from a baseline-bound diff audit", async () => {
-    const { createPromotionRun, startPromotion, validateSecurityAuditEvidence } =
+    const { createPromotionRun, validateSecurityAuditEvidence } =
       await import("../../scripts/lib/ai-release-promotion.mjs");
     const legacy = legacySecurityAudit();
 
@@ -291,13 +338,6 @@ describe("security incident gate", () => {
     expect(() => createPromotionRun(runInput({ securityAudit: legacy }))).toThrowError(
       "SECURITY_AUDIT_BASELINE_REQUIRED",
     );
-    expect(startPromotion(runInput({ securityAudit: legacy }))).toEqual({
-      schemaVersion: 1,
-      recordType: "PromotionStartResultV1",
-      state: "SECURITY_INCIDENT_BLOCKED",
-      blocker: "SECURITY_AUDIT_BASELINE_REQUIRED",
-      mutationAttempted: false,
-    });
     expect(() =>
       createPromotionRun(runInput({ expectedBaselineSha: null })),
     ).toThrowError("SECURITY_AUDIT_BASELINE_REQUIRED");
@@ -723,6 +763,46 @@ describe("registry and CLI contract", () => {
     );
   });
 
+  it("persists the legacy incident state but rejects the transient audit state", async () => {
+    const {
+      createPromotionRun,
+      readPromotionRun,
+      stableFingerprint,
+      validatePromotionRunV1,
+      writePromotionRun,
+    } = await import("../../scripts/lib/ai-release-promotion.mjs");
+    const commonDir = tempRoot();
+    const incidentPayload = structuredClone(createPromotionRun(runInput()));
+    incidentPayload.state = "SECURITY_INCIDENT_BLOCKED";
+    delete incidentPayload.fingerprint;
+    const incidentRecord = {
+      ...incidentPayload,
+      fingerprint: stableFingerprint(incidentPayload),
+    };
+
+    expect(validatePromotionRunV1(incidentRecord)).toEqual([]);
+    writePromotionRun({ gitCommonDir: commonDir, record: incidentRecord });
+    expect(
+      readPromotionRun({ gitCommonDir: commonDir, runId: incidentRecord.runId }),
+    ).toEqual(incidentRecord);
+
+    const auditPayload = structuredClone(incidentRecord);
+    auditPayload.state = "SECURITY_AUDIT_BLOCKED";
+    delete auditPayload.fingerprint;
+    const auditRecord = {
+      ...auditPayload,
+      fingerprint: stableFingerprint(auditPayload),
+    };
+
+    expect(validatePromotionRunV1(auditRecord)).toContainEqual({
+      code: "INVALID_STATE",
+      path: "state",
+    });
+    expect(() =>
+      writePromotionRun({ gitCommonDir: commonDir, record: auditRecord }),
+    ).toThrowError("PROMOTION_RECORD_INVALID");
+  });
+
   it("exposes release start/status/resume and executor package scripts", () => {
     const packageJson = JSON.parse(readFileSync(path.resolve("package.json"), "utf8"));
     expect(packageJson.scripts["release:start"]).toBe("node scripts/ai-release.mjs start");
@@ -782,7 +862,7 @@ describe("registry and CLI contract", () => {
     ]));
   });
 
-  it("resets approval only for a confirmed security finding", async () => {
+  it("release-start security boundary blocks audit schema errors without resetting approval", async () => {
     const { enforceReleaseSecurityResult } =
       await import("../../scripts/ai-release.mjs");
     const readPolicy = vi.fn(() => ({ fingerprint: digest("policy") }));
@@ -798,18 +878,50 @@ describe("registry and CLI contract", () => {
     expect(readPolicy).not.toHaveBeenCalled();
     expect(resetPolicy).not.toHaveBeenCalled();
     expect(writePolicy).not.toHaveBeenCalled();
+  });
+
+  it("release-start security boundary blocks artifact findings without resetting approval", async () => {
+    const { enforceReleaseSecurityResult } =
+      await import("../../scripts/ai-release.mjs");
+    const readPolicy = vi.fn(() => ({ fingerprint: digest("policy") }));
+    const resetPolicy = vi.fn(() => ({ fingerprint: digest("reset") }));
+    const writePolicy = vi.fn();
+    const dependencies = { readPolicy, resetPolicy, writePolicy };
+
+    expect(() => enforceReleaseSecurityResult({
+      security: { ok: false, code: "SECURITY_ARTIFACT_FINDINGS_BLOCKED" },
+      commonDir: tempRoot(),
+      dependencies,
+    })).toThrowError("SECURITY_ARTIFACT_FINDINGS_BLOCKED");
+    expect(readPolicy).not.toHaveBeenCalled();
+    expect(resetPolicy).not.toHaveBeenCalled();
+    expect(writePolicy).not.toHaveBeenCalled();
+  });
+
+  it("release-start security boundary resets approval for an explicit actual security incident", async () => {
+    const { enforceReleaseSecurityResult } =
+      await import("../../scripts/ai-release.mjs");
+    const commonDir = tempRoot();
+    const existingPolicy = { fingerprint: digest("policy") };
+    const resetResult = { fingerprint: digest("reset") };
+    const readPolicy = vi.fn(() => existingPolicy);
+    const resetPolicy = vi.fn(() => resetResult);
+    const writePolicy = vi.fn();
+    const dependencies = { readPolicy, resetPolicy, writePolicy };
 
     expect(() => enforceReleaseSecurityResult({
       security: { ok: false, code: "SECURITY_INCIDENT_BLOCKED" },
-      commonDir: tempRoot(),
+      commonDir,
       dependencies,
     })).toThrowError("SECURITY_INCIDENT_BLOCKED");
     expect(readPolicy).toHaveBeenCalledOnce();
-    expect(resetPolicy).toHaveBeenCalledWith(
-      expect.objectContaining({ fingerprint: digest("policy") }),
-      "SECURITY_INCIDENT",
-    );
+    expect(resetPolicy).toHaveBeenCalledWith(existingPolicy, "SECURITY_INCIDENT");
     expect(writePolicy).toHaveBeenCalledOnce();
+    expect(writePolicy).toHaveBeenCalledWith({
+      gitCommonDir: commonDir,
+      policy: resetResult,
+      expectedFingerprint: existingPolicy.fingerprint,
+    });
   });
 
   it("keeps the documented release examples aligned with the public CLI", async () => {

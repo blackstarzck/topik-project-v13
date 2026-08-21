@@ -75,10 +75,123 @@ const collabProtectionContractLines = [
   "A user request to promote to production starts release orchestration; it does not authorize an immediate collab/main update.",
   "For each contract version, the first two successful production promotions pause once at AWAITING_PROD_APPROVAL before the main merge; later runs may use AUTO. An explicit production-mutation request does not bypass those first two confirmations.",
   "Reset the two-confirmation policy after a pipeline contract, DB workflow or compatibility policy, Vercel project environment or domain, remote branch or auth profile change, or after a deployment failure, rollback, or security incident.",
-  "Before promotion, require a secret-safe security artifact audit, credential rotation, and the approved history response. Production DB automatic apply stays disabled until the baseline and trusted workflow gates pass.",
+  "Before promotion, require a baseline-bound security artifact diff audit for the exact source and target refs.",
+  "Artifact findings block that publication attempt.",
+  "Artifact findings do not declare a credential incident.",
+  "Artifact findings do not reset the production-confirmation policy.",
+  "Require credential rotation only for a confirmed or reasonably suspected credential incident.",
+  "Require the approved history response only for a confirmed or reasonably suspected credential incident.",
+  "Production DB automatic apply stays disabled until the baseline and trusted workflow gates pass.",
   "Before mutation, validate that the collab remote URL matches https://github.com/keduall/topik-project-v13.git.",
   "After a Keduall production mutation, verify that the Vercel production deployment for the exact resulting SHA reaches READY.",
 ];
+
+const securityAndDbContractLines = collabProtectionContractLines.slice(4, 11);
+const securityDbPolicyStartMarker =
+  "<!-- TALKPIK_SECURITY_DB_POLICY_START -->";
+const securityDbPolicyEndMarker = "<!-- TALKPIK_SECURITY_DB_POLICY_END -->";
+const canonicalSecurityDbPolicyBlockLines = [
+  securityDbPolicyStartMarker,
+  securityAndDbContractLines[0],
+  "",
+  securityAndDbContractLines[1],
+  "",
+  securityAndDbContractLines[2],
+  "",
+  securityAndDbContractLines[3],
+  "",
+  securityAndDbContractLines[4],
+  "",
+  securityAndDbContractLines[5],
+  "",
+  securityAndDbContractLines[6],
+  securityDbPolicyEndMarker,
+];
+
+function protectedCollabContractLines({
+  securityBlockLines = canonicalSecurityDbPolicyBlockLines,
+  beforeBlockLines = [],
+  afterBlockLines = [],
+  outsideLines = [],
+} = {}) {
+  return [
+    ...collabProtectionContractLines.slice(0, 4),
+    ...beforeBlockLines,
+    ...securityBlockLines,
+    ...afterBlockLines,
+    ...collabProtectionContractLines.slice(11),
+    ...outsideLines,
+  ];
+}
+
+const completeCollabProtectionContractLines = protectedCollabContractLines();
+
+const activeOwnerContractPatterns = {
+  blackPrDiff:
+    /Black PR[^.\n]*`origin\/main` 이후[^.\n]*차분 감사로[^.\n]*판단한다(?:\.|$)/iu,
+  productionDiff:
+    /production `release:start`는 승인된 기준점 이후 항상 `origin\/main`과 `collab\/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab\/stg`를 추가한다(?:\.|$)/iu,
+  artifactAttemptOnly:
+    /`SECURITY_ARTIFACT_FINDINGS_BLOCKED`[^.\n]*해당 (?:반영|승격|publication|promotion|publish) 시도만 차단한다(?:\.|$)/u,
+  artifactNotIncident:
+    /산출물 finding[^.\n]*credential 사고로 (?:간주|판정)하지 않으며[^.\n]*production 확인 성공 횟수를 초기화하지 않는다(?:\.|$)/u,
+  credentialIncidentOnly:
+    /credential 폐기·교체와 승인된 이력 대응은[^.\n]*확인되었거나 합리적으로 의심되는 credential 사고에만 요구한다(?:\.|$)/u,
+  wholeHistoryDiagnosticOnly:
+    /과거 전체 Git 이력 감사는[^.\n]*수동 진단[^.\n]*보편적인 publish·promotion 선행 조건이 아니다(?:\.|$)/u,
+  productionDbDisabled:
+    /production DB 자동 apply[^.\n]*비활성(?:이다|로 유지한다)(?:\.|$)/iu,
+  supportingArtifactIncidentSplit:
+    /산출물 finding과 credential 사고를 서로 다른 판정으로 분리한다(?:\.|$)/u,
+};
+
+const obsoleteKoreanWholeHistoryGatePrefix =
+  "원격 반영의 선행 조건은 두 저장소 전체 Git 이력";
+const obsoleteEnglishWholeHistoryGate =
+  "Before promotion, require a secret-safe security artifact audit, credential rotation, and the approved history response.";
+const obsoleteFindingIncidentMapping =
+  "finding이 하나라도 있으면 `SECURITY_INCIDENT_BLOCKED`";
+
+function matchesPolicyLine(content, pattern) {
+  return content
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .some((line) => pattern.test(line));
+}
+
+function readActiveSecurityPolicySurfaces() {
+  return [
+    ["AGENTS.md", readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8")],
+    [
+      "docs/operations/ai-development-pipeline.md",
+      readFileSync(
+        path.join(repoRoot, "docs", "operations", "ai-development-pipeline.md"),
+        "utf8",
+      ),
+    ],
+    ["TESTING.md", readFileSync(path.join(repoRoot, "TESTING.md"), "utf8")],
+    [
+      "docs/operations/README.md",
+      readFileSync(
+        path.join(repoRoot, "docs", "operations", "README.md"),
+        "utf8",
+      ),
+    ],
+    [
+      ".codex/skills/finishing-a-development-branch/SKILL.md",
+      readFileSync(
+        path.join(
+          repoRoot,
+          ".codex",
+          "skills",
+          "finishing-a-development-branch",
+          "SKILL.md",
+        ),
+        "utf8",
+      ),
+    ],
+  ];
+}
 
 describe("validateSkillPolicy", () => {
   test("requires plans and plan executors to preserve the current Git authority envelope", () => {
@@ -746,7 +859,7 @@ describe("validateSkillPolicy", () => {
       `Only after the user selects the publish option and protected-branch checks pass.\n` +
       `Authority envelope: action=pr-create; target=blackstarzck/topik:main; status=granted.\n` +
       `${command.prCreate} --repo blackstarzck/topik --base main\n` +
-      `${collabProtectionContractLines.join("\n")}`;
+      `${completeCollabProtectionContractLines.join("\n")}`;
     expect(
       issueIds("finishing-a-development-branch", pinnedPublish),
     ).not.toContain("PUBLISH_AUTHORITY");
@@ -919,20 +1032,150 @@ describe("validateSkillPolicy", () => {
     expect(
       issueIds(
         "finishing-a-development-branch",
-        collabProtectionContractLines.join("\n"),
+        completeCollabProtectionContractLines.join("\n"),
       ),
     ).not.toContain("COLLAB_PROTECTION");
+  });
+
+  test("requires every collab protection clause independently", () => {
     for (const omittedIndex of collabProtectionContractLines.keys()) {
       expect(
         issueIds(
           "finishing-a-development-branch",
-          collabProtectionContractLines
-            .filter((_, index) => index !== omittedIndex)
+          completeCollabProtectionContractLines
+            .filter(
+              (line) => line !== collabProtectionContractLines[omittedIndex],
+            )
             .join("\n"),
         ),
       ).toContain("COLLAB_PROTECTION");
     }
+  });
 
+  test("accepts the complete collab protection clauses in a different order", () => {
+    const reorderedLines = [
+      ...collabProtectionContractLines.slice(11).reverse(),
+      ...canonicalSecurityDbPolicyBlockLines,
+      ...collabProtectionContractLines.slice(0, 4).reverse(),
+    ];
+    expect(
+      issueIds(
+        "finishing-a-development-branch",
+        reorderedLines.join("\n"),
+      ),
+    ).not.toContain("COLLAB_PROTECTION");
+  });
+
+  test("requires exactly one canonical security and DB policy block", () => {
+    const invalidMarkerContracts = [
+      completeCollabProtectionContractLines.filter(
+        (line) => line !== securityDbPolicyStartMarker,
+      ),
+      completeCollabProtectionContractLines.filter(
+        (line) => line !== securityDbPolicyEndMarker,
+      ),
+      [securityDbPolicyStartMarker, ...completeCollabProtectionContractLines],
+      [...completeCollabProtectionContractLines, securityDbPolicyEndMarker],
+      protectedCollabContractLines({
+        securityBlockLines: [
+          securityDbPolicyEndMarker,
+          ...canonicalSecurityDbPolicyBlockLines.slice(1, -1),
+          securityDbPolicyStartMarker,
+        ],
+      }),
+    ];
+
+    for (const contractLines of invalidMarkerContracts) {
+      expect(
+        issueIds("finishing-a-development-branch", contractLines.join("\n")),
+      ).toContain("COLLAB_PROTECTION");
+    }
+  });
+
+  test("normalizes CRLF only when matching the canonical block", () => {
+    expect(
+      issueIds(
+        "finishing-a-development-branch",
+        completeCollabProtectionContractLines.join("\r\n"),
+      ),
+    ).not.toContain("COLLAB_PROTECTION");
+  });
+
+  test("rejects any change to the canonical block", () => {
+    const reordered = [...canonicalSecurityDbPolicyBlockLines];
+    [reordered[1], reordered[3]] = [reordered[3], reordered[1]];
+
+    const blockMutations = [
+      canonicalSecurityDbPolicyBlockLines.map((line) =>
+        line === "" ? line : ` ${line}`,
+      ),
+      [
+        canonicalSecurityDbPolicyBlockLines[0],
+        `Prefix: ${canonicalSecurityDbPolicyBlockLines[1]}`,
+        ...canonicalSecurityDbPolicyBlockLines.slice(2),
+      ],
+      canonicalSecurityDbPolicyBlockLines.map((line, index) =>
+        index === 1 ? `${line} Suffix.` : line,
+      ),
+      reordered,
+      canonicalSecurityDbPolicyBlockLines.filter((_, index) => index !== 1),
+      [
+        ...canonicalSecurityDbPolicyBlockLines.slice(0, 2),
+        canonicalSecurityDbPolicyBlockLines[1],
+        ...canonicalSecurityDbPolicyBlockLines.slice(2),
+      ],
+      [
+        ...canonicalSecurityDbPolicyBlockLines.slice(0, -1),
+        "Unexpected policy text.",
+        securityDbPolicyEndMarker,
+      ],
+      canonicalSecurityDbPolicyBlockLines.map((line, index) =>
+        index === 1 ? line.replace("require", "recommend") : line,
+      ),
+      canonicalSecurityDbPolicyBlockLines.filter((_, index) => index !== 2),
+      [
+        ...canonicalSecurityDbPolicyBlockLines.slice(0, 2),
+        "",
+        ...canonicalSecurityDbPolicyBlockLines.slice(2),
+      ],
+      canonicalSecurityDbPolicyBlockLines.map((line, index) =>
+        index === 1 ? `${line} ` : line,
+      ),
+      canonicalSecurityDbPolicyBlockLines.map((line, index) =>
+        index === 0 ? `Prefix: ${line}` : line,
+      ),
+      canonicalSecurityDbPolicyBlockLines.map((line, index) =>
+        index === canonicalSecurityDbPolicyBlockLines.length - 1
+          ? `${line} Suffix.`
+          : line,
+      ),
+    ];
+
+    for (const securityBlockLines of blockMutations) {
+      expect(
+        issueIds(
+          "finishing-a-development-branch",
+          protectedCollabContractLines({ securityBlockLines }).join("\n"),
+        ),
+      ).toContain("COLLAB_PROTECTION");
+    }
+  });
+
+  test("leaves policy prose outside the exact block to CODEOWNERS review", () => {
+    // This checker is candidate-owned. Review, not natural-language parsing,
+    // decides whether prose outside the exact canonical block is acceptable.
+    const contractLines = protectedCollabContractLines({
+      outsideLines: [
+        "Artifact findings and whole-history audits may be discussed in review notes.",
+      ],
+    });
+
+    expect(
+      issueIds("finishing-a-development-branch", contractLines.join("\n")),
+    ).not.toContain("COLLAB_PROTECTION");
+  });
+
+  test("keeps collab target and verification authority guards", () => {
     expect(
       issueIds(
         "finishing-a-development-branch",
@@ -1020,18 +1263,21 @@ describe("repository deployment contract", () => {
       "utf8",
     );
 
-    for (const content of [agents, pipeline]) {
-      expect(content).toMatch(
+    for (const [fileName, content] of [
+      ["AGENTS.md", agents],
+      ["docs/operations/ai-development-pipeline.md", pipeline],
+    ]) {
+      expect(content, fileName).toMatch(
         /`collab\/main`[\s\S]*`keduall\/topik-project-v13`[\s\S]*`origin\/main`/u,
       );
-      expect(content).toMatch(/최초 2회[\s\S]*최종 확인/u);
-      expect(content).toMatch(
+      expect(content, fileName).toMatch(/최초 2회[\s\S]*최종 확인/u);
+      expect(content, fileName).toMatch(
         /push[\s\S]*merge[\s\S]*(?:승인|확인)[\s\S]*(?:생략|우회)[\s\S]*(?:않|없)/u,
       );
-      expect(content).toMatch(
+      expect(content, fileName).toMatch(
         /https:\/\/github\.com\/keduall\/topik-project-v13\.git/u,
       );
-      expect(content).toMatch(
+      expect(content, fileName).toMatch(
         /Vercel[\s\S]*production[\s\S]*SHA[\s\S]*`READY`/iu,
       );
     }
@@ -1045,6 +1291,212 @@ describe("repository deployment contract", () => {
     expect(pipeline).toMatch(
       /DB[\s\S]*자동 apply[\s\S]*비활성[\s\S]*trusted/u,
     );
+  });
+
+  test("binds Black PR and production audits to their current approved diff ranges", () => {
+    const activeOwners = readActiveSecurityPolicySurfaces().slice(0, 2);
+
+    for (const [fileName, content] of activeOwners) {
+      expect(
+        matchesPolicyLine(content, activeOwnerContractPatterns.blackPrDiff),
+        fileName,
+      ).toBe(true);
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.productionDiff,
+        ),
+        fileName,
+      ).toBe(true);
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.productionDbDisabled,
+        ),
+        fileName,
+      ).toBe(true);
+    }
+  });
+
+  test("matches active-owner policy on one trimmed physical line", () => {
+    const productionDiffLine =
+      "production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.";
+    expect(
+      matchesPolicyLine(
+        `Header\r\n  ${productionDiffLine}  \r\nFooter`,
+        activeOwnerContractPatterns.productionDiff,
+      ),
+    ).toBe(true);
+    expect(
+      matchesPolicyLine(
+        productionDiffLine.replace(" 감사하고, ", " 감사하고,\r\n"),
+        activeOwnerContractPatterns.productionDiff,
+      ),
+    ).toBe(false);
+  });
+
+  test("classifies artifact findings as an attempt-only publication blocker", () => {
+    const activeOwners = readActiveSecurityPolicySurfaces().slice(0, 2);
+
+    for (const [fileName, content] of activeOwners) {
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.artifactAttemptOnly,
+        ),
+        fileName,
+      ).toBe(true);
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.artifactNotIncident,
+        ),
+        fileName,
+      ).toBe(true);
+    }
+  });
+
+  test("requires credential response only for confirmed or reasonably suspected incidents", () => {
+    const activeOwners = readActiveSecurityPolicySurfaces().slice(0, 2);
+
+    for (const [fileName, content] of activeOwners) {
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.credentialIncidentOnly,
+        ),
+        fileName,
+      ).toBe(true);
+    }
+  });
+
+  test("keeps whole-history audit manual and removes obsolete global security gates", () => {
+    const activeOwners = readActiveSecurityPolicySurfaces().slice(0, 2);
+
+    for (const [fileName, content] of activeOwners) {
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.wholeHistoryDiagnosticOnly,
+        ),
+        fileName,
+      ).toBe(true);
+    }
+  });
+
+  test("removes obsolete whole-history publication gates from every active surface", () => {
+    for (const [fileName, content] of readActiveSecurityPolicySurfaces()) {
+      expect(content, fileName).not.toContain(
+        obsoleteKoreanWholeHistoryGatePrefix,
+      );
+      expect(content, fileName).not.toContain(obsoleteEnglishWholeHistoryGate);
+    }
+  });
+
+  test("does not equate artifact findings with credential incidents", () => {
+    for (const [fileName, content] of readActiveSecurityPolicySurfaces()) {
+      expect(content, fileName).not.toContain(obsoleteFindingIncidentMapping);
+    }
+  });
+
+  test("points testing and operations guidance to the artifact-versus-incident split", () => {
+    const supportingOwners = readActiveSecurityPolicySurfaces().slice(2, 4);
+
+    for (const [fileName, content] of supportingOwners) {
+      expect(
+        matchesPolicyLine(content, /SECURITY_ARTIFACT_FINDINGS_BLOCKED/u),
+        fileName,
+      ).toBe(true);
+      expect(
+        matchesPolicyLine(
+          content,
+          activeOwnerContractPatterns.supportingArtifactIncidentSplit,
+        ),
+        fileName,
+      ).toBe(true);
+    }
+  });
+
+  test("rejects opposite statements for every active-owner contract matcher", () => {
+    const matcherSamples = [
+      {
+        pattern: activeOwnerContractPatterns.blackPrDiff,
+        positive:
+          "Black PR은 `origin/main` 이후 현재 차분 감사로 원격 반영 여부를 판단한다.",
+        opposite:
+          "Black PR은 `origin/main` 이전 전체 이력 감사로 원격 반영 여부를 판단한다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.productionDiff,
+        positive:
+          "production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.",
+        opposite:
+          "production `release:start`는 승인된 기준점 이후 항상 `origin/main`, `collab/stg`, `collab/main`을 고정 ref 차분 감사한다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.artifactAttemptOnly,
+        positive:
+          "`SECURITY_ARTIFACT_FINDINGS_BLOCKED`는 해당 반영 시도만 차단한다.",
+        opposite:
+          "`SECURITY_ARTIFACT_FINDINGS_BLOCKED`는 해당 반영 시도를 차단하지 않는다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.artifactNotIncident,
+        positive:
+          "산출물 finding은 credential 사고로 간주하지 않으며 production 확인 성공 횟수를 초기화하지 않는다.",
+        opposite:
+          "산출물 finding을 credential 사고로 간주하며 production 확인 성공 횟수를 초기화한다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.credentialIncidentOnly,
+        positive:
+          "credential 폐기·교체와 승인된 이력 대응은 확인되었거나 합리적으로 의심되는 credential 사고에만 요구한다.",
+        opposite:
+          "credential 폐기·교체와 승인된 이력 대응은 모든 산출물 finding에 요구한다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.wholeHistoryDiagnosticOnly,
+        positive:
+          "과거 전체 Git 이력 감사는 수동 진단이며 보편적인 publish·promotion 선행 조건이 아니다.",
+        opposite:
+          "과거 전체 Git 이력 감사는 보편적인 publish·promotion 선행 조건이다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.productionDbDisabled,
+        positive: "production DB 자동 apply는 비활성이다.",
+        opposite: "production DB 자동 apply를 즉시 활성화한다.",
+      },
+      {
+        pattern: activeOwnerContractPatterns.supportingArtifactIncidentSplit,
+        positive: "산출물 finding과 credential 사고를 서로 다른 판정으로 분리한다.",
+        opposite:
+          "산출물 finding과 credential 사고를 서로 다른 판정으로 분리하지 않는다.",
+      },
+    ];
+
+    for (const { pattern, positive, opposite } of matcherSamples) {
+      expect(positive).toMatch(pattern);
+      expect(opposite).not.toMatch(pattern);
+    }
+
+    expect(
+      "Black PR은 `origin/main` 이후 차분 감사를 사용하지 않고 전체 이력으로 판단한다.",
+    ).not.toMatch(activeOwnerContractPatterns.blackPrDiff);
+    expect(
+      "Black PR은 `origin/main` 이후 차분 감사와 무관하게 원격 반영 여부를 판단한다.",
+    ).not.toMatch(activeOwnerContractPatterns.blackPrDiff);
+    expect(
+      "production `release:start`는 caller가 제출한 임의 ref를 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.",
+    ).not.toMatch(activeOwnerContractPatterns.productionDiff);
+    expect(
+      "production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`의 전체 이력을 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.",
+    ).not.toMatch(activeOwnerContractPatterns.productionDiff);
+    expect(
+      "production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref로 사용하지만 차분 감사하지 않고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.",
+    ).not.toMatch(activeOwnerContractPatterns.productionDiff);
+    expect(
+      "production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다는 규칙을 폐기한다.",
+    ).not.toMatch(activeOwnerContractPatterns.productionDiff);
   });
 
   test("does not embed an executable collab production mutation as a default", () => {

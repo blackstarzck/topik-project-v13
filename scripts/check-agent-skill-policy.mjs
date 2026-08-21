@@ -75,6 +75,47 @@ function normalizeLine(line) {
     .trim();
 }
 
+const SECURITY_DB_POLICY_START_MARKER =
+  "<!-- TALKPIK_SECURITY_DB_POLICY_START -->";
+const SECURITY_DB_POLICY_END_MARKER =
+  "<!-- TALKPIK_SECURITY_DB_POLICY_END -->";
+const SECURITY_DB_POLICY_BLOCK = [
+  SECURITY_DB_POLICY_START_MARKER,
+  "Before promotion, require a baseline-bound security artifact diff audit for the exact source and target refs.",
+  "",
+  "Artifact findings block that publication attempt.",
+  "",
+  "Artifact findings do not declare a credential incident.",
+  "",
+  "Artifact findings do not reset the production-confirmation policy.",
+  "",
+  "Require credential rotation only for a confirmed or reasonably suspected credential incident.",
+  "",
+  "Require the approved history response only for a confirmed or reasonably suspected credential incident.",
+  "",
+  "Production DB automatic apply stays disabled until the baseline and trusted workflow gates pass.",
+  SECURITY_DB_POLICY_END_MARKER,
+].join("\n");
+
+function occurrenceCount(content, value) {
+  return content.split(value).length - 1;
+}
+
+function hasProtectedSecurityAndDbPolicy(content) {
+  const normalizedContent = content.replace(/\r\n/gu, "\n");
+
+  // This checker is candidate-owned: it locks the canonical block only.
+  // CODEOWNERS review remains responsible for prose outside that block.
+  return (
+    occurrenceCount(normalizedContent, SECURITY_DB_POLICY_START_MARKER) === 1 &&
+    occurrenceCount(normalizedContent, SECURITY_DB_POLICY_END_MARKER) === 1 &&
+    occurrenceCount(
+      `\n${normalizedContent}\n`,
+      `\n${SECURITY_DB_POLICY_BLOCK}\n`,
+    ) === 1
+  );
+}
+
 function isNegativeGuardLine(line) {
   return hasAny(line, [
     /\b(?:no|not|without|missing|absent|unknown)\b/i,
@@ -1033,12 +1074,7 @@ export function validateSkillPolicy({ skillName, content }) {
         content,
       );
     const protectsSecurityAndDbGates =
-      /before promotion, require a secret-safe security artifact audit, credential rotation, and the approved history response/i.test(
-        content,
-      ) &&
-      /production DB automatic apply stays disabled until the baseline and trusted workflow gates pass/i.test(
-        content,
-      );
+      hasProtectedSecurityAndDbPolicy(content);
     const validatesRemoteIdentity =
       /before mutation,[^\n]*validate[^\n]*collab remote URL[^\n]*https:\/\/github\.com\/keduall\/topik-project-v13\.git/i.test(
         content,

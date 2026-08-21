@@ -87,7 +87,7 @@ Lifecycle V3는 읽기 작업에서 Git 자원이 생기지 않는지, 작은 �
 
 일회성 `task:sweep`은 유효한 v2 후보의 v3 copy·기존 v3 재사용·복사 실패 보존 뒤 v3 정리기만 한 번 실행하는지 검증한다. 직접 `task:autocleanup`을 호출한 v2-only task도 v3 copy 뒤 같은 계정 복원 경로로 재호출되고 legacy 정리기로 우회하지 않아야 한다. 두 GitHub 계정 전환과 원래 계정 복원, repository permission 실패, ACTIVE task가 없을 때 zero-network, 중복 worker·stale lock·최대 10개·10분 실행 예산, 하위 Git·GitHub 명령의 timeout 전달도 dependency injection으로 확인한다. 코드 작업의 `task:prepare`는 성공 뒤 sweep을 한 번 실행하고, 읽기 전용 prepare는 실행하지 않는다. 운영체제 예약 작업 설치와 파일시스템 호출을 강제 종료하는 watchdog은 파이프라인 범위가 아니다.
 
-`PromotionRunV1`은 exact-parent candidate, candidate→`stg`와 `stg`→`main` merge lineage, security audit SHA binding, migration drift·destructive SQL·N-1/N 호환성, 최초 2회 `AWAITING_PROD_APPROVAL`, 이후 `AUTO`, 계약·profile 변경과 실패·rollback·보안 사고 reset을 검증한다. Vercel은 Preview/Production target, 정확한 commit SHA·project·domain·alias, smoke 실패 시 alias-only rollback과 DB non-rollback을 확인한다. 로그·registry·보고서에 secret 값이 기록되지 않는지도 모든 fixture에서 검사한다.
+`PromotionRunV1`은 exact-parent candidate, candidate→`stg`와 `stg`→`main` merge lineage, security audit SHA binding, migration drift·destructive SQL·N-1/N 호환성, 최초 2회 `AWAITING_PROD_APPROVAL`, 이후 `AUTO`, 계약·profile 변경과 실패·rollback·보안 사고 reset을 검증한다. 보안 산출물 finding은 `SECURITY_ARTIFACT_FINDINGS_BLOCKED`로 해당 반영 시도만 차단하고 확인 성공 횟수를 초기화하지 않는지 검증한다. 산출물 finding과 credential 사고를 서로 다른 판정으로 분리한다. 확인되었거나 합리적으로 의심되는 credential 사고에만 확인 횟수 reset과 credential 폐기·교체, 승인된 이력 대응을 요구하는지도 확인한다. Vercel은 Preview/Production target, 정확한 commit SHA·project·domain·alias, smoke 실패 시 alias-only rollback과 DB non-rollback을 확인한다. 로그·registry·보고서에 secret 값이 기록되지 않는지도 모든 fixture에서 검사한다.
 
 ## CI 변경 범위 분류
 

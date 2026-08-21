@@ -146,11 +146,11 @@ pnpm task:owner-auth -- --repo <repo-or-worktree> --owner guestkeduall-design
 
 repository 단위 auth lock 안에서 필요한 계정으로 전환하고 `gh api user`와 repository permission을 확인한다. token이나 인증 원문은 저장·출력하지 않으며 작업 뒤 원래 활성 계정으로 복원한다. Black solo 작업은 `guestkeduall-design` 승인에 의존하지 않는다. 계정·permission 확인 실패는 Git 작업을 보존 상태로 중단한다.
 
-### 보안 선행 조건
+### 기준점 차분 보안 산출물 정책
 
-현재 두 저장소의 Git 이력에는 `.scratch/**`, `.tmp/**`, `artifacts/**`, 임시 SQL·로그·스크립트·환경 파일·화면 캡처와 root 임의 산출물이 포함됐을 가능성이 확인됐다. 따라서 원격 반영 전에 특정 파일 하나가 아닌 전체 reachable history를 값 출력 없이 검사한다. 보고서는 경로, commit의 안전한 hash, 탐지 규칙만 기록하며 blob 값·token·원문 credential을 기록하지 않는다.
+Black PR은 `origin/main` 이후 현재 변경분의 차분 감사로 반영 여부를 판단한다. production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다. 새로 추가되거나 수정된 보안 산출물 finding이 있으면 `SECURITY_ARTIFACT_FINDINGS_BLOCKED`로 해당 반영 시도만 차단한다. 산출물 finding은 credential 사고로 판정하지 않으며 production 확인 성공 횟수를 초기화하지 않는다.
 
-credential 폐기·교체가 history rewrite보다 먼저다. Actions 산출물·cache, PR 참조, fork·clone, Vercel build·log 노출도 별도 사고 대응에서 조사한다. credential 교체, Git history rewrite·강제 push와 GitHub Support 요청은 각각 사용자 별도 승인 작업이며, 사고 처리 전 archive tag를 만들지 않는다. 이 선행 조건이 끝나기 전 publish·promotion은 차단한다.
+credential 폐기·교체와 승인된 이력 대응은 확인되었거나 합리적으로 의심되는 credential 사고에만 요구한다. 이 사고 대응에서는 credential 폐기·교체를 history rewrite보다 먼저 하고 Actions 산출물·cache, PR 참조, fork·clone, Vercel build·log 노출도 조사한다. credential 교체, Git history rewrite·강제 push와 GitHub Support 요청은 각각 사용자 별도 승인 작업이며, 사고 처리 전 archive tag를 만들지 않는다. 과거 전체 Git 이력 감사는 수동 진단용이며 보편적인 publish·promotion 선행 조건이 아니다. 수동 진단 보고서는 경로, commit의 안전한 hash, 탐지 규칙만 기록하며 blob 값·token·원문 credential을 기록하지 않는다.
 
 ### Keduall 승격·DB·Vercel
 
@@ -168,35 +168,35 @@ pnpm release:status -- --repo <기준-checkout> --run-id <run-id>
 pnpm release:resume -- --repo <기준-checkout> --run-id <run-id> --expected-revision <revision> --expected-fingerprint <fingerprint> --event PROD_APPROVAL_GRANTED --event-at <ISO-8601> --approval <approval-fingerprint>
 ```
 
-`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인한 뒤 `origin/main`과 `collab/main` 또는 `collab/stg`에서 SHA를 직접 읽고, 승인된 기준점 이후의 차분에 대한 보안 감사를 직접 실행한다. finding이 하나라도 있거나 ref를 읽지 못하면 승격 기록을 시작하지 않는다.
+`release:start`는 caller가 source·tree·stg SHA나 보안 감사 JSON을 제출하게 하지 않는다. 고정된 `origin`·`collab` 저장소 identity를 확인하고 고정 ref에서 SHA를 직접 읽는다. production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다. finding이 하나라도 있으면 `SECURITY_ARTIFACT_FINDINGS_BLOCKED`로 해당 승격 시도만 차단하고, ref를 읽지 못하면 승격 기록을 시작하지 않는다.
 
 #### 기준점 차분 보안 감사
 
 보안 감사의 기준점과 승인된 예외는 `config/security-audit-baseline.json`에만 둔다. 이 파일은 승인된 기준점 commit SHA, 승인 시각, 감사 대상 ref 목록과 `(경로, 규칙)` 예외 인벤토리를 닫힌 schema로 담고 전체 내용의 SHA-256 fingerprint를 함께 저장한다.
 
 - 기준점 이전의 오래된 이력은 검토를 마친 예외 인벤토리로 통과시킨다. 이미 정리할 수 없는 과거 산출물 때문에 승격이 영구히 막히는 상태를 없애는 것이 목적이다.
-- 기준점 이후 새로 추가되거나 수정된 산출물의 finding은 그대로 차단한다. finding이 하나라도 있으면 `SECURITY_INCIDENT_BLOCKED`이며 이 조건은 완화하지 않는다.
+- 기준점 이후 새로 추가되거나 수정된 산출물의 finding은 그대로 차단한다. finding이 하나라도 있으면 `SECURITY_ARTIFACT_FINDINGS_BLOCKED`이며 해당 승격 시도만 차단한다.
 - 예외는 경로 하나에 규칙 하나씩 정확히 대응한다. 같은 경로가 나중에 다른 규칙을 위반하면 계속 차단된다. 경로만으로 모든 규칙을 면제하는 통짜 예외는 제공하지 않는다.
 - 기준점이나 예외를 바꾸려면 `config/security-audit-baseline.json`을 고쳐야 하고, `/config/`는 CODEOWNERS가 보호하므로 소유자 리뷰를 거친다. `release:start`에는 기준점·예외를 지정하는 명령 인자가 없어 caller가 감사 범위를 우회할 수 없다.
 - 이 파일이 없거나 schema·fingerprint가 깨졌으면 `SECURITY_BASELINE_CONFIG_INVALID`로 즉시 중단한다. 전체 이력 감사로 조용히 되돌아가지 않는다.
 - 감사 기록은 `SecurityArtifactDiffAuditV1`이며 기준점 SHA의 안전한 hash를 담는다. `release:start`가 읽은 승인 기준점과 이 hash가 다르면 `SECURITY_AUDIT_BASELINE_MISMATCH`, 기준점 정보 없이 차분 기록을 제출하면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부한다. hash뿐 아니라 기록에 적힌 기준점 이름 자체도 승인 기준점에 묶는다. 이름이 승인 기준점 SHA와 다르거나 호출자가 넘긴 기대 이름과 다르면 hash가 맞아도 같은 `SECURITY_AUDIT_BASELINE_MISMATCH`로 거부하므로, 이름과 hash가 서로 다른 기준점을 가리키는 모순된 기록은 통과하지 못한다.
 - 경로 예외는 Git이 저장한 대소문자까지 정확히 같아야 적용된다. 예외에 적힌 이름과 글자 대소문자만 다른 파일은 서로 다른 파일이므로 예외로 통과시키지 않고 계속 차단한다. 대소문자만 다른 두 경로를 함께 승인하려면 예외를 각각 등록한다.
 - 승인 시각이 정해진 형식의 시각 값이 아니면 다른 오류로 새지 않고 `SECURITY_BASELINE_CONFIG_INVALID`로 거부한다.
-- 새 승격 기록을 만드는 경로는 차분 감사 기록만 받는다. 기준점 없는 전체 이력 감사 기록을 넣으면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부하므로 기준점 검증이 통째로 생략되는 조합이 남지 않는다. 전체 이력 감사 기록 자체는 CI 검사처럼 승격 기록을 만들지 않는 경로에서 계속 읽을 수 있다.
+- 새 승격 기록을 만드는 경로는 production에 필요한 `SecurityArtifactDiffAuditV1` 차분 감사 기록만 받는다. 기준점 없는 전체 이력 감사 기록을 넣으면 `SECURITY_AUDIT_BASELINE_REQUIRED`로 거부하므로 기준점 검증이 통째로 생략되는 조합이 남지 않는다. 전체 이력 감사는 수동 진단·report-only 경로에서만 읽으며 publication 판단에는 사용하지 않는다.
 - 승격 기록은 어떤 기준점으로 감사했는지를 기준점 SHA의 안전한 hash로 함께 저장한다. 사후에 감사 범위를 기록만 보고 확인할 수 있다. 이 값은 승격 기록의 fingerprint에만 들어가고 pipeline 계약 fingerprint와 profile fingerprint에는 영향을 주지 않으므로 승인 성공 횟수를 reset하지 않는다.
 - **CI의 감사 단계도 같은 승인 인벤토리를 읽는다.** `.github/workflows/ci.yml`은 `scripts/security-artifact-audit.mjs`에 `--baseline-config config/security-audit-baseline.json`을 넘긴다. 이 배선이 없을 때는 승격 파이프라인만 예외를 적용하고 CI는 적용하지 못해, 기준선에 이미 승인된 종류의 경로를 새로 추가하는 PR이 항상 CI에서 막혔다. 규칙이 최상위 `supabase/migrations/*.sql`만 승인하므로 `supabase/migrations/down/`의 되돌리기 SQL이 정확히 그 경우다.
 - 그래서 `down/`에 파일을 추가하는 변경은 **같은 PR에서 기준선 예외 등록이 따라온다.** `(경로, 규칙)` 항목을 넣고 fingerprint를 다시 계산해야 하며, `/config/`가 CODEOWNERS 보호 경로이므로 이 등록 자체가 승인 장치다. 규칙을 넓혀 폴더 단위로 승인하지는 않는다. 그렇게 하면 그 폴더의 SQL이 소유자 승인 없이 통과하기 때문이다.
 - `--baseline-config`를 주지 않으면 CLI 동작은 이전과 완전히 같다(예외 미적용). 기준선 파일이 없거나 fingerprint가 어긋나면 감사를 그냥 통과시키지 않고 `SECURITY_BASELINE_CONFIG_INVALID`로 중단한다.
 
-##### 대량 등재는 내용 검사를 근거로 남긴다 (2026-08-11)
+##### 과거 이력 내용 검사는 사고 진단 근거로 남긴다 (2026-08-11)
 
-CI가 보는 차분 감사와 승격 선행 조건인 **전체 이력 감사는 서로 다른 검사다.** 차분 감사가 초록이어도 전체 이력 감사는 기준점 이전 산출물 때문에 빨간 상태일 수 있다. 2026-08-11 기준으로 전체 이력 감사는 고유 경로 1,353건이었고, 이 상태로는 승격이 막힌다.
+2026-08-11의 전체 이력 검사는 과거 산출물의 유형과 사고 가능성을 파악하기 위한 수동 진단이었다. 당시 고유 경로 1,353건을 확인했지만 이 결과는 report-only 진단 자료이며 현재 publication 판단은 승인된 기준점 이후의 차분 감사가 맡는다.
 
 그래서 예외 등재는 경로를 세는 작업이 아니라 **내용을 읽고 판정한 결과를 남기는 작업이다.** 이때 지킨 기준을 기록한다.
 
 - **이미지가 아닌 파일은 전수 내용 검사를 거친 뒤에만 등재한다.** 검사 항목은 JWT, Supabase 키, `service_role` 참조, bcrypt 해시, DB 접속 문자열, 세션 저장 파일 구조(`cookies`/`origins`), `sb-*-auth-token`, `base64-` 블롭, refresh/access token, 이메일, 전화번호, 주민등록번호다. 값은 읽어도 기록·출력하지 않고 유형과 건수만 남긴다.
 - **JWT 문자열만 찾는 검사로는 부족하다.** Playwright `storageState` 파일은 Supabase 세션 쿠키를 인코딩해 담기 때문에 `eyJ`로 시작하는 형태가 그대로 나타나지 않는다. 실제로 `.scratch/student-state.json`이 1차 검사를 통과했다가 세션 저장 파일 구조 검사에서 걸렸다. 세션 저장 파일은 갱신 토큰을 포함하므로 등재 대상이 아니라 **자격 증명 폐기 대상**이다.
-- **파일을 지우는 것으로는 감사가 통과되지 않는다.** 감사는 도달 가능한 이력을 스캔하므로, 트리에서 지운 경로도 계속 지적된다. 정식 해소 경로는 이 기준선 등재이고, 이력 재작성은 별도 승인 작업이다.
+- **과거 이력의 파일은 현재 트리에서 지워도 이전 blob이 남는다.** 확인되었거나 합리적으로 의심되는 credential 사고의 진단·복구에서는 이 특성을 고려하며, 필요한 이력 재작성은 별도 승인 작업이다. 단순 산출물 finding의 publication 판단은 기준점 이후 차분 감사로 분리한다.
 - **폐기된 문서 최상위 폴더 아래 경로는 기준선에 적을 수 없다.** `scripts/check-project-structure.mjs`가 `retiredDocsTopLevel`에 오른 이름의 경로 문자열이 저장소 파일에 나타나는 것 자체를 금지하므로, 기준선에 넣으면 구조 게이트가 깨진다. 이 문서도 같은 규칙을 받으므로 여기에 그 경로를 그대로 적지 않는다. 두 게이트가 서로 막는 상태이며 해소에는 구조 게이트 쪽 예외나 이력 정리라는 별도 결정이 필요하다. 2026-08-11 등재에서는 이 사유로 와이어프레임 문서 폴더 117건과 AI 워크플로 문서 폴더 4건, 합계 121건을 제외했다. 제외분도 내용 검사에서는 자격 증명이 검출되지 않았다.
 - `config/security-audit-baseline.json`은 pipeline 계약 구현 경로여서 이 문서와 **같은 변경에서 함께 갱신해야** 구조 게이트를 통과한다. 기준선 인벤토리가 정책 표면이므로 근거를 문서에 남기게 만든 결합이다.
 - `tests/scripts/ai-release-baseline-audit.test.mjs`가 등재 건수를 고정 검증한다. 기준선을 바꾸면 이 숫자도 같은 변경에서 갱신한다. 무심한 인벤토리 증가를 드러내려는 가드다.
@@ -631,7 +631,7 @@ CI는 `pull_request`, merge queue의 `merge_group`, `main` push에서 먼저 전
 
 문서만 바뀌어도 Linux `verify` 작업 자체는 실행하고 신뢰 경계 검사를 통과해야 한다. dependency 설치와 app 검증만 생략한다. pipeline-only 변경은 dependency를 설치한 뒤 관련 contract를 집중 실행한다. app 전체 검증의 `pnpm test`가 lifecycle contract도 포함하므로 같은 Linux contract를 별도로 중복 실행하지 않는다.
 
-Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`을 승인된 기준점 이후 차분으로 감사한다.
+Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.
 
 CI가 검사하는 계약은 다음과 같다.
 

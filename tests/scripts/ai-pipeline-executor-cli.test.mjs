@@ -1020,7 +1020,7 @@ describe("promotion executor step execution", () => {
     const world = fakeWorld();
     const evidence = migrationEvidenceFile();
     const values = { repo: repository, "run-id": RUN_ID, "db-evidence": evidence.file };
-    const options = { ...world.options, localAppData: evidence.localAppData };
+    const options = { ...world.options, localAppData: evidence.localAppData, env: {} };
 
     const first = await runSequence(values, options);
     expect(first.recordType).toBe("PromotionExecutorRunV1");
@@ -1125,7 +1125,7 @@ describe("promotion executor step execution", () => {
 
     const blockedRun = await runSequence(
       { repo: repository, "run-id": RUN_ID, "db-evidence": blocked.file },
-      { ...world.options, localAppData: blocked.localAppData },
+      { ...world.options, localAppData: blocked.localAppData, env: {} },
     );
     expect(blockedRun.stoppedBecause).toBe("DB_GATE_BLOCKED");
     expect(blockedRun.iterationCount).toBe(1);
@@ -1136,7 +1136,7 @@ describe("promotion executor step execution", () => {
 
     const retried = await runNext(
       { repo: repository, "run-id": RUN_ID, "db-evidence": blocked.file },
-      { ...world.options, localAppData: blocked.localAppData },
+      { ...world.options, localAppData: blocked.localAppData, env: {} },
     );
     expect(retried.state).toBe("DB_GATE_BLOCKED");
     expect(retried.step).toBe("EVALUATE_DB_GATE");
@@ -1144,7 +1144,7 @@ describe("promotion executor step execution", () => {
 
     const passed = await runNext(
       { repo: repository, "run-id": RUN_ID, "db-evidence": passing.file },
-      { ...world.options, localAppData: passing.localAppData },
+      { ...world.options, localAppData: passing.localAppData, env: {} },
     );
     expect(passed.step).toBe("EVALUATE_DB_GATE");
     expect(passed.result).toMatchObject({ state: "AWAITING_PROD_APPROVAL", blocker: null });

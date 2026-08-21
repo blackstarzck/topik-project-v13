@@ -451,7 +451,7 @@ function securityAuditValidation(
     }
   }
   if (audit.findings.length !== 0 || audit.summary.findingCount !== 0) {
-    return { ok: false, code: "SECURITY_INCIDENT_BLOCKED" };
+    return { ok: false, code: "SECURITY_ARTIFACT_FINDINGS_BLOCKED" };
   }
   return { ok: true, code: "SECURITY_AUDIT_CLEAR" };
 }
@@ -686,7 +686,7 @@ export function startPromotion(input) {
     return {
       schemaVersion: 1,
       recordType: "PromotionStartResultV1",
-      state: "SECURITY_INCIDENT_BLOCKED",
+      state: "SECURITY_AUDIT_BLOCKED",
       blocker: result.code,
       mutationAttempted: false,
     };

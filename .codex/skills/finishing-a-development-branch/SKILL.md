@@ -25,7 +25,21 @@ For each contract version, the first two successful production promotions pause 
 
 Reset the two-confirmation policy after a pipeline contract, DB workflow or compatibility policy, Vercel project environment or domain, remote branch or auth profile change, or after a deployment failure, rollback, or security incident.
 
-Before promotion, require a secret-safe security artifact audit, credential rotation, and the approved history response. Production DB automatic apply stays disabled until the baseline and trusted workflow gates pass.
+<!-- TALKPIK_SECURITY_DB_POLICY_START -->
+Before promotion, require a baseline-bound security artifact diff audit for the exact source and target refs.
+
+Artifact findings block that publication attempt.
+
+Artifact findings do not declare a credential incident.
+
+Artifact findings do not reset the production-confirmation policy.
+
+Require credential rotation only for a confirmed or reasonably suspected credential incident.
+
+Require the approved history response only for a confirmed or reasonably suspected credential incident.
+
+Production DB automatic apply stays disabled until the baseline and trusted workflow gates pass.
+<!-- TALKPIK_SECURITY_DB_POLICY_END -->
 
 An explicit production request selects the release workflow and target, but not every internal Git action. Record the matching authority envelope, start or resume the `PromotionRunV1`, and stop at `AWAITING_PROD_APPROVAL` when the policy requires it. A discussion, status question, or PR-only request does not authorize updating production.
 
@@ -79,7 +93,7 @@ Local merge or rebase requires separate integration authority. This task does no
 
 When actual integration is not authorized, return a handoff containing the source branch/head, exact validated base, fresh verification evidence, dirty-state evidence, and the requested integration method. Preserve the branch and workspace for the separately authorized integration owner.
 
-When the user requests production promotion, start or resume the release record. Do not merge the production PR from this generic branch-finishing step. The release workflow first proves the exact Black source SHA, candidate lineage, Keduall `stg` result, DB evidence, security precondition, and Vercel Preview. It then pauses at `AWAITING_PROD_APPROVAL` for the first two successful runs of the same contract or proceeds under `AUTO` only after that policy is proven.
+When the user requests production promotion, start or resume the release record. Do not merge the production PR from this generic branch-finishing step. The release workflow first proves the exact Black source SHA, candidate lineage, Keduall `stg` result, DB evidence, canonical security gate evidence, and Vercel Preview. It then pauses at `AWAITING_PROD_APPROVAL` for the first two successful runs of the same contract or proceeds under `AUTO` only after that policy is proven.
 
 #### Option 2: Publish and Create PR
 

@@ -102,6 +102,22 @@ function diffAudit(overrides = {}) {
   return { ...payload, fingerprint: digest(JSON.stringify(payload)) };
 }
 
+function diffAuditWithFinding() {
+  return diffAudit({
+    findings: [
+      {
+        ref: "origin/main",
+        path: ".scratch/session.json",
+        rule: "TRACKED_SCRATCH_PATH",
+        historyCommitCount: 1,
+        commitHashes: [digest("commit")],
+        pathHash: digest(".scratch/session.json"),
+      },
+    ],
+    summary: { refCount: 3, scannedPathCount: 12, findingCount: 1 },
+  });
+}
+
 function fullAudit(overrides = {}) {
   const payload = {
     schemaVersion: 1,
@@ -386,29 +402,25 @@ describe("baseline diff audit evidence", () => {
     }
   });
 
-  it("still blocks a diff audit that carries any finding", async () => {
-    const { createPromotionRun, validateSecurityAuditEvidence } = await import(
+  it("classifies a diff audit finding as an artifact block", async () => {
+    const { validateSecurityAuditEvidence } = await import(
       "../../scripts/lib/ai-release-promotion.mjs"
     );
-    const audit = diffAudit({
-      findings: [
-        {
-          ref: "origin/main",
-          path: ".scratch/session.json",
-          rule: "TRACKED_SCRATCH_PATH",
-          historyCommitCount: 1,
-          commitHashes: [digest("commit")],
-          pathHash: digest(".scratch/session.json"),
-        },
-      ],
-      summary: { refCount: 3, scannedPathCount: 12, findingCount: 1 },
-    });
 
     expect(
-      validateSecurityAuditEvidence(audit, ["collab/main", "collab/stg", "origin/main"], {
-        expectedBaselineSha: BASELINE_SHA,
-      }),
-    ).toEqual({ ok: false, code: "SECURITY_INCIDENT_BLOCKED" });
+      validateSecurityAuditEvidence(
+        diffAuditWithFinding(),
+        ["collab/main", "collab/stg", "origin/main"],
+        { expectedBaselineSha: BASELINE_SHA },
+      ),
+    ).toEqual({ ok: false, code: "SECURITY_ARTIFACT_FINDINGS_BLOCKED" });
+  });
+
+  it("rejects promotion creation with the artifact finding code", async () => {
+    const { createPromotionRun } = await import(
+      "../../scripts/lib/ai-release-promotion.mjs"
+    );
+
     expect(() =>
       createPromotionRun({
         runId: "promotion-20260730-11111111",
@@ -416,7 +428,7 @@ describe("baseline diff audit evidence", () => {
         sourceSha: SHA.source,
         sourceTreeHash: "2".repeat(40),
         stgBaseSha: SHA.stg,
-        securityAudit: audit,
+        securityAudit: diffAuditWithFinding(),
         expectedSecurityRefs: ["collab/main", "collab/stg", "origin/main"],
         expectedBaselineSha: BASELINE_SHA,
         controlPlaneReady: true,
@@ -424,7 +436,7 @@ describe("baseline diff audit evidence", () => {
         vercelProject: "topik-project-v13",
         vercelDomain: "talkpik.example.com",
       }),
-    ).toThrowError("SECURITY_INCIDENT_BLOCKED");
+    ).toThrowError("SECURITY_ARTIFACT_FINDINGS_BLOCKED");
   });
 
   it("keeps the legacy full-history audit record accepted without a baseline", async () => {

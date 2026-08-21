@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -104,12 +105,20 @@ function runBashScript(source, environment = {}, options = {}) {
     if (!/^[A-Z][A-Z0-9_]*$/u.test(name)) throw new Error(`invalid env name: ${name}`);
     return `export ${name}=${shellQuote(value)}`;
   });
-  const encoded = Buffer.from([...exports, source].join("\n"), "utf8").toString(
-    "base64",
-  );
+  const workingDirectory = options.cwd
+    ? path.resolve(options.cwd).replaceAll("\\", "/")
+    : undefined;
+  const changeDirectory = workingDirectory
+    ? [
+        `cd "$(command -v wslpath >/dev/null 2>&1 && wslpath -u ${shellQuote(workingDirectory)} || printf %s ${shellQuote(workingDirectory)})" || exit $?`,
+      ]
+    : [];
+  const encoded = Buffer.from(
+    [...changeDirectory, ...exports, source].join("\n"),
+    "utf8",
+  ).toString("base64");
   return spawnSync("bash", ["-c", `printf %s ${encoded} | base64 -d | bash`], {
     encoding: "utf8",
-    cwd: options.cwd,
   });
 }
 
@@ -395,6 +404,50 @@ function fullTestCoversLifecycle(testScript, configSource) {
     )
   );
 }
+
+describe("runBashScript", () => {
+  it("changes to a safely quoted cwd before applying the requested environment", () => {
+    const workingDirectory = mkdtempSync(
+      path.join(os.tmpdir(), "talkpik bash 'cwd-"),
+    );
+    try {
+      const result = runBashScript(
+        "printf working > cwd-result.txt",
+        { PATH: "/nonexistent" },
+        { cwd: workingDirectory },
+      );
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(
+        readFileSync(path.join(workingDirectory, "cwd-result.txt"), "utf8"),
+      ).toBe("working");
+    } finally {
+      rmSync(workingDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("does not run the source when the requested cwd does not exist", () => {
+    const temporaryRoot = mkdtempSync(
+      path.join(os.tmpdir(), "talkpik-bash-missing-cwd-"),
+    );
+    const missingDirectory = path.join(temporaryRoot, "missing");
+    const sideEffectName = `run-bash-side-effect-${path.basename(temporaryRoot)}.txt`;
+    const sideEffectPath = path.join(root, sideEffectName);
+    try {
+      const result = runBashScript(`printf reached > ${sideEffectName}`, {}, {
+        cwd: missingDirectory,
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(typeof result.status).toBe("number");
+      expect(result.status).toBeGreaterThan(0);
+      expect(existsSync(sideEffectPath)).toBe(false);
+    } finally {
+      rmSync(sideEffectPath, { force: true });
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("CI trusted UI contract boundary", () => {
   it("covers pull request state transitions, merge queues, and main pushes", () => {
@@ -1452,7 +1505,7 @@ describe("CI trusted UI contract boundary", () => {
     );
     expect(workflow).not.toContain("+refs/heads/main:refs/remotes/collab/main");
     expect(pipelineDocs).toContain(
-      "Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. `PromotionRunV1`은 인증된 운영 경로에서 `origin/main`, `collab/stg`, `collab/main`을 승인된 기준점 이후 차분으로 감사한다.",
+      "Black PR CI는 `origin/main` 이후 각 커밋에서 새로 추가되거나 수정된 보안 산출물만 차단하고 순수 삭제는 허용한다. production `release:start`는 승인된 기준점 이후 항상 `origin/main`과 `collab/main`을 고정 ref 차분 감사하고, `stg` 준비 뒤에는 `collab/stg`를 추가한다.",
     );
   });
 

@@ -31,4 +31,4 @@
 - 이 정책은 v13에서 지켜야 할 운영 계약이다. 문서가 있다는 사실만으로 기능 구현이나 운영 자동화가 완료·검증됐다고 보지 않는다.
 - v13은 사용자 앱의 안전한 실패와 복구 UX를 소유하고, 원격 백업·복원·감사 운영을 수행하지 않는다.
 - 정책과 현재 구현이 다르면 차이를 숨기지 않고 구현·테스트·관련 owner를 같은 변경 묶음에서 갱신한다.
-- 개발 task의 준비·인수인계·종료·자동 정리와 Keduall 운영 승격은 [`ai-development-pipeline.md`](./ai-development-pipeline.md), 공용 `task:*`와 `release:*` 명령을 따른다. credential 교체와 history rewrite는 문서화와 별개인 사용자 승인 작업이다. 자동 정리는 예약 작업 없이 병합 직후 또는 다음 코드 작업 준비 시 일회성으로 실행한다.
+- 개발 task의 준비·인수인계·종료·자동 정리와 Keduall 운영 승격은 [`ai-development-pipeline.md`](./ai-development-pipeline.md), 공용 `task:*`와 `release:*` 명령을 따른다. 보안 산출물 발견은 `SECURITY_ARTIFACT_FINDINGS_BLOCKED`로 해당 반영 시도만 차단하며 production 확인 성공 횟수를 초기화하지 않는다. 산출물 finding과 credential 사고를 서로 다른 판정으로 분리한다. credential 교체와 history rewrite는 확인되었거나 합리적으로 의심되는 사고에만 요구하는 별도 사용자 승인 작업이다. 자동 정리는 예약 작업 없이 병합 직후 또는 다음 코드 작업 준비 시 일회성으로 실행한다.
