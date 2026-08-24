@@ -59,6 +59,13 @@ describe("PhoneNumberReminderModal", () => {
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
 
+  it("uses the shared modal surface hook when open", async () => {
+    renderModal({ pathname: "/dashboard" });
+
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(document.querySelector(".app-modal")).toBeTruthy();
+  });
+
   it("also opens on a direct landing to a non-dashboard route", async () => {
     renderModal({ pathname: "/library" });
     expect(await screen.findByText(reminder.title)).toBeTruthy();

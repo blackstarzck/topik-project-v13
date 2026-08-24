@@ -1105,7 +1105,6 @@
     "380d663ae3c5bcede62351841f0cf675a632b6683fcd78ec79244e7b1c441971": 1,
     "380ea317abfe48a7d7c35bd1bdffcd35acfb5c988ec00ad5463b043c7cded67e": 2,
     "380ecc89a4415071db61f71276b57b23d510ed58830d4dc9194b2aadae066f78": 1,
-    "380fbf098ee8b73a252e3b4ce29b8f1ac388ec84bc33e6e850f9cfb62085a259": 1,
     "3815d1caad252497c3ab5806c478f5e03baeefbf82c922c9882134928ee536fa": 1,
     "381f8ef8625957e322a84f72a25384a46f2291edb129d88ee053204275ed977a": 2,
     "382f40836ea4cea9523d4af38a4cd26e871552cf581bc118dab869fdee3d7ee7": 1,
@@ -5209,7 +5208,7 @@
     "fff4cefeade4444a861f52b974453752b0d7471b8f2f3103b7b9376d25e9cdd6": 1,
     "ffff00156e8768edc36144e1f8eb089c5b0eeeefc0f7b163ed86c74279bf6913": 1
   },
-  "generatedAt": "2026-08-24T10:22:47.795Z",
+  "generatedAt": "2026-08-24T12:05:38.123Z",
   "scannerDigest": "1ed07827d1f1d3b811a5e0e7dc90011d249059ccf54e8273fde4e4f03d55a338",
   "scannerVersion": 4,
   "schemaVersion": 2,
@@ -5228,7 +5227,6 @@
     "src/app/(workspace)/writing/reports/[id]/compare/page.tsx": 1,
     "src/app/(workspace)/writing/short-answer-writing-51/page.tsx": 1,
     "src/app/layout.tsx": 1,
-    "src/components/app/PhoneNumberReminderModal.tsx": 1,
     "src/components/app/SidebarNav.tsx": 2,
     "src/components/app/WorkspaceShell.tsx": 1,
     "src/components/auth/AnimatedAuthCharacters.tsx": 1,
@@ -5267,7 +5265,7 @@
   },
   "summaryByRule": {
     "antd.broad-state-override": 18,
-    "antd.shared-wrapper-bypass": 6,
+    "antd.shared-wrapper-bypass": 5,
     "global-css.declaration-freeze": 3876,
     "global-css.selector-freeze": 1211,
     "react.static-inline-style": 9,
