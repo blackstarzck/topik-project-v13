@@ -4122,10 +4122,6 @@
   padding: 8px;
 }
 
-.app-workspace-drawer .ant-drawer-body {
-  padding: 0;
-}
-
 @media (max-width: 767.98px) {
   .app-workspace-sider {
     display: none;

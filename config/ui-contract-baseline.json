@@ -3014,7 +3014,6 @@
     "960c81b6c79b874a4e9472fa8a6351e9503f31e48fb8b2eeff980d2cc4b20222": 1,
     "9624ccccaaf27369593adad431803b108a8004c14bddca9973d1dcea86de02bc": 1,
     "964716145bafda7edf06a89d02cd664098a168def88603d1cbf3c71ebc79717d": 1,
-    "96552cea775a710e4a5a4c9981f86cb4997dff366e4802fb3b28cbaddb887bae": 1,
     "9671ade19b0526dc1198c455cadc98d0fa83c33511edd330ffb385b176d32792": 1,
     "967ba1db9b8f4c8bf84f8cf012e3f4b22185618feb29240f78cfa7a5c8143518": 1,
     "9682838f5fda2872c96ad03733cb5f2944dbe2101432f190fa4a6f676fdea9bb": 1,
@@ -3190,7 +3189,6 @@
     "9e846b30dacf8f6e0df721af52afa48838f25969cc2a42c508fde053a579deed": 1,
     "9e9007aaafec097ace4a394a6a4ff271728d01ffc066966fe44d057827fb5b50": 1,
     "9e903ee9b5e9f20cd8da7bea76b91c9d60aebe3f3a3ad8b78652fe4644ebedb1": 1,
-    "9e95eee539ce0174e472edb5f9cbddf79486248648905a41b4c58d4543e7700d": 1,
     "9ec7c74cabd43bea8b1282c7fe43c6f679ffa31ad0d879357c3e394643d09514": 1,
     "9eccae1dccfb13dcba69f63bacd41f8a711b59664befd1d017d87639abaacb8f": 1,
     "9ed06556e0709b19326be777dd6d1aaf5cf0e555a9f7eff5217de918e8c1c5d3": 1,
@@ -5200,7 +5198,7 @@
     "fff4cefeade4444a861f52b974453752b0d7471b8f2f3103b7b9376d25e9cdd6": 1,
     "ffff00156e8768edc36144e1f8eb089c5b0eeeefc0f7b163ed86c74279bf6913": 1
   },
-  "generatedAt": "2026-08-24T13:40:29.923Z",
+  "generatedAt": "2026-08-24T14:08:08.645Z",
   "scannerDigest": "1ed07827d1f1d3b811a5e0e7dc90011d249059ccf54e8273fde4e4f03d55a338",
   "scannerVersion": 4,
   "schemaVersion": 2,
@@ -5250,12 +5248,12 @@
     "src/components/shared/SettingsPageSkeleton.tsx": 1,
     "src/components/writing/Writing53MaterialCards.tsx": 2,
     "src/styles/foundation.css": 109,
-    "src/styles/global.css": 5469
+    "src/styles/global.css": 5467
   },
   "summaryByRule": {
     "antd.broad-state-override": 18,
-    "global-css.declaration-freeze": 3875,
-    "global-css.selector-freeze": 1210,
+    "global-css.declaration-freeze": 3874,
+    "global-css.selector-freeze": 1209,
     "react.static-inline-style": 9,
     "tailwind.arbitrary-visual": 64,
     "visual.raw-color": 312,

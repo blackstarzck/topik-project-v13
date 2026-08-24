@@ -872,6 +872,16 @@ describe("WorkspaceShell", () => {
     expect(layoutRule).toContain("--workspace-sider-width: 300px;");
   });
 
+  it("uses the drawer public body style API without an internal DOM override", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("styles={{ body: { padding: 0 } }}");
+    expect(GLOBAL_CSS).not.toContain(".app-workspace-drawer .ant-drawer-body");
+  });
+
   it("keeps the responsive workspace logo 48px tall", () => {
     const source = readFileSync(
       join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
