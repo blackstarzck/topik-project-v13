@@ -96,7 +96,9 @@ describe("LibraryFeedbackWaitingPanel", () => {
     const panel = screen.getByTestId("library-feedback-waiting-panel");
     const row = within(panel).getByTestId("library-feedback-waiting-row");
     const meta = within(panel).getByTestId("library-feedback-waiting-meta");
-    const questionNumber = panel.querySelector(".writing-question-number");
+    const questionNumber = within(panel).getByTestId(
+      "library-review-question-number",
+    );
 
     expect(
       Array.from(row.children).map((child) =>
@@ -110,11 +112,12 @@ describe("LibraryFeedbackWaitingPanel", () => {
     expect(meta.textContent).toContain("04. 07. 09:04");
     expect(meta.textContent).toContain("123");
     expect(meta.className).toContain("!text-[14px]");
-    expect(questionNumber?.textContent).toBe("53");
-    expect(questionNumber?.className).toContain(
+    expect(questionNumber.textContent).toBe("53");
+    expect(questionNumber.getAttribute("aria-label")).toBe("53번");
+    expect(questionNumber.className).toContain(
       "library-review-candidate-question-number",
     );
-    expect(questionNumber?.className).toContain("writing-question-number--q53");
+    expect(questionNumber.className).toContain("writing-question-number--q53");
   });
 
   it("delegates refresh clicks to the parent handler", () => {

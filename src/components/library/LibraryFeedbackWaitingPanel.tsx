@@ -10,10 +10,10 @@ import type {
   LibraryFeedbackWaitingSyncedStatus,
   LibraryFeedbackWaitingVisibleItem,
 } from "@/lib/library/types";
-import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { formatDashboardShortDateTime } from "./library-dashboard-format";
+import { LibraryReviewQuestionNumber } from "./LibraryReviewQuestionNumber";
 
 const { Text } = Typography;
 
@@ -78,26 +78,7 @@ export function LibraryFeedbackWaitingPanel({
                   data-testid="library-feedback-waiting-question"
                   className="flex min-w-0 items-start"
                 >
-                  {item.questionNo ? (
-                    <span
-                      aria-label={t("questionNo", {
-                        questionNo: item.questionNo,
-                      })}
-                      className={[
-                        "writing-question-number library-review-candidate-question-number font-['Space_Grotesk'] leading-none",
-                        writingQuestionNeonClass(
-                          "writing-question-number",
-                          item.questionNo,
-                        ),
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      {item.questionNo}
-                    </span>
-                  ) : (
-                    <Tag className="m-0 text-sm">{t("questionUnknown")}</Tag>
-                  )}
+                  <LibraryReviewQuestionNumber questionNo={item.questionNo} />
                 </span>
                 <span
                   data-testid="library-feedback-waiting-content"

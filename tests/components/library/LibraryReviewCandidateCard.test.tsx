@@ -80,7 +80,10 @@ describe("LibraryReviewCandidateCard", () => {
 
     const date = within(content).getByTestId("library-review-candidate-date");
     expect(date.textContent).toContain("2026-06-29");
-    const questionNumber = within(questionNumberRow).getByLabelText("54번");
+    const questionNumber = within(questionNumberRow).getByTestId(
+      "library-review-question-number",
+    );
+    expect(questionNumber.getAttribute("aria-label")).toBe("54번");
     expect(questionNumber.textContent).toBe("54");
     expect(questionNumber.className).toContain("writing-question-number");
     expect(questionNumber.className).toContain("writing-question-number--q54");

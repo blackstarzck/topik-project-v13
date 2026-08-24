@@ -10,9 +10,9 @@ import {
   difficultyLabelKey,
 } from "@/components/practice/DifficultyMeter";
 import type { LibraryReviewCandidate } from "@/lib/library/types";
-import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 
 import { formatDashboardDate } from "./library-dashboard-format";
+import { LibraryReviewQuestionNumber } from "./LibraryReviewQuestionNumber";
 
 const { Text } = Typography;
 
@@ -49,10 +49,6 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
           max: candidate.scoreMax,
         })
       : t("meta.totalScoreUnavailable");
-  const questionNoLabel = candidate.questionNo
-    ? t("questionNo", { questionNo: candidate.questionNo })
-    : t("questionUnknown");
-
   return (
     <AppCard
       size="small"
@@ -75,24 +71,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
               data-testid="library-review-candidate-question-row"
               className="flex justify-end"
             >
-              {candidate.questionNo ? (
-                <span
-                  aria-label={questionNoLabel}
-                  className={[
-                    "writing-question-number library-review-candidate-question-number font-['Space_Grotesk'] leading-none",
-                    writingQuestionNeonClass(
-                      "writing-question-number",
-                      candidate.questionNo,
-                    ),
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  {candidate.questionNo}
-                </span>
-              ) : (
-                <Tag className="m-0 text-sm">{questionNoLabel}</Tag>
-              )}
+              <LibraryReviewQuestionNumber questionNo={candidate.questionNo} />
             </div>
 
             <div
