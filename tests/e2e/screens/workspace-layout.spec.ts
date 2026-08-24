@@ -59,13 +59,12 @@ type BodyMetrics = Rect & {
   size: WorkspaceBodySize;
 };
 
-// Settings/profile pages were unified to the dashboard `workspace` (1152px)
-// container width (2026-06-21). Their forms keep a readable max-width via an
-// inner left-aligned wrapper, but the WorkspaceBody container itself now
-// matches every other workspace page.
+// Settings/profile pages use the dashboard `workspace` (1152px) container.
+// Their forms keep a readable max-width via an inner left-aligned wrapper,
+// while the library dashboard intentionally uses the wider dashboard canvas.
 const LAYOUT_ROUTES = [
   { route: "/practice/weakness", size: null },
-  { route: "/library", size: "workspace" },
+  { route: "/library", size: "wide" },
   { route: "/profile", size: "workspace" },
   { route: "/settings/account", size: "workspace" },
   { route: "/settings/learning", size: "workspace" },
