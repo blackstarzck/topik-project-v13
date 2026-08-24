@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
-import type { ModalProps } from "antd";
+import type { DrawerProps, ModalProps } from "antd";
 
 import { AppCard } from "../../../src/components/shared/AppCard";
 import { AppDrawer } from "../../../src/components/shared/AppDrawer";
@@ -236,16 +236,67 @@ describe("AppDrawer (overlay sentinel)", () => {
         open
         title="t"
         onClose={() => undefined}
-        styles={{ body: { padding: 0 } }}
+        styles={{
+          body: { display: "grid", padding: 0 },
+          header: { paddingTop: 7 },
+        }}
       >
         <span>menu</span>
       </AppDrawer>,
     );
     const body = document.querySelector(".ant-drawer-body");
     const style = body?.getAttribute("style") ?? "";
-    expect(style).toContain("display: flex");
+    expect(style).toContain("display: grid");
     expect(style).toContain("min-height: calc(100dvh - 56px)");
     expect(style).toContain("padding: 0px");
+    expect(
+      document.querySelector<HTMLElement>(".ant-drawer-header")?.style
+        .paddingTop,
+    ).toBe("7px");
+  });
+
+  it("preserves callback semantic styles while retaining the shared body baseline", () => {
+    const styles = vi.fn((info: { props: DrawerProps }) => {
+      expect(info.props.title).toBe("drawer-title");
+      return {
+        body: { display: "grid", minHeight: "42px", paddingBottom: 13 },
+        footer: { borderTopWidth: 4 },
+      };
+    });
+
+    renderWithIntl(
+      <AppDrawer
+        open
+        title="drawer-title"
+        footer="drawer-footer"
+        styles={styles}
+        onClose={() => undefined}
+      >
+        <span>menu</span>
+      </AppDrawer>,
+    );
+
+    const body = document.querySelector<HTMLElement>(".ant-drawer-body");
+    const footer = document.querySelector<HTMLElement>(".ant-drawer-footer");
+
+    expect(styles).toHaveBeenCalled();
+    expect(body?.style.display).toBe("grid");
+    expect(body?.style.flexDirection).toBe("column");
+    expect(body?.style.minHeight).toBe("42px");
+    expect(body?.style.paddingBottom).toBe("13px");
+    expect(footer?.style.borderTopWidth).toBe("4px");
+  });
+
+  it("merges a caller root class without dropping the shared hook", () => {
+    renderWithIntl(
+      <AppDrawer open rootClassName="caller-drawer" onClose={() => undefined}>
+        <span>menu</span>
+      </AppDrawer>,
+    );
+
+    const root = document.querySelector(".app-drawer");
+    expect(root).toBeTruthy();
+    expect(root?.classList.contains("caller-drawer")).toBe(true);
   });
 
   it("calls onClose when the mask (overlay) is clicked", () => {

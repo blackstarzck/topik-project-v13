@@ -4,6 +4,7 @@ export type WorkspaceBodySize = "form" | "task" | "workspace" | "wide" | "full";
 
 type WorkspaceBodyProps = Omit<ComponentPropsWithoutRef<"div">, "children"> & {
   children: ReactNode;
+  "data-testid"?: string;
   size?: WorkspaceBodySize;
 };
 
@@ -24,15 +25,17 @@ export function WorkspaceBody({
   children,
   className,
   size = "workspace",
+  "data-testid": dataTestId = "workspace-page-body",
   ...props
 }: WorkspaceBodyProps) {
   return (
     <div
       {...props}
-      data-testid="workspace-page-body"
+      data-testid={dataTestId}
       data-workspace-body-size={size}
       className={classNames(
         "app-workspace-body",
+        "app-workspace-body--page",
         `app-workspace-body--${size}`,
         className,
       )}

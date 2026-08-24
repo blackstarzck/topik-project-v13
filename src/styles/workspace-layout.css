@@ -53,8 +53,8 @@
    .app-workspace-content가 이미 100vh를 채우고 상하 padding을 가지므로,
    본문은 그 안쪽 박스 높이(=viewport - content padding)만큼 늘린다.
    raw 100vh로 두면 padding만큼 넘쳐 불필요한 스크롤이 생기므로 padding을 뺀다.
-   data-testid로 한정해 fixed action bar inner / feedback 본문 div에는 적용하지 않는다. */
-.app-workspace-body[data-testid="workspace-page-body"] {
+   page 전용 hook으로 한정해 fixed action bar inner / feedback 본문 div에는 적용하지 않는다. */
+.app-workspace-body--page {
   min-height: calc(100vh - var(--workspace-content-padding-block) * 2);
   min-height: calc(
     max(100vh, 100dvh) - var(--workspace-content-padding-block) * 2
@@ -134,15 +134,14 @@
      --workspace-content-padding-block 변수는 base 선택자(.app-workspace-layout.ant-layout,
      specificity 0,2,0)가 모바일 override(.app-workspace-layout, 0,1,0)를 이겨 모바일에서도
      24px로 남으므로, 실제 padding과 일치하도록 여기서는 리터럴 16px를 사용한다. */
-  .app-workspace-body[data-testid="workspace-page-body"] {
+  .app-workspace-body--page {
     min-height: calc(100vh - var(--workspace-mobile-bar-height) - 16px * 2);
     min-height: calc(
       max(100vh, 100dvh) - var(--workspace-mobile-bar-height) - 16px * 2
     );
   }
 
-  .app-workspace-layout--chrome-hidden
-    .app-workspace-body[data-testid="workspace-page-body"] {
+  .app-workspace-layout--chrome-hidden .app-workspace-body--page {
     min-height: calc(100vh - 16px * 2);
     min-height: calc(100dvh - 16px * 2);
   }
