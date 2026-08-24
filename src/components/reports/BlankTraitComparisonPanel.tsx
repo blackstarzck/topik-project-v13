@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, Empty, Progress, Typography, theme } from "antd";
+import { Empty, Progress, Typography, theme } from "antd";
 import { useTranslations } from "next-intl";
+import { AppCard } from "@/components/shared/AppCard";
 import { CheckCircle2 } from "@/components/shared/AppIcons";
 import type {
   BlankComparisonDatum,
@@ -198,7 +199,7 @@ function AnswerFeedbackGroup({
     placement === "previous" ? PREVIOUS_COLUMN_CLASS : CURRENT_COLUMN_CLASS;
 
   return (
-    <Card
+    <AppCard
       className={classNames("h-full min-w-0", columnClass)}
       data-testid={testId}
       size="small"
@@ -221,7 +222,7 @@ function AnswerFeedbackGroup({
           className="h-full"
         />
       </div>
-    </Card>
+    </AppCard>
   );
 }
 

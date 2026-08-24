@@ -1345,9 +1345,13 @@ describe("ComparisonReportView next action chrome", () => {
     expect(answerFeedbackGrid?.className).not.toContain("mt-4");
     expect(answerFeedbackGrid?.className).toContain("lg:grid-cols-2");
     expect(firstBlankCurrent.className).toContain("ant-card");
+    expect(firstBlankCurrent.className).toContain("app-card");
+    expect(firstBlankCurrent.className).toContain("app-surface");
     expect(firstBlankCurrent.className).toContain("h-full");
     expect(firstBlankCurrent.className).toContain("lg:col-start-1");
     expect(firstBlankPrevious.className).toContain("ant-card");
+    expect(firstBlankPrevious.className).toContain("app-card");
+    expect(firstBlankPrevious.className).toContain("app-surface");
     expect(firstBlankPrevious.className).toContain("h-full");
     expect(firstBlankPrevious.className).toContain("lg:col-start-2");
     expect(
