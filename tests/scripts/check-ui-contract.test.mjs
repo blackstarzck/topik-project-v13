@@ -165,7 +165,7 @@ describe("UI contract normalization", () => {
       lexeme: "style={{ color: '#fff' }}",
     });
 
-    expect(UI_CONTRACT_SCANNER_VERSION).toBe(3);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(4);
     expect(left.fingerprint).toBe(right.fingerprint);
     expect(left.fingerprint).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -1039,6 +1039,30 @@ describe("UI contract CSS rules", () => {
     expect(fingerprintsFor(left, "global-css.declaration-freeze")).toEqual(
       fingerprintsFor(right, "global-css.declaration-freeze"),
     );
+  });
+
+  it("freezes selectors and declarations in the two global CSS owners only", () => {
+    const css = `.card { color: var(--app-color-text); }`;
+    const result = scanUiContract([
+      source("src/styles/global.css", css),
+      source("src/styles/foundation.css", css),
+      source("src/styles/component.css", css),
+    ]);
+    const freezePaths = (ruleId) =>
+      result.violations
+        .filter((violation) => violation.ruleId === ruleId)
+        .map((violation) => violation.path)
+        .sort();
+
+    expect(freezePaths("global-css.selector-freeze")).toEqual([
+      "src/styles/foundation.css",
+      "src/styles/global.css",
+    ]);
+    expect(freezePaths("global-css.declaration-freeze")).toEqual([
+      "src/styles/foundation.css",
+      "src/styles/global.css",
+    ]);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(4);
   });
 
   it("canonicalizes comma-selector order and freezes direct at-rule declarations", () => {

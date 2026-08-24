@@ -1,3 +1,4 @@
+export * from "./bridge-contract";
 export * from "./config";
 export * from "./create-theme";
 export * from "./registry";

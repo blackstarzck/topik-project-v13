@@ -6,7 +6,7 @@ import ts from "typescript";
 
 export const UI_CONTRACT_SCHEMA_VERSION = 1;
 export const UI_CONTRACT_BASELINE_SCHEMA_VERSION = 2;
-export const UI_CONTRACT_SCANNER_VERSION = 3;
+export const UI_CONTRACT_SCANNER_VERSION = 4;
 const TEST_SCANNER_DIGEST = "0".repeat(64);
 
 const SCRIPT_KINDS = new Map([
@@ -1872,8 +1872,13 @@ function scanBroadAntdStates(source, root) {
   return violations;
 }
 
+const GLOBAL_CSS_FREEZE_PATHS = new Set([
+  "src/styles/foundation.css",
+  "src/styles/global.css",
+]);
+
 function scanGlobalCssFreeze(source, root) {
-  if (normalizeRepoPath(source.path) !== "src/styles/global.css") return [];
+  if (!GLOBAL_CSS_FREEZE_PATHS.has(normalizeRepoPath(source.path))) return [];
   const violations = [];
   root.walkRules((rule) => {
     const selector = normalizeCssSelector(rule.selector);

@@ -1,0 +1,175 @@
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/montserrat/Montserrat-Regular.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/montserrat/Montserrat-Medium.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/montserrat/Montserrat-SemiBold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/montserrat/Montserrat-Bold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/montserrat/Montserrat-ExtraBold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 800;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../../fonts/montserrat/Montserrat-Black.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 900;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Light.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Regular.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Medium.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-SemiBold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../fonts/space/SpaceGrotesk-Bold.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+}
+
+/*
+ * @theme inline bridges --app-* CSS variables (injected on <html> by layout.tsx)
+ * into Tailwind v4 utility classes.
+ *
+ * "inline" is required (not bare @theme) so Tailwind generates:
+ *   .text-primary { color: var(--app-color-primary) }  ← preserves runtime var
+ * instead of resolving the value at build time (which would break dark mode toggle).
+ */
+@theme inline {
+  --color-primary: var(--app-color-primary);
+  --color-background: var(--app-color-bg-container);
+  --color-surface: var(--app-color-bg-layout);
+  --color-text: var(--app-color-text);
+  --color-text-secondary: var(--app-color-text-secondary);
+  --color-link-secondary: var(--app-color-link-secondary);
+  --color-border: var(--app-color-border);
+  --radius-default: var(--app-radius);
+  --font-sans: var(--app-font-family);
+  --shadow-elevated: var(--app-shadow-elevated);
+}
+
+/*
+ * color-scheme is now injected dynamically on <html> from layout.tsx.
+ * Removed hardcoded ":root { color-scheme: light }" — it would override dark mode.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--app-color-bg-layout);
+  color: var(--app-color-text);
+  font-family: var(--app-font-family);
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.brand-logo__image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/*
+ * Reduced motion (PLAN §G / 05-visual-motion-illustration.md): when the OS
+ * "reduce motion" setting is on, near-stop all transitions/animations so motion
+ * is effectively still. transform/opacity micro-motion elsewhere stays subtle.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .landing-layout-testimonials .swiper-wrapper,
+  .landing-hero-copy > *,
+  [data-landing-heading],
+  [data-landing-stagger],
+  [data-landing-line],
+  [data-landing-parallax] {
+    --landing-line-scale: 1 !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+    will-change: auto !important;
+  }
+}

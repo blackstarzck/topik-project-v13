@@ -8,7 +8,7 @@ import {
   getResolvedBridgeVars,
   getResolvedBridgeVarsByAppearance,
 } from "../../src/theme";
-import type { AppBridgeVarName } from "../../src/theme/tokens/awesomic";
+import type { AppBridgeVarName } from "../../src/theme/bridge-contract";
 import type { ThemeAppearance } from "../../src/theme/types";
 
 type Formatter = (raw: unknown) => string;

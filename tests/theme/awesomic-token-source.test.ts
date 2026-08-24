@@ -4,10 +4,8 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import designTokens from "../../DESIGN/tokens.json";
-import {
-  allowedAppBridgeVars,
-  awesomicThemeTokens,
-} from "../../src/theme/tokens/awesomic";
+import { allowedAppBridgeVars } from "../../src/theme/bridge-contract";
+import { awesomicThemeTokens } from "../../src/theme/tokens/awesomic";
 import { themePresets, themeSettings } from "../../src/theme";
 
 type DesignTokenLeaf = {
@@ -51,6 +49,9 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.color.pebble).toBe(tokenValue("color.pebble"));
     expect(awesomicThemeTokens.color.mist).toBe(tokenValue("color.mist"));
     expect(awesomicThemeTokens.color.snow).toBe(tokenValue("color.snow"));
+    expect(awesomicThemeTokens.color.linkSecondary).toBe(
+      tokenValue("color.link-secondary"),
+    );
   });
 
   test("runtime radius tokens are reduced from the raw rounded reference", () => {
@@ -70,14 +71,17 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.radius.badge).toBeLessThan(tokenPx("radius.xl"));
   });
 
-  test("global.css uses only approved --app-* bridge variables", () => {
-    const css = readFileSync(
-      resolve(process.cwd(), "src/styles/global.css"),
-      "utf8",
-    );
-    const usedVars = Array.from(css.matchAll(/--app-[a-z0-9-]+/g)).map(
-      ([value]) => value,
-    );
+  test("global and foundation CSS use only approved --app-* bridge variables", () => {
+    const usedVars = ["global.css", "foundation.css"].flatMap((fileName) => {
+      const css = readFileSync(
+        resolve(process.cwd(), "src/styles", fileName),
+        "utf8",
+      );
+
+      return Array.from(css.matchAll(/--app-[a-z0-9-]+/g)).map(
+        ([value]) => value,
+      );
+    });
     const allowedVars = new Set<string>(allowedAppBridgeVars);
     const disallowed = usedVars.filter((value) => !allowedVars.has(value));
 

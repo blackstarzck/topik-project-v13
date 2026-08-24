@@ -9,6 +9,9 @@
 > - `DESIGN/tokens.json`: machine-readable imported token source.
 > - `src/theme`: runtime owner that normalizes values and projects them into
 >   AntD and Tailwind adapters.
+> - `src/theme/bridge-contract.ts`: theme-neutral L2 token-to-Tailwind bridge
+>   contract. Test-only themes use the same projection without entering the
+>   production theme registry.
 > - `src/styles/global.css`: Tailwind v4 `@theme inline` bridge and approved
 >   global runtime styles.
 
@@ -42,7 +45,7 @@ icon.
 - `src/theme/config.ts`가 active preset을 선택한다. 현재 product preset은 `awesomic`이고 stock Ant Design은 fallback이다.
 - `DESIGN/tokens.json`은 가져온 machine-readable source이고 `src/theme/tokens/awesomic.ts`는 이를 정규화한 runtime mapping이다.
 - Ant Design은 component adapter다. 전역 값과 component state 값은 `ConfigProvider`, `theme.token`, `theme.components` 또는 scoped provider가 소유한다.
-- Tailwind는 layout·responsive adapter다. `src/theme/tailwind-bridge.ts`와 `src/styles/global.css`의 `@theme inline`을 통해 계산된 `--app-*` 값을 사용하며, 별도의 palette, font, radius, shadow scale을 소유하지 않는다.
+- Tailwind는 layout·responsive와 앱이 직접 소유한 표면의 제한된 시각 보조 adapter다. 시각 utility는 `src/theme/tailwind-bridge.ts`와 `src/styles/global.css`의 `@theme inline`을 통해 계산된 L2 의미 토큰(`--app-*`)만 사용한다. 별도의 palette, font, radius, shadow scale을 만들거나 AntD 내부 상태를 다시 그리지 않는다.
 - 새 `--app-*` 변수에는 source token, 실제 Tailwind/plain-CSS consumer, theme contract test가 모두 필요하다. 계산된 값은 first render에 존재해야 하고 `var(--ant-*)`를 다시 가리키면 안 된다.
 - 기존 project wrapper와 AntD props를 우선한다. 프로젝트가 작성한 visual inline style, 광범위한 `.ant-*` override, 생성된 AntD class selector, page-specific global CSS를 추가하지 않는다.
 
@@ -78,6 +81,7 @@ Awesomic operates on a white-and-near-black canvas with maximum roundness — 36
 | Fog | `#ececee` | `--color-fog` | Card backgrounds (mid variant), badge borders, section dividers — the second surface step above the canvas |
 | Mist | `#f4f4f5` | `--color-mist` | Page canvas, light card backgrounds, tag/link hover surface — the dominant background tone |
 | Snow | `#ffffff` | `--color-snow` | White card surfaces, input backgrounds, button fill for outlined variant — the brightest surface in the stack |
+| Link Secondary | `#3254F2` | `--color-link-secondary` | Legal and secondary text links plus secondary progress accents that must remain distinguishable from the near-black primary action color |
 | Ember | `#ff5a00` | `--color-ember` | YC batch badge backgrounds — vivid orange signals startup-ecosystem provenance, appears only on badge-sized labels |
 | Orchid Flash | `#fe45e2` | `--color-orchid-flash` | Decorative card wash accent — single-use vivid pink on a large card background to punctuate the portfolio grid |
 
@@ -295,7 +299,7 @@ Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor 
 - Put card titles and right-side status/count metadata in Ant Design `Card` `title` and `extra` when the information describes the whole card.
 - Put card-level CTA buttons in the Ant Design `Card.actions` footer area, not in the card body. Keep the footer action area borderless by default.
 - Treat 28-36px radii as raw Awesomic reference values for marketing/reference surfaces; use the documented TALKPIK runtime radius exception (4-8px workspace cards/panels) for study dashboards and operational UI.
-- Use Ant Design components and tokens first; treat Tailwind as a layout utility and `--app-*` bridge consumer.
+- Use Ant Design components and tokens first; use Tailwind for layout/responsive work and limited token-backed visual utilities on app-owned surfaces through the `--app-*` bridge.
 - Keep one clear primary action per task area, and pair every color signal with text or icon.
 - Encode difficulty (1–5) with the muted Difficulty Scale by tinting the difficulty icon only; keep the label text achromatic and source colors from `difficultyFillColor`/`difficultyLabelKey` (see Tokens — Difficulty Scale).
 - Apply the multi-layer button shadow (rgba(255,255,255,0.5) inset + rgba(117,123,133,0.4) inset + rgb(44,46,52) 1.5px ring + rgba(0,0,0,0.14) drop) only on the primary #09090b pill button — it defines the CTA's physicality.
@@ -352,6 +356,7 @@ Max-width approximately 1200px, centered on the canvas (#f4f4f5). The hero is a 
 - border / divider: #ececee / #3f3f46
 - accent (badge only): #ff5a00 (YC), #fe45e2 (decorative card)
 - primary action: #09090b (filled action)
+- secondary link/accent: #3254F2 (legal links and secondary progress only)
 - difficulty (1–5, icon tint only): #5e9e6f → #8aa04e → #cca63a → #cf833f → #c75d4f (see Tokens — Difficulty Scale)
 
 **Example Component Prompts**
@@ -395,6 +400,7 @@ Awesomic uses animation expressively but purposefully. Three named scrolling loo
   --color-fog: #ececee;
   --color-mist: #f4f4f5;
   --color-snow: #ffffff;
+  --color-link-secondary: #3254F2;
   --color-ember: #ff5a00;
   --color-orchid-flash: #fe45e2;
 
@@ -515,6 +521,7 @@ together.
   --color-fog: #ececee;
   --color-mist: #f4f4f5;
   --color-snow: #ffffff;
+  --color-link-secondary: #3254F2;
   --color-ember: #ff5a00;
   --color-orchid-flash: #fe45e2;
 

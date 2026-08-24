@@ -1,20 +1,5 @@
 import { appFontFamily } from "../global/shared-seed";
-
-export const allowedAppBridgeVars = [
-  "--app-color-primary",
-  "--app-color-bg-layout",
-  "--app-color-bg-container",
-  "--app-color-text",
-  "--app-color-text-secondary",
-  "--app-color-link-secondary",
-  "--app-color-border",
-  "--app-radius",
-  "--app-font-family",
-  "--app-shadow-elevated",
-] as const;
-
-export type AppBridgeVarName = (typeof allowedAppBridgeVars)[number];
-export type AppBridgeVars = Record<AppBridgeVarName, string>;
+import type { AppBridgeVars } from "../bridge-contract";
 
 export const awesomicThemeTokens = {
   color: {

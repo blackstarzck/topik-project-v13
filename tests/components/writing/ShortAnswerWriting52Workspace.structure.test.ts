@@ -123,13 +123,13 @@ describe("ShortAnswerWriting52Workspace structure", () => {
     expect(source).not.toContain('tPage("expressionHint0")');
   });
 
-  it("keeps shared expression styles available for other writing screens", () => {
+  it("does not keep the removed q52 expression selector family as global CSS debt", () => {
     const styles = readFileSync(stylesPath, "utf8");
 
-    expect(styles).toContain(".writing-expression-accordion.ant-collapse");
-    expect(styles).toContain(".writing-expression-content");
-    expect(styles).toContain(".writing-expression-chip-list");
-    expect(styles).toContain(".writing-expression-chip");
+    expect(styles).not.toContain(".writing-expression-accordion");
+    expect(styles).not.toContain(".writing-expression-content");
+    expect(styles).not.toContain(".writing-expression-chip-list");
+    expect(styles).not.toContain(".writing-expression-chip");
   });
 
   it("delegates local recovery, latest-save flushing, and conflicts to the shared resilience controller", () => {

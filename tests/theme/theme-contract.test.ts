@@ -8,10 +8,8 @@ import {
   themePresets,
   themeSettings,
 } from "../../src/theme";
-import {
-  awesomicThemeTokens,
-  type AppBridgeVarName,
-} from "../../src/theme/tokens/awesomic";
+import { awesomicThemeTokens } from "../../src/theme/tokens/awesomic";
+import type { AppBridgeVarName } from "../../src/theme/bridge-contract";
 
 // Phase 8 follow-up (2026-05-27) — antd v6.x compatibility fix:
 // `theme` namespace에 "use client" marker + transitive createContext 평가 문제로
