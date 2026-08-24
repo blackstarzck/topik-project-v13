@@ -149,15 +149,42 @@ describe("LibraryReviewCandidateCard", () => {
     expect(footerLinks[1].textContent).toContain("다시 풀기");
   });
 
-  it("keeps the AntD card body full height for uniform swiper cards", () => {
+  it("owns the full-height swiper layout through the public card body slot", () => {
+    renderWithIntl(<LibraryReviewCandidateCard candidate={candidate} />);
+
+    const card = screen.getByTestId("library-review-candidate-card");
+    expect.soft(card.className).toContain("flex");
+    expect.soft(card.className).toContain("h-full");
+
+    const body = Array.from(card.children).find(
+      (child) =>
+        child.classList.contains("flex") &&
+        child.classList.contains("h-full") &&
+        child.classList.contains("w-full"),
+    );
+    expect.soft(body).toBeTruthy();
+
+    const shell = within(card).getByTestId("library-review-candidate-shell");
+    expect.soft(shell.className).toContain("w-full");
+
     const css = readFileSync(
       join(process.cwd(), "src/styles/global.css"),
       "utf8",
     );
 
-    expect(css).toMatch(
-      /\.library-review-candidate-card\.app-card\.app-surface\s*>\s*\.ant-card-body[\s\S]*?height:\s*100%;/,
-    );
+    expect
+      .soft(css)
+      .not.toMatch(
+        /\.library-review-candidate-card\.app-card\.app-surface\s*\{[^}]*\}/,
+      );
+    expect
+      .soft(css)
+      .not.toMatch(/\.library-review-candidate-card[^\{]*>\s*\.ant-card-body/);
+    expect
+      .soft(css)
+      .not.toMatch(
+        /\.library-review-candidate-card[^\{]*>\s*\.ant-card-body\s*>\s*\*/,
+      );
     expect(css).toMatch(
       /\.library-review-candidate-card\s+\.library-review-candidate-question-number\s*\{[\s\S]*?width:\s*1\.47em;/,
     );

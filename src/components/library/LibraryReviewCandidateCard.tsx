@@ -53,11 +53,12 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
     <AppCard
       size="small"
       data-testid="library-review-candidate-card"
-      className="library-review-candidate-card h-full"
+      className="library-review-candidate-card flex h-full"
+      classNames={{ body: "flex h-full w-full" }}
     >
       <article
         data-testid="library-review-candidate-shell"
-        className="flex h-[300px] min-h-[300px] flex-col"
+        className="flex h-[300px] min-h-[300px] w-full flex-col"
       >
         <section
           data-testid="library-review-candidate-top"

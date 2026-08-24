@@ -4215,25 +4215,6 @@
   margin-bottom: 16px;
 }
 
-.library-review-candidate-card.app-card.app-surface {
-  display: flex;
-  height: 100%;
-}
-
-.library-review-candidate-card.app-card.app-surface > .ant-card-body,
-.library-review-candidate-card.app-card.app-surface
-  > .ant-card-body:first-child,
-.library-review-candidate-card.app-card.app-surface
-  > .ant-card-body:last-child {
-  display: flex;
-  width: 100%;
-  height: 100%;
-}
-
-.library-review-candidate-card.app-card.app-surface > .ant-card-body > * {
-  width: 100%;
-}
-
 .library-review-candidate-card .library-review-candidate-question-number {
   width: 1.47em;
   height: 1.47em;
