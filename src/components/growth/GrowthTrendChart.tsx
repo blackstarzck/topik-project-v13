@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Alert, Button, Empty, Segmented, Typography, theme } from "antd";
+import { Alert, Button, Empty, Segmented, theme } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
 import { kstDayKey } from "@/lib/growth/kstDay";
@@ -15,8 +15,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const { Text } = Typography;
 
 /**
  * X-02 성장 대시보드 area 3 — 성장 차트.
@@ -184,9 +182,9 @@ export function GrowthTrendChart({ points, onRetry }: Props) {
             type="info"
             showIcon
             title={
-              <Text type="secondary" className="!text-xs">
+              <span className="text-sm leading-[1.5715] text-text-secondary">
                 {t("legendHelp")}
-              </Text>
+              </span>
             }
           />
         </div>
