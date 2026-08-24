@@ -1,19 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Button, Descriptions, Input, Progress, Typography } from "antd";
 import { Eye, PenLine, Sparkles } from "@/components/shared/AppIcons";
 import { useTranslations } from "next-intl";
 
 import { logStudyEvent } from "@/lib/events/study-events";
-import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useWritingTimeMetrics } from "@/hooks/useWritingTimeMetrics";
-import type { ClientRecoveryRecordV1 } from "@/lib/writing/client-recovery";
 import { recordWritingSubmissionMetrics } from "@/lib/writing/metrics";
-import { isWritingDraftVersionStale } from "@/lib/writing/draft-version";
-import { useSubmitWriting, useUpsertDraft } from "@/lib/writing/mutations";
-import { useWritingResilience } from "@/lib/writing/use-writing-resilience";
-import type { WritingResilienceSnapshot } from "@/lib/writing/writing-resilience";
 import type {
   NormalizedBlank,
   NormalizedWritingProblem,
@@ -23,18 +17,8 @@ import {
   isCountInRecommendedRange,
   isCountSubmittable,
 } from "@/lib/writing/constants";
-import {
-  build51AnswerText,
-  count51AnswerChars,
-  isShortAnswer51DraftJson,
-  type ShortAnswerQuestion51Json,
-  type WritingDraftRow,
-  type WritingRetrySeed,
-} from "@/lib/writing/types";
-import {
-  AutosaveWarningModal,
-  type WarningTrigger,
-} from "./AutosaveWarningModal";
+import type { WritingDraftRow, WritingRetrySeed } from "@/lib/writing/types";
+import { AutosaveWarningModal } from "./AutosaveWarningModal";
 import { InteractiveBlankPrompt } from "./InteractiveBlankPrompt";
 import { SubmissionConfirmModal } from "./SubmissionConfirmModal";
 import { SubmissionFailedModal } from "./SubmissionFailedModal";
@@ -46,7 +30,7 @@ import {
 import { WritingGuideAccordion } from "./WritingGuideAccordion";
 import { WritingExamShell } from "./WritingExamShell";
 import { WritingRecoveryConflictModal } from "./WritingRecoveryConflictModal";
-import { serializeWritingAnswerSnapshot } from "./writingAnswerSnapshot";
+import { useShortAnswerWritingWorkspace } from "./useShortAnswerWritingWorkspace";
 
 const { Text } = Typography;
 
@@ -61,29 +45,8 @@ type Props = {
   returnHref: string;
 };
 
-const DEBOUNCE_MS = 2000;
-
 function blankDisplay(blank: NormalizedBlank, index: number) {
   return `${index + 1} ${blank.label}`;
-}
-
-function initialBlankAnswers(
-  blanks: NormalizedBlank[],
-  draft: Pick<WritingDraftRow, "answer_json" | "answer_text"> | null,
-): Record<string, string> {
-  const draftJson = draft?.answer_json;
-  if (isShortAnswer51DraftJson(draftJson)) {
-    return Object.fromEntries(
-      blanks.map((blank) => [blank.label, draftJson.blanks[blank.label] ?? ""]),
-    );
-  }
-
-  return Object.fromEntries(
-    blanks.map((blank, index) => [
-      blank.label,
-      index === 0 ? (draft?.answer_text ?? "") : "",
-    ]),
-  );
 }
 
 function uniqueNonEmpty(items: Array<string | null | undefined>) {
@@ -103,168 +66,55 @@ export function ShortAnswerWriting51Workspace({
   const tPage = useTranslations("writing.q51");
   const tEditor = useTranslations("writing.editor");
   const tGuide = useTranslations("writing.guide");
-  const answerSource = retrySeed ?? draft;
-  const initialAnswers = useMemo(
-    () => initialBlankAnswers(problem.blanks, answerSource),
-    [answerSource, problem.blanks],
-  );
-  const canonicalQuestionId = problem.canonicalQuestionId ?? null;
-  const canonicalImportId = problem.canonicalImportId ?? null;
-  const canonicalPayloadHash = problem.payloadHash ?? null;
-  const staleDraftVersion = isWritingDraftVersionStale(draft, {
-    questionId: canonicalQuestionId,
-    importId: canonicalImportId,
-    payloadHash: canonicalPayloadHash,
-  });
-  const [blankAnswers, setBlankAnswers] =
-    useState<Record<string, string>>(initialAnswers);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [warningTrigger, setWarningTrigger] = useState<WarningTrigger | null>(
-    null,
-  );
   const [blurNotice, setBlurNotice] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedAnalysis, setSubmittedAnalysis] =
     useState<SubmittedAnalysisState | null>(null);
-  const [autosaveEnabled, setAutosaveEnabled] = useState(true);
   const { elapsedSeconds, markInputActivity, getTimeMetricsSnapshot } =
     useWritingTimeMetrics();
-  const [activeBlankIndex, setActiveBlankIndex] = useState(0);
-  const [recoveryChoice, setRecoveryChoice] = useState<
-    "prior" | "current" | null
-  >(null);
-  const draftIdRef = useRef<string | null>(draft?.id ?? null);
-  const explicitSaveRef = useRef<"manual" | "submit" | null>(null);
-  const upsert = useUpsertDraft();
+  const workspace = useShortAnswerWritingWorkspace({
+    draft,
+    onAnswerActivity: markInputActivity,
+    onAnswersSelected: () => setBlurNotice(null),
+    problem,
+    retrySeed,
+    returnHref,
+    userId,
+  });
+  const {
+    activeBlank,
+    activeBlankIndex,
+    activeBlankValue,
+    answerText,
+    autosaveEnabled,
+    blankAnswers,
+    canonicalImportId,
+    canonicalPayloadHash,
+    canonicalQuestionId,
+    charCount,
+    exitGuard,
+    lastSavedAt,
+    modalTrigger,
+    onChange,
+    onChooseRecovery,
+    onKeepWarning,
+    onManualSave,
+    onProceedWarning,
+    onRetryWarning,
+    onToggleAutosave,
+    prepareSubmission,
+    recoveryChoice,
+    resilience,
+    setActiveBlankIndex,
+    staleDraftVersion,
+    status,
+    submit,
+  } = workspace;
 
   const limit = getCharLimit(51);
-  const answerText = useMemo(
-    () => build51AnswerText(blankAnswers, problem.blanks),
-    [blankAnswers, problem.blanks],
-  );
-  const currentAnswerSnapshot = useMemo(
-    () => serializeWritingAnswerSnapshot(blankAnswers),
-    [blankAnswers],
-  );
-  const [lastSavedSnapshot, setLastSavedSnapshot] = useState(
-    () => currentAnswerSnapshot,
-  );
-  const initialSnapshot = useMemo<WritingResilienceSnapshot>(
-    () => ({
-      draft: {
-        user_id: userId,
-        problem_id: problem.id,
-        question_no: 51,
-        answer_text: build51AnswerText(initialAnswers, problem.blanks),
-        answer_json: { _v: "51.v1", blanks: { ...initialAnswers } },
-        char_count: count51AnswerChars(initialAnswers),
-        autosave_status: draft?.autosave_status ?? "clean",
-        last_saved_at: draft?.last_saved_at ?? null,
-        canonical_question_id: canonicalQuestionId,
-        canonical_import_id:
-          canonicalImportId === null ? null : Number(canonicalImportId),
-        canonical_payload_hash: canonicalPayloadHash,
-        question_snapshot: draft?.question_snapshot ?? null,
-      },
-      draftId: draft?.id ?? null,
-    }),
-    [
-      canonicalImportId,
-      canonicalPayloadHash,
-      canonicalQuestionId,
-      draft,
-      initialAnswers,
-      problem.blanks,
-      problem.id,
-      userId,
-    ],
-  );
-  const saveServer = useCallback(
-    (nextDraft: WritingResilienceSnapshot["draft"]) =>
-      upsert.mutateAsync(nextDraft),
-    [upsert],
-  );
-  const onServerSaved = useCallback(
-    (row: WritingDraftRow, snapshot: WritingResilienceSnapshot) => {
-      draftIdRef.current = row.id;
-      if (isShortAnswer51DraftJson(snapshot.draft.answer_json)) {
-        setLastSavedSnapshot(
-          serializeWritingAnswerSnapshot(snapshot.draft.answer_json.blanks),
-        );
-      }
-      if (explicitSaveRef.current === null) {
-        void logStudyEvent({
-          eventType: "draft_autosaved",
-          problemId: problem.id,
-          payload: {
-            question_no: 51,
-            char_count:
-              snapshot.draft.char_count ??
-              count51AnswerChars(
-                isShortAnswer51DraftJson(snapshot.draft.answer_json)
-                  ? snapshot.draft.answer_json.blanks
-                  : {},
-              ),
-          },
-        });
-      }
-    },
-    [problem.id],
-  );
-  const restorePrior = useCallback(
-    (
-      record: ClientRecoveryRecordV1,
-      current: WritingResilienceSnapshot,
-    ): WritingResilienceSnapshot => {
-      const restoredAnswers = initialBlankAnswers(problem.blanks, {
-        answer_json: record.answerJson,
-        answer_text: record.answerText,
-      });
-      return {
-        draft: {
-          ...current.draft,
-          answer_text: build51AnswerText(restoredAnswers, problem.blanks),
-          answer_json: { _v: "51.v1", blanks: restoredAnswers },
-          char_count: count51AnswerChars(restoredAnswers),
-          autosave_status: "dirty",
-        },
-        draftId: record.draftId ?? current.draftId,
-      };
-    },
-    [problem.blanks],
-  );
-  const resilience = useWritingResilience({
-    debounceMs: DEBOUNCE_MS,
-    initialSnapshot,
-    isBlocked: () => staleDraftVersion,
-    onServerSaved,
-    restorePrior,
-    saveServer,
-    serverAutosaveEnabled: autosaveEnabled,
-  });
-  const submit = useSubmitWriting(undefined, {
-    intentPersistence: resilience.intentPersistence,
-  });
-  const status = resilience.state.status;
-  const lastSavedAt = resilience.state.lastSavedAt;
-  const hasUnsavedAnswerChange = currentAnswerSnapshot !== lastSavedSnapshot;
-  const exitGuard = useUnsavedChangesGuard({
-    when: hasUnsavedAnswerChange,
-    fallbackHref: returnHref,
-  });
-  const modalTrigger: WarningTrigger | null = exitGuard.pendingNavigation
-    ? "exit_with_dirty"
-    : warningTrigger;
   const guideLoadFailed =
     problem.submitBlockedReason === "problem_data_incomplete";
-  const activeBlank = problem.blanks[activeBlankIndex] ?? problem.blanks[0];
-  const activeBlankValue = activeBlank
-    ? (blankAnswers[activeBlank.label] ?? "")
-    : "";
-  const charCount = useMemo(
-    () => count51AnswerChars(blankAnswers),
-    [blankAnswers],
-  );
   const submittable = isCountSubmittable(charCount, 51);
   const inRecommended = isCountInRecommendedRange(charCount, 51);
   const progressPercent = Math.min(
@@ -314,78 +164,6 @@ export function ShortAnswerWriting51Workspace({
     [problem.blanks, tPage],
   );
 
-  useEffect(() => {
-    void logStudyEvent({
-      eventType: "practice_started",
-      problemId: problem.id,
-      payload: { question_no: 51 },
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const previousStatusRef = useRef(status);
-  useEffect(() => {
-    if (status === "failed" && previousStatusRef.current !== "failed") {
-      setWarningTrigger("save_failure");
-    }
-    previousStatusRef.current = status;
-  }, [status]);
-
-  function buildSnapshot(
-    nextAnswers: Record<string, string>,
-  ): WritingResilienceSnapshot {
-    const nextText = build51AnswerText(nextAnswers, problem.blanks);
-    const nextCharCount = count51AnswerChars(nextAnswers);
-    return {
-      draft: {
-        ...initialSnapshot.draft,
-        user_id: userId,
-        problem_id: problem.id,
-        question_no: 51,
-        answer_text: nextText,
-        answer_json: { _v: "51.v1", blanks: { ...nextAnswers } },
-        char_count: nextCharCount,
-        autosave_status: "dirty",
-        last_saved_at: resilience.state.lastSavedAt,
-        canonical_question_id: canonicalQuestionId,
-        canonical_import_id:
-          canonicalImportId === null ? null : Number(canonicalImportId),
-        canonical_payload_hash: canonicalPayloadHash,
-      },
-      draftId: draftIdRef.current,
-    };
-  }
-
-  function onChange(next: string) {
-    if (!activeBlank) return;
-    markInputActivity();
-    const nextAnswers = { ...blankAnswers, [activeBlank.label]: next };
-    setBlankAnswers(nextAnswers);
-    setBlurNotice(null);
-    resilience.edit(buildSnapshot(nextAnswers));
-  }
-
-  async function onManualSave() {
-    explicitSaveRef.current = "manual";
-    try {
-      await resilience.manualSave();
-      return true;
-    } catch {
-      setWarningTrigger("save_failure");
-      return false;
-    } finally {
-      explicitSaveRef.current = null;
-    }
-  }
-
-  function onToggleAutosave() {
-    if (autosaveEnabled) {
-      setWarningTrigger("disable_attempt");
-    } else {
-      setAutosaveEnabled(true);
-    }
-  }
-
   function onBlurValidate() {
     if (answerText.length === 0) return;
     if (charCount < limit.hardMin) {
@@ -419,37 +197,18 @@ export function ShortAnswerWriting51Workspace({
     clearFailure = true,
   }: { clearFailure?: boolean } = {}) {
     if (clearFailure) setSubmitError(null);
-    explicitSaveRef.current = "submit";
-
-    let savedDraft: WritingDraftRow;
-    let latest: WritingResilienceSnapshot | undefined;
-    try {
-      savedDraft = await resilience.prepareForSubmit();
-      latest = resilience.getLatestSnapshot();
-      if (!latest || !isShortAnswer51DraftJson(latest.draft.answer_json)) {
-        throw new Error("The latest question 51 draft is unavailable.");
-      }
-    } catch {
+    const prepared = await prepareSubmission();
+    if (!prepared) {
       setConfirmOpen(false);
-      setWarningTrigger("save_failure");
       return;
-    } finally {
-      explicitSaveRef.current = null;
     }
 
-    const submittedAnswers = latest.draft.answer_json.blanks;
-    const submittedAnswerJson: ShortAnswerQuestion51Json = {
-      _v: "51.v1",
-      blanks: submittedAnswers,
-    };
-    const submittedAnswerText = build51AnswerText(
-      submittedAnswers,
-      problem.blanks,
-    );
-    const submittedCharCount = count51AnswerChars(submittedAnswers);
+    const submittedAnswerJson = prepared.payload.answerJson;
+    const submittedAnswerText = prepared.payload.answerText;
+    const submittedCharCount = prepared.payload.charCount;
     submit.mutate(
       {
-        draft_id: savedDraft.id,
+        draft_id: prepared.savedDraft.id,
         problem_id: problem.id,
         question_no: 51,
         parent_submission_id: parentSubmissionId,
@@ -501,28 +260,6 @@ export function ShortAnswerWriting51Workspace({
 
   function onRetrySubmitFailure() {
     void submitAnswer({ clearFailure: false });
-  }
-
-  async function onChooseRecovery(choice: "prior" | "current") {
-    setRecoveryChoice(choice);
-    try {
-      const selected = await resilience.chooseRecovery(choice);
-      if (!selected || !isShortAnswer51DraftJson(selected.draft.answer_json))
-        return;
-      draftIdRef.current = selected.draftId;
-      const selectedJson = selected.draft.answer_json;
-      setBlankAnswers(
-        Object.fromEntries(
-          problem.blanks.map((blank) => [
-            blank.label,
-            selectedJson.blanks[blank.label] ?? "",
-          ]),
-        ),
-      );
-      setBlurNotice(null);
-    } finally {
-      setRecoveryChoice(null);
-    }
   }
 
   if (submittedAnalysis) {
@@ -784,35 +521,9 @@ export function ShortAnswerWriting51Workspace({
           lastSavedAt={lastSavedAt}
           retrying={status === "syncing"}
           recoveryState={resilience.state.recoveryState}
-          onKeep={() => {
-            if (exitGuard.pendingNavigation) {
-              exitGuard.cancelPendingNavigation();
-              return;
-            }
-            setWarningTrigger(null);
-          }}
-          onRetry={() => {
-            if (exitGuard.pendingNavigation) {
-              void onManualSave().then((saved) => {
-                if (saved) exitGuard.proceedPendingNavigation();
-              });
-              return;
-            }
-            setWarningTrigger(null);
-            void resilience.retry().catch(() => {
-              setWarningTrigger("save_failure");
-            });
-          }}
-          onProceed={() => {
-            if (exitGuard.pendingNavigation) {
-              exitGuard.proceedPendingNavigation();
-              return;
-            }
-            if (warningTrigger === "disable_attempt") {
-              setAutosaveEnabled(false);
-            }
-            setWarningTrigger(null);
-          }}
+          onKeep={onKeepWarning}
+          onRetry={onRetryWarning}
+          onProceed={onProceedWarning}
         />
         <WritingRecoveryConflictModal
           choosing={recoveryChoice}
