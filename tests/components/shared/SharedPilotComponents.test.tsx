@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import type { ModalProps } from "antd";
 
 import { AppCard } from "../../../src/components/shared/AppCard";
 import { AppDrawer } from "../../../src/components/shared/AppDrawer";
@@ -300,6 +301,65 @@ describe("AppModal (overlay sentinel — first modal cluster)", () => {
         .querySelector(".app-modal")
         ?.classList.contains("app-modal--center-origin"),
     ).toBe(true);
+  });
+
+  it("applies center-origin inline styles while preserving caller object styles", () => {
+    renderWithIntl(
+      <AppModal
+        open
+        style={{ top: 24, transformOrigin: "bottom left" }}
+        styles={{
+          body: { padding: 12 },
+          container: { borderWidth: 3, transformOrigin: "top right" },
+        }}
+        onCancel={() => undefined}
+      >
+        <span>body</span>
+      </AppModal>,
+    );
+
+    const dialog = document.querySelector<HTMLElement>(".ant-modal");
+    const container = document.querySelector<HTMLElement>(
+      ".ant-modal-container",
+    );
+    const body = document.querySelector<HTMLElement>(".ant-modal-body");
+
+    expect(dialog?.style.top).toBe("24px");
+    expect(dialog?.style.transformOrigin).toBe("center center");
+    expect(container?.style.borderWidth).toBe("3px");
+    expect(container?.style.transformOrigin).toBe("center center");
+    expect(body?.style.padding).toBe("12px");
+  });
+
+  it("preserves callback semantic styles while enforcing the container center origin", () => {
+    const styles = vi.fn((info: { props: ModalProps }) => {
+      expect(info.props.title).toBe("modal-title");
+      return {
+        header: { paddingTop: 9 },
+        container: { borderRadius: 7, transformOrigin: "bottom right" },
+      };
+    });
+
+    renderWithIntl(
+      <AppModal
+        open
+        title="modal-title"
+        styles={styles}
+        onCancel={() => undefined}
+      >
+        <span>body</span>
+      </AppModal>,
+    );
+
+    const header = document.querySelector<HTMLElement>(".ant-modal-header");
+    const container = document.querySelector<HTMLElement>(
+      ".ant-modal-container",
+    );
+
+    expect(styles).toHaveBeenCalled();
+    expect(header?.style.paddingTop).toBe("9px");
+    expect(container?.style.borderRadius).toBe("7px");
+    expect(container?.style.transformOrigin).toBe("center center");
   });
 
   it("merges a caller rootClassName without dropping the hook", () => {

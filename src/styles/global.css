@@ -294,11 +294,6 @@
   box-shadow: none;
 }
 
-.app-modal--center-origin .ant-modal,
-.app-modal--center-origin .ant-modal-content {
-  transform-origin: center center !important;
-}
-
 .retry-modal.ant-modal {
   max-width: calc(100vw - 32px);
 }

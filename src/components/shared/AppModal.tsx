@@ -2,6 +2,7 @@
 
 import { Modal } from "antd";
 import type { ModalProps } from "antd";
+import type { CSSProperties } from "react";
 
 /**
  * Shared user-facing Modal surface.
@@ -18,10 +19,48 @@ import type { ModalProps } from "antd";
  * 규칙 / 확장 로드맵. "use client": Modal is interactive (portal + open state +
  * focus management).
  */
-export function AppModal({ rootClassName, ...props }: ModalProps) {
+const appModalCenterOriginStyle = {
+  transformOrigin: "center center",
+} satisfies CSSProperties;
+
+function mergeModalStyles(styles: ModalProps["styles"]): ModalProps["styles"] {
+  if (typeof styles === "function") {
+    return (info) => {
+      const resolved = styles(info);
+      return {
+        ...resolved,
+        container: {
+          ...resolved?.container,
+          ...appModalCenterOriginStyle,
+        },
+      };
+    };
+  }
+
+  return {
+    ...styles,
+    container: {
+      ...styles?.container,
+      ...appModalCenterOriginStyle,
+    },
+  };
+}
+
+export function AppModal({
+  rootClassName,
+  style,
+  styles,
+  ...props
+}: ModalProps) {
+  const modalProps = {
+    ...props,
+    style: { ...style, ...appModalCenterOriginStyle },
+    styles: mergeModalStyles(styles),
+  } satisfies ModalProps;
+
   return (
     <Modal
-      {...props}
+      {...modalProps}
       centered
       rootClassName={["app-modal", "app-modal--center-origin", rootClassName]
         .filter(Boolean)
