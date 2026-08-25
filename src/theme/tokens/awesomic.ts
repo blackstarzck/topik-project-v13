@@ -151,6 +151,9 @@ export const awesomicThemeTokens = {
     },
   },
   authPrompt: {
+    canvas: "#ffffff",
+    heroBackground:
+      "radial-gradient(circle at 48% 55%, rgba(255, 255, 255, 0.08), transparent 36%), radial-gradient(circle at 28% 78%, rgba(255, 255, 255, 0.05), transparent 30%), linear-gradient(145deg, #202020 0%, #191919 62%, #242424 100%)",
     controlHeight: 50,
     focusOutline: "rgba(24, 24, 24, 0.08)",
     focusShadow: "0 0 0 2px rgba(24, 24, 24, 0.08)",
@@ -372,6 +375,9 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingPortfolio.background.mediaPlaceholder,
     "--app-background-landing-portfolio-media-overlay":
       awesomicThemeTokens.landingPortfolio.background.mediaOverlay,
+    "--app-color-auth-prompt-canvas": awesomicThemeTokens.authPrompt.canvas,
+    "--app-background-auth-prompt-hero":
+      awesomicThemeTokens.authPrompt.heroBackground,
     "--app-color-auth-prompt-focus-outline":
       awesomicThemeTokens.authPrompt.focusOutline,
     "--app-color-auth-prompt-login-focus-border":

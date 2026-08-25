@@ -131,9 +131,29 @@ const removedStateSelectors = [
   ENABLED_PRIMARY,
 ] as const;
 
-const preservedDeclarations = [
-  [".signup-prompt-layout", "background", "#ffffff"],
-  [".signup-prompt-hero", "color", "#ffffff"],
+const promptSurfaceDeclarations = [
+  [
+    ".signup-prompt-layout",
+    "background",
+    "var(--app-color-auth-prompt-canvas)",
+  ],
+  [
+    ".signup-prompt-hero",
+    "background",
+    "var(--app-background-auth-prompt-hero)",
+  ],
+] as const;
+
+const removedImageOnlyColorDeclarations = [
+  [".signup-prompt-hero", "color"],
+  [".signup-prompt-hero .signup-brand", "color"],
+  [".signup-brand", "color"],
+] as const;
+
+const removedImageOnlyColorRules = [
+  ".signup-prompt-hero .signup-brand:hover",
+  ".signup-prompt-hero .signup-brand strong",
+  ".signup-brand strong",
 ] as const;
 
 const authCharacterTokenizedDeclarations = [
@@ -460,17 +480,40 @@ describe("AuthPromptExperience visual tokens", () => {
     expect(actionableViolations).toEqual([]);
   });
 
-  it("preserves hero and outer colors outside the control cluster", () => {
-    for (const [selector, property, value] of preservedDeclarations) {
+  it("maps the two live prompt surfaces and removes six image-only inherited colors", () => {
+    for (const [selector, property, value] of promptSurfaceDeclarations) {
       expect(
         declarationValue(selector, property),
         `${selector} { ${property} }`,
       ).toBe(value);
     }
-    expect(
-      normalize(declarationValue(".signup-prompt-hero", "background") ?? ""),
-    ).toBe(
-      "radial-gradient( circle at 48% 55%, rgba(255, 255, 255, 0.08), transparent 36% ), radial-gradient( circle at 28% 78%, rgba(255, 255, 255, 0.05), transparent 30% ), linear-gradient(145deg, #202020 0%, #191919 62%, #242424 100%)",
+
+    for (const [selector, property] of removedImageOnlyColorDeclarations) {
+      expect(
+        declarationValues(selector, property),
+        `${selector} { ${property} }`,
+      ).toEqual([]);
+    }
+    for (const selector of removedImageOnlyColorRules) {
+      expect(rulesFor(selector), selector).toEqual([]);
+    }
+
+    const clusterStart = globalCss.indexOf(".signup-prompt-layout {");
+    const clusterEnd = globalCss.indexOf(
+      "\n.signup-character-stage {",
+      clusterStart,
     );
+    const rawColorViolations = scanUiContract([
+      {
+        path: "src/styles/global.css",
+        content: globalCss.slice(clusterStart, clusterEnd),
+      },
+    ]).violations.filter(
+      ({ ruleId }: { ruleId: string }) => ruleId === "visual.raw-color",
+    );
+
+    expect(clusterStart).toBeGreaterThanOrEqual(0);
+    expect(clusterEnd).toBeGreaterThan(clusterStart);
+    expect(rawColorViolations).toEqual([]);
   });
 });

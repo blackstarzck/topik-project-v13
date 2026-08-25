@@ -100,6 +100,12 @@ const DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS = {
   "--app-radius-auth-character-pill": "999px",
 } as const;
 
+const DEFAULT_AUTH_PROMPT_BACKGROUND_BRIDGE_VARS = {
+  "--app-color-auth-prompt-canvas": "#ffffff",
+  "--app-background-auth-prompt-hero":
+    "radial-gradient(circle at 48% 55%, rgba(255, 255, 255, 0.08), transparent 36%), radial-gradient(circle at 28% 78%, rgba(255, 255, 255, 0.05), transparent 30%), linear-gradient(145deg, #202020 0%, #191919 62%, #242424 100%)",
+} as const;
+
 const DEFAULT_AUTH_SURFACE_BRIDGE_VARS = {
   "--app-color-auth-consent-document-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 94%, var(--app-color-bg-layout))",
@@ -189,6 +195,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-landing-cta-ghost-border": "#e7e7e6",
     ...DEFAULT_LANDING_HERO_BRIDGE_VARS,
     ...DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS,
+    ...DEFAULT_AUTH_PROMPT_BACKGROUND_BRIDGE_VARS,
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
     ...DEFAULT_AUTH_SURFACE_BRIDGE_VARS,
@@ -245,6 +252,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-landing-cta-ghost-border": "#e7e7e6",
     ...DEFAULT_LANDING_HERO_BRIDGE_VARS,
     ...DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS,
+    ...DEFAULT_AUTH_PROMPT_BACKGROUND_BRIDGE_VARS,
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
     ...DEFAULT_AUTH_SURFACE_BRIDGE_VARS,

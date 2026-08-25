@@ -79,6 +79,8 @@ const alternateSource = {
     "repeating-linear-gradient(45deg, #ff8a00 0 7px, #6f2cff 7px 14px), #00c4a7",
   backgroundLandingPortfolioMediaOverlay:
     "linear-gradient(135deg, rgba(111, 44, 255, 0.44), rgba(0, 196, 167, 0.36))",
+  colorAuthPromptCanvas: "#d7f8ff",
+  backgroundAuthPromptHero: "linear-gradient(135deg, #3b1c73 0%, #0e5b69 100%)",
   colorAuthPromptFocusOutline: "rgba(111, 44, 255, 0.29)",
   colorAuthPromptLoginFocusBorder: "#ff4bc7",
   colorAuthConsentDocumentSurface: "#ffd6ef",
@@ -193,6 +195,9 @@ const alternateSourceByAppearance = {
   light: alternateSource,
   dark: {
     ...alternateSource,
+    colorAuthPromptCanvas: "#160d2b",
+    backgroundAuthPromptHero:
+      "linear-gradient(135deg, #120823 0%, #00473d 100%)",
     colorStatusErrorBorder: alternateErrorAliasesByAppearance.dark.border,
     colorStatusErrorSurface: alternateErrorAliasesByAppearance.dark.surface,
   },

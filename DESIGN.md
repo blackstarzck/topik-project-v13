@@ -385,6 +385,21 @@ Path cards and footer focus treatment reuse `--app-radius-card` because their
 current `8px` geometry exactly matches the shared card role. The visual tag
 also reuses the existing portfolio muted foreground and display font roles.
 
+## Tokens — Auth Prompt Surfaces
+
+The login and sign-up prompt keeps its white outer canvas and layered desktop
+illustration background independent from the general app and landing palettes.
+Both production appearances preserve the existing paint. Image-only brand links
+do not own inherited text colors: `BrandLogo` renders no `strong` or
+`currentColor` consumer, so those obsolete declarations are not theme roles.
+The official four-color Google mark remains a separate brand asset and is not
+projected through the app theme.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Prompt canvas | `#ffffff` | `--app-color-auth-prompt-canvas` |
+| Desktop illustration background | Existing layered radial and linear gradient | `--app-background-auth-prompt-hero` |
+
 ## Tokens — Auth Prompt Controls
 
 The live login and sign-up prompt owns one scoped Ant Design theme for Input and

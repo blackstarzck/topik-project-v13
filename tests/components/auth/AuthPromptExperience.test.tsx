@@ -301,15 +301,30 @@ describe("AuthPromptExperience", () => {
   });
 
   it("renders the uploaded logo asset in desktop and mobile brand slots", () => {
-    renderLoginPrompt();
+    const { container } = renderLoginPrompt();
 
     const logoImages = Array.from(
-      document.querySelectorAll<HTMLImageElement>(
+      container.querySelectorAll<HTMLImageElement>(
         ".signup-brand img, .signup-prompt-mobile-brand img",
+      ),
+    );
+    const logoLinks = Array.from(
+      container.querySelectorAll<HTMLAnchorElement>(
+        ".signup-brand, .signup-prompt-mobile-brand",
       ),
     );
 
     expect(logoImages).toHaveLength(2);
+    expect(logoLinks).toHaveLength(2);
+    expect(logoLinks.map((link) => link.getAttribute("href"))).toEqual([
+      "/",
+      "/",
+    ]);
+    for (const link of logoLinks) {
+      expect(link.querySelector("strong")).toBeNull();
+      expect(link.querySelector('[fill="currentColor"]')).toBeNull();
+      expect(link.querySelector('[stroke="currentColor"]')).toBeNull();
+    }
     expect(logoImages.map(decodedImageSrc)).toEqual([
       expect.stringContaining(LOGO_SRC),
       expect.stringContaining(LOGO_SRC),
@@ -318,6 +333,23 @@ describe("AuthPromptExperience", () => {
       "eager",
       "eager",
     ]);
+  });
+
+  it("keeps the login and sign-up prompt switch targets", () => {
+    const loginPrompt = renderLoginPrompt();
+    expect(
+      loginPrompt.container
+        .querySelector('[data-testid="auth-switch-link"]')
+        ?.getAttribute("href"),
+    ).toBe("/sign-up");
+    loginPrompt.unmount();
+
+    const signUpPrompt = renderSignUpPrompt();
+    expect(
+      signUpPrompt.container
+        .querySelector('[data-testid="auth-switch-link"]')
+        ?.getAttribute("href"),
+    ).toBe("/login");
   });
 
   it("renders only the four visible auth characters", () => {

@@ -60,6 +60,8 @@ export const allowedAppBridgeVars = [
   "--app-color-landing-portfolio-action-hover",
   "--app-background-landing-portfolio-media-placeholder",
   "--app-background-landing-portfolio-media-overlay",
+  "--app-color-auth-prompt-canvas",
+  "--app-background-auth-prompt-hero",
   "--app-color-auth-prompt-focus-outline",
   "--app-color-auth-prompt-login-focus-border",
   "--app-color-auth-consent-document-surface",
@@ -182,6 +184,8 @@ export type AppBridgeTokenSource = {
   colorLandingPortfolioActionHover: string;
   backgroundLandingPortfolioMediaPlaceholder: string;
   backgroundLandingPortfolioMediaOverlay: string;
+  colorAuthPromptCanvas: string;
+  backgroundAuthPromptHero: string;
   colorAuthPromptFocusOutline: string;
   colorAuthPromptLoginFocusBorder: string;
   colorAuthConsentDocumentSurface: string;
@@ -331,6 +335,8 @@ export function createAppBridgeVars(
       source.backgroundLandingPortfolioMediaPlaceholder,
     "--app-background-landing-portfolio-media-overlay":
       source.backgroundLandingPortfolioMediaOverlay,
+    "--app-color-auth-prompt-canvas": source.colorAuthPromptCanvas,
+    "--app-background-auth-prompt-hero": source.backgroundAuthPromptHero,
     "--app-color-auth-prompt-focus-outline": source.colorAuthPromptFocusOutline,
     "--app-color-auth-prompt-login-focus-border":
       source.colorAuthPromptLoginFocusBorder,

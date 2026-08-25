@@ -87,6 +87,8 @@ const testAlternateSource = {
     "repeating-linear-gradient(45deg, #fd7e14 0 6px, #7048e8 6px 12px), #12b886",
   backgroundLandingPortfolioMediaOverlay:
     "linear-gradient(120deg, rgba(112, 72, 232, 0.41), rgba(18, 184, 134, 0.33))",
+  colorAuthPromptCanvas: "#daf7ff",
+  backgroundAuthPromptHero: "linear-gradient(150deg, #41206f 0%, #12605c 100%)",
   colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
   colorAuthPromptLoginFocusBorder: "#e03f9f",
   colorAuthConsentDocumentSurface: "#f7c8ea",
@@ -335,6 +337,9 @@ describe("generic app theme bridge contract", () => {
         "repeating-linear-gradient(45deg, #fd7e14 0 6px, #7048e8 6px 12px), #12b886",
       "--app-background-landing-portfolio-media-overlay":
         "linear-gradient(120deg, rgba(112, 72, 232, 0.41), rgba(18, 184, 134, 0.33))",
+      "--app-color-auth-prompt-canvas": "#daf7ff",
+      "--app-background-auth-prompt-hero":
+        "linear-gradient(150deg, #41206f 0%, #12605c 100%)",
       "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
       "--app-color-auth-prompt-login-focus-border": "#e03f9f",
       "--app-color-auth-consent-document-surface": "#f7c8ea",
@@ -821,6 +826,8 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorAuthConsentDocumentSurface,
       testAlternateSource.colorAuthVerifyEmailCardBorder,
       testAlternateSource.colorAuthVerifyEmailSummarySurface,
+      testAlternateSource.colorAuthPromptCanvas,
+      testAlternateSource.backgroundAuthPromptHero,
       testAlternateSource.shadowAuthVerifyEmailCard,
       PHASE5D_ALTERNATE_THEME_MARKER,
       phase5dAlternateTheme.appBridgeVars["--app-color-status-error-border"],
@@ -878,6 +885,14 @@ describe("generic app theme bridge contract", () => {
       ],
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-auth-prompt-focus-outline"
+      ],
+      phase5dAlternateTheme.appBridgeVars["--app-color-auth-prompt-canvas"],
+      phase5dAlternateTheme.appBridgeVars["--app-background-auth-prompt-hero"],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-color-auth-prompt-canvas"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-background-auth-prompt-hero"
       ],
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-auth-prompt-login-focus-border"
@@ -1043,6 +1058,8 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingPortfolio.background.mediaPlaceholder,
         backgroundLandingPortfolioMediaOverlay:
           awesomicThemeTokens.landingPortfolio.background.mediaOverlay,
+        colorAuthPromptCanvas: awesomicThemeTokens.authPrompt.canvas,
+        backgroundAuthPromptHero: awesomicThemeTokens.authPrompt.heroBackground,
         colorAuthPromptFocusOutline:
           awesomicThemeTokens.authPrompt.focusOutline,
         colorAuthPromptLoginFocusBorder:
