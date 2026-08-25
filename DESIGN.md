@@ -194,6 +194,29 @@ The header CTA uses the existing fully rounded control token
 variant; add a real consumer and explicit visual contract before introducing a
 new landing CTA mode.
 
+## Tokens — Landing Hero and Header
+
+The public landing shell, video fallback, translucent header, navigation, and
+hero copy form one opening-scene palette. These roles are independent from CTA
+states and from the portfolio content below the hero, even where current values
+match. Production light and dark appearances preserve the existing paint; the
+Phase 5D alternate fixture replaces all eight roles with distinct values.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Outer page canvas | `#f7f3ef` | `--app-color-landing-hero-outer-canvas` |
+| Video and stage fallback | `#ccc2b7` | `--app-color-landing-hero-media-fallback` |
+| Translucent header surface | `rgba(255, 255, 255, 0.72)` | `--app-color-landing-hero-header-surface` |
+| Header navigation foreground | `#0c0c0d` | `--app-color-landing-hero-header-foreground` |
+| Header navigation hover | `#8b8b8e` | `--app-color-landing-hero-header-hover` |
+| Hero title foreground | `#ffffff` | `--app-color-landing-hero-foreground` |
+| Hero kicker foreground | `rgba(255, 255, 255, 0.72)` | `--app-color-landing-hero-kicker` |
+| Hero body foreground | `rgba(255, 255, 255, 0.82)` | `--app-color-landing-hero-body` |
+
+The brand logo hover changes opacity only; text color is not a logo state. The
+header's no-shadow behavior remains owned by its existing utility class and is
+not duplicated in global CSS.
+
 ## Tokens — Portfolio Landing Foreground and Type
 
 The portfolio content below the hero owns a restrained editorial palette and

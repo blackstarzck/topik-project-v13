@@ -21,6 +21,14 @@ export const allowedAppBridgeVars = [
   "--app-color-landing-cta-ghost-surface",
   "--app-color-landing-cta-ghost-text",
   "--app-color-landing-cta-ghost-border",
+  "--app-color-landing-hero-outer-canvas",
+  "--app-color-landing-hero-media-fallback",
+  "--app-color-landing-hero-header-surface",
+  "--app-color-landing-hero-header-foreground",
+  "--app-color-landing-hero-header-hover",
+  "--app-color-landing-hero-foreground",
+  "--app-color-landing-hero-kicker",
+  "--app-color-landing-hero-body",
   "--app-color-landing-portfolio-foreground",
   "--app-color-landing-portfolio-heading-accent",
   "--app-color-landing-portfolio-supporting",
@@ -102,6 +110,14 @@ export type AppBridgeTokenSource = {
   colorLandingCtaGhostSurface: string;
   colorLandingCtaGhostText: string;
   colorLandingCtaGhostBorder: string;
+  colorLandingHeroOuterCanvas: string;
+  colorLandingHeroMediaFallback: string;
+  colorLandingHeroHeaderSurface: string;
+  colorLandingHeroHeaderForeground: string;
+  colorLandingHeroHeaderHover: string;
+  colorLandingHeroForeground: string;
+  colorLandingHeroKicker: string;
+  colorLandingHeroBody: string;
   colorLandingPortfolioForeground: string;
   colorLandingPortfolioHeadingAccent: string;
   colorLandingPortfolioSupporting: string;
@@ -183,6 +199,17 @@ export function createAppBridgeVars(
     "--app-color-landing-cta-ghost-surface": source.colorLandingCtaGhostSurface,
     "--app-color-landing-cta-ghost-text": source.colorLandingCtaGhostText,
     "--app-color-landing-cta-ghost-border": source.colorLandingCtaGhostBorder,
+    "--app-color-landing-hero-outer-canvas": source.colorLandingHeroOuterCanvas,
+    "--app-color-landing-hero-media-fallback":
+      source.colorLandingHeroMediaFallback,
+    "--app-color-landing-hero-header-surface":
+      source.colorLandingHeroHeaderSurface,
+    "--app-color-landing-hero-header-foreground":
+      source.colorLandingHeroHeaderForeground,
+    "--app-color-landing-hero-header-hover": source.colorLandingHeroHeaderHover,
+    "--app-color-landing-hero-foreground": source.colorLandingHeroForeground,
+    "--app-color-landing-hero-kicker": source.colorLandingHeroKicker,
+    "--app-color-landing-hero-body": source.colorLandingHeroBody,
     "--app-color-landing-portfolio-foreground":
       source.colorLandingPortfolioForeground,
     "--app-color-landing-portfolio-heading-accent":

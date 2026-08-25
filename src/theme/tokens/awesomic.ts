@@ -37,6 +37,18 @@ export const awesomicThemeTokens = {
     ghostText: "#0c0c0d",
     ghostBorder: "#e7e7e6",
   },
+  landingHero: {
+    color: {
+      outerCanvas: "#f7f3ef",
+      mediaFallback: "#ccc2b7",
+      headerSurface: "rgba(255, 255, 255, 0.72)",
+      headerForeground: "#0c0c0d",
+      headerHover: "#8b8b8e",
+      foreground: "#ffffff",
+      kicker: "rgba(255, 255, 255, 0.72)",
+      body: "rgba(255, 255, 255, 0.82)",
+    },
+  },
   landingPortfolio: {
     color: {
       foreground: "#0c0c0d",
@@ -183,6 +195,21 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingCta.ghostText,
     "--app-color-landing-cta-ghost-border":
       awesomicThemeTokens.landingCta.ghostBorder,
+    "--app-color-landing-hero-outer-canvas":
+      awesomicThemeTokens.landingHero.color.outerCanvas,
+    "--app-color-landing-hero-media-fallback":
+      awesomicThemeTokens.landingHero.color.mediaFallback,
+    "--app-color-landing-hero-header-surface":
+      awesomicThemeTokens.landingHero.color.headerSurface,
+    "--app-color-landing-hero-header-foreground":
+      awesomicThemeTokens.landingHero.color.headerForeground,
+    "--app-color-landing-hero-header-hover":
+      awesomicThemeTokens.landingHero.color.headerHover,
+    "--app-color-landing-hero-foreground":
+      awesomicThemeTokens.landingHero.color.foreground,
+    "--app-color-landing-hero-kicker":
+      awesomicThemeTokens.landingHero.color.kicker,
+    "--app-color-landing-hero-body": awesomicThemeTokens.landingHero.color.body,
     "--app-color-landing-portfolio-foreground":
       awesomicThemeTokens.landingPortfolio.color.foreground,
     "--app-color-landing-portfolio-heading-accent":

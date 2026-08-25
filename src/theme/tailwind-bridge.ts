@@ -40,6 +40,17 @@ const DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS = {
   "--app-radius-auth-character-pill": "999px",
 } as const;
 
+const DEFAULT_LANDING_HERO_BRIDGE_VARS = {
+  "--app-color-landing-hero-outer-canvas": "#f7f3ef",
+  "--app-color-landing-hero-media-fallback": "#ccc2b7",
+  "--app-color-landing-hero-header-surface": "rgba(255, 255, 255, 0.72)",
+  "--app-color-landing-hero-header-foreground": "#0c0c0d",
+  "--app-color-landing-hero-header-hover": "#8b8b8e",
+  "--app-color-landing-hero-foreground": "#ffffff",
+  "--app-color-landing-hero-kicker": "rgba(255, 255, 255, 0.72)",
+  "--app-color-landing-hero-body": "rgba(255, 255, 255, 0.82)",
+} as const;
+
 const DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS = {
   "--app-color-landing-portfolio-foreground": "#0c0c0d",
   "--app-color-landing-portfolio-heading-accent": "#a5a5aa",
@@ -93,6 +104,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-landing-cta-ghost-surface": "#ffffff",
     "--app-color-landing-cta-ghost-text": "#0c0c0d",
     "--app-color-landing-cta-ghost-border": "#e7e7e6",
+    ...DEFAULT_LANDING_HERO_BRIDGE_VARS,
     ...DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS,
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
@@ -134,6 +146,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-landing-cta-ghost-surface": "#ffffff",
     "--app-color-landing-cta-ghost-text": "#0c0c0d",
     "--app-color-landing-cta-ghost-border": "#e7e7e6",
+    ...DEFAULT_LANDING_HERO_BRIDGE_VARS,
     ...DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS,
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",

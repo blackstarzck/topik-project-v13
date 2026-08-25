@@ -46,6 +46,14 @@ const testAlternateSource = {
   colorLandingCtaGhostSurface: "#f1e7ff",
   colorLandingCtaGhostText: "#29104f",
   colorLandingCtaGhostBorder: "#51b9ad",
+  colorLandingHeroOuterCanvas: "#f0ddff",
+  colorLandingHeroMediaFallback: "#7b574a",
+  colorLandingHeroHeaderSurface: "rgba(207, 249, 238, 0.66)",
+  colorLandingHeroHeaderForeground: "#341057",
+  colorLandingHeroHeaderHover: "#a12970",
+  colorLandingHeroForeground: "#fff3b8",
+  colorLandingHeroKicker: "rgba(252, 210, 91, 0.74)",
+  colorLandingHeroBody: "rgba(185, 251, 232, 0.83)",
   colorLandingPortfolioForeground: "#27104f",
   colorLandingPortfolioHeadingAccent: "#7055a8",
   colorLandingPortfolioSupporting: "#286f65",
@@ -116,6 +124,17 @@ const authCharacterBridgeVars = [
   "--app-radius-auth-character-base-edge",
   "--app-radius-auth-character-body-top",
   "--app-radius-auth-character-pill",
+] as const;
+
+const landingHeroBridgeVars = [
+  "--app-color-landing-hero-outer-canvas",
+  "--app-color-landing-hero-media-fallback",
+  "--app-color-landing-hero-header-surface",
+  "--app-color-landing-hero-header-foreground",
+  "--app-color-landing-hero-header-hover",
+  "--app-color-landing-hero-foreground",
+  "--app-color-landing-hero-kicker",
+  "--app-color-landing-hero-body",
 ] as const;
 
 const landingPortfolioBridgeVars = [
@@ -219,6 +238,14 @@ describe("generic app theme bridge contract", () => {
       "--app-color-landing-cta-ghost-surface": "#f1e7ff",
       "--app-color-landing-cta-ghost-text": "#29104f",
       "--app-color-landing-cta-ghost-border": "#51b9ad",
+      "--app-color-landing-hero-outer-canvas": "#f0ddff",
+      "--app-color-landing-hero-media-fallback": "#7b574a",
+      "--app-color-landing-hero-header-surface": "rgba(207, 249, 238, 0.66)",
+      "--app-color-landing-hero-header-foreground": "#341057",
+      "--app-color-landing-hero-header-hover": "#a12970",
+      "--app-color-landing-hero-foreground": "#fff3b8",
+      "--app-color-landing-hero-kicker": "rgba(252, 210, 91, 0.74)",
+      "--app-color-landing-hero-body": "rgba(185, 251, 232, 0.83)",
       "--app-color-landing-portfolio-foreground": "#27104f",
       "--app-color-landing-portfolio-heading-accent": "#7055a8",
       "--app-color-landing-portfolio-supporting": "#286f65",
@@ -464,6 +491,34 @@ describe("generic app theme bridge contract", () => {
       );
     }
 
+    const productionLandingHeroValues = [
+      ["--app-color-landing-hero-outer-canvas", "#f7f3ef"],
+      ["--app-color-landing-hero-media-fallback", "#ccc2b7"],
+      ["--app-color-landing-hero-header-surface", "rgba(255, 255, 255, 0.72)"],
+      ["--app-color-landing-hero-header-foreground", "#0c0c0d"],
+      ["--app-color-landing-hero-header-hover", "#8b8b8e"],
+      ["--app-color-landing-hero-foreground", "#ffffff"],
+      ["--app-color-landing-hero-kicker", "rgba(255, 255, 255, 0.72)"],
+      ["--app-color-landing-hero-body", "rgba(255, 255, 255, 0.82)"],
+    ] as const;
+
+    expect(productionLandingHeroValues).toHaveLength(
+      landingHeroBridgeVars.length,
+    );
+    expect(
+      new Set(
+        landingHeroBridgeVars.map(
+          (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+        ),
+      ),
+    ).toHaveLength(landingHeroBridgeVars.length);
+    for (const [varName, productionValue] of productionLandingHeroValues) {
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).toBeTruthy();
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).not.toBe(
+        productionValue,
+      );
+    }
+
     const productionLandingPortfolioValues = [
       ["--app-color-landing-portfolio-foreground", "#0c0c0d"],
       ["--app-color-landing-portfolio-heading-accent", "#a5a5aa"],
@@ -580,6 +635,9 @@ describe("generic app theme bridge contract", () => {
       ...authCharacterBridgeVars.map(
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
+      ...landingHeroBridgeVars.map(
+        (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+      ),
       ...landingPortfolioBridgeVars.map(
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
@@ -637,6 +695,20 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingCta.ghostSurface,
         colorLandingCtaGhostText: awesomicThemeTokens.landingCta.ghostText,
         colorLandingCtaGhostBorder: awesomicThemeTokens.landingCta.ghostBorder,
+        colorLandingHeroOuterCanvas:
+          awesomicThemeTokens.landingHero.color.outerCanvas,
+        colorLandingHeroMediaFallback:
+          awesomicThemeTokens.landingHero.color.mediaFallback,
+        colorLandingHeroHeaderSurface:
+          awesomicThemeTokens.landingHero.color.headerSurface,
+        colorLandingHeroHeaderForeground:
+          awesomicThemeTokens.landingHero.color.headerForeground,
+        colorLandingHeroHeaderHover:
+          awesomicThemeTokens.landingHero.color.headerHover,
+        colorLandingHeroForeground:
+          awesomicThemeTokens.landingHero.color.foreground,
+        colorLandingHeroKicker: awesomicThemeTokens.landingHero.color.kicker,
+        colorLandingHeroBody: awesomicThemeTokens.landingHero.color.body,
         colorLandingPortfolioForeground:
           awesomicThemeTokens.landingPortfolio.color.foreground,
         colorLandingPortfolioHeadingAccent:
