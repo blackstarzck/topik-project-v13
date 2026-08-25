@@ -911,6 +911,36 @@ describe("UI contract CSS rules", () => {
     ).toHaveLength(3);
   });
 
+  it("trusts only the font-family descriptor inside @font-face", () => {
+    const result = scanUiContract([
+      source(
+        "src/styles/fonts.css",
+        `
+          @font-face {
+            font-family: "Project Sans";
+            src: url("/fonts/project-sans.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @media (min-width: 640px) {
+            font-family: "Raw At Rule Font";
+          }
+          .consumer {
+            font-family: "Raw Consumer Font";
+          }
+        `,
+      ),
+    ]);
+
+    const fontViolations = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-radius-shadow-font",
+    );
+    expect(fontViolations).toHaveLength(2);
+    expect(fontViolations.map((violation) => violation.line).sort((a, b) => a - b)).toEqual([
+      9, 12,
+    ]);
+  });
+
   it("detects named CSS colors while allowing semantic color keywords", () => {
     const result = scanUiContract([
       source(

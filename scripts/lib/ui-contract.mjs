@@ -1823,6 +1823,10 @@ function scanCssVisualValues(source, root) {
   root.walkDecls((declaration) => {
     const isCustomProperty = declaration.prop.startsWith("--");
     const normalizedProperty = declaration.prop.toLowerCase().replaceAll("-", "");
+    const isFontFaceFamilyDescriptor =
+      normalizedProperty === "fontfamily" &&
+      declaration.parent?.type === "atrule" &&
+      declaration.parent.name.toLowerCase() === "font-face";
     const value = normalizeCssSyntax(declaration.value);
     const colorScanText = cssColorScanText(value);
     const ownsColor =
@@ -1854,6 +1858,7 @@ function scanCssVisualValues(source, root) {
     if (
       (RADIUS_SHADOW_FONT_PROPERTIES.test(normalizedProperty) ||
         (isCustomProperty && /(?:radius|shadow|font)/iu.test(normalizedProperty))) &&
+      !isFontFaceFamilyDescriptor &&
       !/^var\(--app-[^)]+\)$/u.test(value)
     ) {
       violations.push(
