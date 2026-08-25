@@ -614,12 +614,6 @@
   pointer-events: auto;
 }
 
-.signup-prompt-form-inner {
-  align-items: stretch;
-  width: 100%;
-  max-width: var(--auth-form-width);
-}
-
 .signup-prompt-mobile-brand {
   display: none;
   align-items: center;
@@ -637,15 +631,6 @@
   color: #172033;
 }
 
-.signup-prompt-form-heading {
-  margin-bottom: var(--auth-heading-gap);
-  text-align: center;
-}
-
-.signup-prompt-form-panel .signup-prompt-form-heading.ant-flex {
-  margin-bottom: var(--auth-heading-gap);
-}
-
 .signup-prompt-form-heading .signup-prompt-form-title.ant-typography {
   margin: 0;
   color: #030712;
@@ -658,15 +643,6 @@
   color: #667085;
   font-size: 14px;
   line-height: 1.55;
-}
-
-.signup-prompt-form-panel .signup-form-surface {
-  width: 100%;
-  max-width: none;
-}
-
-.signup-prompt-form-panel .signup-form-surface > * {
-  width: 100%;
 }
 
 .signup-prompt-form-panel .auth-form-stack {
@@ -7609,11 +7585,6 @@
   .signup-prompt-mobile-brand {
     display: flex;
     margin: 0;
-  }
-
-  .signup-prompt-form-heading,
-  .signup-prompt-form-panel .signup-prompt-form-heading.ant-flex {
-    margin-bottom: 34px;
   }
 }
 

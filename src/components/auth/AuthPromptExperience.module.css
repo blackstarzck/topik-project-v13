@@ -1,0 +1,30 @@
+.formInner {
+  align-items: stretch;
+  width: 100%;
+  max-width: var(--auth-form-width);
+}
+
+.formHeading {
+  margin-bottom: var(--auth-heading-gap);
+  text-align: center;
+}
+
+.formPanel .formHeading:global(.ant-flex) {
+  margin-bottom: var(--auth-heading-gap);
+}
+
+.formPanel .formSurface {
+  width: 100%;
+  max-width: none;
+}
+
+.formPanel .formSurface > * {
+  width: 100%;
+}
+
+@media (max-width: 1023px) {
+  .formHeading,
+  .formPanel .formHeading:global(.ant-flex) {
+    margin-bottom: 34px;
+  }
+}

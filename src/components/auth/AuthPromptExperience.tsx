@@ -10,6 +10,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { getAuthEntryRedirectPath } from "@/lib/auth/completion-routes";
+import styles from "./AuthPromptExperience.module.css";
 
 const { Link: AntLink, Paragraph, Text, Title } = Typography;
 
@@ -62,7 +63,10 @@ export function AuthPromptExperience({
         </div>
       </aside>
 
-      <main className="signup-prompt-form-panel" aria-labelledby={titleId}>
+      <main
+        className={["signup-prompt-form-panel", styles.formPanel].join(" ")}
+        aria-labelledby={titleId}
+      >
         <div className="signup-prompt-topbar">
           <NextLink
             href="/"
@@ -73,8 +77,17 @@ export function AuthPromptExperience({
           </NextLink>
         </div>
 
-        <Flex vertical className="signup-prompt-form-inner">
-          <Flex vertical align="center" className="signup-prompt-form-heading">
+        <Flex
+          vertical
+          className={["signup-prompt-form-inner", styles.formInner].join(" ")}
+        >
+          <Flex
+            vertical
+            align="center"
+            className={["signup-prompt-form-heading", styles.formHeading].join(
+              " ",
+            )}
+          >
             <Title id={titleId} level={1} className="signup-prompt-form-title">
               {pageHeading}
             </Title>
@@ -83,7 +96,9 @@ export function AuthPromptExperience({
             </Paragraph>
           </Flex>
 
-          <div className="signup-form-surface">
+          <div
+            className={["signup-form-surface", styles.formSurface].join(" ")}
+          >
             {mode === "login" ? (
               <Suspense fallback={null}>
                 <LoginForm

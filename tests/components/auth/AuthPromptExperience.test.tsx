@@ -15,6 +15,17 @@ const GLOBAL_CSS = readFileSync(
   join(process.cwd(), "src/styles/global.css"),
   "utf8",
 );
+const AUTH_PROMPT_SOURCE = readFileSync(
+  join(process.cwd(), "src/components/auth/AuthPromptExperience.tsx"),
+  "utf8",
+);
+const AUTH_PROMPT_STYLES_PATH = join(
+  process.cwd(),
+  "src/components/auth/AuthPromptExperience.module.css",
+);
+const AUTH_PROMPT_STYLES = existsSync(AUTH_PROMPT_STYLES_PATH)
+  ? readFileSync(AUTH_PROMPT_STYLES_PATH, "utf8")
+  : "";
 const AUTH_LANGUAGE_SELECT_PATH = join(
   process.cwd(),
   "src/components/auth/AuthLanguageSelect.tsx",
@@ -34,6 +45,40 @@ const UNUSED_AUTH_SELECTOR_CONTRACTS = [
   ".auth-language-select .ant-select-selection-item",
   ".auth-language-select .ant-select-arrow",
 ] as const;
+const OWNED_AUTH_LAYOUT_GLOBAL_SELECTORS = [
+  ".signup-prompt-form-inner",
+  ".signup-prompt-form-heading",
+  ".signup-prompt-form-panel .signup-prompt-form-heading.ant-flex",
+  ".signup-prompt-form-panel .signup-form-surface",
+  ".signup-prompt-form-panel .signup-form-surface > *",
+] as const;
+const OWNED_AUTH_LAYOUT_MODULE_RULES = [
+  `.formInner {
+  align-items: stretch;
+  width: 100%;
+  max-width: var(--auth-form-width);
+}`,
+  `.formHeading {
+  margin-bottom: var(--auth-heading-gap);
+  text-align: center;
+}`,
+  `.formPanel .formHeading:global(.ant-flex) {
+  margin-bottom: var(--auth-heading-gap);
+}`,
+  `.formPanel .formSurface {
+  width: 100%;
+  max-width: none;
+}`,
+  `.formPanel .formSurface > * {
+  width: 100%;
+}`,
+  `@media (max-width: 1023px) {
+  .formHeading,
+  .formPanel .formHeading:global(.ant-flex) {
+    margin-bottom: 34px;
+  }
+}`,
+] as const;
 let searchParamsMock = new URLSearchParams();
 
 function decodedImageSrc(image: HTMLImageElement) {
@@ -47,6 +92,20 @@ function getCssRule(selector: string) {
   );
 
   return match?.[1] ?? "";
+}
+
+function hasCssSelector(source: string, selector: string) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  return new RegExp(`(?:^|[,{])\\s*${escapedSelector}\\s*(?=,|\\{)`, "m").test(
+    source,
+  );
+}
+
+function hasOwnedCssRule(source: string, rule: string) {
+  const escapedRule = rule.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  return new RegExp(`(?:^|\\})\\s*${escapedRule}`).test(source);
 }
 
 function hasAuthLanguageMessage(path: string) {
@@ -78,6 +137,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { AuthPromptExperience } from "../../../src/components/auth/AuthPromptExperience";
+import authPromptStyles from "../../../src/components/auth/AuthPromptExperience.module.css";
 
 function renderLoginPrompt() {
   return renderWithIntl(
@@ -142,6 +202,52 @@ describe("AuthPromptExperience", () => {
     ];
 
     expect(remainingContracts).toEqual([]);
+  });
+
+  it("keeps auth form layout owned by the rendering component without changing its values", () => {
+    const { container } = renderLoginPrompt();
+    const missingContracts = [
+      ...(!existsSync(AUTH_PROMPT_STYLES_PATH) ? ["component stylesheet"] : []),
+      ...(!AUTH_PROMPT_SOURCE.includes(
+        'import styles from "./AuthPromptExperience.module.css";',
+      )
+        ? ["component stylesheet import"]
+        : []),
+      ...[
+        "styles.formPanel].join(",
+        "styles.formInner].join(",
+        "styles.formHeading].join(",
+        "styles.formSurface].join(",
+      ].filter((contract) => !AUTH_PROMPT_SOURCE.includes(contract)),
+      ...OWNED_AUTH_LAYOUT_MODULE_RULES.filter(
+        (rule) => !hasOwnedCssRule(AUTH_PROMPT_STYLES, rule),
+      ),
+      ...OWNED_AUTH_LAYOUT_GLOBAL_SELECTORS.filter((selector) =>
+        hasCssSelector(GLOBAL_CSS, selector),
+      ),
+    ];
+
+    expect(missingContracts).toEqual([]);
+    expect(
+      container
+        .querySelector(".signup-prompt-form-panel")
+        ?.classList.contains(authPromptStyles.formPanel),
+    ).toBe(true);
+    expect(
+      container
+        .querySelector(".signup-prompt-form-inner")
+        ?.classList.contains(authPromptStyles.formInner),
+    ).toBe(true);
+    expect(
+      container
+        .querySelector(".signup-prompt-form-heading")
+        ?.classList.contains(authPromptStyles.formHeading),
+    ).toBe(true);
+    expect(
+      container
+        .querySelector(".signup-form-surface")
+        ?.classList.contains(authPromptStyles.formSurface),
+    ).toBe(true);
   });
 
   it("replaces authenticated login entry pages with post-auth on mount", async () => {
