@@ -31,6 +31,7 @@ import { WritingGuideAccordion } from "./WritingGuideAccordion";
 import { WritingExamShell } from "./WritingExamShell";
 import { WritingRecoveryConflictModal } from "./WritingRecoveryConflictModal";
 import { useShortAnswerWritingWorkspace } from "./useShortAnswerWritingWorkspace";
+import styles from "./ShortAnswerWritingWorkspace.module.css";
 
 const { Text } = Typography;
 
@@ -471,9 +472,20 @@ export function ShortAnswerWriting52Workspace({
                         icon: <Eye aria-hidden size={18} />,
                         title: tPage("hintTitle"),
                         children: (
-                          <div className="writing-guide-hints">
+                          <div
+                            className={[
+                              "writing-guide-hints",
+                              styles.guideHints,
+                            ].join(" ")}
+                          >
                             {blankHints.map(({ blank, index, fields }) => (
-                              <div key={blank.key} className="app-card-compact">
+                              <div
+                                key={blank.key}
+                                className={[
+                                  "app-card-compact",
+                                  styles.guideHintCard,
+                                ].join(" ")}
+                              >
                                 <Text strong>{blankDisplay(blank, index)}</Text>
                                 <Descriptions
                                   size="small"

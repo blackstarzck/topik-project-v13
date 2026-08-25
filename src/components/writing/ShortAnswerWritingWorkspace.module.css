@@ -1,0 +1,9 @@
+.guideHints {
+  display: grid;
+  gap: 10px;
+}
+
+.guideHints .guideHintCard {
+  display: grid;
+  gap: 4px;
+}

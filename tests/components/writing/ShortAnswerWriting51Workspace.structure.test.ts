@@ -18,13 +18,47 @@ const sourcePath = join(
   process.cwd(),
   "src/components/writing/ShortAnswerWriting51Workspace.tsx",
 );
+const q52SourcePath = join(
+  process.cwd(),
+  "src/components/writing/ShortAnswerWriting52Workspace.tsx",
+);
 const orchestrationPath = join(
   process.cwd(),
   "src/components/writing/useShortAnswerWritingWorkspace.ts",
 );
 const messagesPath = join(process.cwd(), "messages", "ko.json");
+const sharedStylesPath = join(
+  process.cwd(),
+  "src/components/writing/ShortAnswerWritingWorkspace.module.css",
+);
+const globalStylesPath = join(process.cwd(), "src/styles/global.css");
 
 describe("ShortAnswerWriting51Workspace structure", () => {
+  it("shares the guide hint layout while preserving q51 and q52 stable classes", () => {
+    const sources = [sourcePath, q52SourcePath].map((path) =>
+      readFileSync(path, "utf8"),
+    );
+    const sharedStyles = readFileSync(sharedStylesPath, "utf8");
+    const globalStyles = readFileSync(globalStylesPath, "utf8");
+
+    expect(sharedStyles.replace(/\s+/gu, " ").trim()).toBe(
+      ".guideHints { display: grid; gap: 10px; } .guideHints .guideHintCard { display: grid; gap: 4px; }",
+    );
+    expect(globalStyles).not.toContain(".writing-guide-hints");
+    for (const source of sources) {
+      const compactSource = source.replace(/\s+/gu, " ");
+      expect(source).toContain(
+        'import styles from "./ShortAnswerWritingWorkspace.module.css";',
+      );
+      expect(compactSource).toContain(
+        '"writing-guide-hints", styles.guideHints',
+      );
+      expect(compactSource).toContain(
+        '"app-card-compact", styles.guideHintCard',
+      );
+    }
+  });
+
   it("keeps the q51 JSON version, answer text order, and character count contract", () => {
     const answers = { "(ㄱ)": "  첫째 답  ", "(ㄴ)": "둘째 답" };
     const blanks = [{ label: "(ㄱ)" }, { label: "(ㄴ)" }] as NormalizedBlank[];

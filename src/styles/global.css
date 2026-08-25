@@ -7015,16 +7015,6 @@
   content: "";
 }
 
-.writing-guide-hints {
-  display: grid;
-  gap: 10px;
-}
-
-.writing-guide-hints .app-card-compact {
-  display: grid;
-  gap: 4px;
-}
-
 /* D-M2 분석 단계: 페이지 전체 배경을 container(흰색)로 채운다(full-bleed). 두 카드는
    가로 2열 grid로 중앙 정렬한다. grid 같은 행의 아이템은 기본적으로 행 높이(=더 큰 카드)
    만큼 stretch되므로, 하드코딩 없이 두 카드 높이가 자동으로 같아진다. align-content: safe
