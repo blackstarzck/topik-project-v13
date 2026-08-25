@@ -10,8 +10,6 @@ const globalCss = readFileSync(
 );
 
 const tokenizedRadiusRules = [
-  ".landing-image-placeholder__mock i",
-  ".landing-image-placeholder__lines i",
   ".landing-layout-service__frame",
   ".landing-layout-testimonials article",
   ".landing-layout-stat",
