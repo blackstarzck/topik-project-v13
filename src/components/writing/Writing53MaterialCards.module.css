@@ -1,0 +1,14 @@
+.chartStack {
+  display: grid;
+  gap: 12px;
+}
+
+.chart {
+  margin-inline-start: 0;
+  width: 100%;
+  min-height: 180px;
+}
+
+.radialChart {
+  min-height: 156px;
+}

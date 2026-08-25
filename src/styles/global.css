@@ -6306,21 +6306,6 @@
   white-space: nowrap;
 }
 
-.writing-material-chart-stack {
-  display: grid;
-  gap: 12px;
-}
-
-.writing-material-chart {
-  margin-inline-start: 0;
-  width: 100%;
-  min-height: 180px;
-}
-
-.writing-material-chart--radial {
-  min-height: 156px;
-}
-
 .writing-material-chart-tooltip {
   display: grid;
   gap: 4px;

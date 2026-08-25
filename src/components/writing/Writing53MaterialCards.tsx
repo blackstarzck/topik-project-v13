@@ -18,6 +18,7 @@ import {
   YAxis,
 } from "recharts";
 
+import styles from "./Writing53MaterialCards.module.css";
 import { AppCard } from "@/components/shared/AppCard";
 import type {
   NormalizedChart,
@@ -353,7 +354,12 @@ function ChartVisual({
     if (data.length === 0) return null;
     return (
       <div
-        className="writing-material-chart writing-material-chart--radial"
+        className={[
+          "writing-material-chart",
+          "writing-material-chart--radial",
+          styles.chart,
+          styles.radialChart,
+        ].join(" ")}
         aria-label={chart.title}
         data-testid="q53-material-chart"
         ref={chartRef}
@@ -393,7 +399,11 @@ function ChartVisual({
   if (chart.chartType === "line") {
     return (
       <div
-        className="writing-material-chart writing-material-chart--cartesian"
+        className={[
+          "writing-material-chart",
+          "writing-material-chart--cartesian",
+          styles.chart,
+        ].join(" ")}
         aria-label={chart.title}
         data-testid="q53-material-chart"
         ref={chartRef}
@@ -428,7 +438,11 @@ function ChartVisual({
 
   return (
     <div
-      className="writing-material-chart writing-material-chart--cartesian"
+      className={[
+        "writing-material-chart",
+        "writing-material-chart--cartesian",
+        styles.chart,
+      ].join(" ")}
       aria-label={chart.title}
       data-testid="q53-material-chart"
       ref={chartRef}
@@ -493,7 +507,9 @@ function CardBody({ card }: { card: NormalizedMaterialCard }) {
   }
 
   return (
-    <div className="writing-material-chart-stack">
+    <div
+      className={["writing-material-chart-stack", styles.chartStack].join(" ")}
+    >
       {card.warning ? (
         <Alert type="warning" showIcon title={t("materialChartFallback")} />
       ) : null}

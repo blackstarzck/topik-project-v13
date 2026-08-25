@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -55,6 +58,50 @@ const cards: NormalizedMaterialCard[] = [
 ];
 
 describe("Writing53MaterialCards", () => {
+  it("owns the chart surface layout without a global CSS dependency", () => {
+    const modulePath = join(
+      process.cwd(),
+      "src/components/writing/Writing53MaterialCards.module.css",
+    );
+    const source = readFileSync(
+      join(process.cwd(), "src/components/writing/Writing53MaterialCards.tsx"),
+      "utf8",
+    );
+    const globalCss = readFileSync(
+      join(process.cwd(), "src/styles/global.css"),
+      "utf8",
+    );
+
+    expect(existsSync(modulePath)).toBe(true);
+    if (!existsSync(modulePath)) return;
+
+    expect(readFileSync(modulePath, "utf8").trim()).toBe(`.chartStack {
+  display: grid;
+  gap: 12px;
+}
+
+.chart {
+  margin-inline-start: 0;
+  width: 100%;
+  min-height: 180px;
+}
+
+.radialChart {
+  min-height: 156px;
+}`);
+    expect(source).toContain(
+      'import styles from "./Writing53MaterialCards.module.css";',
+    );
+    expect(source).toContain(
+      '"writing-material-chart-stack", styles.chartStack',
+    );
+    expect(source.match(/styles\.chart\b/gu)).toHaveLength(3);
+    expect(source).toContain("styles.radialChart");
+    expect(globalCss).not.toMatch(
+      /\.writing-material-(?:chart-stack|chart(?:--radial)?)\s*\{/u,
+    );
+  });
+
   it("renders chart materials and expands the cause descriptions across an empty row slot", () => {
     renderWithIntl(<Writing53MaterialCards cards={cards} />);
 
