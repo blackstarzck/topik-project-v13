@@ -45,6 +45,8 @@ import {
   type SidebarLockMap,
 } from "@/lib/routes";
 
+import styles from "./SidebarNav.module.css";
+
 type Props = {
   role: AppRole;
   planLabel?: string | null;
@@ -311,7 +313,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
     <div className="app-sidebar-shell">
       <button
         type="button"
-        className="app-sidebar-brand"
+        className={["app-sidebar-brand", styles.brand].join(" ")}
         aria-label={tApp("brand")}
         onClick={() => {
           router.push(APP_ROUTES.dashboard);
@@ -320,6 +322,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
       >
         <BrandLogo
           className="app-sidebar-brand__logo"
+          imageClassName={[styles.logoImage].join(" ")}
           height={68}
           loading="eager"
         />

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   act,
@@ -23,6 +23,17 @@ const WORKSPACE_LAYOUT_CSS = readFileSync(
   join(process.cwd(), "src/styles/workspace-layout.css"),
   "utf8",
 );
+const SIDEBAR_NAV_SOURCE = readFileSync(
+  join(process.cwd(), "src/components/app/SidebarNav.tsx"),
+  "utf8",
+);
+const SIDEBAR_NAV_CSS_PATH = join(
+  process.cwd(),
+  "src/components/app/SidebarNav.module.css",
+);
+const SIDEBAR_NAV_CSS = existsSync(SIDEBAR_NAV_CSS_PATH)
+  ? readFileSync(SIDEBAR_NAV_CSS_PATH, "utf8")
+  : "";
 
 const navMock = vi.hoisted(() => ({
   routerPush: vi.fn(),
@@ -641,16 +652,18 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    expect(
-      decodedImageSrc(
-        container.querySelector<HTMLImageElement>(".app-sidebar-brand img"),
-      ),
-    ).toContain(LOGO_SRC);
-    expect(
-      container
-        .querySelector<HTMLImageElement>(".app-sidebar-brand img")
-        ?.getAttribute("loading"),
-    ).toBe("eager");
+    const brandButton =
+      container.querySelector<HTMLButtonElement>(".app-sidebar-brand");
+    const logoWrapper = brandButton?.querySelector(".app-sidebar-brand__logo");
+    const logoImage = brandButton?.querySelector<HTMLImageElement>("img");
+
+    expect(brandButton?.classList.contains("app-sidebar-brand")).toBe(true);
+    expect(brandButton?.classList.length).toBe(2);
+    expect(logoWrapper).toBeTruthy();
+    expect(logoImage?.classList.contains("brand-logo__image")).toBe(true);
+    expect(logoImage?.classList.length).toBe(2);
+    expect(decodedImageSrc(logoImage ?? null)).toContain(LOGO_SRC);
+    expect(logoImage?.getAttribute("loading")).toBe("eager");
   });
 
   it("hides workspace navigation chrome on the onboarding learning goal route", () => {
@@ -832,14 +845,39 @@ describe("WorkspaceShell", () => {
   });
 
   it("keeps the sidebar logo slot 68px tall and centered", () => {
-    const brandRule = cssRule(".app-sidebar-brand");
-    const logoRule = cssRule(".app-sidebar-brand__logo .brand-logo__image");
+    const brandRule = cssRuleFrom(SIDEBAR_NAV_CSS, ".brand");
+    const logoRule = cssRuleFrom(SIDEBAR_NAV_CSS, ".brand .logoImage");
 
     expect(brandRule).toContain("height: 68px;");
     expect(brandRule).toContain("justify-content: center;");
     expect(brandRule).toContain("text-align: center;");
     expect(logoRule).toContain("width: auto;");
     expect(logoRule).toContain("height: 68px;");
+  });
+
+  it("scopes the sidebar brand styles to SidebarNav", () => {
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'import styles from "./SidebarNav.module.css";',
+    );
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'className={["app-sidebar-brand", styles.brand].join(" ")}',
+    );
+    expect(SIDEBAR_NAV_SOURCE).toContain('className="app-sidebar-brand__logo"');
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'imageClassName={[styles.logoImage].join(" ")}',
+    );
+    expect(cssRuleFrom(SIDEBAR_NAV_CSS, ".brand:hover")).toContain(
+      "color: var(--app-color-text);",
+    );
+    expect(cssRuleFrom(SIDEBAR_NAV_CSS, ".brand:focus-visible")).toContain(
+      "outline: 2px solid var(--app-color-primary);",
+    );
+    expect(GLOBAL_CSS).not.toMatch(/\.app-sidebar-brand\s*\{/u);
+    expect(GLOBAL_CSS).not.toMatch(/\.app-sidebar-brand:hover\s*\{/u);
+    expect(GLOBAL_CSS).not.toMatch(/\.app-sidebar-brand:focus-visible\s*\{/u);
+    expect(GLOBAL_CSS).not.toMatch(
+      /\.app-sidebar-brand__logo\s+\.brand-logo__image\s*\{/u,
+    );
   });
 
   it("sets the selected sidebar shell horizontal padding to zero", () => {
@@ -849,13 +887,9 @@ describe("WorkspaceShell", () => {
   });
 
   it("sets sidebar icon spacing", () => {
-    const source = readFileSync(
-      join(process.cwd(), "src/components/app/SidebarNav.tsx"),
-      "utf8",
-    );
     const appIconRule = cssRule(".app-sidebar-icon");
 
-    expect(source).toContain("iconMarginInlineEnd: 8");
+    expect(SIDEBAR_NAV_SOURCE).toContain("iconMarginInlineEnd: 8");
     expect(appIconRule).not.toContain("margin-inline-end:");
     expect(GLOBAL_CSS).not.toContain(
       ".app-sidebar-menu.ant-menu .ant-menu-item-icon",

@@ -149,3 +149,75 @@ test("sidebar keeps an 8px visual gap between Iconsax icons and labels", async (
   }
   expect(errors, errors.join("\n")).toEqual([]);
 });
+
+test("sidebar brand keeps 68px geometry and keyboard navigation", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const isMobile =
+    (page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) < 768;
+
+  await page.goto("/library", { waitUntil: "networkidle" });
+  await expect(page, "bounced to /login — storageState stale?").not.toHaveURL(
+    /\/login/,
+  );
+  await expect(page).toHaveURL(/\/library(?:[/?#]|$)/);
+  await closeSessionOnlyReminder(page);
+
+  await openMobileDrawerIfNeeded(page);
+
+  const menuDialog = page.locator('.app-workspace-drawer [role="dialog"]');
+  if (isMobile) {
+    await expect(menuDialog).toBeVisible();
+  }
+
+  const brandButton = page.locator(".app-sidebar-brand:visible").first();
+  const brandImage = brandButton.locator("img");
+  await expect(brandButton).toBeVisible();
+  await expect(brandImage).toBeVisible();
+
+  const brandGeometry = await brandButton.evaluate((button) => {
+    const image = button.querySelector("img");
+    if (!image) return null;
+
+    const buttonRect = button.getBoundingClientRect();
+    const imageRect = image.getBoundingClientRect();
+    return {
+      buttonHeight: buttonRect.height,
+      imageHeight: imageRect.height,
+      horizontalCenterDifference: Math.abs(
+        buttonRect.left +
+          buttonRect.width / 2 -
+          (imageRect.left + imageRect.width / 2),
+      ),
+    };
+  });
+  expect(brandGeometry).not.toBeNull();
+  if (!brandGeometry) {
+    throw new Error("Visible sidebar brand geometry was not measurable");
+  }
+
+  expect(brandGeometry.buttonHeight).toBe(68);
+  expect(brandGeometry.imageHeight).toBe(68);
+  expect(brandGeometry.horizontalCenterDifference).toBeLessThanOrEqual(0.5);
+
+  await brandButton.focus();
+  await expect(brandButton).toBeFocused();
+  await brandButton.press("Enter");
+  await expect(page).toHaveURL(/\/dashboard(?:[/?#]|$)/);
+  await expect(
+    page.getByRole("heading", { name: "오늘의 학습", exact: true }),
+  ).toBeVisible();
+  if (isMobile) {
+    await expect(menuDialog).toBeHidden();
+  }
+
+  const horizontalOverflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return (
+      Math.max(root.scrollWidth, document.body.scrollWidth) - root.clientWidth
+    );
+  });
+  expect(horizontalOverflow).toBe(0);
+  expect(errors, errors.join("\n")).toEqual([]);
+});
