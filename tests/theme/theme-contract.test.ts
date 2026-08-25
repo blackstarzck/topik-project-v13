@@ -171,6 +171,30 @@ describe("app theme contract", () => {
     }
   });
 
+  test("owns floating action, popover, and message shadows in every production theme", () => {
+    expect(awesomicThemeTokens.shadow).toMatchObject({
+      floatingAction: "0 6px 18px rgba(42, 55, 89, 0.1)",
+      popover:
+        "0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)",
+      message:
+        "0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)",
+    });
+
+    const expectedBridge = {
+      "--app-shadow-floating-action": awesomicThemeTokens.shadow.floatingAction,
+      "--app-shadow-popover": awesomicThemeTokens.shadow.popover,
+      "--app-shadow-message": awesomicThemeTokens.shadow.message,
+    };
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject(
+          expectedBridge,
+        );
+      }
+    }
+  });
+
   test("owns the portfolio landing foreground and typography in every production theme", () => {
     expect(awesomicThemeTokens).toHaveProperty("landingPortfolio", {
       color: {
@@ -349,6 +373,9 @@ describe("app theme contract", () => {
       "--app-radius-landing-hero-cta",
       "--app-font-family",
       "--app-shadow-elevated",
+      "--app-shadow-floating-action",
+      "--app-shadow-popover",
+      "--app-shadow-message",
     ];
 
     requiredKeys.forEach((key) => {

@@ -13,6 +13,14 @@ const DEFAULT_LIGHT_SHADOW_ELEVATED =
 const DEFAULT_DARK_SHADOW_ELEVATED =
   "0 6px 16px 0 rgba(255, 255, 255, 0.016), 0 3px 6px -4px rgba(255, 255, 255, 0.024), 0 9px 28px 8px rgba(255, 255, 255, 0.01)";
 
+const DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS = {
+  "--app-shadow-floating-action": "0 6px 18px rgba(42, 55, 89, 0.1)",
+  "--app-shadow-popover":
+    "0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)",
+  "--app-shadow-message":
+    "0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)",
+} as const;
+
 const DEFAULT_FONT_SIZE_BRIDGE_VARS = {
   "--app-font-size-caption": "10px",
   "--app-font-size-body": "14px",
@@ -120,6 +128,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-font-family": appFontFamily,
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_LIGHT_SHADOW_ELEVATED,
+    ...DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS,
     "--app-shadow-auth-prompt-focus": "0 0 0 2px rgba(24, 24, 24, 0.08)",
     "--app-shadow-auth-prompt-login-focus": "0 0 0 2px rgba(82, 102, 255, 0.1)",
   },
@@ -162,6 +171,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-font-family": appFontFamily,
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_DARK_SHADOW_ELEVATED,
+    ...DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS,
     "--app-shadow-auth-prompt-focus": "0 0 0 2px rgba(24, 24, 24, 0.08)",
     "--app-shadow-auth-prompt-login-focus": "0 0 0 2px rgba(82, 102, 255, 0.1)",
   },

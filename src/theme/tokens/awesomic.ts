@@ -144,6 +144,11 @@ export const awesomicThemeTokens = {
   },
   shadow: {
     elevated: "rgba(0, 0, 0, 0.04) 0px 4px 12px 0px",
+    floatingAction: "0 6px 18px rgba(42, 55, 89, 0.1)",
+    popover:
+      "0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)",
+    message:
+      "0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)",
     none: "none",
   },
   font: {
@@ -289,6 +294,9 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-font-size-display-sm": awesomicThemeTokens.fontSize.displaySm,
     "--app-font-size-display": awesomicThemeTokens.fontSize.display,
     "--app-shadow-elevated": awesomicThemeTokens.shadow.elevated,
+    "--app-shadow-floating-action": awesomicThemeTokens.shadow.floatingAction,
+    "--app-shadow-popover": awesomicThemeTokens.shadow.popover,
+    "--app-shadow-message": awesomicThemeTokens.shadow.message,
     "--app-shadow-auth-prompt-focus":
       awesomicThemeTokens.authPrompt.focusShadow,
     "--app-shadow-auth-prompt-login-focus":

@@ -170,6 +170,24 @@ used only where the rendered shape must stay fully rounded.
 | Compact card/action corner | Runtime card radius (8px) | `--app-radius-card` | Menu and notification rows |
 | Fully rounded control | `radius.full-6` (10000px) | `--app-radius-pill` | User/notification action groups and unread dot |
 
+## Tokens — Shared Overlay Shadows
+
+Workspace floating actions, popovers, and Ant Design messages use three
+app-owned elevation roles because their existing depth and placement differ
+from the quieter shared elevated surface. Production light and dark themes keep
+the exact current shadows; alternate themes must replace all three with
+distinct values. These bridge variables are consumed directly by global CSS,
+so no unused Tailwind `--shadow-*` aliases are exposed.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Floating workspace actions | `0 6px 18px rgba(42, 55, 89, 0.1)` | `--app-shadow-floating-action` |
+| Notification/report popovers | `0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)` | `--app-shadow-popover` |
+| Ant Design message toast | `0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)` | `--app-shadow-message` |
+
+The existing `--app-shadow-elevated` role remains unchanged and continues to
+own quieter notification/card surfaces.
+
 ## Tokens — Landing CTA
 
 The live landing page has two intentional CTA color modes: a dark primary

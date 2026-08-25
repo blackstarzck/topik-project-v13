@@ -2364,7 +2364,7 @@
   border: 1px solid var(--app-color-border);
   border-radius: var(--app-radius-pill);
   background: var(--app-color-bg-container);
-  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+  box-shadow: var(--app-shadow-floating-action);
   padding: 8px;
 }
 
@@ -3894,7 +3894,7 @@
   border: 1px solid var(--app-color-border);
   border-radius: var(--app-radius-pill);
   background: var(--app-color-bg-container);
-  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
+  box-shadow: var(--app-shadow-floating-action);
   padding: 8px;
 }
 
@@ -3999,16 +3999,12 @@
 }
 
 .app-notification-popover .ant-popover-container {
-  box-shadow:
-    0 16px 42px rgba(15, 23, 42, 0.16),
-    0 4px 14px rgba(15, 23, 42, 0.1);
+  box-shadow: var(--app-shadow-popover);
 }
 
 .app-notification-popover.app-notification-popover
   .ant-popover-container.ant-popover-container {
-  box-shadow:
-    0 16px 42px rgba(15, 23, 42, 0.16),
-    0 4px 14px rgba(15, 23, 42, 0.1);
+  box-shadow: var(--app-shadow-popover);
 }
 
 /* Message(toast)는 Notification과 같은 공유 item 스타일을 쓰며, 그 스타일은
@@ -4019,9 +4015,7 @@
  * 화면 맨 위에 떠 있는 토스트는 공유 --app-shadow-elevated(0.04)보다 약간 더
  * 진한 2중 그림자로 띄워 콘텐츠 위에 확실히 분리돼 보이게 한다. */
 .ant-message .ant-message-notice.ant-message-notice {
-  box-shadow:
-    0 6px 16px 0 rgba(0, 0, 0, 0.1),
-    0 2px 6px -2px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--app-shadow-message);
 }
 
 .app-notification-panel__header {

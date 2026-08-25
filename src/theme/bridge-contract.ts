@@ -80,6 +80,9 @@ export const allowedAppBridgeVars = [
   "--app-font-size-display-sm",
   "--app-font-size-display",
   "--app-shadow-elevated",
+  "--app-shadow-floating-action",
+  "--app-shadow-popover",
+  "--app-shadow-message",
   "--app-shadow-auth-prompt-focus",
   "--app-shadow-auth-prompt-login-focus",
 ] as const;
@@ -169,6 +172,9 @@ export type AppBridgeTokenSource = {
   fontSizeDisplaySm: string;
   fontSizeDisplay: string;
   shadowElevated: string;
+  shadowFloatingAction: string;
+  shadowPopover: string;
+  shadowMessage: string;
   shadowAuthPromptFocus: string;
   shadowAuthPromptLoginFocus: string;
 };
@@ -276,6 +282,9 @@ export function createAppBridgeVars(
     "--app-font-size-display-sm": source.fontSizeDisplaySm,
     "--app-font-size-display": source.fontSizeDisplay,
     "--app-shadow-elevated": source.shadowElevated,
+    "--app-shadow-floating-action": source.shadowFloatingAction,
+    "--app-shadow-popover": source.shadowPopover,
+    "--app-shadow-message": source.shadowMessage,
     "--app-shadow-auth-prompt-focus": source.shadowAuthPromptFocus,
     "--app-shadow-auth-prompt-login-focus": source.shadowAuthPromptLoginFocus,
   };

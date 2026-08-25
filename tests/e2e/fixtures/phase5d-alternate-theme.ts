@@ -80,6 +80,11 @@ const alternateSource = {
   radiusLandingPortfolioTagPill: "887px",
   sizeAuthPromptControl: "58px",
   shadowElevated: "11px 13px 0 rgba(36, 16, 79, 0.42)",
+  shadowFloatingAction: "0 9px 24px rgba(72, 18, 112, 0.22)",
+  shadowPopover:
+    "0 20px 52px rgba(51, 16, 91, 0.28), 0 5px 16px rgba(4, 120, 100, 0.18)",
+  shadowMessage:
+    "0 8px 20px 0 rgba(81, 24, 115, 0.2), 0 3px 8px -2px rgba(0, 140, 116, 0.15)",
   shadowAuthPromptFocus: "0 0 0 4px rgba(111, 44, 255, 0.29)",
   shadowAuthPromptLoginFocus: "0 0 0 5px rgba(255, 75, 199, 0.31)",
   fontFamily: '"Courier New", Courier, monospace',

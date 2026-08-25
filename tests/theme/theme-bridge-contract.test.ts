@@ -110,6 +110,11 @@ const testAlternateSource = {
   fontSizeDisplaySm: "57px",
   fontSizeDisplay: "65px",
   shadowElevated: "0 9px 27px rgba(18, 52, 86, 0.17)",
+  shadowFloatingAction: "0 10px 26px rgba(54, 20, 96, 0.21)",
+  shadowPopover:
+    "0 22px 54px rgba(45, 13, 86, 0.27), 0 6px 18px rgba(2, 112, 94, 0.17)",
+  shadowMessage:
+    "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
   shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
   shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
 } as const;
@@ -135,6 +140,12 @@ const landingHeroBridgeVars = [
   "--app-color-landing-hero-foreground",
   "--app-color-landing-hero-kicker",
   "--app-color-landing-hero-body",
+] as const;
+
+const sharedOverlayShadowBridgeVars = [
+  "--app-shadow-floating-action",
+  "--app-shadow-popover",
+  "--app-shadow-message",
 ] as const;
 
 const landingPortfolioBridgeVars = [
@@ -299,6 +310,11 @@ describe("generic app theme bridge contract", () => {
       "--app-font-size-display-sm": "57px",
       "--app-font-size-display": "65px",
       "--app-shadow-elevated": "0 9px 27px rgba(18, 52, 86, 0.17)",
+      "--app-shadow-floating-action": "0 10px 26px rgba(54, 20, 96, 0.21)",
+      "--app-shadow-popover":
+        "0 22px 54px rgba(45, 13, 86, 0.27), 0 6px 18px rgba(2, 112, 94, 0.17)",
+      "--app-shadow-message":
+        "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
       "--app-shadow-auth-prompt-focus": "0 0 0 3px rgba(91, 43, 196, 0.23)",
       "--app-shadow-auth-prompt-login-focus":
         "0 0 0 4px rgba(224, 63, 159, 0.27)",
@@ -491,6 +507,38 @@ describe("generic app theme bridge contract", () => {
       );
     }
 
+    const productionSharedOverlayShadowValues = [
+      ["--app-shadow-floating-action", "0 6px 18px rgba(42, 55, 89, 0.1)"],
+      [
+        "--app-shadow-popover",
+        "0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)",
+      ],
+      [
+        "--app-shadow-message",
+        "0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)",
+      ],
+    ] as const;
+
+    expect(productionSharedOverlayShadowValues).toHaveLength(
+      sharedOverlayShadowBridgeVars.length,
+    );
+    expect(
+      new Set(
+        sharedOverlayShadowBridgeVars.map(
+          (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+        ),
+      ),
+    ).toHaveLength(sharedOverlayShadowBridgeVars.length);
+    for (const [
+      varName,
+      productionValue,
+    ] of productionSharedOverlayShadowValues) {
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).toBeTruthy();
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).not.toBe(
+        productionValue,
+      );
+    }
+
     const productionLandingHeroValues = [
       ["--app-color-landing-hero-outer-canvas", "#f7f3ef"],
       ["--app-color-landing-hero-media-fallback", "#ccc2b7"],
@@ -636,6 +684,9 @@ describe("generic app theme bridge contract", () => {
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
       ...landingHeroBridgeVars.map(
+        (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+      ),
+      ...sharedOverlayShadowBridgeVars.map(
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
       ...landingPortfolioBridgeVars.map(
@@ -785,6 +836,9 @@ describe("generic app theme bridge contract", () => {
         fontSizeDisplaySm: awesomicThemeTokens.fontSize.displaySm,
         fontSizeDisplay: awesomicThemeTokens.fontSize.display,
         shadowElevated: awesomicThemeTokens.shadow.elevated,
+        shadowFloatingAction: awesomicThemeTokens.shadow.floatingAction,
+        shadowPopover: awesomicThemeTokens.shadow.popover,
+        shadowMessage: awesomicThemeTokens.shadow.message,
         shadowAuthPromptFocus: awesomicThemeTokens.authPrompt.focusShadow,
         shadowAuthPromptLoginFocus:
           awesomicThemeTokens.authPrompt.loginFocusShadow,

@@ -540,18 +540,16 @@ describe("In-app notification inbox item styles", () => {
     ).toBe(true);
   });
 
-  test("notification popover uses a darker floating shadow", () => {
+  test("notification and system-report popovers share the popover shadow role", () => {
     expect(notificationBell).toContain('root: "app-notification-popover"');
-    expect(
-      blockFor(
-        ".app-notification-popover.app-notification-popover .ant-popover-container.ant-popover-container",
-      ),
-    ).toContain("box-shadow:");
-    expect(
-      blockFor(
-        ".app-notification-popover.app-notification-popover .ant-popover-container.ant-popover-container",
-      ),
-    ).toContain("rgba(15, 23, 42, 0.16)");
+    for (const selector of [
+      ".app-notification-popover .ant-popover-container",
+      ".app-notification-popover.app-notification-popover .ant-popover-container.ant-popover-container",
+    ]) {
+      expect(blockFor(selector)).toContain(
+        "box-shadow: var(--app-shadow-popover)",
+      );
+    }
   });
 
   test("notification popover keeps every text surface at 14px", () => {
@@ -710,14 +708,23 @@ describe("In-app notification inbox item styles", () => {
       "border-radius:",
     );
 
-    for (const selector of [
-      ".app-workspace-mobile-actions",
-      ".app-notification-corner",
-      ".app-notification-popover .ant-popover-container",
-      ".app-notification-popover.app-notification-popover .ant-popover-container.ant-popover-container",
-      ".ant-message .ant-message-notice.ant-message-notice",
+    for (const [selector, shadowToken] of [
+      [".app-workspace-mobile-actions", "var(--app-shadow-floating-action)"],
+      [".app-notification-corner", "var(--app-shadow-floating-action)"],
+      [
+        ".app-notification-popover .ant-popover-container",
+        "var(--app-shadow-popover)",
+      ],
+      [
+        ".app-notification-popover.app-notification-popover .ant-popover-container.ant-popover-container",
+        "var(--app-shadow-popover)",
+      ],
+      [
+        ".ant-message .ant-message-notice.ant-message-notice",
+        "var(--app-shadow-message)",
+      ],
     ]) {
-      expect(blockFor(selector)).toContain("box-shadow:");
+      expect(blockFor(selector)).toContain(`box-shadow: ${shadowToken}`);
     }
   });
 
