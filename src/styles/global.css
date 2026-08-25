@@ -2859,24 +2859,6 @@
   margin-bottom: 0;
 }
 
-.password-reset-login-return.ant-typography {
-  margin: 14px 0 0;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.password-reset-login-return.ant-typography a {
-  color: var(--app-color-text-secondary);
-  font-size: 16px;
-  font-weight: 400;
-  text-decoration: none;
-}
-
-.password-reset-login-return.ant-typography a:hover {
-  color: var(--app-color-text);
-  text-decoration: underline;
-}
-
 /*
  * X-12 /auth/verify-email. The visual treatment follows the current reference
  * image while keeping the existing public auth behavior and project token
