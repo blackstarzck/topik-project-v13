@@ -49,7 +49,7 @@ export function ComparisonKpiBlock({
             value={currentScore}
             suffix={t("suffixPoint")}
           />
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--app-color-bg-layout)] text-primary">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-primary">
             <Trophy aria-hidden size={22} />
           </span>
         </div>
@@ -79,7 +79,7 @@ export function ComparisonKpiBlock({
               )}
             />
           )}
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--app-color-bg-layout)] text-primary">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-primary">
             <ChartNoAxesColumnIncreasing aria-hidden size={22} />
           </span>
         </div>
@@ -100,7 +100,7 @@ export function ComparisonKpiBlock({
                   )
             }
           />
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--app-color-bg-layout)] text-primary">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface text-primary">
             <BarChart3 aria-hidden size={22} />
           </span>
         </div>

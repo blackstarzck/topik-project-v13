@@ -275,7 +275,7 @@ function ScoreMeterRow({
           </Text>
           <Text
             type="secondary"
-            className="whitespace-nowrap !text-[14px]"
+            className="whitespace-nowrap !text-body"
             data-testid="comparison-blank-score-normalized"
           >
             ({formatNormalizedScore(item, t)})
@@ -303,7 +303,7 @@ function AnswerTextBlock({
     <div className={classNames("min-w-0", className)} data-testid={testId}>
       <Text
         type="secondary"
-        className="mb-1 block !text-[14px]"
+        className="mb-1 block !text-body"
         data-testid={labelTestId}
       >
         {title}
@@ -344,7 +344,7 @@ function FeedbackBlock({
     <div className={classNames("min-w-0", className)} data-testid={testId}>
       <Text
         type="secondary"
-        className="mb-1 block !text-[14px]"
+        className="mb-1 block !text-body"
         data-testid={labelTestId}
       >
         {title}
