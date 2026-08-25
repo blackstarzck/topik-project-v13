@@ -138,6 +138,18 @@ Alternate test themes must provide a visibly distinct resolved value through
 the same bridge. The test-only fixture remains excluded from production source
 and bundles.
 
+## Tokens — Shared Card Outline
+
+Outlined workspace cards use one app-owned subtle outline recipe. The recipe
+preserves the current border-at-25%-over-layout paint while allowing alternate
+themes to replace the resolved result without copying a `color-mix()` into
+global CSS. Selected cards continue to override only `border-color` with the
+primary role, so their state remains visually stronger than the shared outline.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Shared card subtle outline | border at 25% mixed with layout | `--app-color-shared-card-subtle-outline` | `.app-cards-bordered` AppCard outline |
+
 ## Tokens — Semantic Status
 
 Ant Design is the L1 owner of interface status meaning. App-owned Tailwind
@@ -399,11 +411,13 @@ The required-document card on `/auth/consent` and the verification card on
 to the nested document card; the outer consent card keeps its existing shared
 surface. The verification card uses a compact corner below `479.98px` while its
 shadow remains the same recipe. Light and dark currently preserve the same
-values, but alternate themes must replace all four roles through the bridge.
+values, but alternate themes must replace all six roles through the bridge.
 
 | Meaning | Awesomic value | App bridge |
 | --- | --- | --- |
 | Consent document surface | container at 94% mixed with layout | `--app-color-auth-consent-document-surface` |
+| Verify card border | border at 72% mixed with transparent | `--app-color-auth-verify-email-card-border` |
+| Verify summary surface | layout at 56% mixed with container | `--app-color-auth-verify-email-summary-surface` |
 | Verify card corner | `28px` | `--app-radius-auth-verify-email-card` |
 | Verify compact corner | `12px` | `--app-radius-auth-verify-email-card-compact` |
 | Verify card shadow | primary-tinted lift plus elevated shadow | `--app-shadow-auth-verify-email-card` |

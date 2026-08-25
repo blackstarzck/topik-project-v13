@@ -9,6 +9,7 @@ export const allowedAppBridgeVars = [
   "--app-color-link-secondary",
   "--app-color-border",
   "--app-color-border-secondary",
+  "--app-color-shared-card-subtle-outline",
   "--app-color-chart-series-primary",
   "--app-color-chart-accent",
   "--app-color-status-error",
@@ -62,6 +63,8 @@ export const allowedAppBridgeVars = [
   "--app-color-auth-prompt-focus-outline",
   "--app-color-auth-prompt-login-focus-border",
   "--app-color-auth-consent-document-surface",
+  "--app-color-auth-verify-email-card-border",
+  "--app-color-auth-verify-email-summary-surface",
   "--app-color-auth-character-purple",
   "--app-color-auth-character-charcoal",
   "--app-color-auth-character-coral",
@@ -128,6 +131,7 @@ export type AppBridgeTokenSource = {
   colorLinkSecondary: string;
   colorBorder: string;
   colorBorderSecondary: string;
+  colorSharedCardSubtleOutline: string;
   colorChartSeriesPrimary: string;
   colorChartAccent: string;
   colorStatusError: string;
@@ -181,6 +185,8 @@ export type AppBridgeTokenSource = {
   colorAuthPromptFocusOutline: string;
   colorAuthPromptLoginFocusBorder: string;
   colorAuthConsentDocumentSurface: string;
+  colorAuthVerifyEmailCardBorder: string;
+  colorAuthVerifyEmailSummarySurface: string;
   colorAuthCharacterPurple: string;
   colorAuthCharacterCharcoal: string;
   colorAuthCharacterCoral: string;
@@ -247,6 +253,8 @@ export function createAppBridgeVars(
     "--app-color-link-secondary": source.colorLinkSecondary,
     "--app-color-border": source.colorBorder,
     "--app-color-border-secondary": source.colorBorderSecondary,
+    "--app-color-shared-card-subtle-outline":
+      source.colorSharedCardSubtleOutline,
     "--app-color-chart-series-primary": source.colorChartSeriesPrimary,
     "--app-color-chart-accent": source.colorChartAccent,
     "--app-color-status-error": source.colorStatusError,
@@ -328,6 +336,10 @@ export function createAppBridgeVars(
       source.colorAuthPromptLoginFocusBorder,
     "--app-color-auth-consent-document-surface":
       source.colorAuthConsentDocumentSurface,
+    "--app-color-auth-verify-email-card-border":
+      source.colorAuthVerifyEmailCardBorder,
+    "--app-color-auth-verify-email-summary-surface":
+      source.colorAuthVerifyEmailSummarySurface,
     "--app-color-auth-character-purple": source.colorAuthCharacterPurple,
     "--app-color-auth-character-charcoal": source.colorAuthCharacterCharcoal,
     "--app-color-auth-character-coral": source.colorAuthCharacterCoral,

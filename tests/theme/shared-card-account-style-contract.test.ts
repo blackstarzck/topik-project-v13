@@ -43,7 +43,36 @@ function exactSelectorGroup(selectors: readonly string[]) {
 }
 
 function exactRule(selector: string) {
-  return exactSelectorGroup([selector]);
+  const matches: Rule[] = [];
+  stylesheet.walkRules((rule) => {
+    if (
+      normalizeSelector(rule.selector) === selector &&
+      rule.parent?.type === "root"
+    ) {
+      matches.push(rule);
+    }
+  });
+
+  expect(matches, selector).toHaveLength(1);
+  return matches[0];
+}
+
+function exactRuleInMedia(selector: string, mediaQuery: string) {
+  const matches: Rule[] = [];
+  stylesheet.walkRules((rule) => {
+    const parent = rule.parent;
+    if (
+      normalizeSelector(rule.selector) === selector &&
+      parent?.type === "atrule" &&
+      parent.name === "media" &&
+      normalizeSelector(parent.params) === mediaQuery
+    ) {
+      matches.push(rule);
+    }
+  });
+
+  expect(matches, `${mediaQuery} ${selector}`).toHaveLength(1);
+  return matches[0];
 }
 
 function declarationValues(rule: Rule, property: string) {
@@ -113,5 +142,28 @@ describe("shared card and account visual ownership", () => {
     expect(
       declarationValuesForSelector(".account-status-row", "border-bottom"),
     ).toEqual(["1px solid var(--app-color-border-secondary)"]);
+  });
+
+  test("keeps the feedback header divider geometry while using the shared secondary border", () => {
+    const mobileDivider = exactRule(".feedback-action-divider::before");
+    expect(declarationValues(mobileDivider, "background")).toEqual([
+      "var(--app-color-border-secondary)",
+    ]);
+    expect(declarationValues(mobileDivider, "left")).toEqual(["0"]);
+    expect(declarationValues(mobileDivider, "right")).toEqual(["0"]);
+    expect(declarationValues(mobileDivider, "top")).toEqual(["0"]);
+    expect(declarationValues(mobileDivider, "height")).toEqual(["1px"]);
+
+    const desktopDivider = exactRuleInMedia(
+      ".feedback-action-divider::before",
+      "(min-width: 768px)",
+    );
+    expect(declarationValues(desktopDivider, "right")).toEqual(["auto"]);
+    expect(declarationValues(desktopDivider, "top")).toEqual(["50%"]);
+    expect(declarationValues(desktopDivider, "width")).toEqual(["1px"]);
+    expect(declarationValues(desktopDivider, "height")).toEqual(["20px"]);
+    expect(declarationValues(desktopDivider, "transform")).toEqual([
+      "translateY(-50%)",
+    ]);
   });
 });

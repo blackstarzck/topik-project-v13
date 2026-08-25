@@ -2557,7 +2557,7 @@
 
 .verify-email-card.app-card.app-surface {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 72%, transparent);
+  border: 1px solid var(--app-color-auth-verify-email-card-border);
   border-radius: var(--app-radius-auth-verify-email-card);
   background: var(--app-color-bg-container);
   box-shadow: var(--app-shadow-auth-verify-email-card);
@@ -2625,11 +2625,7 @@
   border: 0;
   border-radius: var(--app-radius);
   padding: 14px 16px;
-  background: color-mix(
-    in srgb,
-    var(--app-color-bg-layout) 56%,
-    var(--app-color-bg-container)
-  );
+  background: var(--app-color-auth-verify-email-summary-surface);
   color: var(--app-color-text-secondary);
   text-align: left;
 }
@@ -2833,8 +2829,7 @@
  * (`app-card-compact`) and the continuous footer actions stay flat per DESIGN.md.
  */
 .app-cards-bordered .app-card.app-surface {
-  border: 1px solid
-    color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout));
+  border: 1px solid var(--app-color-shared-card-subtle-outline);
 }
 
 /*
@@ -2851,7 +2846,7 @@
  * E-01/E-02 피드백 헤더 액션 구분선 (FeedbackActionGroup variant="header").
  * 주요 CTA(다시 풀기)와 보조 액션 그룹(다음 문제/저장/비교 리포트) 사이 구분선.
  * 모바일은 상단 가로선, 데스크톱(≥768px)은 좌측 세로선이다. 색은 AntD Card의
- * native border 토큰(--ant-color-border-secondary)에 맞추고, 세로선 높이는
+ * 공용 보조 경계선 토큰(--app-color-border-secondary)에 맞추고, 세로선 높이는
  * 컨트롤 높이(controlHeight 40px)의 절반인 20px로 둔다.
  */
 .feedback-action-divider {
@@ -2865,7 +2860,7 @@
   right: 0;
   top: 0;
   height: 1px;
-  background: var(--ant-color-border-secondary);
+  background: var(--app-color-border-secondary);
 }
 
 @media (min-width: 768px) {

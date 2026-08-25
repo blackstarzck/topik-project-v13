@@ -34,6 +34,7 @@ const testAlternateSource = {
   colorLinkSecondary: "#405de6",
   colorBorder: "#90a0b0",
   colorBorderSecondary: "#718293",
+  colorSharedCardSubtleOutline: "#5040c8",
   colorChartSeriesPrimary: "#9c36b5",
   colorChartAccent: "#1971c2",
   colorStatusError: "#c21f52",
@@ -89,6 +90,8 @@ const testAlternateSource = {
   colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
   colorAuthPromptLoginFocusBorder: "#e03f9f",
   colorAuthConsentDocumentSurface: "#f7c8ea",
+  colorAuthVerifyEmailCardBorder: "#dd42b2",
+  colorAuthVerifyEmailSummarySurface: "#c4f1fa",
   colorAuthCharacterPurple: "#7416a8",
   colorAuthCharacterCharcoal: "#17343c",
   colorAuthCharacterCoral: "#f94f78",
@@ -278,6 +281,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-link-secondary": "#405de6",
       "--app-color-border": "#90a0b0",
       "--app-color-border-secondary": "#718293",
+      "--app-color-shared-card-subtle-outline": "#5040c8",
       "--app-color-chart-series-primary": "#9c36b5",
       "--app-color-chart-accent": "#1971c2",
       "--app-color-status-error": "#c21f52",
@@ -334,6 +338,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
       "--app-color-auth-prompt-login-focus-border": "#e03f9f",
       "--app-color-auth-consent-document-surface": "#f7c8ea",
+      "--app-color-auth-verify-email-card-border": "#dd42b2",
+      "--app-color-auth-verify-email-summary-surface": "#c4f1fa",
       "--app-color-auth-character-purple": "#7416a8",
       "--app-color-auth-character-charcoal": "#17343c",
       "--app-color-auth-character-coral": "#f94f78",
@@ -794,6 +800,7 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorFillSecondary,
       testAlternateSource.colorMaskSubtle,
       testAlternateSource.colorBorderSecondary,
+      testAlternateSource.colorSharedCardSubtleOutline,
       testAlternateSource.colorChartSeriesPrimary,
       testAlternateSource.colorChartAccent,
       testAlternateSource.colorTextInverse,
@@ -812,14 +819,12 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorWritingManuscriptConclusionBorder,
       testAlternateSource.shadowWritingManuscriptConclusionInset,
       testAlternateSource.colorAuthConsentDocumentSurface,
+      testAlternateSource.colorAuthVerifyEmailCardBorder,
+      testAlternateSource.colorAuthVerifyEmailSummarySurface,
       testAlternateSource.shadowAuthVerifyEmailCard,
       PHASE5D_ALTERNATE_THEME_MARKER,
-      phase5dAlternateTheme.appBridgeVars[
-        "--app-color-status-error-border"
-      ],
-      phase5dAlternateTheme.appBridgeVars[
-        "--app-color-status-error-surface"
-      ],
+      phase5dAlternateTheme.appBridgeVars["--app-color-status-error-border"],
+      phase5dAlternateTheme.appBridgeVars["--app-color-status-error-surface"],
       phase5dAlternateTheme.appBridgeVars[
         "--app-shadow-notification-channel-selected"
       ],
@@ -831,6 +836,9 @@ describe("generic app theme bridge contract", () => {
       ],
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-shared-card-subtle-outline"
+      ],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
       phase5dAlternateTheme.appBridgeVars[
@@ -880,6 +888,12 @@ describe("generic app theme bridge contract", () => {
       ],
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-auth-consent-document-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-auth-verify-email-card-border"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-auth-verify-email-summary-surface"
       ],
       phase5dAlternateTheme.appBridgeVars[
         "--app-shadow-auth-verify-email-card"
@@ -940,6 +954,8 @@ describe("generic app theme bridge contract", () => {
         colorLinkSecondary: awesomicThemeTokens.color.linkSecondary,
         colorBorder: awesomicThemeTokens.color.pebble,
         colorBorderSecondary: awesomicThemeTokens.border.secondary.light,
+        colorSharedCardSubtleOutline:
+          awesomicThemeTokens.sharedCard.color.subtleOutline,
         colorChartSeriesPrimary: awesomicThemeTokens.chart.seriesPrimary,
         colorChartAccent: awesomicThemeTokens.chart.accent,
         colorStatusError: awesomicThemeTokens.status.light.error,
@@ -1033,6 +1049,10 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.authPrompt.loginFocusBorder,
         colorAuthConsentDocumentSurface:
           awesomicThemeTokens.authConsent.documentSurface,
+        colorAuthVerifyEmailCardBorder:
+          awesomicThemeTokens.authVerifyEmail.color.cardBorder,
+        colorAuthVerifyEmailSummarySurface:
+          awesomicThemeTokens.authVerifyEmail.color.summarySurface,
         colorAuthCharacterPurple:
           awesomicThemeTokens.authCharacter.color.purple,
         colorAuthCharacterCharcoal:

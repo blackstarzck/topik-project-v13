@@ -21,6 +21,12 @@ export const awesomicThemeTokens = {
       dark: "#303030",
     },
   },
+  sharedCard: {
+    color: {
+      subtleOutline:
+        "color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout))",
+    },
+  },
   chart: {
     // AntD's blue and cyan seeds preserve the existing categorical chart
     // paints. The remaining chart colors reuse status roles exposed by the app.
@@ -157,6 +163,12 @@ export const awesomicThemeTokens = {
       "color-mix(in srgb, var(--app-color-bg-container) 94%, var(--app-color-bg-layout))",
   },
   authVerifyEmail: {
+    color: {
+      cardBorder:
+        "color-mix(in srgb, var(--app-color-border) 72%, transparent)",
+      summarySurface:
+        "color-mix(in srgb, var(--app-color-bg-layout) 56%, var(--app-color-bg-container))",
+    },
     radius: {
       card: 28,
       compact: 12,
@@ -267,6 +279,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-border": awesomicThemeTokens.color.pebble,
     "--app-color-border-secondary":
       awesomicThemeTokens.border.secondary[appearance],
+    "--app-color-shared-card-subtle-outline":
+      awesomicThemeTokens.sharedCard.color.subtleOutline,
     "--app-color-chart-series-primary": awesomicThemeTokens.chart.seriesPrimary,
     "--app-color-chart-accent": awesomicThemeTokens.chart.accent,
     "--app-color-status-error": status.error,
@@ -364,6 +378,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.authPrompt.loginFocusBorder,
     "--app-color-auth-consent-document-surface":
       awesomicThemeTokens.authConsent.documentSurface,
+    "--app-color-auth-verify-email-card-border":
+      awesomicThemeTokens.authVerifyEmail.color.cardBorder,
+    "--app-color-auth-verify-email-summary-surface":
+      awesomicThemeTokens.authVerifyEmail.color.summarySurface,
     "--app-color-auth-character-purple":
       awesomicThemeTokens.authCharacter.color.purple,
     "--app-color-auth-character-charcoal":

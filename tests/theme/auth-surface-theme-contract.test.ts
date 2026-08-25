@@ -24,6 +24,10 @@ const stylesheet = postcss.parse(globalCss, {
 const productionRoles = {
   "--app-color-auth-consent-document-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 94%, var(--app-color-bg-layout))",
+  "--app-color-auth-verify-email-card-border":
+    "color-mix(in srgb, var(--app-color-border) 72%, transparent)",
+  "--app-color-auth-verify-email-summary-surface":
+    "color-mix(in srgb, var(--app-color-bg-layout) 56%, var(--app-color-bg-container))",
   "--app-radius-auth-verify-email-card": "28px",
   "--app-radius-auth-verify-email-card-compact": "12px",
   "--app-shadow-auth-verify-email-card":
@@ -34,10 +38,7 @@ function normalize(value: string) {
   return value.replace(/\s+/gu, " ").trim();
 }
 
-function findRule(
-  selector: string,
-  mediaQuery?: string,
-): Rule | undefined {
+function findRule(selector: string, mediaQuery?: string): Rule | undefined {
   let match: Rule | undefined;
 
   stylesheet.walkRules((rule) => {
@@ -63,7 +64,7 @@ function declaration(rule: Rule | undefined, property: string) {
 }
 
 describe("auth surface theme contract", () => {
-  test("documents the four auth surface roles", () => {
+  test("documents every auth surface role", () => {
     for (const role of Object.keys(productionRoles)) {
       expect(designContract).toContain(`\`${role}\``);
       expect(allowedAppBridgeVars).toContain(role);
@@ -75,6 +76,12 @@ describe("auth surface theme contract", () => {
       productionRoles["--app-color-auth-consent-document-surface"],
     );
     expect(awesomicThemeTokens.authVerifyEmail).toEqual({
+      color: {
+        cardBorder:
+          productionRoles["--app-color-auth-verify-email-card-border"],
+        summarySurface:
+          productionRoles["--app-color-auth-verify-email-summary-surface"],
+      },
       radius: {
         card: 28,
         compact: 12,
@@ -94,30 +101,23 @@ describe("auth surface theme contract", () => {
   });
 
   test("keeps the alternate auth surface roles distinct and isolated from production", () => {
-    const alternateRoles = Object.keys(productionRoles).map(
-      (role) =>
-        phase5dAlternateTheme.appBridgeVars[
-          role as keyof typeof phase5dAlternateTheme.appBridgeVars
-        ],
-    );
+    for (const appearance of ["light", "dark"] as const) {
+      const alternateRoles = Object.keys(productionRoles).map(
+        (role) =>
+          phase5dAlternateTheme.appBridgeVarsByAppearance[appearance][
+            role as keyof typeof phase5dAlternateTheme.appBridgeVars
+          ],
+      );
 
-    expect(new Set(alternateRoles).size).toBe(alternateRoles.length);
-    expect(alternateRoles.every(Boolean)).toBe(true);
-    expect(alternateRoles).not.toContain(
-      productionRoles["--app-color-auth-consent-document-surface"],
-    );
-    expect(alternateRoles).not.toContain(
-      productionRoles["--app-radius-auth-verify-email-card"],
-    );
-    expect(alternateRoles).not.toContain(
-      productionRoles["--app-radius-auth-verify-email-card-compact"],
-    );
-    expect(alternateRoles).not.toContain(
-      productionRoles["--app-shadow-auth-verify-email-card"],
-    );
+      expect(new Set(alternateRoles).size).toBe(alternateRoles.length);
+      expect(alternateRoles.every(Boolean)).toBe(true);
+      for (const productionValue of Object.values(productionRoles)) {
+        expect(alternateRoles).not.toContain(productionValue);
+      }
+    }
   });
 
-  test("consumes only semantic roles in the four auth surface declarations", () => {
+  test("consumes only semantic roles in the auth surface declarations", () => {
     const consentRule = findRule(
       ".auth-consent-document-card.app-card.app-surface",
     );
@@ -136,8 +136,14 @@ describe("auth surface theme contract", () => {
     expect(declaration(verifyRule, "border-radius")).toBe(
       "var(--app-radius-auth-verify-email-card)",
     );
+    expect(declaration(verifyRule, "border")).toBe(
+      "1px solid var(--app-color-auth-verify-email-card-border)",
+    );
     expect(declaration(verifyRule, "box-shadow")).toBe(
       "var(--app-shadow-auth-verify-email-card)",
+    );
+    expect(declaration(findRule(".verify-email-summary"), "background")).toBe(
+      "var(--app-color-auth-verify-email-summary-surface)",
     );
     expect(declaration(compactVerifyRule, "border-radius")).toBe(
       "var(--app-radius-auth-verify-email-card-compact)",

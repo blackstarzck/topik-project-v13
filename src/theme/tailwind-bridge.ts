@@ -26,6 +26,11 @@ const DEFAULT_NOTIFICATION_BRIDGE_VARS = {
     "0 0 0 1px var(--app-color-primary)",
 } as const;
 
+const DEFAULT_SHARED_CARD_BRIDGE_VARS = {
+  "--app-color-shared-card-subtle-outline":
+    "color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout))",
+} as const;
+
 const DEFAULT_WRITING_EXAM_BRIDGE_VARS = {
   "--app-color-writing-exam-header-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
@@ -98,6 +103,10 @@ const DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS = {
 const DEFAULT_AUTH_SURFACE_BRIDGE_VARS = {
   "--app-color-auth-consent-document-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 94%, var(--app-color-bg-layout))",
+  "--app-color-auth-verify-email-card-border":
+    "color-mix(in srgb, var(--app-color-border) 72%, transparent)",
+  "--app-color-auth-verify-email-summary-surface":
+    "color-mix(in srgb, var(--app-color-bg-layout) 56%, var(--app-color-bg-container))",
   "--app-radius-auth-verify-email-card": "28px",
   "--app-radius-auth-verify-email-card-compact": "12px",
   "--app-shadow-auth-verify-email-card":
@@ -156,6 +165,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-link-secondary": "#3254F2",
     "--app-color-border": "#d9d9d9",
     "--app-color-border-secondary": "#f0f0f0",
+    ...DEFAULT_SHARED_CARD_BRIDGE_VARS,
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#ff4d4f",
@@ -211,6 +221,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-link-secondary": "#3254F2",
     "--app-color-border": "#424242",
     "--app-color-border-secondary": "#303030",
+    ...DEFAULT_SHARED_CARD_BRIDGE_VARS,
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#dc4446",
