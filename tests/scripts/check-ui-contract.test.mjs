@@ -575,6 +575,35 @@ describe("UI contract TSX rules", () => {
     );
   });
 
+  it("ignores CSS module bindings while preserving local TypeScript style resolution", () => {
+    const scan = (padding) =>
+      scanUiContract([
+        source(
+          "src/components/example/CssModuleConsumer.tsx",
+          `
+            import styles from "./CssModuleConsumer.module.css";
+            import { visual } from "./visual";
+            export function CssModuleConsumer() {
+              return <div className={styles.frame} style={visual} />;
+            }
+          `,
+        ),
+        source(
+          "src/components/example/CssModuleConsumer.module.css",
+          `.frame { color: var(--app-text-primary); }`,
+        ),
+        source(
+          "src/components/example/visual.ts",
+          `export const visual = { padding: ${padding} };`,
+        ),
+      ]);
+
+    expect(() => scan(8)).not.toThrow();
+    expect(fingerprintsFor(scan(8), "react.static-inline-style")).not.toEqual(
+      fingerprintsFor(scan(80), "react.static-inline-style"),
+    );
+  });
+
   it("resolves inline-style bindings from the nearest lexical scope", () => {
     const scan = (padding) =>
       scanUiContract([

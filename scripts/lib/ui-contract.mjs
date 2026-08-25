@@ -1549,7 +1549,11 @@ function resolveLocalModule(fromPath, moduleName, sourceEntries) {
         `${basePath}/index.jsx`,
         `${basePath}/index.js`,
       ];
-  return candidates.find((candidate) => sourceEntries.has(candidate)) ?? null;
+  return (
+    candidates.find(
+      (candidate) => sourceEntries.get(candidate)?.parsed.kind === "typescript",
+    ) ?? null
+  );
 }
 
 function isCanonicalWorkspaceBodyImport(binding) {
