@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const PHONE_REMINDER_TITLE = "전화번호를 등록해 주세요";
+
 const SIDEBAR_CASES = [
   {
     name: "practice problem list",
@@ -46,6 +48,17 @@ async function openMobileDrawerIfNeeded(page: Page) {
   }
 }
 
+async function closeSessionOnlyReminder(page: Page) {
+  const reminderDialog = page.getByRole("dialog", {
+    name: PHONE_REMINDER_TITLE,
+    exact: true,
+  });
+  if (await reminderDialog.isVisible().catch(() => false)) {
+    await reminderDialog.locator(".ant-modal-close").click();
+    await expect(reminderDialog).toBeHidden();
+  }
+}
+
 for (const sidebarCase of SIDEBAR_CASES) {
   test(`sidebar keeps ${sidebarCase.name} group open on direct entry`, async ({
     page,
@@ -81,6 +94,7 @@ test("sidebar keeps an 8px visual gap between Iconsax icons and labels", async (
   await expect(page, "bounced to /login ??storageState stale?").not.toHaveURL(
     /\/login/,
   );
+  await closeSessionOnlyReminder(page);
 
   await openMobileDrawerIfNeeded(page);
 

@@ -5955,16 +5955,6 @@
   height: 18px;
   align-items: center;
   justify-content: center;
-  margin-inline-end: 8px;
-}
-
-.app-sidebar-menu.ant-menu .ant-menu-item-icon {
-  flex-shrink: 0;
-  margin-inline-end: 8px;
-}
-
-.app-sidebar-menu.ant-menu .ant-menu-title-content {
-  margin-inline-start: 0;
 }
 
 /* 계정 설정 하단 footer 안에 들어가며, 위 경계는 섹션 <Divider>가 담당하므로

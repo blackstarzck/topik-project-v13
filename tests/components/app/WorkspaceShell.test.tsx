@@ -467,6 +467,9 @@ describe("WorkspaceShell", () => {
     expect(
       sidebarMenu?.querySelectorAll('[data-sidebar-icon-kind="svg"]'),
     ).toHaveLength(6);
+    expect(
+      sidebarMenu?.querySelectorAll(".app-sidebar-icon.ant-menu-item-icon"),
+    ).toHaveLength(6);
 
     const growthItem = Array.from(
       sidebarMenu?.querySelectorAll(
@@ -846,15 +849,20 @@ describe("WorkspaceShell", () => {
   });
 
   it("sets sidebar icon spacing", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/components/app/SidebarNav.tsx"),
+      "utf8",
+    );
     const appIconRule = cssRule(".app-sidebar-icon");
-    const iconRule = cssRule(".app-sidebar-menu.ant-menu .ant-menu-item-icon");
-    const titleRule = cssRule(
+
+    expect(source).toContain("iconMarginInlineEnd: 8");
+    expect(appIconRule).not.toContain("margin-inline-end:");
+    expect(GLOBAL_CSS).not.toContain(
+      ".app-sidebar-menu.ant-menu .ant-menu-item-icon",
+    );
+    expect(GLOBAL_CSS).not.toContain(
       ".app-sidebar-menu.ant-menu .ant-menu-title-content",
     );
-
-    expect(appIconRule).toContain("margin-inline-end: 8px;");
-    expect(iconRule).toContain("margin-inline-end: 8px;");
-    expect(titleRule).toContain("margin-inline-start: 0;");
     expect(GLOBAL_CSS).not.toContain("@keyframes app-sidebar-icon-hover");
   });
 

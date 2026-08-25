@@ -203,14 +203,16 @@ function SidebarIcon({
   icon: Icon,
   iconName,
   props,
+  className,
 }: {
   icon: IconsaxIcon;
   iconName: string;
   props: IconsaxIconProps;
+  className?: string;
 }) {
   return (
     <span
-      className="app-sidebar-icon"
+      className={`app-sidebar-icon${className ? ` ${className}` : ""}`}
       data-sidebar-icon-kind="svg"
       data-sidebar-icon-library="iconsax"
       data-sidebar-icon-name={iconName}
@@ -285,6 +287,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         Menu: {
           activeBarBorderWidth: 0,
           activeBarWidth: 0,
+          iconMarginInlineEnd: 8,
           itemActiveBg: token.colorFillSecondary,
           itemBorderRadius: 8,
           itemHoverBg: token.colorFillTertiary,
