@@ -11,6 +11,12 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import React from "react";
 
+import { collectUiSources } from "../../scripts/check-ui-contract.mjs";
+import { scanUiContract } from "../../scripts/lib/ui-contract.mjs";
+import { themeSettings } from "../../src/theme/config";
+import { getResolvedBridgeVars } from "../../src/theme/tailwind-bridge";
+import type { ThemeAppearance } from "../../src/theme/types";
+
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
@@ -99,8 +105,7 @@ describe("RootLayout hydration consistency", () => {
     //   </body>
     // </html>
     const htmlStyle = element.props.style as Record<string, string>;
-    const colorScheme = htmlStyle.colorScheme as string;
-    const bgContainer = htmlStyle["--app-color-bg-container"] as string;
+    const colorScheme = htmlStyle.colorScheme as ThemeAppearance;
     const lang = element.props.lang as string;
     const translate = element.props.translate as string | undefined;
 
@@ -125,8 +130,8 @@ describe("RootLayout hydration consistency", () => {
     const initialAppearance = appProvidersEl.props.initialAppearance as string;
 
     return {
+      htmlStyle,
       colorScheme,
-      bgContainer,
       initialAppearance,
       lang,
       translate,
@@ -137,30 +142,63 @@ describe("RootLayout hydration consistency", () => {
   }
 
   test("dark cookie is ignored while DESIGN/Awesomic is light-fixed", async () => {
-    const { colorScheme, bgContainer, initialAppearance } =
+    const { htmlStyle, colorScheme, initialAppearance } =
       await getLayoutAndProviderProps("dark");
 
     expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(htmlStyle).toEqual({
+      ...getResolvedBridgeVars(themeSettings.main, colorScheme),
+      colorScheme,
+    });
+    expect(initialAppearance).toBe(colorScheme);
   });
 
   test("light cookie → html colorScheme=light AND AppProviders initialAppearance=light", async () => {
-    const { colorScheme, bgContainer, initialAppearance } =
+    const { htmlStyle, colorScheme, initialAppearance } =
       await getLayoutAndProviderProps("light");
 
     expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(htmlStyle).toEqual({
+      ...getResolvedBridgeVars(themeSettings.main, colorScheme),
+      colorScheme,
+    });
+    expect(initialAppearance).toBe(colorScheme);
   });
 
   test("no cookie → defaults to light for both html and AppProviders", async () => {
-    const { colorScheme, bgContainer, initialAppearance } =
+    const { htmlStyle, colorScheme, initialAppearance } =
       await getLayoutAndProviderProps(undefined);
 
     expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(htmlStyle).toEqual({
+      ...getResolvedBridgeVars(themeSettings.main, colorScheme),
+      colorScheme,
+    });
+    expect(initialAppearance).toBe(colorScheme);
+  });
+
+  test("keeps the approved SSR theme bridge inline style at its exact scanner fingerprint", async () => {
+    const sources = await collectUiSources(process.cwd());
+    const inlineStyles = scanUiContract(sources).violations.filter(
+      ({ path, ruleId }) =>
+        path === "src/app/layout.tsx" &&
+        ruleId === "react.static-inline-style",
+    );
+
+    expect(
+      inlineStyles.map(({ path, ruleId, fingerprint }) => ({
+        path,
+        ruleId,
+        fingerprint,
+      })),
+    ).toEqual([
+      {
+        path: "src/app/layout.tsx",
+        ruleId: "react.static-inline-style",
+        fingerprint:
+          "81b7d6f9316068a3dbab42f493957a376492121c916758edde08c55c5fe98edd",
+      },
+    ]);
   });
 
   // i18n (G-01): the resolved locale must drive BOTH <html lang> and the
