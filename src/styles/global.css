@@ -4023,27 +4023,6 @@
   }
 }
 
-/*
- * Constrained content width for AUTHED pages, whose <main> landmark is already
- * provided by WorkspaceShell's antd Layout.Content (antd renders Content as
- * <main>). Adding PageContainer (also <main>) would duplicate the landmark, so
- * authed forms use this plain centering wrapper on a <div> instead. Layout-only,
- * no --app-* declaration; vertical padding comes from the surrounding Content.
- */
-.app-workspace-layout {
-  min-height: 100vh;
-  background: var(--app-color-bg-layout);
-}
-
-.app-workspace-main {
-  min-width: 0;
-  background: var(--app-color-bg-layout);
-}
-
-.app-workspace-layout--exam .app-workspace-main {
-  min-width: 0;
-}
-
 .app-workspace-mobile-bar {
   display: flex;
   min-height: 68px;

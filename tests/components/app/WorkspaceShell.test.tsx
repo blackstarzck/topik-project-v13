@@ -822,6 +822,63 @@ describe("WorkspaceShell", () => {
     expect(contentRule).toContain("background: var(--app-color-bg-container);");
   });
 
+  it("keeps workspace shell scaffolding ownership out of global CSS", () => {
+    const { container: normalContainer } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    navMock.pathname = "/writing/short-answer-writing-51";
+    const { container: focusContainer } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+
+    for (const container of [normalContainer, focusContainer]) {
+      expect(
+        container.querySelector(".app-workspace-layout.ant-layout"),
+      ).toBeTruthy();
+      expect(
+        container.querySelector(".app-workspace-main.ant-layout"),
+      ).toBeTruthy();
+    }
+    expect(
+      focusContainer.querySelector(".app-workspace-layout--exam.ant-layout"),
+    ).toBeTruthy();
+
+    const layoutRule = workspaceLayoutCssRule(
+      ".app-workspace-layout.ant-layout",
+    );
+    const mainRule = workspaceLayoutCssRule(".app-workspace-main.ant-layout");
+
+    expect(layoutRule).toContain("min-height: 100vh;");
+    expect(layoutRule).toContain("min-height: max(100vh, 100dvh);");
+    expect(layoutRule).toContain("background: var(--app-color-bg-layout);");
+    expect(mainRule).toContain("min-width: 0;");
+    expect(mainRule).toContain("min-height: 100vh;");
+    expect(mainRule).toContain("min-height: max(100vh, 100dvh);");
+    expect(mainRule).toContain("background: var(--app-color-bg-layout);");
+
+    const globalSelectors = cssSelectorsFrom(GLOBAL_CSS);
+    expect(globalSelectors).not.toContain(".app-workspace-layout");
+    expect(globalSelectors).not.toContain(".app-workspace-main");
+    expect(globalSelectors).not.toContain(
+      ".app-workspace-layout--exam .app-workspace-main",
+    );
+  });
+
   it("keeps workspace content layout ownership out of global CSS", () => {
     const layoutRule = workspaceLayoutCssRule(
       ".app-workspace-layout.ant-layout",
