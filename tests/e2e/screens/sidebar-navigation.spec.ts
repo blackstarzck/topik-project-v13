@@ -181,6 +181,76 @@ test("sidebar brand keeps 68px geometry and keyboard navigation", async ({
     await expect(menuDialog).toBeVisible();
   }
 
+  const visibleSidebarShell = page
+    .locator(".app-sidebar-shell:visible")
+    .first();
+  const visibleMenuScroll = visibleSidebarShell.locator(
+    ".app-sidebar-menu-scroll",
+  );
+  await expect(visibleSidebarShell).toBeVisible();
+  await expect(visibleMenuScroll).toBeVisible();
+
+  const sidebarLayout = await visibleSidebarShell.evaluate((shell) => {
+    const menuScroll = shell.querySelector<HTMLElement>(
+      ".app-sidebar-menu-scroll",
+    );
+    if (!menuScroll) return null;
+
+    const shellStyle = window.getComputedStyle(shell);
+    const menuScrollStyle = window.getComputedStyle(menuScroll);
+    return {
+      shellDisplay: shellStyle.display,
+      shellFlexDirection: shellStyle.flexDirection,
+      shellOverflow: shellStyle.overflow,
+      shellPaddingTop: shellStyle.paddingTop,
+      shellPaddingBottom: shellStyle.paddingBottom,
+      menuFlex: menuScrollStyle.flex,
+      menuMinHeight: menuScrollStyle.minHeight,
+      menuOverflowX: menuScrollStyle.overflowX,
+      menuOverflowY: menuScrollStyle.overflowY,
+    };
+  });
+  expect(sidebarLayout).not.toBeNull();
+  if (!sidebarLayout) {
+    throw new Error("Visible sidebar layout was not measurable");
+  }
+  expect(sidebarLayout.shellDisplay).toBe("flex");
+  expect(sidebarLayout.shellFlexDirection).toBe("column");
+  expect(sidebarLayout.shellOverflow).toBe("hidden");
+  expect(sidebarLayout.shellPaddingTop).toBe("18px");
+  expect(sidebarLayout.shellPaddingBottom).toBe("18px");
+  expect(sidebarLayout.menuFlex).toBe("1 1 auto");
+  expect(sidebarLayout.menuMinHeight).toBe("0px");
+  expect(sidebarLayout.menuOverflowX).toBe("hidden");
+  expect(sidebarLayout.menuOverflowY).toBe("auto");
+  if (isMobile) {
+    const overflowMetrics = await visibleMenuScroll.evaluate((menuScroll) => {
+      menuScroll.style.height = "200px";
+      menuScroll.style.flex = "0 0 200px";
+
+      return {
+        clientHeight: menuScroll.clientHeight,
+        scrollHeight: menuScroll.scrollHeight,
+      };
+    });
+    expect(overflowMetrics.scrollHeight).toBeGreaterThan(
+      overflowMetrics.clientHeight,
+    );
+    await visibleMenuScroll.evaluate((menuScroll) => {
+      menuScroll.scrollTop = 40;
+    });
+    await expect
+      .poll(() =>
+        visibleMenuScroll.evaluate((menuScroll) => menuScroll.scrollTop),
+      )
+      .toBeGreaterThan(0);
+    await visibleMenuScroll.evaluate((menuScroll) => {
+      menuScroll.scrollTop = 0;
+      menuScroll.style.removeProperty("height");
+      menuScroll.style.removeProperty("flex");
+    });
+  }
+
   const brandButton = page.locator(".app-sidebar-brand:visible").first();
   const brandImage = brandButton.locator("img");
   await expect(brandButton).toBeVisible();

@@ -305,6 +305,11 @@ async function getShellMetrics(page: Page) {
     );
     const main = document.querySelector<HTMLElement>(".app-workspace-main");
     const sider = document.querySelector<HTMLElement>(".app-workspace-sider");
+    const sidebarShell =
+      document.querySelector<HTMLElement>(".app-sidebar-shell");
+    const sidebarMenuScroll = document.querySelector<HTMLElement>(
+      ".app-sidebar-menu-scroll",
+    );
     const mobileBar = document.querySelector<HTMLElement>(
       ".app-workspace-mobile-bar",
     );
@@ -320,6 +325,12 @@ async function getShellMetrics(page: Page) {
     const mainRect = main.getBoundingClientRect();
     const siderRect = sider?.getBoundingClientRect() ?? null;
     const siderStyle = sider ? window.getComputedStyle(sider) : null;
+    const sidebarShellStyle = sidebarShell
+      ? window.getComputedStyle(sidebarShell)
+      : null;
+    const sidebarMenuScrollStyle = sidebarMenuScroll
+      ? window.getComputedStyle(sidebarMenuScroll)
+      : null;
     const mobileBarRect = mobileBar?.getBoundingClientRect() ?? null;
     const mobileBrandRect = mobileBrand?.getBoundingClientRect() ?? null;
     const mobileBrandImageRect =
@@ -355,6 +366,15 @@ async function getShellMetrics(page: Page) {
       mobileBarTagName: mobileBar?.tagName ?? null,
       mobileBarTop: mobileBarStyle?.top ?? null,
       mobileBarZIndex: mobileBarStyle?.zIndex ?? null,
+      sidebarMenuScrollFlex: sidebarMenuScrollStyle?.flex ?? null,
+      sidebarMenuScrollMinHeight: sidebarMenuScrollStyle?.minHeight ?? null,
+      sidebarMenuScrollOverflowX: sidebarMenuScrollStyle?.overflowX ?? null,
+      sidebarMenuScrollOverflowY: sidebarMenuScrollStyle?.overflowY ?? null,
+      sidebarShellDisplay: sidebarShellStyle?.display ?? null,
+      sidebarShellFlexDirection: sidebarShellStyle?.flexDirection ?? null,
+      sidebarShellOverflow: sidebarShellStyle?.overflow ?? null,
+      sidebarShellPaddingBottom: sidebarShellStyle?.paddingBottom ?? null,
+      sidebarShellPaddingTop: sidebarShellStyle?.paddingTop ?? null,
       siderDisplay: siderStyle?.display ?? null,
       siderHeight: siderRect?.height ?? null,
       siderRight: siderRect?.right ?? null,
@@ -444,6 +464,15 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
   expect(metrics.contentHeight).toBeGreaterThanOrEqual(
     expectedContentHeight - 1,
   );
+  expect(metrics.sidebarShellDisplay).toBe("flex");
+  expect(metrics.sidebarShellFlexDirection).toBe("column");
+  expect(metrics.sidebarShellOverflow).toBe("hidden");
+  expect(metrics.sidebarShellPaddingTop).toBe("18px");
+  expect(metrics.sidebarShellPaddingBottom).toBe("18px");
+  expect(metrics.sidebarMenuScrollFlex).toBe("1 1 auto");
+  expect(metrics.sidebarMenuScrollMinHeight).toBe("0px");
+  expect(metrics.sidebarMenuScrollOverflowX).toBe("hidden");
+  expect(metrics.sidebarMenuScrollOverflowY).toBe("auto");
 
   if (isDesktop) {
     expect(metrics.mobileBarTagName).toBeNull();

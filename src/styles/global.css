@@ -5747,24 +5747,6 @@
   }
 }
 
-.app-sidebar-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  padding: 18px 0;
-  background: var(--app-color-bg-container);
-}
-
-.app-sidebar-menu-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-color: transparent transparent;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-}
-
 .app-sidebar-shell:hover .app-sidebar-menu-scroll {
   scrollbar-color: color-mix(
       in srgb,

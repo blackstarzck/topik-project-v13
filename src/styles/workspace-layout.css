@@ -121,13 +121,23 @@
 }
 
 .app-sidebar-shell {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  padding: 18px 0;
+  background: var(--app-color-bg-container);
 }
 
 .app-sidebar-menu-scroll {
+  flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
 @media (max-width: 767.98px) {

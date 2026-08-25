@@ -1028,10 +1028,27 @@ describe("WorkspaceShell", () => {
     );
   });
 
-  it("sets the selected sidebar shell horizontal padding to zero", () => {
-    const shellRule = cssRule(".app-sidebar-shell");
+  it("keeps sidebar base layout ownership out of global CSS", () => {
+    const shellRule = workspaceLayoutCssRule(".app-sidebar-shell");
+    const scrollRule = workspaceLayoutCssRule(".app-sidebar-menu-scroll");
+    const globalSelectors = cssSelectorsFrom(GLOBAL_CSS);
 
+    expect(shellRule).toContain("display: flex;");
+    expect(shellRule).toContain("flex-direction: column;");
+    expect(shellRule).toContain("height: 100%;");
+    expect(shellRule).toContain("min-height: 0;");
+    expect(shellRule).toContain("overflow: hidden;");
     expect(shellRule).toContain("padding: 18px 0;");
+    expect(shellRule).toContain("background: var(--app-color-bg-container);");
+    expect(scrollRule).toContain("flex: 1 1 auto;");
+    expect(scrollRule).toContain("min-height: 0;");
+    expect(scrollRule).toContain("overflow-x: hidden;");
+    expect(scrollRule).toContain("overflow-y: auto;");
+    expect(scrollRule).toContain("scrollbar-color: transparent transparent;");
+    expect(scrollRule).toContain("scrollbar-gutter: stable;");
+    expect(scrollRule).toContain("scrollbar-width: thin;");
+    expect(globalSelectors).not.toContain(".app-sidebar-shell");
+    expect(globalSelectors).not.toContain(".app-sidebar-menu-scroll");
   });
 
   it("sets sidebar icon spacing", () => {
