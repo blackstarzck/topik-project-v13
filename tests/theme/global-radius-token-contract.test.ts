@@ -19,6 +19,14 @@ const tokenizedRadiusRules = [
   ".writing-guide-accordion.ant-collapse > .ant-collapse-item:first-child, .writing-guide-accordion.ant-collapse > .ant-collapse-item:last-child, .writing-guide-accordion.ant-collapse > .ant-collapse-item",
 ] as const;
 const tokenizedRadiusRuleSet = new Set<string>(tokenizedRadiusRules);
+const writingPillRadiusRules = [
+  ".writing-exam-header__back",
+  ".writing-exam-header__timer",
+  ".writing-material-value-list__bullet",
+  ".writing-inline-blank__index",
+  ".writing-guide-list > li::before, .writing-guide-list--examples > li::before",
+] as const;
+const writingPillRadiusRuleSet = new Set<string>(writingPillRadiusRules);
 const problemTypeTabsCss = readFileSync(
   path.join(
     process.cwd(),
@@ -74,5 +82,30 @@ describe("global CSS radius token contract", () => {
       "border-radius: var(--app-radius-pill);",
     );
     expect(problemTypeTabsCss).not.toContain("border-radius: 999px;");
+  });
+
+  test("maps circular writing controls and bullets to the shared pill radius", () => {
+    const root = postcss.parse(globalCss, { from: "src/styles/global.css" });
+    const actual = new Map<string, string[]>();
+
+    root.walkRules((rule) => {
+      const selector = normalizeSelector(rule.selector);
+      if (!writingPillRadiusRuleSet.has(selector)) return;
+
+      const values = actual.get(selector) ?? [];
+      rule.walkDecls("border-radius", (declaration) => {
+        values.push(declaration.value);
+      });
+      actual.set(selector, values);
+    });
+
+    expect(Object.fromEntries(actual)).toEqual(
+      Object.fromEntries(
+        writingPillRadiusRules.map((selector) => [
+          selector,
+          ["var(--app-radius-pill)"],
+        ]),
+      ),
+    );
   });
 });
