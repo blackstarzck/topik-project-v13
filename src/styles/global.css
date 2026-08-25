@@ -6221,95 +6221,6 @@
   line-height: 1.4;
 }
 
-.writing-command {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius);
-  background: var(--app-color-bg-container);
-  box-shadow: var(--app-shadow-elevated);
-  padding: 18px 22px;
-}
-
-.writing-command__titles {
-  min-width: 0;
-}
-
-.writing-command__title {
-  margin: 0;
-  color: var(--app-color-text);
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.writing-command__info {
-  color: var(--app-color-text-secondary);
-  flex-shrink: 0;
-}
-
-.writing-command__subtitle {
-  margin: 6px 0 0;
-  color: var(--app-color-text-secondary);
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.writing-command__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-wrap: wrap;
-  min-width: 280px;
-}
-
-.writing-stepper {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius);
-  background: var(--app-color-bg-container);
-  padding: 10px;
-}
-
-.writing-step {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 0;
-  border-radius: 8px;
-  padding: 8px;
-}
-
-.writing-step span:first-child {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--app-color-border);
-  border-radius: 999px;
-  color: var(--app-color-text-secondary);
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.writing-step--done span:first-child,
-.writing-step--active span:first-child {
-  border-color: var(--app-color-primary);
-  color: #ffffff;
-  background: var(--app-color-primary);
-}
-
-.writing-step--active {
-  background: var(--app-color-bg-layout);
-}
-
 .writing-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
@@ -6407,16 +6318,6 @@
 
 .writing-material-card__cell--span-row {
   grid-column: 1 / -1;
-}
-
-.writing-material-card__cell--empty {
-  border-color: transparent;
-  background: transparent;
-  padding: 0;
-}
-
-.writing-material-card__placeholder {
-  min-height: 1px;
 }
 
 .writing-material-card__body {
@@ -6664,16 +6565,6 @@
   line-height: 1;
 }
 
-.writing-editor-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  border-top: 1px solid var(--app-color-border);
-  padding-top: 12px;
-}
-
 .writing-answer-panel {
   display: grid;
   gap: 0;
@@ -6844,11 +6735,6 @@
   font-size: 12px;
 }
 
-.writing-answer-card__actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .writing-guide {
   min-width: 0;
 }
@@ -6955,10 +6841,6 @@
   border-radius: 6px;
   background: var(--app-color-bg-container);
   padding: 18px;
-}
-
-.writing-guide-card--tutor {
-  background: var(--app-color-bg-container);
 }
 
 .writing-guide-card__title {
@@ -7533,10 +7415,6 @@
     grid-template-columns: 1fr;
   }
 
-  .writing-material-card__cell--empty {
-    display: none;
-  }
-
   .signup-prompt-form-heading .signup-prompt-form-title.ant-typography {
     font-size: 30px;
   }
@@ -7562,20 +7440,6 @@
 
   .signup-form-panel {
     padding-top: 72px;
-  }
-
-  .writing-command,
-  .writing-command__actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .writing-command__actions {
-    min-width: 0;
-  }
-
-  .writing-command__actions .ant-btn {
-    width: 100%;
   }
 
   .writing-grid {
@@ -7686,33 +7550,12 @@
     justify-content: flex-start;
   }
 
-  .writing-command {
-    padding: 16px;
-  }
-
   .writing-answer-card__head {
     flex-direction: column;
     align-items: stretch;
   }
 
   .writing-composer-mode {
-    justify-content: flex-start;
-  }
-
-  .writing-editor-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .writing-command__title {
-    font-size: 22px;
-  }
-
-  .writing-stepper {
-    grid-template-columns: 1fr;
-  }
-
-  .writing-step {
     justify-content: flex-start;
   }
 
