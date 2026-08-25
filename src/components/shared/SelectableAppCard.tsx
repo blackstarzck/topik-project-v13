@@ -88,9 +88,7 @@ export function SelectableAppCard({
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="selectable-app-card__content">
-        {children}
-      </div>
+      <div className="selectable-app-card__content">{children}</div>
     </AppCard>
   );
 }

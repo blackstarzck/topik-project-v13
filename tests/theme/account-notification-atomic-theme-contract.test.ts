@@ -152,9 +152,7 @@ describe("account and notification atomic theme contract", () => {
       expect(bridge["--app-color-status-error-surface"]).toBe(
         resolved.colorErrorBg,
       );
-      expect(antd["--ant-color-error-border"]).toBe(
-        resolved.colorErrorBorder,
-      );
+      expect(antd["--ant-color-error-border"]).toBe(resolved.colorErrorBorder);
       expect(antd["--ant-color-error-bg"]).toBe(resolved.colorErrorBg);
     }
 
@@ -198,9 +196,7 @@ describe("account and notification atomic theme contract", () => {
   });
 
   test("consumes the semantic roles without changing selector specificity", () => {
-    const accountRule = findRule(
-      ".account-delete-card.app-card.app-surface",
-    );
+    const accountRule = findRule(".account-delete-card.app-card.app-surface");
     const selectedChannelRule = findRule(
       '.notification-settings-channel-option[aria-pressed="true"]',
     );

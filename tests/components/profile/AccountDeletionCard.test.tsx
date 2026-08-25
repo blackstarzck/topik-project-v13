@@ -54,9 +54,7 @@ describe("AccountDeletionCard", () => {
     expect(openButton.classList.contains("ant-btn-dangerous")).toBe(true);
     expect(container.querySelector(".account-delete-section")).toBeTruthy();
     expect(
-      container.querySelector(
-        ".account-delete-card.app-card.app-surface",
-      ),
+      container.querySelector(".account-delete-card.app-card.app-surface"),
     ).toBeTruthy();
     expect(container.querySelector(".account-delete-actions")).toBeTruthy();
     // ko 카탈로그의 settings.account.dangerZone.title
@@ -67,9 +65,7 @@ describe("AccountDeletionCard", () => {
     const { container } = renderWithIntl(<AccountSettingsLoading />);
 
     expect(
-      container.querySelector(
-        ".account-delete-card.app-card.app-surface",
-      ),
+      container.querySelector(".account-delete-card.app-card.app-surface"),
     ).toBeTruthy();
   });
 

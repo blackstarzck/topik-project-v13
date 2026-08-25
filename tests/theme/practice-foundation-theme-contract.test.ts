@@ -31,8 +31,7 @@ const alternateRolesByAppearance = {
     "--app-font-question-number-display":
       '"Phase5D Question Display", var(--app-font-family), sans-serif',
     "--app-radius-problem-new-badge": "15.5px",
-    "--app-color-problem-new-badge-surface":
-      "rgba(239, 66, 189, 0.22)",
+    "--app-color-problem-new-badge-surface": "rgba(239, 66, 189, 0.22)",
   },
   dark: {
     "--app-radius-practice-retry-summary": "13.75px",
@@ -43,8 +42,7 @@ const alternateRolesByAppearance = {
     "--app-font-question-number-display":
       '"Phase5D Question Display", var(--app-font-family), sans-serif',
     "--app-radius-problem-new-badge": "15.5px",
-    "--app-color-problem-new-badge-surface":
-      "rgba(85, 230, 193, 0.24)",
+    "--app-color-problem-new-badge-surface": "rgba(85, 230, 193, 0.24)",
   },
 } as const;
 

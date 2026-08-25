@@ -84,18 +84,14 @@ describe("practice dead style cleanup", () => {
     expect(selectableAppCardSource).not.toContain(
       'import { Check } from "@/components/shared/AppIcons";',
     );
-    expect(selectableAppCardSource).not.toContain(
-      "selectable-app-card__cue",
-    );
+    expect(selectableAppCardSource).not.toContain("selectable-app-card__cue");
     expect(
       findCssClassFamilySelectors(globalCss, ["selectable-app-card__cue"]),
     ).toEqual([]);
   });
 
   test("keeps production callers from depending on the removed selected-label API", () => {
-    const callers = productionTypeScriptFiles(
-      path.join(process.cwd(), "src"),
-    )
+    const callers = productionTypeScriptFiles(path.join(process.cwd(), "src"))
       .filter((filePath) => filePath !== selectableAppCardPath)
       .filter((filePath) =>
         /\bselectedLabel\s*=/u.test(readFileSync(filePath, "utf8")),

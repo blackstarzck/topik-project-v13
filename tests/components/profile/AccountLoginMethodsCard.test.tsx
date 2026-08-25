@@ -131,7 +131,9 @@ describe("AccountLoginMethodsCard", () => {
       'import { GoogleMark } from "@/components/auth/GoogleMark";',
     );
     expect(accountLoginMethodsSource).not.toContain("function GoogleGlyph");
-    expect(accountLoginMethodsSource).not.toMatch(/fill=["']#[0-9a-f]{6}["']/iu);
+    expect(accountLoginMethodsSource).not.toMatch(
+      /fill=["']#[0-9a-f]{6}["']/iu,
+    );
     expect(googleMark?.getAttribute("aria-hidden")).toBe("true");
     expect(googleMark?.getAttribute("focusable")).toBe("false");
     expect(googleMark?.getAttribute("width")).toBe("20");
