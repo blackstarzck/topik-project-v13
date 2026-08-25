@@ -189,8 +189,7 @@ describe("RootLayout hydration consistency", () => {
     const sources = await collectUiSources(process.cwd());
     const inlineStyles = scanUiContract(sources).violations.filter(
       ({ path, ruleId }: ScannerViolation) =>
-        path === "src/app/layout.tsx" &&
-        ruleId === "react.static-inline-style",
+        path === "src/app/layout.tsx" && ruleId === "react.static-inline-style",
     );
 
     expect(

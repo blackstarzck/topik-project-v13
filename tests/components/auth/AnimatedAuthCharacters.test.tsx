@@ -97,9 +97,7 @@ describe("AnimatedAuthCharacters", () => {
   });
 
   it("applies the typing motion and class", () => {
-    render(
-      <AnimatedAuthCharacters ariaLabel="typing characters" isTyping />,
-    );
+    render(<AnimatedAuthCharacters ariaLabel="typing characters" isTyping />);
     const stage = screen.getByRole("img", { name: "typing characters" });
 
     expect(stage.classList.contains("is-typing")).toBe(true);
