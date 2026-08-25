@@ -57,6 +57,15 @@ describe("app theme contract", () => {
     expect(vars["--app-color-chart-series-primary"]).toBe(
       awesomicThemeTokens.chart.seriesPrimary,
     );
+    expect(vars["--app-color-landing-cta-primary"]).toBe(
+      awesomicThemeTokens.landingCta.primary,
+    );
+    expect(vars["--app-color-landing-cta-primary-hover"]).toBe(
+      awesomicThemeTokens.landingCta.primaryHover,
+    );
+    expect(vars["--app-radius-landing-hero-cta"]).toBe(
+      `${awesomicThemeTokens.radius.landingHeroCta}px`,
+    );
     expect(vars["--app-radius"]).toBe(`${awesomicThemeTokens.radius.base}px`);
     expect(vars["--app-radius-card"]).toBe(
       `${awesomicThemeTokens.radius.card}px`,
@@ -87,6 +96,11 @@ describe("app theme contract", () => {
     expect(defaultVars["--app-radius"]).toBe("6px");
     expect(defaultVars["--app-radius-card"]).toBe("8px");
     expect(defaultVars["--app-radius-pill"]).toBe("10000px");
+    expect(defaultVars["--app-color-landing-cta-primary"]).toBe("#070203");
+    expect(defaultVars["--app-color-landing-cta-primary-hover"]).toBe(
+      "#21080c",
+    );
+    expect(defaultVars["--app-radius-landing-hero-cta"]).toBe("0px");
   });
 
   test("applies Awesomic global and component tokens to both appearances", () => {
@@ -147,9 +161,16 @@ describe("app theme contract", () => {
       "--app-color-border-secondary",
       "--app-color-chart-series-primary",
       "--app-color-chart-accent",
+      "--app-color-landing-cta-primary",
+      "--app-color-landing-cta-primary-hover",
+      "--app-color-landing-cta-foreground",
+      "--app-color-landing-cta-ghost-surface",
+      "--app-color-landing-cta-ghost-text",
+      "--app-color-landing-cta-ghost-border",
       "--app-radius",
       "--app-radius-card",
       "--app-radius-pill",
+      "--app-radius-landing-hero-cta",
       "--app-font-family",
       "--app-shadow-elevated",
     ];

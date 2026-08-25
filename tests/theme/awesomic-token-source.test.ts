@@ -103,6 +103,14 @@ describe("Awesomic token source contract", () => {
       seriesPrimary: "#1677ff",
       accent: "#13c2c2",
     });
+    expect(awesomicThemeTokens.landingCta).toEqual({
+      primary: "#070203",
+      primaryHover: "#21080c",
+      foreground: "#ffffff",
+      ghostSurface: "#ffffff",
+      ghostText: "#0c0c0d",
+      ghostBorder: "#e7e7e6",
+    });
     expect(awesomicThemeTokens.fontSize).toEqual({
       caption: typographyFontSize("typography.xs"),
       body: typographyFontSize("typography.sm-9"),
@@ -155,6 +163,7 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.radius.compactCard).toBe(6);
     expect(awesomicThemeTokens.radius.badge).toBe(4);
     expect(awesomicThemeTokens.radius.indicator).toBe(2);
+    expect(awesomicThemeTokens.radius.landingHeroCta).toBe(0);
     expect(awesomicThemeTokens.radius.pill).toBe(tokenPx("radius.full-6"));
 
     expect(awesomicThemeTokens.radius.card).toBeLessThan(

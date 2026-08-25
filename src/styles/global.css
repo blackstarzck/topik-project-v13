@@ -1302,13 +1302,13 @@
 }
 
 .landing-hero-button.ant-btn {
-  border-radius: 0;
+  border-radius: var(--app-radius-landing-hero-cta);
   text-transform: uppercase;
 }
 
 .landing-header-button.ant-btn {
   height: 40px;
-  border-radius: 40px;
+  border-radius: var(--app-radius-pill);
   padding-inline: 16px;
   font-size: 16px;
   font-weight: 600;
@@ -1317,42 +1317,28 @@
 
 .landing-header-button--primary.ant-btn,
 .landing-hero-button--primary.ant-btn {
-  border-color: #070203;
-  background: #070203;
-  color: #ffffff;
+  border-color: var(--app-color-landing-cta-primary);
+  background: var(--app-color-landing-cta-primary);
+  color: var(--app-color-landing-cta-foreground);
 }
 
-.landing-header-button--primary.ant-btn:not(:disabled):hover,
-.landing-hero-button--primary.ant-btn:not(:disabled):hover {
-  border-color: #21080c;
-  background: #21080c;
-  color: #ffffff;
-}
-
-.landing-header-button--ghost.ant-btn,
-.landing-hero-button--secondary.ant-btn {
-  border-color: rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+.landing-header .landing-header-button--primary:not(:disabled):hover,
+.landing-hero .landing-hero-button--primary:not(:disabled):hover {
+  border-color: var(--app-color-landing-cta-primary-hover);
+  background: var(--app-color-landing-cta-primary-hover);
+  color: var(--app-color-landing-cta-foreground);
 }
 
 .landing-header-button--ghost.ant-btn {
-  border-color: #e7e7e6;
-  background: #ffffff;
-  color: #0c0c0d;
+  border-color: var(--app-color-landing-cta-ghost-border);
+  background: var(--app-color-landing-cta-ghost-surface);
+  color: var(--app-color-landing-cta-ghost-text);
 }
 
-.landing-header-button--ghost.ant-btn:not(:disabled):hover,
-.landing-hero-button--secondary.ant-btn:not(:disabled):hover {
-  border-color: rgba(255, 255, 255, 0.62);
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-}
-
-.landing-header-button--ghost.ant-btn:not(:disabled):hover {
-  border-color: #0c0c0d;
-  background: #0c0c0d;
-  color: #ffffff;
+.landing-header .landing-header-button--ghost:not(:disabled):hover {
+  border-color: var(--app-color-landing-cta-ghost-text);
+  background: var(--app-color-landing-cta-ghost-text);
+  color: var(--app-color-landing-cta-ghost-surface);
 }
 
 .landing-hero {

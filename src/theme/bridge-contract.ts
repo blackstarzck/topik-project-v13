@@ -15,10 +15,17 @@ export const allowedAppBridgeVars = [
   "--app-color-status-success",
   "--app-color-status-strong-success",
   "--app-color-fill-secondary",
+  "--app-color-landing-cta-primary",
+  "--app-color-landing-cta-primary-hover",
+  "--app-color-landing-cta-foreground",
+  "--app-color-landing-cta-ghost-surface",
+  "--app-color-landing-cta-ghost-text",
+  "--app-color-landing-cta-ghost-border",
   "--app-radius",
   "--app-radius-card",
   "--app-radius-pill",
   "--app-radius-indicator",
+  "--app-radius-landing-hero-cta",
   "--app-font-family",
   "--app-font-size-caption",
   "--app-font-size-body",
@@ -52,10 +59,17 @@ export type AppBridgeTokenSource = {
   colorStatusSuccess: string;
   colorStatusStrongSuccess: string;
   colorFillSecondary: string;
+  colorLandingCtaPrimary: string;
+  colorLandingCtaPrimaryHover: string;
+  colorLandingCtaForeground: string;
+  colorLandingCtaGhostSurface: string;
+  colorLandingCtaGhostText: string;
+  colorLandingCtaGhostBorder: string;
   radius: string;
   radiusCard: string;
   radiusPill: string;
   radiusIndicator: string;
+  radiusLandingHeroCta: string;
   fontFamily: string;
   fontSizeCaption: string;
   fontSizeBody: string;
@@ -89,10 +103,17 @@ export function createAppBridgeVars(
     "--app-color-status-success": source.colorStatusSuccess,
     "--app-color-status-strong-success": source.colorStatusStrongSuccess,
     "--app-color-fill-secondary": source.colorFillSecondary,
+    "--app-color-landing-cta-primary": source.colorLandingCtaPrimary,
+    "--app-color-landing-cta-primary-hover": source.colorLandingCtaPrimaryHover,
+    "--app-color-landing-cta-foreground": source.colorLandingCtaForeground,
+    "--app-color-landing-cta-ghost-surface": source.colorLandingCtaGhostSurface,
+    "--app-color-landing-cta-ghost-text": source.colorLandingCtaGhostText,
+    "--app-color-landing-cta-ghost-border": source.colorLandingCtaGhostBorder,
     "--app-radius": source.radius,
     "--app-radius-card": source.radiusCard,
     "--app-radius-pill": source.radiusPill,
     "--app-radius-indicator": source.radiusIndicator,
+    "--app-radius-landing-hero-cta": source.radiusLandingHeroCta,
     "--app-font-family": source.fontFamily,
     "--app-font-size-caption": source.fontSizeCaption,
     "--app-font-size-body": source.fontSizeBody,

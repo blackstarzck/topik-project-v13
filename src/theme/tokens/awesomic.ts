@@ -26,6 +26,17 @@ export const awesomicThemeTokens = {
     seriesPrimary: "#1677ff",
     accent: "#13c2c2",
   },
+  landingCta: {
+    // The live landing page uses two deliberate color modes: a dark action on
+    // video and a light ghost action on the translucent header. These values
+    // preserve that existing paint while giving alternate themes one source.
+    primary: "#070203",
+    primaryHover: "#21080c",
+    foreground: "#ffffff",
+    ghostSurface: "#ffffff",
+    ghostText: "#0c0c0d",
+    ghostBorder: "#e7e7e6",
+  },
   radius: {
     // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
@@ -36,6 +47,7 @@ export const awesomicThemeTokens = {
     compactCard: 6,
     input: 6,
     indicator: 2,
+    landingHeroCta: 0,
     pill: 10_000,
   },
   // AntD owns status semantics. These resolved light/dark values lock the
@@ -103,10 +115,22 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-status-success": status.success,
     "--app-color-status-strong-success": status.strongSuccess,
     "--app-color-fill-secondary": status.fillSecondary,
+    "--app-color-landing-cta-primary": awesomicThemeTokens.landingCta.primary,
+    "--app-color-landing-cta-primary-hover":
+      awesomicThemeTokens.landingCta.primaryHover,
+    "--app-color-landing-cta-foreground":
+      awesomicThemeTokens.landingCta.foreground,
+    "--app-color-landing-cta-ghost-surface":
+      awesomicThemeTokens.landingCta.ghostSurface,
+    "--app-color-landing-cta-ghost-text":
+      awesomicThemeTokens.landingCta.ghostText,
+    "--app-color-landing-cta-ghost-border":
+      awesomicThemeTokens.landingCta.ghostBorder,
     "--app-radius": `${awesomicThemeTokens.radius.base}px`,
     "--app-radius-card": `${awesomicThemeTokens.radius.card}px`,
     "--app-radius-pill": `${awesomicThemeTokens.radius.pill}px`,
     "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
+    "--app-radius-landing-hero-cta": `${awesomicThemeTokens.radius.landingHeroCta}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
     "--app-font-size-body": awesomicThemeTokens.fontSize.body,

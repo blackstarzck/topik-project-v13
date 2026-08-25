@@ -170,6 +170,30 @@ used only where the rendered shape must stay fully rounded.
 | Compact card/action corner | Runtime card radius (8px) | `--app-radius-card` | Menu and notification rows |
 | Fully rounded control | `radius.full-6` (10000px) | `--app-radius-pill` | User/notification action groups and unread dot |
 
+## Tokens — Landing CTA
+
+The live landing page has two intentional CTA color modes: a dark primary
+action over the hero video and a light ghost action in the translucent header.
+Their current paint is preserved as a semantic L1 source and projected to L2 so
+alternate themes can replace the complete cluster without page-local colors.
+Ant Design continues to own focus, disabled, loading, and active lifecycle;
+app CSS owns only the documented default and enabled-hover paint.
+
+| Meaning | Awesomic value | App bridge |
+| --- | --- | --- |
+| Primary fill and border | `#070203` | `--app-color-landing-cta-primary` |
+| Primary enabled hover | `#21080c` | `--app-color-landing-cta-primary-hover` |
+| Primary foreground | `#ffffff` | `--app-color-landing-cta-foreground` |
+| Header ghost surface | `#ffffff` | `--app-color-landing-cta-ghost-surface` |
+| Header ghost text and hover fill | `#0c0c0d` | `--app-color-landing-cta-ghost-text` |
+| Header ghost border | `#e7e7e6` | `--app-color-landing-cta-ghost-border` |
+| Hero CTA square corner | `0px` | `--app-radius-landing-hero-cta` |
+
+The header CTA uses the existing fully rounded control token
+(`--app-radius-pill`). The retired hero secondary selector is not a supported
+variant; add a real consumer and explicit visual contract before introducing a
+new landing CTA mode.
+
 ## Tokens — Semantic Overlay
 
 App-owned overlay paint keeps alpha inside the color value so Ant Design can
@@ -377,7 +401,7 @@ Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor 
 ### Don't
 - Don't create custom card header rows inside the card body for whole-card title/status alignment.
 - Don't place card-level CTA buttons inside card body content unless the action is inline with a form field or a sentence-level control.
-- Don't use any color other than #09090b/#222222 for filled button backgrounds — the system has no chromatic CTA color; dark filled + white text is the only primary action pattern.
+- Don't use any color other than #09090b/#222222 for new filled button backgrounds — the system has no chromatic CTA color; dark filled + white text is the only primary action pattern. The live landing CTA values documented in `Tokens — Landing CTA` are a preservation exception, not a reusable palette.
 - Don't apply the raw 28-36px Awesomic radius scale to TALKPIK workspace cards when the runtime contract specifies the smaller app radius.
 - Don't paste raw Tailwind export values into app CSS; normalize through `src/theme` and expose only approved `@theme inline` aliases.
 - Don't create a separate Tailwind palette, radius scale, shadow scale, or font source.
@@ -420,7 +444,7 @@ Max-width approximately 1200px, centered on the canvas (#f4f4f5). The hero is a 
 - card surface: #ffffff
 - border / divider: #ececee / #3f3f46
 - accent (badge only): #ff5a00 (YC), #fe45e2 (decorative card)
-- primary action: #09090b (filled action)
+- primary action: #09090b (filled action; see the preserved live landing CTA exception above)
 - secondary link/accent: #3254F2 (legal links and secondary progress only)
 - difficulty (1–5, icon tint only): #5e9e6f → #8aa04e → #cca63a → #cf833f → #c75d4f (see Tokens — Difficulty Scale)
 

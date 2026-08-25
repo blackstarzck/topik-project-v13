@@ -40,6 +40,12 @@ const testAlternateSource = {
   colorStatusSuccess: "#087f5b",
   colorStatusStrongSuccess: "#005f45",
   colorFillSecondary: "rgba(18, 52, 86, 0.19)",
+  colorLandingCtaPrimary: "#5b2bc4",
+  colorLandingCtaPrimaryHover: "#351474",
+  colorLandingCtaForeground: "#fff2cf",
+  colorLandingCtaGhostSurface: "#f1e7ff",
+  colorLandingCtaGhostText: "#29104f",
+  colorLandingCtaGhostBorder: "#51b9ad",
   radius: "12px",
   radiusNumber: 12,
   radiusCard: "18px",
@@ -47,6 +53,7 @@ const testAlternateSource = {
   radiusPill: "10000px",
   radiusIndicator: "3px",
   radiusIndicatorNumber: 3,
+  radiusLandingHeroCta: "13px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontSizeCaption: "11px",
   fontSizeBody: "15px",
@@ -130,10 +137,17 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-success": "#087f5b",
       "--app-color-status-strong-success": "#005f45",
       "--app-color-fill-secondary": "rgba(18, 52, 86, 0.19)",
+      "--app-color-landing-cta-primary": "#5b2bc4",
+      "--app-color-landing-cta-primary-hover": "#351474",
+      "--app-color-landing-cta-foreground": "#fff2cf",
+      "--app-color-landing-cta-ghost-surface": "#f1e7ff",
+      "--app-color-landing-cta-ghost-text": "#29104f",
+      "--app-color-landing-cta-ghost-border": "#51b9ad",
       "--app-radius": "12px",
       "--app-radius-card": "18px",
       "--app-radius-pill": "10000px",
       "--app-radius-indicator": "3px",
+      "--app-radius-landing-hero-cta": "13px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-size-caption": "11px",
       "--app-font-size-body": "15px",
@@ -280,6 +294,17 @@ describe("generic app theme bridge contract", () => {
     expect(phase5dAlternateTheme.appBridgeVars["--app-radius-pill"]).toBe(
       "12000px",
     );
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-primary"],
+    ).not.toBe(awesomicThemeTokens.landingCta.primary);
+    expect(
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-landing-cta-primary-hover"
+      ],
+    ).not.toBe(awesomicThemeTokens.landingCta.primaryHover);
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-radius-landing-hero-cta"],
+    ).not.toBe(`${awesomicThemeTokens.radius.landingHeroCta}px`);
     expect(phase5dAlternateTheme.antdRadiusByAppearance).toEqual({
       light: { card: "23px", global: "23px" },
       dark: { card: "23px", global: "23px" },
@@ -319,8 +344,21 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
+      phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-primary"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-landing-cta-primary-hover"
+      ],
+      phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-foreground"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-landing-cta-ghost-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-ghost-text"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-landing-cta-ghost-border"
+      ],
       'radiusCard: "23px"',
       'radiusPill: "12000px"',
+      'radiusLandingHeroCta: "17px"',
     ];
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
@@ -362,10 +400,19 @@ describe("generic app theme bridge contract", () => {
         colorStatusStrongSuccess:
           awesomicThemeTokens.status.light.strongSuccess,
         colorFillSecondary: awesomicThemeTokens.status.light.fillSecondary,
+        colorLandingCtaPrimary: awesomicThemeTokens.landingCta.primary,
+        colorLandingCtaPrimaryHover:
+          awesomicThemeTokens.landingCta.primaryHover,
+        colorLandingCtaForeground: awesomicThemeTokens.landingCta.foreground,
+        colorLandingCtaGhostSurface:
+          awesomicThemeTokens.landingCta.ghostSurface,
+        colorLandingCtaGhostText: awesomicThemeTokens.landingCta.ghostText,
+        colorLandingCtaGhostBorder: awesomicThemeTokens.landingCta.ghostBorder,
         radius: `${awesomicThemeTokens.radius.base}px`,
         radiusCard: `${awesomicThemeTokens.radius.card}px`,
         radiusPill: `${awesomicThemeTokens.radius.pill}px`,
         radiusIndicator: `${awesomicThemeTokens.radius.indicator}px`,
+        radiusLandingHeroCta: `${awesomicThemeTokens.radius.landingHeroCta}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,
         fontSizeBody: awesomicThemeTokens.fontSize.body,
