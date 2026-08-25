@@ -5239,12 +5239,9 @@
   transition: stroke-dasharray 0.18s linear;
 }
 
-/* D-M2 page: primary가 거의 검정(#09090b)이라 outlined의 현재 단계 배경 토큰
-   colorPrimaryBg가 어두운 회색(#46464a)으로 파생되어, 현재 단계 숫자(primary)가
-   배경에 묻힌다(대비 ~2.1:1). 현재 단계 아이콘 배경만 container(흰색) 토큰으로 되돌려
-   숫자를 또렷하게 한다(대비 ~19.9:1). primary 테두리/링은 그대로 현재 단계를 표시한다.
-   AntD의 `.ant-steps.ant-steps-outlined .ant-steps-item-process` 규칙이 (0,3,0)으로
-   동률이며 나중에 주입되므로, process+active 합성으로 (0,4,0)을 만들어 확실히 이긴다. */
+/* D-M2 page: primary가 거의 검정(#09090b)이라 outlined의 현재 단계 배경은
+   Steps 전용 테마 설정에서 container 토큰으로 맞춰 숫자 대비를 유지한다.
+   아래 CSS에서는 배경색을 소유하지 않고 상태 전환 효과만 담당한다. */
 .analysis-loading--page .analysis-loading__steps .ant-steps-item-icon {
   transition:
     background-color 0.18s ease,
@@ -5304,12 +5301,6 @@
   .ant-steps-item-icon
   .ant-steps-item-icon-finish {
   color: var(--app-color-bg-container);
-}
-
-.analysis-loading--page
-  .analysis-loading__steps
-  .ant-steps-item-process.ant-steps-item-active {
-  --ant-cmp-steps-item-icon-active-bg-color: var(--app-color-bg-container);
 }
 
 /* D-M2 page: 마지막 단계(점수 산출)는 더 진행할 곳이 없으므로 링을 앞으로만 도는

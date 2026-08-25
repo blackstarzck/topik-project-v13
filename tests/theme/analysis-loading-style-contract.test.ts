@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { describe, expect, test } from "vitest";
 
+import { createAnalysisStepsTheme } from "../../src/components/feedback/analysis-loading-theme";
 import { findCssClassFamilySelectors } from "../test-utils/cssClassFamily";
 
 const globalCss = readFileSync(
@@ -16,6 +17,35 @@ function cssRule(selector: string) {
 }
 
 describe("D-M2 analysis loading style contract", () => {
+  test("scopes the active outlined step background to the outer container token", () => {
+    const source = readFileSync(
+      path.join(
+        process.cwd(),
+        "src",
+        "components",
+        "feedback",
+        "AnalysisLoadingModal.tsx",
+      ),
+      "utf8",
+    );
+    const normalizedCss = globalCss.replace(/\s+/g, " ");
+
+    expect(createAnalysisStepsTheme("outer-container-bg")).toEqual({
+      components: {
+        Steps: {
+          colorPrimaryBg: "outer-container-bg",
+        },
+      },
+    });
+    expect(normalizedCss).not.toContain(
+      ".analysis-loading--page .analysis-loading__steps .ant-steps-item-process.ant-steps-item-active {",
+    );
+    expect(source).toContain("<ConfigProvider theme={analysisStepsTheme}>");
+    expect(source).toMatch(
+      /<ConfigProvider theme=\{analysisStepsTheme\}>\s*<Steps[\s\S]*?\/?>\s*<\/ConfigProvider>/,
+    );
+  });
+
   test("keeps the retired submitted-answer background family out of global CSS", () => {
     expect(
       findCssClassFamilySelectors(globalCss, ["analysis-loading-background"]),
