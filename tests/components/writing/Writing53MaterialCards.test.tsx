@@ -8,6 +8,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { Writing53MaterialCards } from "../../../src/components/writing/Writing53MaterialCards";
 import type { NormalizedMaterialCard } from "../../../src/lib/writing/problem-normalizer";
+import {
+  findGlobalCssOwners,
+  hasStableAndScopedClasses,
+  hasExactCssRule,
+} from "./writing-style-contract";
 
 afterEach(() => cleanup());
 
@@ -67,28 +72,23 @@ describe("Writing53MaterialCards", () => {
       join(process.cwd(), "src/components/writing/Writing53MaterialCards.tsx"),
       "utf8",
     );
-    const globalCss = readFileSync(
-      join(process.cwd(), "src/styles/global.css"),
-      "utf8",
-    );
-
     expect(existsSync(modulePath)).toBe(true);
     if (!existsSync(modulePath)) return;
 
-    expect(readFileSync(modulePath, "utf8").trim()).toBe(`.chartStack {
-  display: grid;
-  gap: 12px;
-}
-
-.chart {
-  margin-inline-start: 0;
-  width: 100%;
-  min-height: 180px;
-}
-
-.radialChart {
-  min-height: 156px;
-}`);
+    const moduleCss = readFileSync(modulePath, "utf8");
+    expect(
+      hasExactCssRule(moduleCss, ".chartStack", "display: grid; gap: 12px;"),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".chart",
+        "margin-inline-start: 0; width: 100%; min-height: 180px;",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(moduleCss, ".radialChart", "min-height: 156px;"),
+    ).toBe(true);
     expect(source).toContain(
       'import styles from "./Writing53MaterialCards.module.css";',
     );
@@ -97,9 +97,13 @@ describe("Writing53MaterialCards", () => {
     );
     expect(source.match(/styles\.chart\b/gu)).toHaveLength(3);
     expect(source).toContain("styles.radialChart");
-    expect(globalCss).not.toMatch(
-      /\.writing-material-(?:chart-stack|chart(?:--radial)?)\s*\{/u,
-    );
+    expect(
+      findGlobalCssOwners([
+        "writing-material-chart-stack",
+        "writing-material-chart",
+        "writing-material-chart--radial",
+      ]),
+    ).toEqual([]);
   });
 
   it("renders chart materials and expands the cause descriptions across an empty row slot", () => {
@@ -116,6 +120,17 @@ describe("Writing53MaterialCards", () => {
     expect(screen.getAllByTestId("q53-material-grid-cell")).toHaveLength(3);
     expect(screen.getAllByTestId("q53-material-data-card")).toHaveLength(2);
     expect(screen.getAllByTestId("q53-material-chart")).toHaveLength(2);
+    expect(
+      hasStableAndScopedClasses(
+        screen.getAllByTestId("q53-material-value-list")[0]?.parentElement,
+        "writing-material-chart-stack",
+      ),
+    ).toBe(true);
+    for (const chart of screen.getAllByTestId("q53-material-chart")) {
+      expect(hasStableAndScopedClasses(chart, "writing-material-chart")).toBe(
+        true,
+      );
+    }
     expect(screen.queryByTestId("q53-material-placeholder")).toBeNull();
 
     const reference = screen.getByTestId("q53-material-reference");
@@ -259,5 +274,13 @@ describe("Writing53MaterialCards", () => {
     expect(screen.getByText("Math")).toBeTruthy();
     expect(screen.getByText("19")).toBeTruthy();
     expect(screen.getAllByTestId("q53-material-value-bullet").length).toBe(4);
+    const radialChart = screen
+      .getAllByTestId("q53-material-chart")
+      .find((chart) =>
+        chart.classList.contains("writing-material-chart--radial"),
+      );
+    expect(
+      hasStableAndScopedClasses(radialChart, "writing-material-chart--radial"),
+    ).toBe(true);
   });
 });

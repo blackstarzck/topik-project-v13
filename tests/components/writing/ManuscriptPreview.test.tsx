@@ -8,6 +8,11 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { ManuscriptPreview } from "../../../src/components/writing/ManuscriptPreview";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
+import {
+  findGlobalCssOwners,
+  hasStableAndScopedClasses,
+  hasExactCssRule,
+} from "./writing-style-contract";
 
 afterEach(() => cleanup());
 
@@ -21,33 +26,38 @@ describe("ManuscriptPreview", () => {
       join(process.cwd(), "src/components/writing/ManuscriptPreview.tsx"),
       "utf8",
     );
-    const globalCss = readFileSync(
-      join(process.cwd(), "src/styles/global.css"),
-      "utf8",
-    );
-
     expect(existsSync(modulePath)).toBe(true);
     if (!existsSync(modulePath)) return;
 
-    expect(readFileSync(modulePath, "utf8").trim()).toBe(`.preview {
-  display: grid;
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 8px;
-}
-
-.compact {
-  grid-template-rows: minmax(0, 1fr);
-}
-
-.title:global(.ant-typography) {
-  margin: 0;
-}
-
-.meta:global(.ant-typography) {
-  display: block;
-}`);
+    const moduleCss = readFileSync(modulePath, "utf8");
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".preview",
+        "display: grid; height: 100%; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); gap: 8px;",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".compact",
+        "grid-template-rows: minmax(0, 1fr);",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".title:global(.ant-typography)",
+        "margin: 0;",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".meta:global(.ant-typography)",
+        "display: block;",
+      ),
+    ).toBe(true);
     expect(source).toContain(
       'import styles from "./ManuscriptPreview.module.css";',
     );
@@ -59,9 +69,22 @@ describe("ManuscriptPreview", () => {
     expect(source).toMatch(
       /"writing-manuscript-preview__meta",\s*styles\.meta/u,
     );
-    expect(globalCss).not.toMatch(
-      /\.writing-manuscript-preview(?:--compact|__(?:title|meta)\.ant-typography)?\s*\{/u,
-    );
+    expect(
+      findGlobalCssOwners([
+        "writing-manuscript-preview",
+        "writing-manuscript-preview--compact",
+        "writing-manuscript-preview__title",
+        "writing-manuscript-preview__meta",
+      ]),
+    ).toEqual([]);
+
+    renderWithIntl(<ManuscriptPreview text="" showHeader={false} />);
+    expect(
+      hasStableAndScopedClasses(
+        screen.getByTestId("manuscript-preview"),
+        "writing-manuscript-preview--compact",
+      ),
+    ).toBe(true);
   });
 
   it("marks each filled cell with its writing section and highlights the active section", () => {
@@ -79,6 +102,24 @@ describe("ManuscriptPreview", () => {
     );
 
     const cells = screen.getAllByTestId("manuscript-preview-cell");
+    expect(
+      hasStableAndScopedClasses(
+        screen.getByTestId("manuscript-preview"),
+        "writing-manuscript-preview",
+      ),
+    ).toBe(true);
+    expect(
+      hasStableAndScopedClasses(
+        document.querySelector(".writing-manuscript-preview__title"),
+        "writing-manuscript-preview__title",
+      ),
+    ).toBe(true);
+    expect(
+      hasStableAndScopedClasses(
+        document.querySelector(".writing-manuscript-preview__meta"),
+        "writing-manuscript-preview__meta",
+      ),
+    ).toBe(true);
 
     expect(cells[0]?.textContent).toBe("A");
     expect(cells[0]?.getAttribute("data-section")).toBe("intro");

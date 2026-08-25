@@ -13,6 +13,7 @@ import {
   readInitialShortAnswerAnswers,
   shortAnswerWriting51Adapter,
 } from "@/components/writing/shortAnswerWritingAdapters";
+import { findGlobalCssOwners, hasExactCssRule } from "./writing-style-contract";
 
 const sourcePath = join(
   process.cwd(),
@@ -31,22 +32,37 @@ const sharedStylesPath = join(
   process.cwd(),
   "src/components/writing/ShortAnswerWritingWorkspace.module.css",
 );
-const globalStylesPath = join(process.cwd(), "src/styles/global.css");
-
 describe("ShortAnswerWriting51Workspace structure", () => {
   it("shares concise writing layouts while preserving q51 and q52 stable classes", () => {
     const sources = [sourcePath, q52SourcePath].map((path) =>
       readFileSync(path, "utf8"),
     );
     const sharedStyles = readFileSync(sharedStylesPath, "utf8");
-    const globalStyles = readFileSync(globalStylesPath, "utf8");
+    const expectedRules = [
+      [".guideHints", "display: grid; gap: 10px;"],
+      [".guideHints .guideHintCard", "display: grid; gap: 4px;"],
+      [".answerPanel", "display: grid; gap: 0;"],
+      [
+        ".blankTabs",
+        "display: flex; gap: 8px; overflow-x: auto; padding-inline: 0;",
+      ],
+    ] as const;
 
-    expect(sharedStyles.replace(/\s+/gu, " ").trim()).toBe(
-      ".guideHints { display: grid; gap: 10px; } .guideHints .guideHintCard { display: grid; gap: 4px; } .answerPanel { display: grid; gap: 0; } .blankTabs { display: flex; gap: 8px; overflow-x: auto; padding-inline: 0; }",
-    );
-    expect(globalStyles).not.toContain(".writing-guide-hints");
-    expect(globalStyles).not.toContain(".writing-answer-panel");
-    expect(globalStyles).not.toContain(".writing-blank-tabs");
+    expect(
+      expectedRules
+        .filter(
+          ([selector, declarations]) =>
+            !hasExactCssRule(sharedStyles, selector, declarations),
+        )
+        .map(([selector]) => selector),
+    ).toEqual([]);
+    expect(
+      findGlobalCssOwners([
+        "writing-guide-hints",
+        "writing-answer-panel",
+        "writing-blank-tabs",
+      ]),
+    ).toEqual([]);
     for (const source of sources) {
       const compactSource = source.replace(/\s+/gu, " ");
       expect(source).toContain(

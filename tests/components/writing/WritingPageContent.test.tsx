@@ -11,6 +11,11 @@ vi.mock("next-intl/server", () => ({
 }));
 
 import { WritingPageContent } from "@/components/writing/WritingPageContent";
+import {
+  findGlobalCssOwners,
+  hasStableAndScopedClasses,
+  hasExactCssRule,
+} from "./writing-style-contract";
 
 afterEach(() => cleanup());
 
@@ -24,36 +29,36 @@ describe("WritingPageContent", () => {
       join(process.cwd(), "src/components/writing/WritingPageContent.tsx"),
       "utf8",
     );
-    const globalCss = readFileSync(
-      join(process.cwd(), "src/styles/global.css"),
-      "utf8",
-    );
 
     expect(existsSync(modulePath)).toBe(true);
     if (!existsSync(modulePath)) return;
 
-    expect(readFileSync(modulePath, "utf8").trim()).toBe(`.emptyState {
-  display: flex;
-  min-height: 100dvh;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.title {
-  margin: 0;
-  color: var(--app-color-text);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.4;
-}`);
+    const moduleCss = readFileSync(modulePath, "utf8");
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".emptyState",
+        "display: flex; min-height: 100dvh; flex-direction: column; align-items: center; justify-content: center; padding: 24px;",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".title",
+        "margin: 0; color: var(--app-color-text); font-size: 18px; font-weight: 700; line-height: 1.4;",
+      ),
+    ).toBe(true);
     expect(source).toContain(
       'import styles from "./WritingPageContent.module.css";',
     );
     expect(source).toContain('"writing-empty-state", styles.emptyState');
     expect(source).toContain('"writing-empty-state__title", styles.title');
-    expect(globalCss).not.toMatch(/\.writing-empty-state(?:__title)?\s*\{/u);
+    expect(
+      findGlobalCssOwners([
+        "writing-empty-state",
+        "writing-empty-state__title",
+      ]),
+    ).toEqual([]);
   });
 
   it("uses a destination-neutral label for contextual return navigation", async () => {
@@ -67,6 +72,19 @@ describe("WritingPageContent", () => {
     });
 
     render(element);
+
+    expect(
+      hasStableAndScopedClasses(
+        screen.getByText("writing.page.problemUnavailableTitle").closest("h1"),
+        "writing-empty-state__title",
+      ),
+    ).toBe(true);
+    expect(
+      hasStableAndScopedClasses(
+        document.querySelector(".writing-empty-state"),
+        "writing-empty-state",
+      ),
+    ).toBe(true);
 
     const returnLink = screen.getByRole("link", {
       name: "writing.editor.back",

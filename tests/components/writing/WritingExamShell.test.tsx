@@ -7,6 +7,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { WritingExamShell } from "../../../src/components/writing/WritingExamShell";
+import {
+  findGlobalCssOwners,
+  hasStableAndScopedClasses,
+  hasExactCssRule,
+} from "./writing-style-contract";
 
 const libraryDeleteMock = vi.hoisted(() => vi.fn());
 
@@ -114,29 +119,45 @@ describe("WritingExamShell", () => {
       "src/components/writing/WritingExamShell.tsx",
       "utf8",
     );
-    const globalCss = readFileSync("src/styles/global.css", "utf8");
+    const moduleCss = readFileSync(modulePath, "utf8");
+    const expectedRules: Array<{
+      atRules: readonly string[];
+      declarations: string;
+      selector: string;
+    }> = [
+      {
+        selector: ".shell",
+        declarations:
+          "min-height: 100dvh; background: var(--app-color-bg-layout);",
+        atRules: [],
+      },
+      {
+        selector: ".main",
+        declarations:
+          "width: min(100%, 1320px); margin-inline: auto; padding: 28px 28px 48px;",
+        atRules: [],
+      },
+      {
+        selector: ".main :global(.writing-workspace)",
+        declarations: "gap: 20px;",
+        atRules: [],
+      },
+      {
+        selector: ".main",
+        declarations: "padding: 18px 16px 40px;",
+        atRules: ["@media (max-width: 767px)"],
+      },
+    ];
 
     expect(existsSync(modulePath)).toBe(true);
-    expect(readFileSync(modulePath, "utf8").trim()).toBe(`.shell {
-  min-height: 100dvh;
-  background: var(--app-color-bg-layout);
-}
-
-.main {
-  width: min(100%, 1320px);
-  margin-inline: auto;
-  padding: 28px 28px 48px;
-}
-
-.main :global(.writing-workspace) {
-  gap: 20px;
-}
-
-@media (max-width: 767px) {
-  .main {
-    padding: 18px 16px 40px;
-  }
-}`);
+    expect(
+      expectedRules
+        .filter(
+          ({ selector, declarations, atRules }) =>
+            !hasExactCssRule(moduleCss, selector, declarations, atRules),
+        )
+        .map(({ selector, atRules }) => [...atRules, selector].join(" > ")),
+    ).toEqual([]);
     expect(source).toContain(
       'import styles from "./WritingExamShell.module.css";',
     );
@@ -146,8 +167,41 @@ describe("WritingExamShell", () => {
     expect(source).toContain(
       'className={["writing-exam-main", styles.main].join(" ")}',
     );
-    expect(globalCss).not.toMatch(/\.writing-exam-(?:shell|main)\s*\{/);
-    expect(globalCss).not.toContain(".writing-exam-main .writing-workspace {");
+    expect(
+      findGlobalCssOwners(["writing-exam-shell", "writing-exam-main"]),
+    ).toEqual([]);
+
+    const { container } = renderWithIntl(
+      <WritingExamShell
+        title="53"
+        subtitle="subtitle"
+        progressPercent={0}
+        elapsedSeconds={0}
+        autosaveStatus="clean"
+        lastSavedAt={null}
+        canSave={false}
+        canSubmit={false}
+        isSaving={false}
+        isSubmitting={false}
+        onSave={vi.fn()}
+        onSubmit={vi.fn()}
+        onRequestBack={vi.fn()}
+      >
+        <div className="writing-workspace">content</div>
+      </WritingExamShell>,
+    );
+    expect(
+      hasStableAndScopedClasses(
+        container.querySelector(".writing-exam-shell"),
+        "writing-exam-shell",
+      ),
+    ).toBe(true);
+    expect(
+      hasStableAndScopedClasses(
+        container.querySelector(".writing-exam-main"),
+        "writing-exam-main",
+      ),
+    ).toBe(true);
   });
 
   it("labels the header save action as draft save and delegates it", () => {
