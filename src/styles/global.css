@@ -583,26 +583,6 @@
   translate: 4% 0;
 }
 
-.signup-prompt-links {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 32px;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 14px;
-}
-
-.signup-prompt-links a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 160ms ease-out;
-}
-
-.signup-prompt-links a:hover {
-  color: #ffffff;
-}
-
 .auth-legal-link {
   color: var(--app-color-link-secondary);
 }
@@ -632,47 +612,6 @@
 
 .signup-prompt-topbar > * {
   pointer-events: auto;
-}
-
-.auth-language-select {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
-  backdrop-filter: blur(10px);
-}
-
-.auth-language-select__icon {
-  flex: 0 0 auto;
-  color: #526074;
-}
-
-.auth-language-select .auth-language-select__control.ant-select {
-  width: 106px;
-}
-
-.auth-language-select .ant-select-selector {
-  height: 30px !important;
-  padding-inline: 0 4px !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.auth-language-select .ant-select-selection-item {
-  color: #1f2937;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 30px !important;
-}
-
-.auth-language-select .ant-select-arrow {
-  color: #526074;
 }
 
 .signup-prompt-form-inner {

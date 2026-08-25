@@ -585,9 +585,6 @@
       "socialDivider": "or",
       "socialGoogle": "Continue with Google"
     },
-    "languageSelect": {
-      "ariaLabel": "Choose display language"
-    },
     "oauth": {
       "browser": {
         "kakaoTalk": "KakaoTalk",

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { act, cleanup, waitFor } from "@testing-library/react";
@@ -15,6 +15,25 @@ const GLOBAL_CSS = readFileSync(
   join(process.cwd(), "src/styles/global.css"),
   "utf8",
 );
+const AUTH_LANGUAGE_SELECT_PATH = join(
+  process.cwd(),
+  "src/components/auth/AuthLanguageSelect.tsx",
+);
+const AUTH_MESSAGE_PATHS = ["ko", "en", "vi"].map((locale) =>
+  join(process.cwd(), `messages/${locale}.json`),
+);
+const UNUSED_AUTH_SELECTOR_CONTRACTS = [
+  ".signup-prompt-links",
+  ".signup-prompt-links a",
+  ".signup-prompt-links a:hover",
+  ".auth-language-select",
+  ".auth-language-select__icon",
+  ".auth-language-select__control",
+  ".auth-language-select .auth-language-select__control.ant-select",
+  ".auth-language-select .ant-select-selector",
+  ".auth-language-select .ant-select-selection-item",
+  ".auth-language-select .ant-select-arrow",
+] as const;
 let searchParamsMock = new URLSearchParams();
 
 function decodedImageSrc(image: HTMLImageElement) {
@@ -28,6 +47,14 @@ function getCssRule(selector: string) {
   );
 
   return match?.[1] ?? "";
+}
+
+function hasAuthLanguageMessage(path: string) {
+  const messages = JSON.parse(readFileSync(path, "utf8")) as {
+    auth?: { languageSelect?: unknown };
+  };
+
+  return messages.auth?.languageSelect !== undefined;
 }
 
 vi.mock("@/lib/supabase/browser", () => ({
@@ -101,6 +128,20 @@ describe("AuthPromptExperience", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+  });
+
+  it("keeps removed secondary auth chrome out of source and global styles", () => {
+    const remainingContracts = [
+      ...(existsSync(AUTH_LANGUAGE_SELECT_PATH)
+        ? ["src/components/auth/AuthLanguageSelect.tsx"]
+        : []),
+      ...UNUSED_AUTH_SELECTOR_CONTRACTS.filter((selector) =>
+        GLOBAL_CSS.includes(selector),
+      ),
+      ...AUTH_MESSAGE_PATHS.filter(hasAuthLanguageMessage),
+    ];
+
+    expect(remainingContracts).toEqual([]);
   });
 
   it("replaces authenticated login entry pages with post-auth on mount", async () => {
