@@ -21,6 +21,11 @@ const DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS = {
     "0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)",
 } as const;
 
+const DEFAULT_WRITING_EXAM_BRIDGE_VARS = {
+  "--app-color-writing-exam-header-surface":
+    "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
+} as const;
+
 const DEFAULT_FONT_SIZE_BRIDGE_VARS = {
   "--app-font-size-caption": "10px",
   "--app-font-size-body": "14px",
@@ -106,6 +111,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-status-success": "#52c41a",
     "--app-color-status-strong-success": "#389e0d",
     "--app-color-fill-secondary": "rgba(0, 0, 0, 0.06)",
+    ...DEFAULT_WRITING_EXAM_BRIDGE_VARS,
     "--app-color-landing-cta-primary": "#070203",
     "--app-color-landing-cta-primary-hover": "#21080c",
     "--app-color-landing-cta-foreground": "#ffffff",
@@ -149,6 +155,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-status-success": "#49aa19",
     "--app-color-status-strong-success": "#3c8618",
     "--app-color-fill-secondary": "rgba(255, 255, 255, 0.12)",
+    ...DEFAULT_WRITING_EXAM_BRIDGE_VARS,
     "--app-color-landing-cta-primary": "#070203",
     "--app-color-landing-cta-primary-hover": "#21080c",
     "--app-color-landing-cta-foreground": "#ffffff",

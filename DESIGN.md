@@ -188,6 +188,22 @@ so no unused Tailwind `--shadow-*` aliases are exposed.
 The existing `--app-shadow-elevated` role remains unchanged and continues to
 own quieter notification/card surfaces.
 
+## Tokens — Writing Exam Header
+
+The writing exam header keeps its translucent container paint as an app-owned
+semantic surface. `WritingExamShell.module.css` is the L2 consumer and owns the
+header paint plus the shared save/submit button corner. The button corner reuses
+`--app-radius-card` because its existing value is exactly 8px.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Sticky writing header surface | `color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)` | `--app-color-writing-exam-header-surface` | `WritingExamShell.module.css` |
+
+Autosave status color remains owned by Ant Design's public `Tag` tones for all
+five states; writing CSS must not replace them with one blanket success paint.
+The shell module retains only the badge's existing zero margin, zero border,
+12px type size, and 700 weight so the visual geometry does not regress.
+
 ## Tokens — Landing CTA
 
 The live landing page has two intentional CTA color modes: a dark primary

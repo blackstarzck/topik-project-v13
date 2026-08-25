@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { existsSync, readFileSync } from "node:fs";
+import postcss from "postcss";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -15,6 +16,27 @@ import {
 } from "./writing-style-contract";
 
 const libraryDeleteMock = vi.hoisted(() => vi.fn());
+const globalCss = readFileSync("src/styles/global.css", "utf8");
+
+function declarationsForSelector(source: string, selector: string) {
+  const normalizedSelector = selector.replace(/\s+/gu, " ").trim();
+  let declarations: Record<string, string> | null = null;
+
+  postcss.parse(source).walkRules((rule) => {
+    const selectors = rule.selector
+      .split(",")
+      .map((candidate) => candidate.replace(/\s+/gu, " ").trim());
+    if (!selectors.includes(normalizedSelector)) return;
+
+    declarations = Object.fromEntries(
+      (rule.nodes ?? [])
+        .filter((node) => node.type === "decl")
+        .map((node) => [node.prop, node.value]),
+    );
+  });
+
+  return declarations;
+}
 
 vi.mock("@/lib/supabase/browser", () => ({
   createSupabaseBrowserClient: () => ({
@@ -133,6 +155,17 @@ describe("WritingExamShell", () => {
         atRules: [],
       },
       {
+        selector: ".header",
+        declarations:
+          "background: var(--app-color-writing-exam-header-surface);",
+        atRules: [],
+      },
+      {
+        selector: ".actionButton:global(.ant-btn)",
+        declarations: "border-radius: var(--app-radius-card);",
+        atRules: [],
+      },
+      {
         selector: ".main",
         declarations:
           "width: min(100%, 1320px); margin-inline: auto; padding: 28px 28px 48px;",
@@ -164,6 +197,9 @@ describe("WritingExamShell", () => {
     );
     expect(source).toContain(
       'className={["writing-exam-shell", styles.shell].join(" ")}',
+    );
+    expect(source).toContain(
+      'className={["writing-exam-header", styles.header].join(" ")}',
     );
     expect(source).toContain(
       'className={["writing-exam-main", styles.main].join(" ")}',
@@ -205,8 +241,56 @@ describe("WritingExamShell", () => {
         shellStyles.main,
       ),
     ).toBe(true);
+    expect(
+      hasStableAndScopedClasses(
+        container.querySelector(".writing-exam-header"),
+        "writing-exam-header",
+        shellStyles.header,
+      ),
+    ).toBe(true);
+    expect(
+      hasStableAndScopedClasses(
+        container.querySelector(".writing-exam-header__save-state"),
+        "writing-exam-header__save-state",
+        shellStyles.saveState,
+      ),
+    ).toBe(true);
+    for (const stableClass of [
+      "writing-exam-header__save-button",
+      "writing-exam-header__submit-button",
+    ]) {
+      expect(
+        hasStableAndScopedClasses(
+          container.querySelector(`.${stableClass}`),
+          stableClass,
+          shellStyles.actionButton,
+        ),
+      ).toBe(true);
+    }
     expect(container.querySelector(".writing-exam-main")?.tagName).toBe("DIV");
     expect(container.querySelector("main")).toBeNull();
+
+    expect(
+      declarationsForSelector(globalCss, ".writing-exam-header"),
+    ).not.toHaveProperty("background");
+    expect(
+      declarationsForSelector(
+        globalCss,
+        ".writing-exam-header__save-state .ant-tag",
+      ),
+    ).toBeNull();
+    expect(
+      declarationsForSelector(
+        globalCss,
+        ".writing-exam-header__save-button.ant-btn",
+      ),
+    ).not.toHaveProperty("border-radius");
+    expect(
+      declarationsForSelector(
+        globalCss,
+        ".writing-exam-header__submit-button.ant-btn",
+      ),
+    ).not.toHaveProperty("border-radius");
   });
 
   it("labels the header save action as draft save and delegates it", () => {

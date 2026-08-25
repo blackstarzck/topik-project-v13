@@ -26,6 +26,12 @@ export const awesomicThemeTokens = {
     seriesPrimary: "#1677ff",
     accent: "#13c2c2",
   },
+  writingExam: {
+    color: {
+      headerSurface:
+        "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
+    },
+  },
   landingCta: {
     // The live landing page uses two deliberate color modes: a dark action on
     // video and a light ghost action on the translucent header. These values
@@ -189,6 +195,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-status-success": status.success,
     "--app-color-status-strong-success": status.strongSuccess,
     "--app-color-fill-secondary": status.fillSecondary,
+    "--app-color-writing-exam-header-surface":
+      awesomicThemeTokens.writingExam.color.headerSurface,
     "--app-color-landing-cta-primary": awesomicThemeTokens.landingCta.primary,
     "--app-color-landing-cta-primary-hover":
       awesomicThemeTokens.landingCta.primaryHover,

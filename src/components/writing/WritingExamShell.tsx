@@ -90,7 +90,7 @@ export function WritingExamShell({
 
   return (
     <div className={["writing-exam-shell", styles.shell].join(" ")}>
-      <header className="writing-exam-header">
+      <header className={["writing-exam-header", styles.header].join(" ")}>
         <div className="writing-exam-header__identity">
           <AppBackControl
             className="writing-exam-header__back"
@@ -128,11 +128,19 @@ export function WritingExamShell({
             <Clock3 aria-hidden size={16} strokeWidth={2.4} />
             {formatElapsed(elapsedSeconds)}
           </span>
-          <span className="writing-exam-header__save-state">
+          <span
+            className={[
+              "writing-exam-header__save-state",
+              styles.saveState,
+            ].join(" ")}
+          >
             <AutosaveBadge status={autosaveStatus} lastSavedAt={lastSavedAt} />
           </span>
           <Button
-            className="writing-exam-header__save-button"
+            className={[
+              "writing-exam-header__save-button",
+              styles.actionButton,
+            ].join(" ")}
             icon={<PenLine aria-hidden size={16} />}
             onClick={onSave}
             loading={isSaving}
@@ -142,7 +150,10 @@ export function WritingExamShell({
           </Button>
           <Button
             type="primary"
-            className="writing-exam-header__submit-button"
+            className={[
+              "writing-exam-header__submit-button",
+              styles.actionButton,
+            ].join(" ")}
             icon={<SendHorizontal aria-hidden size={16} />}
             onClick={onSubmit}
             loading={isSubmitting}

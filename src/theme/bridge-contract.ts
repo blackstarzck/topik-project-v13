@@ -15,6 +15,7 @@ export const allowedAppBridgeVars = [
   "--app-color-status-success",
   "--app-color-status-strong-success",
   "--app-color-fill-secondary",
+  "--app-color-writing-exam-header-surface",
   "--app-color-landing-cta-primary",
   "--app-color-landing-cta-primary-hover",
   "--app-color-landing-cta-foreground",
@@ -107,6 +108,7 @@ export type AppBridgeTokenSource = {
   colorStatusSuccess: string;
   colorStatusStrongSuccess: string;
   colorFillSecondary: string;
+  colorWritingExamHeaderSurface: string;
   colorLandingCtaPrimary: string;
   colorLandingCtaPrimaryHover: string;
   colorLandingCtaForeground: string;
@@ -199,6 +201,8 @@ export function createAppBridgeVars(
     "--app-color-status-success": source.colorStatusSuccess,
     "--app-color-status-strong-success": source.colorStatusStrongSuccess,
     "--app-color-fill-secondary": source.colorFillSecondary,
+    "--app-color-writing-exam-header-surface":
+      source.colorWritingExamHeaderSurface,
     "--app-color-landing-cta-primary": source.colorLandingCtaPrimary,
     "--app-color-landing-cta-primary-hover": source.colorLandingCtaPrimaryHover,
     "--app-color-landing-cta-foreground": source.colorLandingCtaForeground,

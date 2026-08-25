@@ -22,6 +22,7 @@ const alternateSource = {
   colorStatusSuccess: "#006b3c",
   colorStatusStrongSuccess: "#004b2a",
   colorFillSecondary: "rgba(36, 16, 79, 0.24)",
+  colorWritingExamHeaderSurface: "rgba(255, 75, 199, 0.84)",
   colorLandingCtaPrimary: "#6f2cff",
   colorLandingCtaPrimaryHover: "#43158f",
   colorLandingCtaForeground: "#fff0d8",

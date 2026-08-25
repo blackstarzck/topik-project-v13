@@ -40,6 +40,7 @@ const testAlternateSource = {
   colorStatusSuccess: "#087f5b",
   colorStatusStrongSuccess: "#005f45",
   colorFillSecondary: "rgba(18, 52, 86, 0.19)",
+  colorWritingExamHeaderSurface: "rgba(91, 43, 196, 0.79)",
   colorLandingCtaPrimary: "#5b2bc4",
   colorLandingCtaPrimaryHover: "#351474",
   colorLandingCtaForeground: "#fff2cf",
@@ -243,6 +244,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-success": "#087f5b",
       "--app-color-status-strong-success": "#005f45",
       "--app-color-fill-secondary": "rgba(18, 52, 86, 0.19)",
+      "--app-color-writing-exam-header-surface": "rgba(91, 43, 196, 0.79)",
       "--app-color-landing-cta-primary": "#5b2bc4",
       "--app-color-landing-cta-primary-hover": "#351474",
       "--app-color-landing-cta-foreground": "#fff2cf",
@@ -447,6 +449,11 @@ describe("generic app theme bridge contract", () => {
     expect(
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
     ).not.toBe(awesomicThemeTokens.chart.seriesPrimary);
+    expect(
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-writing-exam-header-surface"
+      ],
+    ).not.toBe(awesomicThemeTokens.writingExam.color.headerSurface);
     expect(phase5dAlternateTheme.appBridgeVars["--app-radius-card"]).toBe(
       "23px",
     );
@@ -658,6 +665,9 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-writing-exam-header-surface"
+      ],
       phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-primary"],
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-landing-cta-primary-hover"
@@ -738,6 +748,8 @@ describe("generic app theme bridge contract", () => {
         colorStatusStrongSuccess:
           awesomicThemeTokens.status.light.strongSuccess,
         colorFillSecondary: awesomicThemeTokens.status.light.fillSecondary,
+        colorWritingExamHeaderSurface:
+          awesomicThemeTokens.writingExam.color.headerSurface,
         colorLandingCtaPrimary: awesomicThemeTokens.landingCta.primary,
         colorLandingCtaPrimaryHover:
           awesomicThemeTokens.landingCta.primaryHover,
@@ -861,6 +873,8 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-indicator": "2px",
       "--app-radius-card": "8px",
       "--app-radius-pill": "10000px",
+      "--app-color-writing-exam-header-surface":
+        "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
       "--app-font-size-heading-sm": "20px",
@@ -876,6 +890,8 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-indicator": "2px",
       "--app-radius-card": "8px",
       "--app-radius-pill": "10000px",
+      "--app-color-writing-exam-header-surface":
+        "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
     });
   });
 });

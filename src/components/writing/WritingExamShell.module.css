@@ -3,6 +3,21 @@
   background: var(--app-color-bg-layout);
 }
 
+.header {
+  background: var(--app-color-writing-exam-header-surface);
+}
+
+.actionButton:global(.ant-btn) {
+  border-radius: var(--app-radius-card);
+}
+
+.saveState :global(.ant-tag) {
+  margin-inline-end: 0;
+  border: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .main {
   width: min(100%, 1320px);
   margin-inline: auto;

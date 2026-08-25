@@ -129,6 +129,28 @@ describe("app theme contract", () => {
     }
   });
 
+  test("owns the writing exam header surface in every production theme", () => {
+    expect(awesomicThemeTokens).toHaveProperty("writingExam", {
+      color: {
+        headerSurface:
+          "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
+      },
+    });
+
+    const expectedBridge = {
+      "--app-color-writing-exam-header-surface":
+        awesomicThemeTokens.writingExam.color.headerSurface,
+    };
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject(
+          expectedBridge,
+        );
+      }
+    }
+  });
+
   test("owns the landing hero and header paint in every production theme", () => {
     expect(awesomicThemeTokens).toHaveProperty("landingHero", {
       color: {
@@ -367,6 +389,7 @@ describe("app theme contract", () => {
       "--app-color-landing-cta-ghost-surface",
       "--app-color-landing-cta-ghost-text",
       "--app-color-landing-cta-ghost-border",
+      "--app-color-writing-exam-header-surface",
       "--app-radius",
       "--app-radius-card",
       "--app-radius-pill",
