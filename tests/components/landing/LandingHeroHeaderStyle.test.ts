@@ -38,7 +38,9 @@ function declarationValues(selector: string, property: string) {
       return;
     }
 
-    rule.walkDecls(property, (declaration) => values.push(declaration.value));
+    rule.walkDecls(property, (declaration) => {
+      values.push(declaration.value);
+    });
   });
 
   return values;
