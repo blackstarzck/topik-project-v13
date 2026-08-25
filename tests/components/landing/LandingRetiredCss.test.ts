@@ -1,15 +1,19 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import postcss from "postcss";
 import { describe, expect, test } from "vitest";
+
+import {
+  findCssClassFamilySelectors,
+  findCssClassPrefixSelectors,
+} from "../../test-utils/cssClassFamily";
 
 const globalCss = readFileSync(
   path.join(process.cwd(), "src", "styles", "global.css"),
   "utf8",
 );
 
-const retiredClassPrefixes = [
+const retiredLegacyClassPrefixes = [
   "landing-bento-grid",
   "landing-capability",
   "landing-content-shell",
@@ -33,28 +37,46 @@ const retiredClassPrefixes = [
   "landing-step-list",
   "landing-footer",
 ] as const;
+const retiredClassFamilies = ["landing-layout-visual__grid"] as const;
 
 describe("retired landing CSS contract", () => {
   test("keeps obsolete pre-layout landing selectors out of global CSS", () => {
-    const root = postcss.parse(globalCss, { from: "src/styles/global.css" });
-    const retiredSelectors: string[] = [];
+    expect(
+      findCssClassPrefixSelectors(globalCss, retiredLegacyClassPrefixes),
+    ).toEqual([]);
+    expect(
+      findCssClassFamilySelectors(globalCss, retiredClassFamilies),
+    ).toEqual([]);
+  });
 
-    root.walkRules((rule) => {
-      const classNames = Array.from(
-        rule.selector.matchAll(/\.([A-Za-z_-][\w-]*)/gu),
-        (match) => match[1],
-      );
+  test("matches retired class tokens without rejecting deceptive near-names", () => {
+    expect(
+      findCssClassFamilySelectors(
+        ".landing-layout-visual__gridline { display: grid; }",
+        ["landing-layout-visual__grid"],
+      ),
+    ).toEqual([]);
+    expect(
+      findCssClassFamilySelectors(
+        `.scope .landing-layout-visual__grid:hover { display: grid; }
+        .scope .landing-layout-visual__grid__cell:focus-visible { display: block; }
+        .landing-layout-visual__grid--chart { display: grid; }`,
+        ["landing-layout-visual__grid"],
+      ),
+    ).toEqual([
+      ".scope .landing-layout-visual__grid:hover",
+      ".scope .landing-layout-visual__grid__cell:focus-visible",
+      ".landing-layout-visual__grid--chart",
+    ]);
+  });
 
-      if (
-        classNames.some((className) =>
-          retiredClassPrefixes.some((prefix) => className.startsWith(prefix)),
-        )
-      ) {
-        retiredSelectors.push(rule.selector);
-      }
-    });
-
-    expect(retiredSelectors).toEqual([]);
+  test("continues to reject single-hyphen descendants of legacy prefixes", () => {
+    expect(
+      findCssClassPrefixSelectors(
+        ".scope .landing-footer-brand-new:hover { display: block; }",
+        ["landing-footer"],
+      ),
+    ).toEqual([".scope .landing-footer-brand-new:hover"]);
   });
 
   test("preserves the live public hero and landing layout selectors", () => {

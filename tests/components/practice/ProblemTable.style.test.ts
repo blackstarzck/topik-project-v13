@@ -8,6 +8,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { ProblemTable } from "../../../src/components/practice/ProblemTable";
 import problemTableStyles from "../../../src/components/practice/ProblemTable.module.css";
+import { findCssClassFamilySelectors } from "../../test-utils/cssClassFamily";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const css = readFileSync(
@@ -49,6 +50,7 @@ const formerGlobalColumnTitleSelectors = [
   ".problem-table__column-title-icon",
   ".problem-table__column-title-icon svg",
 ] as const;
+const retiredStatusPillClassFamilies = ["problem-table__status-pill"] as const;
 
 function cssRule(selector: string) {
   const escaped = selector
@@ -222,6 +224,33 @@ describe("ProblemTable styles", () => {
         ".problem-table__analysis-tooltip.problem-table__analysis-tooltip .problem-table__analysis-tooltip-arrow::before",
       ),
     ).toBe("");
+  });
+
+  test("keeps the retired status-pill family out of global CSS", () => {
+    expect(
+      findCssClassFamilySelectors(css, retiredStatusPillClassFamilies),
+    ).toEqual([]);
+  });
+
+  test("matches retired class tokens without rejecting deceptive near-names", () => {
+    expect(
+      findCssClassFamilySelectors(
+        ".problem-table__status-pillbox { display: inline-flex; }",
+        ["problem-table__status-pill"],
+      ),
+    ).toEqual([]);
+    expect(
+      findCssClassFamilySelectors(
+        `.scope .problem-table__status-pill:hover { display: inline-flex; }
+        .scope .problem-table__status-pill__icon:focus-visible { display: block; }
+        .problem-table__status-pill--completed { display: inline-flex; }`,
+        ["problem-table__status-pill"],
+      ),
+    ).toEqual([
+      ".scope .problem-table__status-pill:hover",
+      ".scope .problem-table__status-pill__icon:focus-visible",
+      ".problem-table__status-pill--completed",
+    ]);
   });
 
   test("styles problem metadata tags as description text with icon size inherited", () => {

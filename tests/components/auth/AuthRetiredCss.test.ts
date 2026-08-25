@@ -1,15 +1,16 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import postcss from "postcss";
 import { describe, expect, test } from "vitest";
+
+import { findCssClassFamilySelectors } from "../../test-utils/cssClassFamily";
 
 const globalCss = readFileSync(
   path.join(process.cwd(), "src", "styles", "global.css"),
   "utf8",
 );
 
-const retiredClassNames = [
+const retiredClassFamilies = [
   "signup-public-shell",
   "signup-page",
   "signup-shell-card",
@@ -28,31 +29,35 @@ const retiredClassNames = [
   "signup-login-prompt",
   "signup-form-heading",
   "signup-chip-row",
+  "signup-brand__mark",
 ] as const;
 
 describe("retired auth CSS contract", () => {
   test("keeps obsolete card-layout sign-up selectors out of global CSS", () => {
-    const root = postcss.parse(globalCss, { from: "src/styles/global.css" });
-    const retiredSelectors: string[] = [];
+    expect(
+      findCssClassFamilySelectors(globalCss, retiredClassFamilies),
+    ).toEqual([]);
+  });
 
-    root.walkRules((rule) => {
-      const classNames = Array.from(
-        rule.selector.matchAll(/\.([A-Za-z_-][\w-]*)/gu),
-        (match) => match[1],
-      );
-
-      if (
-        classNames.some((className) =>
-          retiredClassNames.includes(
-            className as (typeof retiredClassNames)[number],
-          ),
-        )
-      ) {
-        retiredSelectors.push(rule.selector);
-      }
-    });
-
-    expect(retiredSelectors).toEqual([]);
+  test("matches retired class tokens without rejecting deceptive near-names", () => {
+    expect(
+      findCssClassFamilySelectors(
+        ".signup-brand__marker { display: inline-flex; }",
+        ["signup-brand__mark"],
+      ),
+    ).toEqual([]);
+    expect(
+      findCssClassFamilySelectors(
+        `.scope .signup-brand__mark:hover { display: inline-flex; }
+        .scope .signup-brand__mark__glyph:focus-visible { display: block; }
+        .signup-brand__mark--compact { display: inline-flex; }`,
+        ["signup-brand__mark"],
+      ),
+    ).toEqual([
+      ".scope .signup-brand__mark:hover",
+      ".scope .signup-brand__mark__glyph:focus-visible",
+      ".signup-brand__mark--compact",
+    ]);
   });
 
   test("preserves the live auth prompt, character, form, and state selectors", () => {
