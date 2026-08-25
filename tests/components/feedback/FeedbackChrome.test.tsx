@@ -185,7 +185,7 @@ describe("FeedbackSummary (i18n chrome)", () => {
     expect(summary.getAttribute("style") ?? "").not.toContain("line-clamp");
   });
 
-  it("emphasizes the top summary score value at 46px and weight 700", () => {
+  it("connects the top summary score to its theme-backed typography recipe", () => {
     renderWithIntl(
       <FeedbackSummary
         feedback={feedback({ score_total: 3, score_max: 30 })}
@@ -193,12 +193,8 @@ describe("FeedbackSummary (i18n chrome)", () => {
     );
 
     const score = screen.getByTestId("feedback-summary-score");
-    expect(score.className).toContain(
-      "[&_.ant-statistic-content-value]:text-[46px]",
-    );
-    expect(score.className).toContain(
-      "[&_.ant-statistic-content-value]:font-bold",
-    );
+    expect(score.className).toMatch(/score/u);
+    expect(score.className).not.toContain("text-[46px]");
   });
 });
 
