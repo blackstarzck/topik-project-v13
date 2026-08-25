@@ -38,9 +38,11 @@ function rulesFor(selector: string) {
 
 function declarationValues(selector: string, property: string) {
   const declarations: Declaration[] = [];
-  rulesFor(selector).forEach((rule) =>
-    rule.walkDecls(property, (declaration) => declarations.push(declaration)),
-  );
+  rulesFor(selector).forEach((rule) => {
+    rule.walkDecls(property, (declaration) => {
+      declarations.push(declaration);
+    });
+  });
   return declarations.map((declaration) => declaration.value);
 }
 
