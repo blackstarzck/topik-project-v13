@@ -6565,18 +6565,6 @@
   line-height: 1;
 }
 
-.writing-answer-panel {
-  display: grid;
-  gap: 0;
-}
-
-.writing-blank-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-inline: 0;
-}
-
 .writing-blank-tab {
   min-width: 124px;
   border: 1px solid var(--app-color-border);

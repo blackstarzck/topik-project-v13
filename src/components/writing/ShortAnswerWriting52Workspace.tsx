@@ -340,9 +340,13 @@ export function ShortAnswerWriting52Workspace({
               onSelectBlank={setActiveBlankIndex}
             />
 
-            <section className="writing-answer-panel">
+            <section
+              className={["writing-answer-panel", styles.answerPanel].join(
+                " ",
+              )}
+            >
               <div
-                className="writing-blank-tabs"
+                className={["writing-blank-tabs", styles.blankTabs].join(" ")}
                 role="tablist"
                 aria-label={tPage("blankTabsLabel")}
               >

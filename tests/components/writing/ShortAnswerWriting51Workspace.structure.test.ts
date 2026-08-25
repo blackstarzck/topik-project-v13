@@ -34,7 +34,7 @@ const sharedStylesPath = join(
 const globalStylesPath = join(process.cwd(), "src/styles/global.css");
 
 describe("ShortAnswerWriting51Workspace structure", () => {
-  it("shares the guide hint layout while preserving q51 and q52 stable classes", () => {
+  it("shares concise writing layouts while preserving q51 and q52 stable classes", () => {
     const sources = [sourcePath, q52SourcePath].map((path) =>
       readFileSync(path, "utf8"),
     );
@@ -42,9 +42,11 @@ describe("ShortAnswerWriting51Workspace structure", () => {
     const globalStyles = readFileSync(globalStylesPath, "utf8");
 
     expect(sharedStyles.replace(/\s+/gu, " ").trim()).toBe(
-      ".guideHints { display: grid; gap: 10px; } .guideHints .guideHintCard { display: grid; gap: 4px; }",
+      ".guideHints { display: grid; gap: 10px; } .guideHints .guideHintCard { display: grid; gap: 4px; } .answerPanel { display: grid; gap: 0; } .blankTabs { display: flex; gap: 8px; overflow-x: auto; padding-inline: 0; }",
     );
     expect(globalStyles).not.toContain(".writing-guide-hints");
+    expect(globalStyles).not.toContain(".writing-answer-panel");
+    expect(globalStyles).not.toContain(".writing-blank-tabs");
     for (const source of sources) {
       const compactSource = source.replace(/\s+/gu, " ");
       expect(source).toContain(
@@ -55,6 +57,12 @@ describe("ShortAnswerWriting51Workspace structure", () => {
       );
       expect(compactSource).toContain(
         '"app-card-compact", styles.guideHintCard',
+      );
+      expect(compactSource).toContain(
+        '"writing-answer-panel", styles.answerPanel',
+      );
+      expect(compactSource).toContain(
+        '"writing-blank-tabs", styles.blankTabs',
       );
     }
   });

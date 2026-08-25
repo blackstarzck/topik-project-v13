@@ -7,3 +7,15 @@
   display: grid;
   gap: 4px;
 }
+
+.answerPanel {
+  display: grid;
+  gap: 0;
+}
+
+.blankTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-inline: 0;
+}
