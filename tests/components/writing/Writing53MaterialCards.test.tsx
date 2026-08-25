@@ -48,7 +48,10 @@ afterEach(() => cleanup());
 
 const globalCss = readFileSync("src/styles/global.css", "utf8");
 
-function declarationsForSelector(source: string, selector: string) {
+function declarationsForSelector(
+  source: string,
+  selector: string,
+): Record<string, string> | null {
   const normalizedSelector = selector.replace(/\s+/gu, " ").trim();
   let declarations: Record<string, string> | null = null;
 

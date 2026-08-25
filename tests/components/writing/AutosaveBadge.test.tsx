@@ -47,7 +47,7 @@ describe("AutosaveBadge", () => {
       ),
     ).toBe(true);
     expect(moduleCss).not.toMatch(
-      /\.saveState\s+:global\(\.ant-tag\)[^{]*\{[^}]*(?:background|color)\s*:/su,
+      /\.saveState\s+:global\(\.ant-tag\)[^{]*\{[^}]*(?:background|color)\s*:/u,
     );
     expect(globalCss).not.toMatch(
       /\.writing-exam-header__save-state\s+\.ant-tag\s*\{/u,
