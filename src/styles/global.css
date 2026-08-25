@@ -2397,7 +2397,7 @@
 .app-card-compact {
   background: transparent;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--app-radius-none);
   padding: 12px 4px;
 }
 
@@ -2409,11 +2409,7 @@
 .app-card.app-surface > .ant-card-body:first-child,
 .app-card.app-surface > .ant-card-body:last-child {
   border: 0;
-  border-radius: 0;
-  border-start-start-radius: 0;
-  border-start-end-radius: 0;
-  border-end-start-radius: 0;
-  border-end-end-radius: 0;
+  border-radius: var(--app-radius-none);
 }
 
 .app-card.app-surface .app-card-footer-actions {
@@ -2481,7 +2477,7 @@
 
 .auth-consent-document-card.app-card.app-surface {
   overflow: hidden;
-  border: 1px solid var(--ant-color-border-secondary, var(--app-color-border));
+  border: 1px solid var(--app-color-border-secondary);
   border-radius: var(--app-radius);
   background: color-mix(
     in srgb,
@@ -2904,7 +2900,7 @@
 .notification-settings-card.app-card.app-surface {
   overflow: visible;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--app-radius-none);
   background: transparent;
 }
 
@@ -2936,7 +2932,6 @@
 .notification-settings-card.app-card.app-surface > .ant-card-body:first-child,
 .notification-settings-card.app-card.app-surface > .ant-card-body:last-child {
   padding: 0;
-  border-radius: 0;
 }
 
 .notification-settings-card-body {
@@ -3260,15 +3255,15 @@
   margin-top: 12px;
 }
 
-/* 계정 상태: label 좌 / value 우. 행 사이 구분선은 AntD Card의 native border 색
-   (--ant-color-border-secondary)과 동일하게 맞춘다(아이콘 없음). */
+/* 계정 상태: label 좌 / value 우. 행 사이 구분선은 공통 보조 테두리 색과
+   동일하게 맞춘다(아이콘 없음). */
 .account-status-row {
   display: grid;
   grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1px solid var(--ant-color-border-secondary);
+  border-bottom: 1px solid var(--app-color-border-secondary);
 }
 
 .account-status-row:last-of-type {

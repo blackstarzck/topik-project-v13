@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   act,
@@ -26,6 +29,18 @@ vi.mock("@/lib/supabase/browser", () => ({
 }));
 
 import { AccountLoginMethodsCard } from "../../../src/components/profile/AccountLoginMethodsCard";
+import { GoogleMark } from "../../../src/components/auth/GoogleMark";
+
+const accountLoginMethodsSource = readFileSync(
+  path.join(
+    process.cwd(),
+    "src",
+    "components",
+    "profile",
+    "AccountLoginMethodsCard.tsx",
+  ),
+  "utf8",
+);
 
 const labels = {
   regionAriaLabel: "Login methods",
@@ -81,6 +96,16 @@ describe("AccountLoginMethodsCard", () => {
     vi.unstubAllEnvs();
   });
 
+  it("keeps the shared Google mark default at 18 pixels", () => {
+    const { container } = renderWithIntl(<GoogleMark />);
+    const googleMark = container.querySelector("svg");
+
+    expect(googleMark?.getAttribute("width")).toBe("18");
+    expect(googleMark?.getAttribute("height")).toBe("18");
+    expect(googleMark?.getAttribute("aria-hidden")).toBe("true");
+    expect(googleMark?.getAttribute("focusable")).toBe("false");
+  });
+
   it("shows email and disconnected Google login methods", async () => {
     renderCard();
 
@@ -92,6 +117,26 @@ describe("AccountLoginMethodsCard", () => {
       expect(screen.getByText("Not connected")).toBeTruthy();
     });
     expect(screen.getByRole("button", { name: "Connect Google" })).toBeTruthy();
+  });
+
+  it("reuses the decorative Google mark at the account-card size", () => {
+    renderCard();
+
+    const googleCard = screen
+      .getByText("Google login")
+      .closest(".account-login-method");
+    const googleMark = googleCard?.querySelector("svg");
+
+    expect(accountLoginMethodsSource).toContain(
+      'import { GoogleMark } from "@/components/auth/GoogleMark";',
+    );
+    expect(accountLoginMethodsSource).not.toContain("function GoogleGlyph");
+    expect(accountLoginMethodsSource).not.toMatch(/fill=["']#[0-9a-f]{6}["']/iu);
+    expect(googleMark?.getAttribute("aria-hidden")).toBe("true");
+    expect(googleMark?.getAttribute("focusable")).toBe("false");
+    expect(googleMark?.getAttribute("width")).toBe("20");
+    expect(googleMark?.getAttribute("height")).toBe("20");
+    expect(googleMark?.getAttribute("viewBox")).toBe("0 0 18 18");
   });
 
   it("shows Google as connected when the identity exists", async () => {

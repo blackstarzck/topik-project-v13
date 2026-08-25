@@ -1,10 +1,10 @@
-export function GoogleMark() {
+export function GoogleMark({ size = 18 }: { size?: number }) {
   return (
     <svg
       aria-hidden="true"
       focusable="false"
-      width="18"
-      height="18"
+      width={size}
+      height={size}
       viewBox="0 0 18 18"
     >
       <path
