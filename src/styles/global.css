@@ -3264,9 +3264,7 @@
 
 .selectable-app-card--selected {
   border-color: var(--app-color-primary);
-  box-shadow:
-    var(--app-shadow-elevated),
-    0 0 0 1.5px var(--app-color-primary) inset;
+  box-shadow: var(--app-shadow-selectable-card-selected);
 }
 
 .selectable-app-card--disabled {
@@ -3323,7 +3321,7 @@
   align-items: center;
   justify-content: center;
   color: var(--app-color-text);
-  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  font-family: var(--app-font-question-number-display);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -3359,7 +3357,7 @@
   align-items: center;
   justify-content: center;
   color: var(--app-color-text);
-  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  font-family: var(--app-font-question-number-display);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -3400,7 +3398,7 @@
 }
 
 .problem-table__type-index--number {
-  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  font-family: var(--app-font-question-number-display);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -3455,23 +3453,6 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
   overflow-wrap: anywhere;
-}
-
-.problem-table__new-badge {
-  display: inline-flex;
-  min-height: 22px;
-  align-items: center;
-  border-radius: 12px;
-  background: color-mix(
-    in srgb,
-    var(--app-color-text-secondary) 12%,
-    transparent
-  );
-  padding: 0 9px;
-  color: var(--app-color-text);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.5;
 }
 
 .problem-table__tags {

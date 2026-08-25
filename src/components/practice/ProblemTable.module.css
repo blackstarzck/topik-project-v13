@@ -37,3 +37,16 @@
   font-weight: 400;
   line-height: 1;
 }
+
+.newBadge {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  border-radius: var(--app-radius-problem-new-badge);
+  background: var(--app-color-problem-new-badge-surface);
+  padding: 0 9px;
+  color: var(--app-color-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}

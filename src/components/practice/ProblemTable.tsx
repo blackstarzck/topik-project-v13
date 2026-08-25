@@ -225,7 +225,12 @@ export function ProblemTable({
               <div className="problem-table__title-line">
                 <strong className="problem-table__title">{row.title}</strong>
                 {displayMeta.isNew ? (
-                  <span className="problem-table__new-badge">
+                  <span
+                    className={[
+                      "problem-table__new-badge",
+                      styles.newBadge,
+                    ].join(" ")}
+                  >
                     {t("newBadge")}
                   </span>
                 ) : null}
