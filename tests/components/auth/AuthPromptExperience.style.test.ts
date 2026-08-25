@@ -4,11 +4,25 @@ import { join } from "node:path";
 import postcss, { type Declaration, type Rule } from "postcss";
 import { describe, expect, it } from "vitest";
 
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
+import { scanUiContract } from "../../../scripts/lib/ui-contract.mjs";
+
 const globalCss = readFileSync(
   join(process.cwd(), "src/styles/global.css"),
   "utf8",
 );
 const stylesheet = postcss.parse(globalCss, { from: "src/styles/global.css" });
+const moduleCss = readFileSync(
+  join(process.cwd(), "src/components/auth/AuthPromptExperience.module.css"),
+  "utf8",
+);
+const loginFormSource = readFileSync(
+  join(process.cwd(), "src/components/auth/LoginForm.tsx"),
+  "utf8",
+);
+const moduleStylesheet = postcss.parse(moduleCss, {
+  from: "src/components/auth/AuthPromptExperience.module.css",
+});
 const PANEL = ".signup-prompt-form-panel";
 const SURFACE = `${PANEL} .signup-form-surface`;
 const PRIMARY = `${SURFACE} .ant-btn-primary`;
@@ -24,12 +38,7 @@ function normalize(value: string) {
 function rulesFor(selector: string) {
   const matches: Rule[] = [];
   stylesheet.walkRules((rule) => {
-    const line = rule.source?.start?.line ?? 0;
-    if (
-      line >= 381 &&
-      line <= 959 &&
-      rule.selectors.some((candidate) => normalize(candidate) === selector)
-    ) {
+    if (rule.selectors.some((candidate) => normalize(candidate) === selector)) {
       matches.push(rule);
     }
   });
@@ -52,6 +61,17 @@ function declarationValue(selector: string, property: string) {
   return values[0];
 }
 
+function moduleDeclarationValues(selector: string, property: string) {
+  const values: string[] = [];
+  moduleStylesheet.walkRules((rule) => {
+    if (normalize(rule.selector) !== selector) return;
+    rule.walkDecls(property, (declaration) => {
+      values.push(declaration.value);
+    });
+  });
+  return values;
+}
+
 const tokenizedDeclarations = [
   [PANEL, "background", "var(--app-color-bg-container)"],
   [".signup-prompt-mobile-brand", "color", "var(--app-color-text)"],
@@ -68,14 +88,10 @@ const tokenizedDeclarations = [
   ],
   [`${SURFACE} .ant-form-item-label > label`, "color", "var(--app-color-text)"],
   [
-    `${SURFACE} .ant-input-affix-wrapper`,
-    "background",
-    "var(--app-color-bg-container)",
+    ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
+    "color",
+    "var(--app-color-text)",
   ],
-  [`${SURFACE} .ant-input:focus`, "border-color", "var(--app-color-primary)"],
-  [SELECT, "background", "var(--app-color-bg-container)"],
-  [SELECTOR, "background", "var(--app-color-bg-container)"],
-  [`${PANEL} .signup-social-button.ant-btn`, "color", "var(--app-color-text)"],
   [`${PANEL} .auth-input-icon`, "color", "var(--app-color-text-secondary)"],
   [
     `${PANEL} .auth-form-remember.ant-checkbox-wrapper`,
@@ -121,19 +137,6 @@ const removedStateSelectors = [
 ] as const;
 
 const preservedDeclarations = [
-  [`${PRIMARY}:disabled`, "border-color", "rgba(0, 0, 0, 0.15)"],
-  [`${PRIMARY}:disabled`, "background", "rgba(0, 0, 0, 0.04)"],
-  [`${PRIMARY}:disabled`, "color", "rgba(0, 0, 0, 0.45)"],
-  [`${LOGIN} .ant-input:focus`, "border-color", "#aab5ff"],
-  [
-    `${LOGIN} .ant-input:focus`,
-    "box-shadow",
-    "0 0 0 2px rgba(82, 102, 255, 0.1)",
-  ],
-  [`${SURFACE} .ant-input-affix-wrapper`, "border-radius", "8px"],
-  [SELECT, "border-radius", "8px"],
-  [SELECTOR, "border-radius", "8px"],
-  [PRIMARY, "border-radius", "8px"],
   [".signup-prompt-layout", "background", "#ffffff"],
   [".signup-prompt-hero", "color", "#ffffff"],
   [
@@ -158,9 +161,25 @@ const preservedDeclarations = [
   ],
 ] as const;
 
+const removedOwnedVisualRules = [
+  `${SURFACE} .ant-form-item-control-input-content > .ant-input`,
+  `${SURFACE} .ant-input-affix-wrapper`,
+  `${SURFACE} .ant-input:focus`,
+  `${SURFACE} .ant-input-affix-wrapper-focused`,
+  `${SURFACE} .ant-select-focused`,
+  `${SURFACE} .ant-select-focused .ant-select-selector`,
+  SELECT,
+  SELECTOR,
+  PRIMARY,
+  `${PRIMARY}:disabled`,
+  `${PRIMARY}.ant-btn-disabled`,
+  `${LOGIN} .ant-input:focus`,
+  `${LOGIN} .ant-input-affix-wrapper-focused`,
+] as const;
+
 describe("AuthPromptExperience visual tokens", () => {
   it("maps or removes each of the 24 audited auth prompt colors", () => {
-    expect(tokenizedDeclarations).toHaveLength(16);
+    expect(tokenizedDeclarations).toHaveLength(12);
     expect(removedStateDeclarations).toHaveLength(8);
     for (const [selector, property, value] of tokenizedDeclarations) {
       expect(
@@ -179,7 +198,70 @@ describe("AuthPromptExperience visual tokens", () => {
     }
   });
 
-  it("preserves disabled, login focus, radius, hero, character, and outer colors", () => {
+  it("moves live control geometry and state paint out of the global stylesheet", () => {
+    for (const selector of removedOwnedVisualRules) {
+      expect(rulesFor(selector), selector).toEqual([]);
+    }
+
+    expect(moduleCss).toContain("var(--app-size-auth-prompt-control)");
+    expect(moduleCss).toContain("var(--app-radius-auth-prompt-control)");
+    expect(moduleCss).not.toMatch(/(?:#|rgba?\(|hsla?\()/u);
+    expect(moduleCss).not.toMatch(/box-shadow\s*:/u);
+
+    const socialSelector = ".formPanel :global(.signup-social-button.ant-btn)";
+    expect(moduleDeclarationValues(socialSelector, "height")).toEqual([
+      "var(--app-size-auth-prompt-control)",
+    ]);
+    expect(moduleDeclarationValues(socialSelector, "border-radius")).toEqual([
+      "var(--app-radius-auth-prompt-control)",
+    ]);
+    expect(moduleDeclarationValues(socialSelector, "background")).toEqual([]);
+    expect(moduleDeclarationValues(socialSelector, "color")).toEqual([]);
+    expect(moduleCss).not.toMatch(/:global\(\.ant-btn\)(?:\s|\{|,)/u);
+
+    const retryStart = loginFormSource.indexOf("if (magicLinkSent)");
+    const retryEnd = loginFormSource.indexOf("\n  return (", retryStart + 1);
+    const retrySource = loginFormSource.slice(retryStart, retryEnd);
+    expect(retrySource).toContain(
+      "<Button onClick={() => setMagicLinkSent(null)}>",
+    );
+    expect(retrySource).not.toContain("signup-social-button");
+    expect(retrySource).not.toContain('type="primary"');
+    expect(globalCss).toContain(
+      ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
+    );
+
+    const clusterStart = globalCss.indexOf(
+      ".signup-prompt-form-panel .signup-form-surface .ant-form-item {",
+    );
+    const clusterEnd = globalCss.indexOf(
+      ".signup-prompt-form-panel .auth-form-divider.ant-divider",
+      clusterStart,
+    );
+    const actionableRules = new Set([
+      "antd.broad-state-override",
+      "visual.raw-color",
+      "visual.raw-radius-shadow-font",
+    ]);
+    const actionableViolations = scanUiContract([
+      {
+        path: "src/styles/global.css",
+        content: globalCss.slice(clusterStart, clusterEnd),
+      },
+      {
+        path: "src/components/auth/AuthPromptExperience.module.css",
+        content: moduleCss,
+      },
+    ]).violations.filter(({ ruleId }: { ruleId: string }) =>
+      actionableRules.has(ruleId),
+    );
+
+    expect(clusterStart).toBeGreaterThanOrEqual(0);
+    expect(clusterEnd).toBeGreaterThan(clusterStart);
+    expect(actionableViolations).toEqual([]);
+  });
+
+  it("preserves hero, character, and outer colors outside the control cluster", () => {
     for (const [selector, property, value] of preservedDeclarations) {
       expect(
         declarationValue(selector, property),

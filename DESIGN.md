@@ -194,6 +194,25 @@ The header CTA uses the existing fully rounded control token
 variant; add a real consumer and explicit visual contract before introducing a
 new landing CTA mode.
 
+## Tokens — Auth Prompt Controls
+
+The live login and sign-up prompt owns one scoped Ant Design theme for Input and
+Select focus paint only. Button lifecycle, including disabled social and the
+magic-link retry action, remains owned by the outer Ant Design theme. The app
+bridge and the prompt's local stylesheet are the single geometry owner for the
+50px/8px input, select, primary, and social controls; only the primary action
+gets the local 600 font weight. Alternate themes must replace every bridge
+value through the same source contract.
+
+| Meaning | Awesomic value | App bridge |
+| --- | --- | --- |
+| Shared focus outline | `rgba(24, 24, 24, 0.08)` | `--app-color-auth-prompt-focus-outline` |
+| Login focus border | `#aab5ff` | `--app-color-auth-prompt-login-focus-border` |
+| Shared focus ring | `0 0 0 2px rgba(24, 24, 24, 0.08)` | `--app-shadow-auth-prompt-focus` |
+| Login focus ring | `0 0 0 2px rgba(82, 102, 255, 0.1)` | `--app-shadow-auth-prompt-login-focus` |
+| Control corner | `8px` | `--app-radius-auth-prompt-control` |
+| Control height | `50px` | `--app-size-auth-prompt-control` |
+
 ## Tokens — Semantic Overlay
 
 App-owned overlay paint keeps alpha inside the color value so Ant Design can

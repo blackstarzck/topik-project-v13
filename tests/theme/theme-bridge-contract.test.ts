@@ -46,6 +46,8 @@ const testAlternateSource = {
   colorLandingCtaGhostSurface: "#f1e7ff",
   colorLandingCtaGhostText: "#29104f",
   colorLandingCtaGhostBorder: "#51b9ad",
+  colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
+  colorAuthPromptLoginFocusBorder: "#e03f9f",
   radius: "12px",
   radiusNumber: 12,
   radiusCard: "18px",
@@ -54,6 +56,8 @@ const testAlternateSource = {
   radiusIndicator: "3px",
   radiusIndicatorNumber: 3,
   radiusLandingHeroCta: "13px",
+  radiusAuthPromptControl: "20px",
+  sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontSizeCaption: "11px",
   fontSizeBody: "15px",
@@ -65,6 +69,8 @@ const testAlternateSource = {
   fontSizeDisplaySm: "57px",
   fontSizeDisplay: "65px",
   shadowElevated: "0 9px 27px rgba(18, 52, 86, 0.17)",
+  shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
+  shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
 } as const;
 
 const productionSourceExtensions = new Set([
@@ -143,11 +149,15 @@ describe("generic app theme bridge contract", () => {
       "--app-color-landing-cta-ghost-surface": "#f1e7ff",
       "--app-color-landing-cta-ghost-text": "#29104f",
       "--app-color-landing-cta-ghost-border": "#51b9ad",
+      "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
+      "--app-color-auth-prompt-login-focus-border": "#e03f9f",
       "--app-radius": "12px",
       "--app-radius-card": "18px",
       "--app-radius-pill": "10000px",
       "--app-radius-indicator": "3px",
       "--app-radius-landing-hero-cta": "13px",
+      "--app-radius-auth-prompt-control": "20px",
+      "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-size-caption": "11px",
       "--app-font-size-body": "15px",
@@ -159,6 +169,9 @@ describe("generic app theme bridge contract", () => {
       "--app-font-size-display-sm": "57px",
       "--app-font-size-display": "65px",
       "--app-shadow-elevated": "0 9px 27px rgba(18, 52, 86, 0.17)",
+      "--app-shadow-auth-prompt-focus": "0 0 0 3px rgba(91, 43, 196, 0.23)",
+      "--app-shadow-auth-prompt-login-focus":
+        "0 0 0 4px rgba(224, 63, 159, 0.27)",
     });
   });
 
@@ -305,6 +318,22 @@ describe("generic app theme bridge contract", () => {
     expect(
       phase5dAlternateTheme.appBridgeVars["--app-radius-landing-hero-cta"],
     ).not.toBe(`${awesomicThemeTokens.radius.landingHeroCta}px`);
+    expect(
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-auth-prompt-login-focus-border"
+      ],
+    ).not.toBe(awesomicThemeTokens.authPrompt.loginFocusBorder);
+    expect(
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-auth-prompt-login-focus"
+      ],
+    ).not.toBe(awesomicThemeTokens.authPrompt.loginFocusShadow);
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-radius-auth-prompt-control"],
+    ).not.toBe(`${awesomicThemeTokens.authPrompt.radius}px`);
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-size-auth-prompt-control"],
+    ).not.toBe(`${awesomicThemeTokens.authPrompt.controlHeight}px`);
     expect(phase5dAlternateTheme.antdRadiusByAppearance).toEqual({
       light: { card: "23px", global: "23px" },
       dark: { card: "23px", global: "23px" },
@@ -356,9 +385,21 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-landing-cta-ghost-border"
       ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-auth-prompt-focus-outline"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-auth-prompt-login-focus-border"
+      ],
+      phase5dAlternateTheme.appBridgeVars["--app-shadow-auth-prompt-focus"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-auth-prompt-login-focus"
+      ],
       'radiusCard: "23px"',
       'radiusPill: "12000px"',
       'radiusLandingHeroCta: "17px"',
+      'radiusAuthPromptControl: "25px"',
+      'sizeAuthPromptControl: "58px"',
     ];
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
@@ -408,11 +449,17 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingCta.ghostSurface,
         colorLandingCtaGhostText: awesomicThemeTokens.landingCta.ghostText,
         colorLandingCtaGhostBorder: awesomicThemeTokens.landingCta.ghostBorder,
+        colorAuthPromptFocusOutline:
+          awesomicThemeTokens.authPrompt.focusOutline,
+        colorAuthPromptLoginFocusBorder:
+          awesomicThemeTokens.authPrompt.loginFocusBorder,
         radius: `${awesomicThemeTokens.radius.base}px`,
         radiusCard: `${awesomicThemeTokens.radius.card}px`,
         radiusPill: `${awesomicThemeTokens.radius.pill}px`,
         radiusIndicator: `${awesomicThemeTokens.radius.indicator}px`,
         radiusLandingHeroCta: `${awesomicThemeTokens.radius.landingHeroCta}px`,
+        radiusAuthPromptControl: `${awesomicThemeTokens.authPrompt.radius}px`,
+        sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,
         fontSizeBody: awesomicThemeTokens.fontSize.body,
@@ -424,6 +471,9 @@ describe("generic app theme bridge contract", () => {
         fontSizeDisplaySm: awesomicThemeTokens.fontSize.displaySm,
         fontSizeDisplay: awesomicThemeTokens.fontSize.display,
         shadowElevated: awesomicThemeTokens.shadow.elevated,
+        shadowAuthPromptFocus: awesomicThemeTokens.authPrompt.focusShadow,
+        shadowAuthPromptLoginFocus:
+          awesomicThemeTokens.authPrompt.loginFocusShadow,
       }),
     ).toEqual(awesomicBridgeVars);
   });

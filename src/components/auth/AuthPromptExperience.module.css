@@ -22,6 +22,42 @@
   width: 100%;
 }
 
+.formPanel
+  .formSurface
+  :global(.ant-form-item-control-input-content > .ant-input),
+.formPanel .formSurface :global(.ant-input-affix-wrapper) {
+  height: var(--app-size-auth-prompt-control);
+  min-height: var(--app-size-auth-prompt-control);
+  border-radius: var(--app-radius-auth-prompt-control);
+  background: var(--app-color-bg-container);
+}
+
+.formPanel :global(.signup-social-button.ant-btn) {
+  height: var(--app-size-auth-prompt-control);
+  min-height: var(--app-size-auth-prompt-control);
+  border-radius: var(--app-radius-auth-prompt-control);
+}
+
+.formPanel .formSurface :global(.ant-select-single) {
+  height: var(--app-size-auth-prompt-control) !important;
+  min-height: var(--app-size-auth-prompt-control) !important;
+  align-items: center;
+  border-radius: var(--app-radius-auth-prompt-control);
+  background: var(--app-color-bg-container);
+}
+
+.formPanel .formSurface :global(.ant-select-single .ant-select-selector) {
+  min-height: var(--app-size-auth-prompt-control);
+  border-radius: var(--app-radius-auth-prompt-control);
+  background: var(--app-color-bg-container);
+}
+
+.formPanel .formSurface :global(.ant-btn-primary) {
+  min-height: var(--app-size-auth-prompt-control);
+  border-radius: var(--app-radius-auth-prompt-control);
+  font-weight: 600;
+}
+
 @media (max-width: 1023px) {
   .formHeading,
   .formPanel .formHeading:global(.ant-flex) {

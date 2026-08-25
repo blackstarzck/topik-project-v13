@@ -37,6 +37,14 @@ export const awesomicThemeTokens = {
     ghostText: "#0c0c0d",
     ghostBorder: "#e7e7e6",
   },
+  authPrompt: {
+    controlHeight: 50,
+    focusOutline: "rgba(24, 24, 24, 0.08)",
+    focusShadow: "0 0 0 2px rgba(24, 24, 24, 0.08)",
+    loginFocusBorder: "#aab5ff",
+    loginFocusShadow: "0 0 0 2px rgba(82, 102, 255, 0.1)",
+    radius: 8,
+  },
   radius: {
     // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
@@ -126,11 +134,17 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingCta.ghostText,
     "--app-color-landing-cta-ghost-border":
       awesomicThemeTokens.landingCta.ghostBorder,
+    "--app-color-auth-prompt-focus-outline":
+      awesomicThemeTokens.authPrompt.focusOutline,
+    "--app-color-auth-prompt-login-focus-border":
+      awesomicThemeTokens.authPrompt.loginFocusBorder,
     "--app-radius": `${awesomicThemeTokens.radius.base}px`,
     "--app-radius-card": `${awesomicThemeTokens.radius.card}px`,
     "--app-radius-pill": `${awesomicThemeTokens.radius.pill}px`,
     "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
     "--app-radius-landing-hero-cta": `${awesomicThemeTokens.radius.landingHeroCta}px`,
+    "--app-radius-auth-prompt-control": `${awesomicThemeTokens.authPrompt.radius}px`,
+    "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
     "--app-font-size-body": awesomicThemeTokens.fontSize.body,
@@ -142,6 +156,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-font-size-display-sm": awesomicThemeTokens.fontSize.displaySm,
     "--app-font-size-display": awesomicThemeTokens.fontSize.display,
     "--app-shadow-elevated": awesomicThemeTokens.shadow.elevated,
+    "--app-shadow-auth-prompt-focus":
+      awesomicThemeTokens.authPrompt.focusShadow,
+    "--app-shadow-auth-prompt-login-focus":
+      awesomicThemeTokens.authPrompt.loginFocusShadow,
   } as const satisfies AppBridgeVars;
 }
 

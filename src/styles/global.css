@@ -385,7 +385,6 @@
   --auth-field-gap: 24px;
   --auth-error-gap: 8px;
   --auth-label-gap: 8px;
-  --auth-control-height: 50px;
   --auth-login-mode-min-height: 234px;
   position: relative;
   display: grid;
@@ -713,39 +712,6 @@
 
 .signup-prompt-form-panel
   .signup-form-surface
-  .ant-form-item-control-input-content
-  > .ant-input,
-.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper,
-.signup-prompt-form-panel .signup-social-button.ant-btn {
-  height: var(--auth-control-height);
-  min-height: var(--auth-control-height);
-  border-radius: 8px;
-  background: var(--app-color-bg-container);
-  box-shadow: none;
-}
-
-.signup-prompt-form-panel .signup-form-surface .ant-input:focus,
-.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper-focused,
-.signup-prompt-form-panel .signup-form-surface .ant-select-focused,
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-select-focused
-  .ant-select-selector {
-  border-color: var(--app-color-primary);
-  box-shadow: 0 0 0 2px rgba(24, 24, 24, 0.08);
-}
-
-.signup-prompt-form-panel .signup-form-surface .ant-select-single {
-  height: var(--auth-control-height) !important;
-  min-height: var(--auth-control-height) !important;
-  align-items: center;
-  border-radius: 8px;
-  background: var(--app-color-bg-container);
-  box-shadow: none;
-}
-
-.signup-prompt-form-panel
-  .signup-form-surface
   .ant-select-single
   .ant-select-content {
   height: 100%;
@@ -778,19 +744,9 @@
 
 .signup-prompt-form-panel
   .signup-form-surface
-  .ant-select-single
-  .ant-select-selector {
-  min-height: var(--auth-control-height);
-  border-radius: 8px;
-  background: var(--app-color-bg-container);
-  box-shadow: none;
-}
-
-.signup-prompt-form-panel
-  .signup-form-surface
   .ant-select-single:not(.ant-select-customize-input)
   .ant-select-selector {
-  height: var(--auth-control-height);
+  height: var(--app-size-auth-prompt-control);
 }
 
 .signup-prompt-form-panel
@@ -812,22 +768,6 @@
   align-items: center;
 }
 
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary {
-  min-height: var(--auth-control-height);
-  border-radius: 8px;
-  font-weight: 600;
-}
-
-.signup-prompt-form-panel .signup-form-surface .ant-btn-primary:disabled,
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-btn-primary.ant-btn-disabled {
-  border-color: rgba(0, 0, 0, 0.15);
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.45);
-  box-shadow: none;
-}
-
 .signup-prompt-form-panel
   .signup-form-surface
   .ant-input-affix-wrapper
@@ -835,10 +775,6 @@
   height: auto;
   min-height: 0;
   padding-block: 0;
-}
-
-.signup-prompt-form-panel .signup-social-button.ant-btn {
-  color: var(--app-color-text);
 }
 
 .signup-prompt-form-panel .auth-input-icon {
@@ -878,18 +814,6 @@
   .ant-form-item-label
   > label {
   color: var(--app-color-text-secondary);
-}
-
-.signup-prompt-layout--login
-  .signup-prompt-form-panel
-  .signup-form-surface
-  .ant-input:focus,
-.signup-prompt-layout--login
-  .signup-prompt-form-panel
-  .signup-form-surface
-  .ant-input-affix-wrapper-focused {
-  border-color: #aab5ff;
-  box-shadow: 0 0 0 2px rgba(82, 102, 255, 0.1);
 }
 
 .signup-prompt-form-panel .auth-form-divider.ant-divider {
@@ -1160,9 +1084,9 @@
   font-weight: 700;
 }
 
-.signup-social-button.ant-btn {
-  color: #172033;
-  background: #ffffff;
+.signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled) {
+  color: var(--app-color-text);
+  background: var(--app-color-bg-container);
 }
 
 .landing-public-shell {
@@ -5743,10 +5667,6 @@
 
   .signup-prompt-form-heading .signup-prompt-form-title.ant-typography {
     font-size: 30px;
-  }
-
-  .signup-prompt-form-panel .signup-form-surface .ant-btn-primary {
-    min-height: 50px;
   }
 }
 

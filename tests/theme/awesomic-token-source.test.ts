@@ -111,6 +111,14 @@ describe("Awesomic token source contract", () => {
       ghostText: "#0c0c0d",
       ghostBorder: "#e7e7e6",
     });
+    expect(awesomicThemeTokens.authPrompt).toEqual({
+      controlHeight: 50,
+      focusOutline: "rgba(24, 24, 24, 0.08)",
+      focusShadow: "0 0 0 2px rgba(24, 24, 24, 0.08)",
+      loginFocusBorder: "#aab5ff",
+      loginFocusShadow: "0 0 0 2px rgba(82, 102, 255, 0.1)",
+      radius: 8,
+    });
     expect(awesomicThemeTokens.fontSize).toEqual({
       caption: typographyFontSize("typography.xs"),
       body: typographyFontSize("typography.sm-9"),

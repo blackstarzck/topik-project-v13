@@ -21,11 +21,15 @@ export const allowedAppBridgeVars = [
   "--app-color-landing-cta-ghost-surface",
   "--app-color-landing-cta-ghost-text",
   "--app-color-landing-cta-ghost-border",
+  "--app-color-auth-prompt-focus-outline",
+  "--app-color-auth-prompt-login-focus-border",
   "--app-radius",
   "--app-radius-card",
   "--app-radius-pill",
   "--app-radius-indicator",
   "--app-radius-landing-hero-cta",
+  "--app-radius-auth-prompt-control",
+  "--app-size-auth-prompt-control",
   "--app-font-family",
   "--app-font-size-caption",
   "--app-font-size-body",
@@ -37,6 +41,8 @@ export const allowedAppBridgeVars = [
   "--app-font-size-display-sm",
   "--app-font-size-display",
   "--app-shadow-elevated",
+  "--app-shadow-auth-prompt-focus",
+  "--app-shadow-auth-prompt-login-focus",
 ] as const;
 
 export type AppBridgeVarName = (typeof allowedAppBridgeVars)[number];
@@ -65,11 +71,15 @@ export type AppBridgeTokenSource = {
   colorLandingCtaGhostSurface: string;
   colorLandingCtaGhostText: string;
   colorLandingCtaGhostBorder: string;
+  colorAuthPromptFocusOutline: string;
+  colorAuthPromptLoginFocusBorder: string;
   radius: string;
   radiusCard: string;
   radiusPill: string;
   radiusIndicator: string;
   radiusLandingHeroCta: string;
+  radiusAuthPromptControl: string;
+  sizeAuthPromptControl: string;
   fontFamily: string;
   fontSizeCaption: string;
   fontSizeBody: string;
@@ -81,6 +91,8 @@ export type AppBridgeTokenSource = {
   fontSizeDisplaySm: string;
   fontSizeDisplay: string;
   shadowElevated: string;
+  shadowAuthPromptFocus: string;
+  shadowAuthPromptLoginFocus: string;
 };
 
 export function createAppBridgeVars(
@@ -109,11 +121,16 @@ export function createAppBridgeVars(
     "--app-color-landing-cta-ghost-surface": source.colorLandingCtaGhostSurface,
     "--app-color-landing-cta-ghost-text": source.colorLandingCtaGhostText,
     "--app-color-landing-cta-ghost-border": source.colorLandingCtaGhostBorder,
+    "--app-color-auth-prompt-focus-outline": source.colorAuthPromptFocusOutline,
+    "--app-color-auth-prompt-login-focus-border":
+      source.colorAuthPromptLoginFocusBorder,
     "--app-radius": source.radius,
     "--app-radius-card": source.radiusCard,
     "--app-radius-pill": source.radiusPill,
     "--app-radius-indicator": source.radiusIndicator,
     "--app-radius-landing-hero-cta": source.radiusLandingHeroCta,
+    "--app-radius-auth-prompt-control": source.radiusAuthPromptControl,
+    "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
     "--app-font-size-caption": source.fontSizeCaption,
     "--app-font-size-body": source.fontSizeBody,
@@ -125,5 +142,7 @@ export function createAppBridgeVars(
     "--app-font-size-display-sm": source.fontSizeDisplaySm,
     "--app-font-size-display": source.fontSizeDisplay,
     "--app-shadow-elevated": source.shadowElevated,
+    "--app-shadow-auth-prompt-focus": source.shadowAuthPromptFocus,
+    "--app-shadow-auth-prompt-login-focus": source.shadowAuthPromptLoginFocus,
   };
 }

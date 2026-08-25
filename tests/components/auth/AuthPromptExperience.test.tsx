@@ -214,6 +214,10 @@ describe("AuthPromptExperience", () => {
         ? ["component stylesheet import"]
         : []),
       ...[
+        "createAuthPromptTheme(mode, token)",
+        "<ConfigProvider theme={authPromptTheme}>",
+      ].filter((contract) => !AUTH_PROMPT_SOURCE.includes(contract)),
+      ...[
         "styles.formPanel].join(",
         "styles.formInner].join(",
         "styles.formHeading].join(",
