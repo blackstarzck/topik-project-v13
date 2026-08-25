@@ -13,6 +13,7 @@ import type { LibraryReviewCandidate } from "@/lib/library/types";
 
 import { formatDashboardDate } from "./library-dashboard-format";
 import { LibraryReviewQuestionNumber } from "./LibraryReviewQuestionNumber";
+import styles from "./LibraryReviewCandidateCard.module.css";
 import typographyStyles from "./LibraryTypography.module.css";
 
 const { Text } = Typography;
@@ -146,7 +147,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
           <Tooltip title={scoreTooltip}>
             <progress
               data-testid="library-review-candidate-progress"
-              className="library-review-candidate-score-progress block h-[3px] w-full"
+              className={`library-review-candidate-score-progress block h-[3px] w-full ${styles.scoreProgress}`}
               value={candidate.scorePercent ?? 0}
               max={100}
               aria-label={scoreTooltip}

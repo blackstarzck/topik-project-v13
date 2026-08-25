@@ -2420,33 +2420,6 @@
   font-size: 18px;
 }
 
-.library-review-candidate-score-progress {
-  appearance: none;
-  overflow: hidden;
-  border: 0;
-  background: color-mix(
-    in srgb,
-    var(--app-color-border) 18%,
-    var(--app-color-bg-container)
-  );
-}
-
-.library-review-candidate-score-progress::-webkit-progress-bar {
-  background: color-mix(
-    in srgb,
-    var(--app-color-border) 18%,
-    var(--app-color-bg-container)
-  );
-}
-
-.library-review-candidate-score-progress::-webkit-progress-value {
-  background: var(--app-color-link-secondary);
-}
-
-.library-review-candidate-score-progress::-moz-progress-bar {
-  background: var(--app-color-link-secondary);
-}
-
 .auth-consent-document-card.app-card.app-surface {
   overflow: hidden;
   border: 1px solid var(--app-color-border-secondary);

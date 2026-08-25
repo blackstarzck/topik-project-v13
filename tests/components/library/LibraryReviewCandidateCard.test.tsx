@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 
 import { LibraryReviewCandidateCard } from "../../../src/components/library/LibraryReviewCandidateCard";
+import styles from "../../../src/components/library/LibraryReviewCandidateCard.module.css";
 import typographyStyles from "../../../src/components/library/LibraryTypography.module.css";
 import type { LibraryReviewCandidate } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
@@ -205,15 +206,6 @@ describe("LibraryReviewCandidateCard", () => {
     expect(css).toMatch(
       /\.library-review-candidate-card\s+\.library-review-candidate-question-number\s*\{[\s\S]*?font-size:\s*18px;/,
     );
-    expect(css).toMatch(
-      /\.library-review-candidate-score-progress\s*\{[\s\S]*?background:\s*color-mix\(\s*in srgb,\s*var\(--app-color-border\) 18%,\s*var\(--app-color-bg-container\)\s*\);/,
-    );
-    expect(css).toMatch(
-      /\.library-review-candidate-score-progress::-webkit-progress-value\s*\{[\s\S]*?background:\s*var\(--app-color-link-secondary\);/,
-    );
-    expect(css).toMatch(
-      /\.library-review-candidate-score-progress::-moz-progress-bar\s*\{[\s\S]*?background:\s*var\(--app-color-link-secondary\);/,
-    );
   });
 
   it("shows the total score tooltip from the progress bar", async () => {
@@ -238,6 +230,10 @@ describe("LibraryReviewCandidateCard", () => {
     );
 
     const progress = screen.getByTestId("library-review-candidate-progress");
+    expect(progress.className).toContain(
+      "library-review-candidate-score-progress",
+    );
+    expect(progress.className).toContain(styles.scoreProgress);
     expect(progress.getAttribute("value")).toBe("60");
     expect(progress.getAttribute("max")).toBe("100");
     expect(progress.getAttribute("aria-label")).toBe("총 6/10");

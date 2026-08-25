@@ -1,0 +1,18 @@
+.scoreProgress {
+  appearance: none;
+  overflow: hidden;
+  border: 0;
+  background: var(--app-color-library-review-score-track);
+}
+
+.scoreProgress::-webkit-progress-bar {
+  background: var(--app-color-library-review-score-track);
+}
+
+.scoreProgress::-webkit-progress-value {
+  background: var(--app-color-link-secondary);
+}
+
+.scoreProgress::-moz-progress-bar {
+  background: var(--app-color-link-secondary);
+}
