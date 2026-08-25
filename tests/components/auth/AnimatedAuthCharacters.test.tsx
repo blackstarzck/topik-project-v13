@@ -3,11 +3,19 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
 import { collectUiSources } from "../../../scripts/check-ui-contract.mjs";
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
 import { scanUiContract } from "../../../scripts/lib/ui-contract.mjs";
 import { AnimatedAuthCharacters } from "../../../src/components/auth/AnimatedAuthCharacters";
 
 const motionPropertyNames = ["--lean", "--look-x", "--look-y"] as const;
+
+type ScannerViolation = {
+  path: string;
+  ruleId: string;
+  fingerprint: string;
+};
 
 function expectMotion(
   stage: HTMLElement,
@@ -162,13 +170,13 @@ describe("AnimatedAuthCharacters", () => {
   it("pins the approved full-source scanner finding", async () => {
     const sources = await collectUiSources(process.cwd());
     const inlineStyles = scanUiContract(sources).violations.filter(
-      ({ path, ruleId }) =>
+      ({ path, ruleId }: ScannerViolation) =>
         path === "src/components/auth/AnimatedAuthCharacters.tsx" &&
         ruleId === "react.static-inline-style",
     );
 
     expect(
-      inlineStyles.map(({ path, ruleId, fingerprint }) => ({
+      inlineStyles.map(({ path, ruleId, fingerprint }: ScannerViolation) => ({
         path,
         ruleId,
         fingerprint,

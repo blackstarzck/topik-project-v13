@@ -11,11 +11,19 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import React from "react";
 
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
 import { collectUiSources } from "../../scripts/check-ui-contract.mjs";
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
 import { scanUiContract } from "../../scripts/lib/ui-contract.mjs";
 import { themeSettings } from "../../src/theme/config";
 import { getResolvedBridgeVars } from "../../src/theme/tailwind-bridge";
 import type { ThemeAppearance } from "../../src/theme/types";
+
+type ScannerViolation = {
+  path: string;
+  ruleId: string;
+  fingerprint: string;
+};
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
@@ -180,13 +188,13 @@ describe("RootLayout hydration consistency", () => {
   test("keeps the approved SSR theme bridge inline style at its exact scanner fingerprint", async () => {
     const sources = await collectUiSources(process.cwd());
     const inlineStyles = scanUiContract(sources).violations.filter(
-      ({ path, ruleId }) =>
+      ({ path, ruleId }: ScannerViolation) =>
         path === "src/app/layout.tsx" &&
         ruleId === "react.static-inline-style",
     );
 
     expect(
-      inlineStyles.map(({ path, ruleId, fingerprint }) => ({
+      inlineStyles.map(({ path, ruleId, fingerprint }: ScannerViolation) => ({
         path,
         ruleId,
         fingerprint,
