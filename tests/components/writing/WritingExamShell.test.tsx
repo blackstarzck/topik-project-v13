@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { WritingExamShell } from "../../../src/components/writing/WritingExamShell";
+import shellStyles from "../../../src/components/writing/WritingExamShell.module.css";
 import {
   findGlobalCssOwners,
   hasStableAndScopedClasses,
@@ -194,12 +195,14 @@ describe("WritingExamShell", () => {
       hasStableAndScopedClasses(
         container.querySelector(".writing-exam-shell"),
         "writing-exam-shell",
+        shellStyles.shell,
       ),
     ).toBe(true);
     expect(
       hasStableAndScopedClasses(
         container.querySelector(".writing-exam-main"),
         "writing-exam-main",
+        shellStyles.main,
       ),
     ).toBe(true);
   });

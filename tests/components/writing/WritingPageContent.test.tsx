@@ -11,6 +11,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 import { WritingPageContent } from "@/components/writing/WritingPageContent";
+import pageStyles from "@/components/writing/WritingPageContent.module.css";
 import {
   findGlobalCssOwners,
   hasStableAndScopedClasses,
@@ -77,12 +78,14 @@ describe("WritingPageContent", () => {
       hasStableAndScopedClasses(
         screen.getByText("writing.page.problemUnavailableTitle").closest("h1"),
         "writing-empty-state__title",
+        pageStyles.title,
       ),
     ).toBe(true);
     expect(
       hasStableAndScopedClasses(
         document.querySelector(".writing-empty-state"),
         "writing-empty-state",
+        pageStyles.emptyState,
       ),
     ).toBe(true);
 

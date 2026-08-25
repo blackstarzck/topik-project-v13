@@ -7,6 +7,7 @@ import { cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ManuscriptPreview } from "../../../src/components/writing/ManuscriptPreview";
+import manuscriptStyles from "../../../src/components/writing/ManuscriptPreview.module.css";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import {
   findGlobalCssOwners,
@@ -83,6 +84,7 @@ describe("ManuscriptPreview", () => {
       hasStableAndScopedClasses(
         screen.getByTestId("manuscript-preview"),
         "writing-manuscript-preview--compact",
+        manuscriptStyles.compact,
       ),
     ).toBe(true);
   });
@@ -106,18 +108,21 @@ describe("ManuscriptPreview", () => {
       hasStableAndScopedClasses(
         screen.getByTestId("manuscript-preview"),
         "writing-manuscript-preview",
+        manuscriptStyles.preview,
       ),
     ).toBe(true);
     expect(
       hasStableAndScopedClasses(
         document.querySelector(".writing-manuscript-preview__title"),
         "writing-manuscript-preview__title",
+        manuscriptStyles.title,
       ),
     ).toBe(true);
     expect(
       hasStableAndScopedClasses(
         document.querySelector(".writing-manuscript-preview__meta"),
         "writing-manuscript-preview__meta",
+        manuscriptStyles.meta,
       ),
     ).toBe(true);
 

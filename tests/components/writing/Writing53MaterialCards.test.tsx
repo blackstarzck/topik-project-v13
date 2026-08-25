@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { Writing53MaterialCards } from "../../../src/components/writing/Writing53MaterialCards";
+import materialStyles from "../../../src/components/writing/Writing53MaterialCards.module.css";
 import type { NormalizedMaterialCard } from "../../../src/lib/writing/problem-normalizer";
 import {
   findGlobalCssOwners,
@@ -124,12 +125,17 @@ describe("Writing53MaterialCards", () => {
       hasStableAndScopedClasses(
         screen.getAllByTestId("q53-material-value-list")[0]?.parentElement,
         "writing-material-chart-stack",
+        materialStyles.chartStack,
       ),
     ).toBe(true);
     for (const chart of screen.getAllByTestId("q53-material-chart")) {
-      expect(hasStableAndScopedClasses(chart, "writing-material-chart")).toBe(
-        true,
-      );
+      expect(
+        hasStableAndScopedClasses(
+          chart,
+          "writing-material-chart",
+          materialStyles.chart,
+        ),
+      ).toBe(true);
     }
     expect(screen.queryByTestId("q53-material-placeholder")).toBeNull();
 
@@ -280,7 +286,11 @@ describe("Writing53MaterialCards", () => {
         chart.classList.contains("writing-material-chart--radial"),
       );
     expect(
-      hasStableAndScopedClasses(radialChart, "writing-material-chart--radial"),
+      hasStableAndScopedClasses(
+        radialChart,
+        "writing-material-chart--radial",
+        materialStyles.radialChart,
+      ),
     ).toBe(true);
   });
 });

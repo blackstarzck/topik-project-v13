@@ -171,13 +171,46 @@ function selectorContainsClass(
   }
 
   const classAttributePattern =
-    /\[\s*class\s*(?:[~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))/giu;
+    /\[\s*class\s*(=|~=|\|=|\^=|\$=|\*=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))/giu;
   return Array.from(decodedSelector.matchAll(classAttributePattern)).some(
     (match) => {
-      const value = match[1] ?? match[2] ?? match[3] ?? "";
-      return (
-        value.split(/\s+/u).includes(className) || value.includes(className)
-      );
+      const operator = match[1];
+      const value = match[2] ?? match[3] ?? match[4] ?? "";
+      const matchesClass = (candidate: string) =>
+        includeSuffix
+          ? candidate.startsWith(className)
+          : candidate === className;
+
+      if (operator === "=") {
+        return value.split(/\s+/u).some(matchesClass);
+      }
+      if (operator === "~=") return matchesClass(value);
+      if (operator === "|=") {
+        return (
+          matchesClass(value) ||
+          className === value ||
+          className.startsWith(`${value}-`)
+        );
+      }
+      if (operator === "^=") {
+        return (
+          className.startsWith(value) ||
+          (includeSuffix && value.startsWith(className))
+        );
+      }
+      if (operator === "$=") {
+        return (
+          className.endsWith(value) ||
+          (includeSuffix && value.startsWith(className))
+        );
+      }
+      if (operator === "*=") {
+        return (
+          className.includes(value) ||
+          (includeSuffix && value.includes(className))
+        );
+      }
+      return false;
     },
   );
 }
@@ -226,14 +259,10 @@ export function findGlobalCssOwners(
 export function hasStableAndScopedClasses(
   element: Element | null | undefined,
   stableClassName: string,
+  scopedClassName: string,
 ) {
-  if (!element?.classList.contains(stableClassName)) return false;
-
-  return Array.from(element.classList).some(
-    (className) =>
-      className !== stableClassName &&
-      !className.startsWith("ant-") &&
-      !className.startsWith("app-") &&
-      !className.startsWith("writing-"),
+  return Boolean(
+    element?.classList.contains(stableClassName) &&
+    element.classList.contains(scopedClassName),
   );
 }
