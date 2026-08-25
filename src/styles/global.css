@@ -5805,30 +5805,6 @@
   border-bottom: 1px solid var(--ant-color-border-secondary);
 }
 
-.app-profile-popover-panel {
-  width: 240px;
-  max-width: 72vw;
-  font-size: 14px;
-}
-
-.app-profile-popover.app-profile-popover .ant-popover-container {
-  padding: 0;
-}
-
-.app-profile-popover-panel .ant-typography {
-  font-size: 14px;
-}
-
-.app-profile-popover-list {
-  display: grid;
-  margin: 0;
-  padding: 8px;
-}
-
-.app-profile-popover-list .app-profile-popover-item {
-  list-style: none;
-}
-
 .app-profile-popover-action {
   position: relative;
   display: flex;

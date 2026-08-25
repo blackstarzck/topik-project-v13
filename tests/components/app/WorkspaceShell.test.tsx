@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   act,
   cleanup,
@@ -10,15 +10,15 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import postcss from "postcss";
 
 import { WorkspaceShell } from "../../../src/components/app/WorkspaceShell";
+import workspaceShellStyles from "../../../src/components/app/WorkspaceShell.module.css";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import koMessages from "../../../messages/ko.json";
 
-const GLOBAL_CSS = readFileSync(
-  join(process.cwd(), "src/styles/global.css"),
-  "utf8",
-);
+const GLOBAL_CSS_PATH = join(process.cwd(), "src/styles/global.css");
+const GLOBAL_CSS = readFileSync(GLOBAL_CSS_PATH, "utf8");
 const WORKSPACE_LAYOUT_CSS = readFileSync(
   join(process.cwd(), "src/styles/workspace-layout.css"),
   "utf8",
@@ -41,6 +41,28 @@ const WORKSPACE_SHELL_CSS_PATH = join(
 const WORKSPACE_SHELL_CSS = existsSync(WORKSPACE_SHELL_CSS_PATH)
   ? readFileSync(WORKSPACE_SHELL_CSS_PATH, "utf8")
   : "";
+const PROFILE_POPOVER_MODULE_RULES = [
+  [".profilePopoverPanel", "width: 240px; max-width: 72vw; font-size: 14px;"],
+  [
+    ".profilePopover.profilePopover :global(.ant-popover-container)",
+    "padding: 0;",
+  ],
+  [".profilePopoverPanel :global(.ant-typography)", "font-size: 14px;"],
+  [".profilePopoverList", "display: grid; margin: 0; padding: 8px;"],
+  [".profilePopoverList .profilePopoverItem", "list-style: none;"],
+] as const;
+const PROFILE_POPOVER_STABLE_STRUCTURE_CLASSES = [
+  "app-profile-popover",
+  "app-profile-popover-panel",
+  "app-profile-popover-list",
+  "app-profile-popover-item",
+] as const;
+const PROFILE_POPOVER_LOCAL_CLASSES = [
+  "profilePopover",
+  "profilePopoverPanel",
+  "profilePopoverList",
+  "profilePopoverItem",
+] as const;
 
 const navMock = vi.hoisted(() => ({
   routerPush: vi.fn(),
@@ -122,6 +144,272 @@ function cssSelectorsFrom(source: string) {
 function compactCssRule(source: string, selector: string) {
   return cssRuleFrom(source, selector).replace(/\s+/gu, " ").trim();
 }
+
+function normalizeCssSelector(selector: string) {
+  return selector
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/\s*([,>+~])\s*/gu, "$1")
+    .replace(/\(\s+/gu, "(")
+    .replace(/\s+\)/gu, ")");
+}
+
+function normalizeCssAtRule(atRule: string) {
+  return normalizeCssSelector(atRule)
+    .replace(/^(@[\w-]+)\s*\(/u, "$1(")
+    .replace(/\s*:\s*/gu, ":");
+}
+
+function splitCssSelectors(selector: string) {
+  const selectors: string[] = [];
+  let start = 0;
+  let parentheses = 0;
+  let brackets = 0;
+  let quote: '"' | "'" | null = null;
+
+  for (let index = 0; index < selector.length; index += 1) {
+    const character = selector[index];
+    const previous = selector[index - 1];
+
+    if (quote) {
+      if (character === quote && previous !== "\\") quote = null;
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === "(") parentheses += 1;
+    if (character === ")") parentheses = Math.max(0, parentheses - 1);
+    if (character === "[") brackets += 1;
+    if (character === "]") brackets = Math.max(0, brackets - 1);
+    if (character === "," && parentheses === 0 && brackets === 0) {
+      selectors.push(normalizeCssSelector(selector.slice(start, index)));
+      start = index + 1;
+    }
+  }
+
+  selectors.push(normalizeCssSelector(selector.slice(start)));
+  return selectors.filter(Boolean);
+}
+
+function canonicalDeclarations(source: string) {
+  return source
+    .split(";")
+    .map((declaration) => declaration.trim())
+    .filter(Boolean)
+    .map((declaration) => {
+      const separator = declaration.indexOf(":");
+      return [
+        declaration.slice(0, separator).trim().toLowerCase(),
+        declaration
+          .slice(separator + 1)
+          .replace(/\s+/gu, " ")
+          .trim(),
+      ] as const;
+    })
+    .sort(([leftName, leftValue], [rightName, rightValue]) =>
+      `${leftName}:${leftValue}`.localeCompare(`${rightName}:${rightValue}`),
+    );
+}
+
+type ParsedCssRule = {
+  atRules: string[];
+  declarations: string;
+  depth: number;
+  selector: string;
+  selectors: string[];
+};
+
+function parseCssRules(source: string): ParsedCssRule[] {
+  const rules: ParsedCssRule[] = [];
+
+  postcss.parse(source).walkRules((rule) => {
+    const atRules: string[] = [];
+    let depth = 0;
+    let parent = rule.parent;
+    while (parent && parent.type !== "root") {
+      depth += 1;
+      if (parent.type === "atrule") {
+        atRules.unshift(
+          normalizeCssAtRule(
+            `@${parent.name}${parent.params ? ` ${parent.params}` : ""}`,
+          ),
+        );
+      }
+      parent = parent.parent;
+    }
+
+    const selector = normalizeCssSelector(rule.selector);
+    rules.push({
+      atRules,
+      declarations: (rule.nodes ?? [])
+        .filter((node) => node.type === "decl")
+        .map(
+          (node) =>
+            `${node.prop}: ${node.value}${node.important ? " !important" : ""};`,
+        )
+        .join(" "),
+      depth,
+      selector,
+      selectors: splitCssSelectors(selector),
+    });
+  });
+
+  return rules;
+}
+
+function selectorContainsClass(selector: string, className: string) {
+  const decodedSelector = selector.replace(
+    /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\r\n\f0-9a-f]))/giu,
+    (_match, hexadecimal: string | undefined, escaped: string | undefined) =>
+      hexadecimal
+        ? String.fromCodePoint(Number.parseInt(hexadecimal, 16))
+        : (escaped ?? ""),
+  );
+  const escapedClassName = className.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  if (
+    new RegExp(`\\.${escapedClassName}(?![\\w-])`, "u").test(decodedSelector)
+  ) {
+    return true;
+  }
+
+  const classAttributePattern =
+    /\[\s*class\s*(=|~=|\|=|\^=|\$=|\*=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))\s*([is])?\s*\]/giu;
+  return Array.from(decodedSelector.matchAll(classAttributePattern)).some(
+    (match) => {
+      const operator = match[1];
+      const value = match[2] ?? match[3] ?? match[4] ?? "";
+      const caseInsensitive = match[5]?.toLowerCase() === "i";
+      const comparableClassName = caseInsensitive
+        ? className.toLowerCase()
+        : className;
+      const comparableValue = caseInsensitive ? value.toLowerCase() : value;
+
+      if (operator === "=" || operator === "~=") {
+        return comparableClassName === comparableValue;
+      }
+      if (operator === "^=") {
+        return comparableClassName.startsWith(comparableValue);
+      }
+      if (operator === "$=") {
+        return comparableClassName.endsWith(comparableValue);
+      }
+      if (operator === "*=") {
+        return comparableClassName.includes(comparableValue);
+      }
+      if (operator === "|=") {
+        return (
+          comparableClassName === comparableValue ||
+          comparableClassName.startsWith(`${comparableValue}-`)
+        );
+      }
+      return false;
+    },
+  );
+}
+
+function profilePopoverModuleContractViolations(source: string) {
+  const profileRules = parseCssRules(source).filter((rule) =>
+    rule.selectors.some((selector) =>
+      PROFILE_POPOVER_LOCAL_CLASSES.some((className) =>
+        selectorContainsClass(selector, className),
+      ),
+    ),
+  );
+  const isExactAllowedRule = (
+    rule: ParsedCssRule,
+    selector: string,
+    declarations: string,
+  ) =>
+    rule.depth === 0 &&
+    rule.atRules.length === 0 &&
+    rule.selectors.length === 1 &&
+    rule.selector === normalizeCssSelector(selector) &&
+    JSON.stringify(canonicalDeclarations(rule.declarations)) ===
+      JSON.stringify(canonicalDeclarations(declarations));
+  const violations: string[] = [];
+
+  for (const [selector, declarations] of PROFILE_POPOVER_MODULE_RULES) {
+    const matchCount = profileRules.filter((rule) =>
+      isExactAllowedRule(rule, selector, declarations),
+    ).length;
+    if (matchCount !== 1) {
+      violations.push(
+        `module rule count: ${selector} expected 1, received ${matchCount}`,
+      );
+    }
+  }
+  for (const rule of profileRules) {
+    const allowed = PROFILE_POPOVER_MODULE_RULES.some(
+      ([selector, declarations]) =>
+        isExactAllowedRule(rule, selector, declarations),
+    );
+    if (!allowed) {
+      violations.push(
+        `unexpected module rule: depth=${rule.depth} ${[
+          ...rule.atRules,
+          rule.selector,
+        ].join(" > ")}`,
+      );
+    }
+  }
+
+  return violations;
+}
+
+function globalProfileStructureOwners(source: string) {
+  const selectors = parseCssRules(source).flatMap((rule) => rule.selectors);
+  return PROFILE_POPOVER_STABLE_STRUCTURE_CLASSES.filter((className) =>
+    selectors.some((selector) => selectorContainsClass(selector, className)),
+  );
+}
+
+type CssRuntimeSource = { path: string; source: string };
+
+function localCssImportPath(params: string) {
+  const urlMatch = params
+    .trim()
+    .match(/^url\(\s*(?:"([^"]+)"|'([^']+)'|([^)'"\s]+))\s*\)/u);
+  if (urlMatch) return urlMatch[1] ?? urlMatch[2] ?? urlMatch[3] ?? null;
+
+  const quotedMatch = params.trim().match(/^(?:"([^"]+)"|'([^']+)')/u);
+  return quotedMatch?.[1] ?? quotedMatch?.[2] ?? null;
+}
+
+function readGlobalCssRuntimeSources(
+  entryPath: string,
+  visited = new Set<string>(),
+): CssRuntimeSource[] {
+  const resolvedEntryPath = resolve(entryPath);
+  if (visited.has(resolvedEntryPath)) return [];
+  visited.add(resolvedEntryPath);
+
+  const source = readFileSync(resolvedEntryPath, "utf8");
+  const importedSources: CssRuntimeSource[] = [];
+  postcss.parse(source).walkAtRules("import", (atRule) => {
+    const importPath = localCssImportPath(atRule.params);
+    if (!importPath?.startsWith(".")) return;
+    importedSources.push(
+      ...readGlobalCssRuntimeSources(
+        resolve(dirname(resolvedEntryPath), importPath),
+        visited,
+      ),
+    );
+  });
+
+  return [{ path: resolvedEntryPath, source }, ...importedSources];
+}
+
+function globalProfileStructureOwnersInSources(sources: CssRuntimeSource[]) {
+  return sources.flatMap(({ path, source }) =>
+    globalProfileStructureOwners(source).map(
+      (className) => `${path}: ${className}`,
+    ),
+  );
+}
+
+const GLOBAL_CSS_RUNTIME_SOURCES = readGlobalCssRuntimeSources(GLOBAL_CSS_PATH);
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navMock.pathname,
@@ -384,9 +672,24 @@ describe("WorkspaceShell", () => {
     fireEvent.click(profileTrigger);
     await waitFor(() => {
       const panel = document.body.querySelector(".app-profile-popover-panel");
+      const popover = panel?.closest(".app-profile-popover");
+      const list = panel?.querySelector(".app-profile-popover-list");
+      const item = list?.querySelector(".app-profile-popover-item");
       expect(panel).toBeTruthy();
-      expect(panel?.closest(".app-profile-popover")).toBeTruthy();
+      expect(popover).toBeTruthy();
       expect(panel?.closest(".app-notification-popover")).toBeTruthy();
+      expect(
+        panel?.classList.contains(workspaceShellStyles.profilePopoverPanel),
+      ).toBe(true);
+      expect(
+        popover?.classList.contains(workspaceShellStyles.profilePopover),
+      ).toBe(true);
+      expect(
+        list?.classList.contains(workspaceShellStyles.profilePopoverList),
+      ).toBe(true);
+      expect(
+        item?.classList.contains(workspaceShellStyles.profilePopoverItem),
+      ).toBe(true);
       expect(
         panel?.querySelector(".app-profile-popover-panel__header"),
       ).toBeNull();
@@ -416,17 +719,15 @@ describe("WorkspaceShell", () => {
     expect(
       logoutAction.classList.contains("app-profile-popover-action--danger"),
     ).toBe(false);
-    expect(cssRule(".app-profile-popover-panel")).toContain("font-size: 14px");
+    expect(profilePopoverModuleContractViolations(WORKSPACE_SHELL_CSS)).toEqual(
+      [],
+    );
     expect(
-      cssRule(
-        ".app-profile-popover.app-profile-popover .ant-popover-container",
-      ),
-    ).toContain("padding: 0");
-    expect(
-      cssRule(".app-profile-popover-list .app-profile-popover-item"),
-    ).toContain("list-style: none");
-    expect(cssRule(".app-profile-popover-list")).toContain("display: grid");
-    expect(cssRule(".app-profile-popover-list")).toContain("padding: 8px");
+      globalProfileStructureOwnersInSources(GLOBAL_CSS_RUNTIME_SOURCES),
+    ).toEqual([]);
+    expect(GLOBAL_CSS_RUNTIME_SOURCES.map(({ path }) => path)).toContain(
+      resolve(dirname(GLOBAL_CSS_PATH), "foundation.css"),
+    );
     expect(cssRule(".app-profile-popover-actions")).toBe("");
     expect(cssRule(".app-profile-popover-panel__header")).toBe("");
     expect(cssRule(".app-profile-popover-action")).toContain(
@@ -446,6 +747,89 @@ describe("WorkspaceShell", () => {
       "z-index: 1",
     );
     expect(cssRule(".app-profile-popover-action--danger")).toBe("");
+  });
+
+  it("rejects grouped, high-specificity, nested, media, and duplicate profile module overrides", () => {
+    const validRules = PROFILE_POPOVER_MODULE_RULES.map(
+      ([selector, declarations]) => `${selector} { ${declarations} }`,
+    ).join("\n");
+    const reviewerCounterexamples = [
+      ".profilePopoverPanel, .other { width: 999px; }",
+      ".profilePopoverPanel.profilePopoverPanel { width: 999px; }",
+      ".wrapper { .profilePopoverPanel { width: 999px; } }",
+      "@media (max-width: 700px) { .profilePopoverPanel { width: 999px; } }",
+      ".profilePopoverPanel { width: 240px; max-width: 72vw; font-size: 14px; }",
+    ];
+
+    for (const reviewerCounterexample of reviewerCounterexamples) {
+      expect(
+        profilePopoverModuleContractViolations(
+          `${validRules}\n${reviewerCounterexample}`,
+        ),
+        reviewerCounterexample,
+      ).not.toEqual([]);
+    }
+  });
+
+  it("finds high-specificity, nested, attribute, and escaped global profile structure owners", () => {
+    const reviewerCounterexampleSources = [
+      {
+        path: "global.css",
+        source: `
+          .app-profile-popover-panel.app-profile-popover-panel { width: 999px; }
+          body { & .app-profile-popover-list { display: block; } }
+        `,
+      },
+      {
+        path: "imported.css",
+        source: `
+          [class~="app-profile-popover-item"] { list-style: square; }
+          [class*="profile-popover-panel"] { width: 999px; }
+          [class~="app-profile-popover-action"] { color: inherit; }
+          .app\\2d profile\\2d popover { padding: 20px; }
+        `,
+      },
+    ];
+
+    expect(
+      globalProfileStructureOwnersInSources(reviewerCounterexampleSources),
+    ).toEqual([
+      "global.css: app-profile-popover-panel",
+      "global.css: app-profile-popover-list",
+      "imported.css: app-profile-popover",
+      "imported.css: app-profile-popover-panel",
+      "imported.css: app-profile-popover-item",
+    ]);
+    expect(
+      selectorContainsClass(
+        '[class~="app-profile-popover-action"]',
+        "app-profile-popover",
+      ),
+    ).toBe(false);
+    expect(
+      selectorContainsClass(
+        '[class^="app-profile-"]',
+        "app-profile-popover-panel",
+      ),
+    ).toBe(true);
+    expect(
+      selectorContainsClass(
+        '[class$="popover-panel"]',
+        "app-profile-popover-panel",
+      ),
+    ).toBe(true);
+    expect(
+      selectorContainsClass(
+        '[class|="app-profile"]',
+        "app-profile-popover-panel",
+      ),
+    ).toBe(true);
+    expect(
+      selectorContainsClass(
+        '[class="APP-PROFILE-POPOVER-PANEL" i]',
+        "app-profile-popover-panel",
+      ),
+    ).toBe(true);
   });
 
   it("clears eligible local recovery data before profile-menu sign-out", async () => {

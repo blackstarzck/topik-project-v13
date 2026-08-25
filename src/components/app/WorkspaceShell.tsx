@@ -201,14 +201,26 @@ export function WorkspaceShell({
     void clearClientRecoveryForLogout(userId).finally(() => form.submit());
   };
   const profilePopoverContent = profileName ? (
-    <div className="app-profile-popover-panel">
+    <div
+      className={["app-profile-popover-panel", styles.profilePopoverPanel].join(
+        " ",
+      )}
+    >
       <ul
-        className="app-profile-popover-list"
+        className={["app-profile-popover-list", styles.profilePopoverList].join(
+          " ",
+        )}
         role="menu"
         aria-label={t("userSummary")}
       >
         {profileActions.map((item) => (
-          <li key={item.key} className="app-profile-popover-item">
+          <li
+            key={item.key}
+            className={[
+              "app-profile-popover-item",
+              styles.profilePopoverItem,
+            ].join(" ")}
+          >
             <button
               type="button"
               role="menuitem"
@@ -231,7 +243,13 @@ export function WorkspaceShell({
       placement="bottomRight"
       trigger="click"
       content={profilePopoverContent}
-      classNames={{ root: "app-notification-popover app-profile-popover" }}
+      classNames={{
+        root: [
+          "app-notification-popover",
+          "app-profile-popover",
+          styles.profilePopover,
+        ].join(" "),
+      }}
     >
       <button
         type="button"
