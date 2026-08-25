@@ -153,9 +153,9 @@ export function WritingExamShell({
         </div>
       </header>
 
-      <main className={["writing-exam-main", styles.main].join(" ")}>
+      <div className={["writing-exam-main", styles.main].join(" ")}>
         {children}
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { FeedbackPageContent } from "@/components/feedback/FeedbackPageContent";
 import { requireUser } from "@/lib/auth/session";
 import { isSubmissionSavedToLibrary } from "@/lib/library/server";
@@ -55,19 +56,21 @@ export default async function ShortFeedbackPage({
       }),
     ]);
   return (
-    <FeedbackPageContent
-      submission={submission}
-      bundle={bundle}
-      withSentences
-      dimensionCardLimit={4}
-      showDetailPanel={false}
-      retryLabelKey="retryDefault"
-      reloadHref={`/writing/feedback/short/${id}`}
-      userId={user.id}
-      saveLocked={saveLocked}
-      alreadySaved={alreadySaved}
-      canRetryProblem={problemAvailability.canStart}
-      nextHref={nextHref}
-    />
+    <WorkspaceBody size="full">
+      <FeedbackPageContent
+        submission={submission}
+        bundle={bundle}
+        withSentences
+        dimensionCardLimit={4}
+        showDetailPanel={false}
+        retryLabelKey="retryDefault"
+        reloadHref={`/writing/feedback/short/${id}`}
+        userId={user.id}
+        saveLocked={saveLocked}
+        alreadySaved={alreadySaved}
+        canRetryProblem={problemAvailability.canStart}
+        nextHref={nextHref}
+      />
+    </WorkspaceBody>
   );
 }

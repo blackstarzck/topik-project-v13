@@ -205,6 +205,8 @@ describe("WritingExamShell", () => {
         shellStyles.main,
       ),
     ).toBe(true);
+    expect(container.querySelector(".writing-exam-main")?.tagName).toBe("DIV");
+    expect(container.querySelector("main")).toBeNull();
   });
 
   it("labels the header save action as draft save and delegates it", () => {
