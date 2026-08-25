@@ -12,6 +12,14 @@ export const awesomicThemeTokens = {
     snow: "#ffffff",
     linkSecondary: "#3254F2",
   },
+  border: {
+    // Resolved AntD colorBorderSecondary values. These lock the existing row
+    // separator paint while exposing the role to app-owned CSS consumers.
+    secondary: {
+      light: "#f0f0f0",
+      dark: "#303030",
+    },
+  },
   radius: {
     // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
@@ -79,6 +87,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-text-secondary": awesomicThemeTokens.color.steel,
     "--app-color-link-secondary": awesomicThemeTokens.color.linkSecondary,
     "--app-color-border": awesomicThemeTokens.color.pebble,
+    "--app-color-border-secondary":
+      awesomicThemeTokens.border.secondary[appearance],
     "--app-color-status-error": status.error,
     "--app-color-status-warning": status.warning,
     "--app-color-status-success": status.success,

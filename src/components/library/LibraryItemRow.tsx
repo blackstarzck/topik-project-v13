@@ -12,6 +12,8 @@ import {
   emitClientOperationalEvent,
 } from "@/lib/operations/client-operational-event";
 
+import styles from "./LibraryItemRow.module.css";
+
 type LibraryRowTab = LibraryTab | "drafts";
 
 type Props = {
@@ -119,7 +121,8 @@ export function LibraryItemRow({
       data-testid="library-item-row"
       data-library-tab={tab}
       className={[
-        "flex flex-wrap items-center justify-between gap-4 border-b border-[var(--ant-color-border-secondary)] py-4",
+        "flex flex-wrap items-center justify-between gap-4 py-4",
+        styles.row,
         className,
       ]
         .filter(Boolean)

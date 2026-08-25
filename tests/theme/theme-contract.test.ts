@@ -48,6 +48,9 @@ describe("app theme contract", () => {
       awesomicThemeTokens.color.snow,
     );
     expect(vars["--app-color-border"]).toBe(awesomicThemeTokens.color.pebble);
+    expect(vars["--app-color-border-secondary"]).toBe(
+      awesomicThemeTokens.border.secondary.light,
+    );
     expect(vars["--app-radius"]).toBe(`${awesomicThemeTokens.radius.base}px`);
     expect(vars["--app-color-text"]).toBe(awesomicThemeTokens.color.ink);
     expect(vars["--app-color-text-secondary"]).toBe(
@@ -66,6 +69,7 @@ describe("app theme contract", () => {
 
     expect(defaultVars["--app-color-primary"]).toBe("#1677ff");
     expect(defaultVars["--app-color-border"]).toBe("#d9d9d9");
+    expect(defaultVars["--app-color-border-secondary"]).toBe("#f0f0f0");
     expect(defaultVars["--app-radius"]).toBe("6px");
   });
 
@@ -119,6 +123,7 @@ describe("app theme contract", () => {
       "--app-color-text-secondary",
       "--app-color-link-secondary",
       "--app-color-border",
+      "--app-color-border-secondary",
       "--app-radius",
       "--app-font-family",
       "--app-shadow-elevated",

@@ -32,6 +32,7 @@ const testAlternateSource = {
   colorTextSecondary: "#506070",
   colorLinkSecondary: "#405de6",
   colorBorder: "#90a0b0",
+  colorBorderSecondary: "#718293",
   colorStatusError: "#c21f52",
   colorStatusWarning: "#9a6700",
   colorStatusSuccess: "#087f5b",
@@ -116,6 +117,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-text-secondary": "#506070",
       "--app-color-link-secondary": "#405de6",
       "--app-color-border": "#90a0b0",
+      "--app-color-border-secondary": "#718293",
       "--app-color-status-error": "#c21f52",
       "--app-color-status-warning": "#9a6700",
       "--app-color-status-success": "#087f5b",
@@ -151,6 +153,7 @@ describe("generic app theme bridge contract", () => {
             colorText: testAlternateSource.colorText,
             colorTextSecondary: testAlternateSource.colorTextSecondary,
             colorBorder: testAlternateSource.colorBorder,
+            colorBorderSecondary: testAlternateSource.colorBorderSecondary,
             colorError: testAlternateSource.colorStatusError,
             colorWarning: testAlternateSource.colorStatusWarning,
             colorSuccess: testAlternateSource.colorStatusSuccess,
@@ -171,6 +174,7 @@ describe("generic app theme bridge contract", () => {
             colorText: testAlternateSource.colorText,
             colorTextSecondary: testAlternateSource.colorTextSecondary,
             colorBorder: testAlternateSource.colorBorder,
+            colorBorderSecondary: testAlternateSource.colorBorderSecondary,
             colorError: testAlternateSource.colorStatusError,
             colorWarning: testAlternateSource.colorStatusWarning,
             colorSuccess: testAlternateSource.colorStatusSuccess,
@@ -196,6 +200,7 @@ describe("generic app theme bridge contract", () => {
       colorText: testAlternateSource.colorText,
       colorTextSecondary: testAlternateSource.colorTextSecondary,
       colorBorder: testAlternateSource.colorBorder,
+      colorBorderSecondary: testAlternateSource.colorBorderSecondary,
       colorError: testAlternateSource.colorStatusError,
       colorWarning: testAlternateSource.colorStatusWarning,
       colorSuccess: testAlternateSource.colorStatusSuccess,
@@ -225,6 +230,9 @@ describe("generic app theme bridge contract", () => {
     expect(
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
     ).not.toBe(awesomicThemeTokens.overlay.maskSubtle);
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
+    ).not.toBe(awesomicThemeTokens.border.secondary.light);
   });
 
   test("enforces the alternate fixture production-source and dependency boundary", () => {
@@ -252,8 +260,10 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorStatusStrongSuccess,
       testAlternateSource.colorFillSecondary,
       testAlternateSource.colorMaskSubtle,
+      testAlternateSource.colorBorderSecondary,
       PHASE5D_ALTERNATE_THEME_MARKER,
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
+      phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
     ];
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
@@ -286,6 +296,7 @@ describe("generic app theme bridge contract", () => {
         colorTextSecondary: awesomicThemeTokens.color.steel,
         colorLinkSecondary: awesomicThemeTokens.color.linkSecondary,
         colorBorder: awesomicThemeTokens.color.pebble,
+        colorBorderSecondary: awesomicThemeTokens.border.secondary.light,
         colorStatusError: awesomicThemeTokens.status.light.error,
         colorStatusWarning: awesomicThemeTokens.status.light.warning,
         colorStatusSuccess: awesomicThemeTokens.status.light.success,
@@ -318,6 +329,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-strong-success": "#389e0d",
       "--app-color-fill-secondary": "rgba(0, 0, 0, 0.06)",
       "--app-color-mask-subtle": "rgba(244, 244, 245, 0.18)",
+      "--app-color-border-secondary": "#f0f0f0",
       "--app-radius-indicator": "2px",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
@@ -328,6 +340,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-strong-success": "#3c8618",
       "--app-color-fill-secondary": "rgba(255, 255, 255, 0.12)",
       "--app-color-mask-subtle": "rgba(0, 0, 0, 0.18)",
+      "--app-color-border-secondary": "#303030",
       "--app-radius-indicator": "2px",
     });
   });

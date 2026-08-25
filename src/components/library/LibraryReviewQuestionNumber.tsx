@@ -28,7 +28,7 @@ export function LibraryReviewQuestionNumber({ questionNo }: Props) {
       aria-label={questionNoLabel}
       data-testid="library-review-question-number"
       className={[
-        "writing-question-number library-review-candidate-question-number font-['Space_Grotesk'] leading-none",
+        "writing-question-number library-review-candidate-question-number leading-none",
         writingQuestionNeonClass("writing-question-number", questionNo),
       ]
         .filter(Boolean)

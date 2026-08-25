@@ -28,6 +28,10 @@ const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
     format: asString,
   },
   "--app-color-border": { token: "colorBorder", format: asString },
+  "--app-color-border-secondary": {
+    token: "colorBorderSecondary",
+    format: asString,
+  },
   "--app-color-status-error": { token: "colorError", format: asString },
   "--app-color-status-warning": { token: "colorWarning", format: asString },
   "--app-color-status-success": { token: "colorSuccess", format: asString },
@@ -45,7 +49,7 @@ const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
   "--app-shadow-elevated": { token: "boxShadowSecondary", format: asString },
 };
 
-const STATUS_BRIDGE_TOKEN_MAP = Object.fromEntries(
+const APPEARANCE_DEPENDENT_BRIDGE_TOKEN_MAP = Object.fromEntries(
   Object.entries(ANT_D_BACKED_BRIDGE_TOKEN_MAP).filter(([varName]) =>
     [
       "--app-color-status-error",
@@ -53,6 +57,7 @@ const STATUS_BRIDGE_TOKEN_MAP = Object.fromEntries(
       "--app-color-status-success",
       "--app-color-status-strong-success",
       "--app-color-fill-secondary",
+      "--app-color-border-secondary",
       "--app-radius-indicator",
     ].includes(varName),
   ),
@@ -101,18 +106,20 @@ describe("theme bridge ↔ AntD token parity (Awesomic selected theme)", () => {
     }
   });
 
-  test("dark semantic status bridge values match resolved AntD tokens", () => {
+  test("dark appearance-dependent bridge values match resolved AntD tokens", () => {
     const bridge = getResolvedBridgeVars(defaultThemeName, "dark");
     const resolved = resolveTokens("dark");
 
     expect(resolved).toBeTruthy();
 
     for (const [varName, { token, format }] of Object.entries(
-      STATUS_BRIDGE_TOKEN_MAP,
+      APPEARANCE_DEPENDENT_BRIDGE_TOKEN_MAP,
     ) as Array<
       [
         AppBridgeVarName,
-        NonNullable<(typeof STATUS_BRIDGE_TOKEN_MAP)[AppBridgeVarName]>,
+        NonNullable<
+          (typeof APPEARANCE_DEPENDENT_BRIDGE_TOKEN_MAP)[AppBridgeVarName]
+        >,
       ]
     >) {
       expect(normalize(bridge[varName])).toBe(

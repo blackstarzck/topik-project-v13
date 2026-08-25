@@ -14,6 +14,7 @@ import { writingFeedbackHref } from "@/lib/writing/routes";
 
 import { formatDashboardShortDateTime } from "./library-dashboard-format";
 import { LibraryReviewQuestionNumber } from "./LibraryReviewQuestionNumber";
+import typographyStyles from "./LibraryTypography.module.css";
 
 const { Text } = Typography;
 
@@ -90,7 +91,7 @@ export function LibraryFeedbackWaitingPanel({
                   <Text
                     type="secondary"
                     data-testid="library-feedback-waiting-meta"
-                    className="block !text-[14px] !leading-[22px]"
+                    className={`block ${typographyStyles.metadata}`}
                   >
                     {formatDashboardShortDateTime(item.submittedAt)}
                     {" \u00b7 "}

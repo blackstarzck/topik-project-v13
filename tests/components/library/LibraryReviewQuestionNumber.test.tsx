@@ -21,7 +21,7 @@ describe("LibraryReviewQuestionNumber", () => {
     expect(questionNumber.className).toContain(
       "library-review-candidate-question-number",
     );
-    expect(questionNumber.className).toContain("font-['Space_Grotesk']");
+    expect(questionNumber.className).not.toContain("font-['Space_Grotesk']");
     expect(questionNumber.className).toContain("leading-none");
     expect(questionNumber.className).toContain("writing-question-number--q54");
   });

@@ -4,6 +4,7 @@ import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 
 import { LibraryFeedbackWaitingPanel } from "../../../src/components/library/LibraryFeedbackWaitingPanel";
+import typographyStyles from "../../../src/components/library/LibraryTypography.module.css";
 import type { LibraryFeedbackWaitingVisibleItem } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -111,7 +112,9 @@ describe("LibraryFeedbackWaitingPanel", () => {
     ]);
     expect(meta.textContent).toContain("04. 07. 09:04");
     expect(meta.textContent).toContain("123");
-    expect(meta.className).toContain("!text-[14px]");
+    expect(meta.className).not.toContain("!text-[14px]");
+    expect(meta.className).not.toContain("!leading-[22px]");
+    expect(meta.className.split(" ")).toContain(typographyStyles.metadata);
     expect(questionNumber.textContent).toBe("53");
     expect(questionNumber.getAttribute("aria-label")).toBe("53번");
     expect(questionNumber.className).toContain(

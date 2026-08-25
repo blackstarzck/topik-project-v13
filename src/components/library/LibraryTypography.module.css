@@ -1,0 +1,8 @@
+.metadata {
+  font-size: var(--app-font-size-body) !important;
+  line-height: calc(var(--app-font-size-body) * 11 / 7) !important;
+}
+
+.kpiValue {
+  font-size: calc(var(--app-font-size-heading) * 3 / 4) !important;
+}

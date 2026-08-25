@@ -13,6 +13,7 @@ import type { LibraryReviewCandidate } from "@/lib/library/types";
 
 import { formatDashboardDate } from "./library-dashboard-format";
 import { LibraryReviewQuestionNumber } from "./LibraryReviewQuestionNumber";
+import typographyStyles from "./LibraryTypography.module.css";
 
 const { Text } = Typography;
 
@@ -102,7 +103,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
             <Text
               type="secondary"
               data-testid="library-review-candidate-summary"
-              className="block !text-[14px] !leading-[22px]"
+              className={`block ${typographyStyles.metadata}`}
             >
               {primaryReason}
               {" \u00b7 "}
@@ -111,7 +112,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
             <Text
               type="secondary"
               data-testid="library-review-candidate-total-score"
-              className="block !text-[14px] !leading-[22px]"
+              className={`block ${typographyStyles.metadata}`}
             >
               {totalScore}
             </Text>
@@ -119,7 +120,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
               <Text
                 type="secondary"
                 data-testid="library-review-candidate-estimated-time"
-                className="inline-flex items-center gap-2 !text-[14px] !leading-[22px]"
+                className={`inline-flex items-center gap-2 ${typographyStyles.metadata}`}
               >
                 <Clock3 size={16} aria-hidden="true" />
                 <span>{estimatedTime}</span>
@@ -129,7 +130,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
               <Text
                 type="secondary"
                 data-testid="library-review-candidate-difficulty"
-                className="inline-flex items-center gap-2 !text-[14px] !leading-[22px]"
+                className={`inline-flex items-center gap-2 ${typographyStyles.metadata}`}
               >
                 <DifficultyStateIcon
                   level={candidate.difficultyLevel}

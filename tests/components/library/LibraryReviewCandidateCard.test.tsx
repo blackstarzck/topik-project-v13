@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 
 import { LibraryReviewCandidateCard } from "../../../src/components/library/LibraryReviewCandidateCard";
+import typographyStyles from "../../../src/components/library/LibraryTypography.module.css";
 import type { LibraryReviewCandidate } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -98,9 +99,9 @@ describe("LibraryReviewCandidateCard", () => {
     expect(within(top).getByText("50분")).toBeTruthy();
     expect(within(top).queryByText("난이도")).toBeNull();
     expect(within(top).getByText("어려움")).toBeTruthy();
-    expect(
-      within(top).getByTestId("library-review-candidate-summary").className,
-    ).toContain("!text-[14px]");
+    const summary = within(top).getByTestId("library-review-candidate-summary");
+    expect(summary.className).not.toContain("!text-[14px]");
+    expect(summary.className.split(" ")).toContain(typographyStyles.metadata);
     expect(
       within(top).queryByTestId("library-review-candidate-lowest-dimension"),
     ).toBeNull();
@@ -108,14 +109,24 @@ describe("LibraryReviewCandidateCard", () => {
       "library-review-candidate-total-score",
     );
     expect(totalScore.textContent).toBe("총점 76점");
-    expect(totalScore.className).toContain("!text-[14px]");
-    expect(
-      within(top).getByTestId("library-review-candidate-estimated-time")
-        .className,
-    ).toContain("!text-[14px]");
-    expect(
-      within(top).getByTestId("library-review-candidate-difficulty").className,
-    ).toContain("!text-[14px]");
+    expect(totalScore.className).not.toContain("!text-[14px]");
+    expect(totalScore.className.split(" ")).toContain(
+      typographyStyles.metadata,
+    );
+    const estimatedTime = within(top).getByTestId(
+      "library-review-candidate-estimated-time",
+    );
+    expect(estimatedTime.className).not.toContain("!text-[14px]");
+    expect(estimatedTime.className.split(" ")).toContain(
+      typographyStyles.metadata,
+    );
+    const difficulty = within(top).getByTestId(
+      "library-review-candidate-difficulty",
+    );
+    expect(difficulty.className).not.toContain("!text-[14px]");
+    expect(difficulty.className.split(" ")).toContain(
+      typographyStyles.metadata,
+    );
     const difficultyIcon = within(top).getByTestId(
       "library-review-candidate-difficulty-icon",
     );

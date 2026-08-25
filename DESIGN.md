@@ -122,6 +122,21 @@ difficulty.
   `src/theme` into `--app-*` and update the theme contract tests (per the
   runtime policy above).
 
+## Tokens — Semantic Borders
+
+Ant Design is the L1 owner of border roles. App-owned CSS that needs the
+secondary separator color uses the resolved L2 bridge value instead of reading
+an `--ant-*` runtime variable or inventing another gray. The Awesomic values
+preserve the previously resolved paint: light `#f0f0f0`, dark `#303030`.
+
+| Meaning | Ant Design owner | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Secondary row separator | `colorBorderSecondary` | `--app-color-border-secondary` | Component-local CSS border |
+
+Alternate test themes must provide a visibly distinct resolved value through
+the same bridge. The test-only fixture remains excluded from production source
+and bundles.
+
 ## Tokens — Semantic Status
 
 Ant Design is the L1 owner of interface status meaning. App-owned Tailwind

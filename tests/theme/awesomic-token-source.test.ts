@@ -95,6 +95,10 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.overlay.maskSubtle).toBe(
       "rgba(244, 244, 245, 0.18)",
     );
+    expect(awesomicThemeTokens.border.secondary).toEqual({
+      light: "#f0f0f0",
+      dark: "#303030",
+    });
     expect(awesomicThemeTokens.fontSize).toEqual({
       caption: typographyFontSize("typography.xs"),
       body: typographyFontSize("typography.sm-9"),
