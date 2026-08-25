@@ -1,0 +1,50 @@
+.root.root.root {
+  position: fixed;
+  inset: 0;
+}
+
+.root.root .mask {
+  background: var(--app-color-mask-subtle);
+}
+
+.root.root .body {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.root.root .header {
+  padding: 24px 24px 14px;
+  border-bottom: 0;
+}
+
+.root.root .footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  border-top: 1px solid var(--app-color-border);
+  background: var(--app-color-bg-container);
+  padding: 18px 24px 20px;
+}
+
+.root.root .section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.root.root .wrapper {
+  height: 100dvh;
+}
+
+.option:hover,
+.option[data-selected="true"] {
+  background: var(--app-color-bg-layout);
+}
+
+.divider.divider {
+  margin: 0;
+}

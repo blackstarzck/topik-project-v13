@@ -9,6 +9,7 @@ const alternateSource = {
   colorPrimary: "#8b2cff",
   colorBgLayout: "#d8fff4",
   colorBgContainer: "#fff3c4",
+  colorMaskSubtle: "rgba(139, 44, 255, 0.31)",
   colorText: "#24104f",
   colorTextSecondary: "#006b61",
   colorLinkSecondary: "#d10068",

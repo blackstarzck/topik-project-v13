@@ -41,6 +41,11 @@ export const awesomicThemeTokens = {
       fillSecondary: "rgba(255, 255, 255, 0.12)",
     },
   },
+  overlay: {
+    // App-owned subtle overlay derived from Mist at 18% opacity. Keeping the
+    // alpha in the token lets AntD retain ownership of Drawer fade opacity.
+    maskSubtle: "rgba(244, 244, 245, 0.18)",
+  },
   shadow: {
     elevated: "rgba(0, 0, 0, 0.04) 0px 4px 12px 0px",
     none: "none",
@@ -69,6 +74,7 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-primary": awesomicThemeTokens.color.obsidian,
     "--app-color-bg-layout": awesomicThemeTokens.color.mist,
     "--app-color-bg-container": awesomicThemeTokens.color.snow,
+    "--app-color-mask-subtle": awesomicThemeTokens.overlay.maskSubtle,
     "--app-color-text": awesomicThemeTokens.color.ink,
     "--app-color-text-secondary": awesomicThemeTokens.color.steel,
     "--app-color-link-secondary": awesomicThemeTokens.color.linkSecondary,

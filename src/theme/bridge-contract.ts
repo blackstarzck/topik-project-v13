@@ -2,6 +2,7 @@ export const allowedAppBridgeVars = [
   "--app-color-primary",
   "--app-color-bg-layout",
   "--app-color-bg-container",
+  "--app-color-mask-subtle",
   "--app-color-text",
   "--app-color-text-secondary",
   "--app-color-link-secondary",
@@ -33,6 +34,7 @@ export type AppBridgeTokenSource = {
   colorPrimary: string;
   colorBgLayout: string;
   colorBgContainer: string;
+  colorMaskSubtle: string;
   colorText: string;
   colorTextSecondary: string;
   colorLinkSecondary: string;
@@ -64,6 +66,7 @@ export function createAppBridgeVars(
     "--app-color-primary": source.colorPrimary,
     "--app-color-bg-layout": source.colorBgLayout,
     "--app-color-bg-container": source.colorBgContainer,
+    "--app-color-mask-subtle": source.colorMaskSubtle,
     "--app-color-text": source.colorText,
     "--app-color-text-secondary": source.colorTextSecondary,
     "--app-color-link-secondary": source.colorLinkSecondary,

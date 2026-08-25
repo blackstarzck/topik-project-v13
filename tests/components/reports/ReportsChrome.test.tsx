@@ -1044,17 +1044,17 @@ describe("ComparisonReportView next action chrome", () => {
       ".comparison-target-drawer",
     ) as HTMLElement | null;
     expect(drawerRoot).toBeTruthy();
-    expect(drawerRoot?.style.position).toBe("fixed");
-    expect(drawerRoot?.style.inset).toBe("0px");
+    expect(drawerRoot?.style.position).toBe("");
+    expect(drawerRoot?.style.inset).toBe("");
     const drawerWrapper = drawerRoot?.querySelector(
       ".ant-drawer-content-wrapper",
     ) as HTMLElement | null;
-    expect(drawerWrapper?.style.height).toBe("100dvh");
+    expect(drawerWrapper?.style.height).toBe("");
     const drawerSection = drawerRoot?.querySelector(
       ".ant-drawer-section",
     ) as HTMLElement | null;
-    expect(drawerSection?.style.height).toBe("100%");
-    expect(drawerSection?.style.overflow).toBe("hidden");
+    expect(drawerSection?.style.height).toBe("");
+    expect(drawerSection?.style.overflow).toBe("");
     const drawerBody = screen.getByTestId("comparison-target-drawer-body");
     expect(drawerBody.className).toContain("overflow-hidden");
     expect(drawerBody.className).not.toContain("overflow-y-auto");
@@ -1063,17 +1063,15 @@ describe("ComparisonReportView next action chrome", () => {
     const antDrawerBody = drawerBody.closest(
       ".ant-drawer-body",
     ) as HTMLElement | null;
-    expect(antDrawerBody?.style.flex).toBe("1 1 0%");
-    expect(antDrawerBody?.style.minHeight).toBe("0px");
+    expect(antDrawerBody?.style.flex).toBe("");
+    expect(antDrawerBody?.style.minHeight).toBe("");
     const drawerFooter = screen.getByTestId("comparison-target-drawer-footer");
     expect(drawerFooter.className).toContain("comparison-target-drawer-footer");
     const drawerFooterShell = drawerFooter.closest(".ant-drawer-footer");
-    expect((drawerFooterShell as HTMLElement | null)?.style.position).toBe(
-      "sticky",
-    );
-    expect((drawerFooterShell as HTMLElement | null)?.style.bottom).toBe("0px");
+    expect((drawerFooterShell as HTMLElement | null)?.style.position).toBe("");
+    expect((drawerFooterShell as HTMLElement | null)?.style.bottom).toBe("");
     expect((drawerFooterShell as HTMLElement | null)?.style.flexShrink).toBe(
-      "0",
+      "",
     );
     const targetListScroll = screen.getByTestId(
       "comparison-target-list-scroll",
@@ -1101,10 +1099,9 @@ describe("ComparisonReportView next action chrome", () => {
       screen.queryByText("분석 중이라 비교할 수 없어요."),
     ).not.toBeTruthy();
     screen.getAllByTestId("comparison-target-option").forEach((option) => {
-      expect(option.className).toContain("border-b");
-      expect(option.className).toContain(
-        "border-[var(--ant-color-border-secondary)]",
-      );
+      expect(option.className).not.toContain("border-b");
+      expect(option.className).not.toContain("border-[var(");
+      expect(option.className).not.toContain("bg-[var(");
       expect(option.className).not.toContain(
         "border-[var(--app-color-border)]",
       );
@@ -1118,6 +1115,9 @@ describe("ComparisonReportView next action chrome", () => {
       expect(optionMeta.className).toContain("gap-1");
       expect(optionMeta.className).not.toContain("gap-2");
     });
+    const targetDividers = targetListScroll.querySelectorAll(".ant-divider");
+    expect(targetDividers).toHaveLength(1);
+    expect((targetDividers[0] as HTMLElement).style.margin).toBe("");
     const candidateScore = screen.getAllByTestId(
       "comparison-target-option-score",
     )[1];

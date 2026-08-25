@@ -4,6 +4,11 @@ import { extname, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
+  PHASE5D_ALTERNATE_THEME_MARKER,
+  phase5dAlternateTheme,
+} from "../e2e/fixtures/phase5d-alternate-theme";
+
+import {
   allowedAppBridgeVars,
   createAppBridgeVars,
   createTheme,
@@ -22,6 +27,7 @@ const testAlternateSource = {
   colorPrimary: "#123456",
   colorBgLayout: "#e8edf2",
   colorBgContainer: "#fefefe",
+  colorMaskSubtle: "rgba(31, 96, 168, 0.27)",
   colorText: "#102030",
   colorTextSecondary: "#506070",
   colorLinkSecondary: "#405de6",
@@ -105,6 +111,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-primary": "#123456",
       "--app-color-bg-layout": "#e8edf2",
       "--app-color-bg-container": "#fefefe",
+      "--app-color-mask-subtle": "rgba(31, 96, 168, 0.27)",
       "--app-color-text": "#102030",
       "--app-color-text-secondary": "#506070",
       "--app-color-link-secondary": "#405de6",
@@ -208,6 +215,18 @@ describe("generic app theme bridge contract", () => {
     expect(themePresets).not.toHaveProperty("test-alternate");
   });
 
+  test("keeps the browser alternate fixture complete and visibly distinct", () => {
+    expect(Object.keys(phase5dAlternateTheme.appBridgeVars)).toEqual(
+      allowedAppBridgeVars,
+    );
+    expect(phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"]).toBe(
+      "rgba(139, 44, 255, 0.31)",
+    );
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
+    ).not.toBe(awesomicThemeTokens.overlay.maskSubtle);
+  });
+
   test("enforces the alternate fixture production-source and dependency boundary", () => {
     const sourceDirectory = resolve(process.cwd(), "src");
     const productionSourceFiles = readdirSync(sourceDirectory, {
@@ -232,6 +251,9 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorStatusSuccess,
       testAlternateSource.colorStatusStrongSuccess,
       testAlternateSource.colorFillSecondary,
+      testAlternateSource.colorMaskSubtle,
+      PHASE5D_ALTERNATE_THEME_MARKER,
+      phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
     ];
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
@@ -259,6 +281,7 @@ describe("generic app theme bridge contract", () => {
         colorPrimary: awesomicThemeTokens.color.obsidian,
         colorBgLayout: awesomicThemeTokens.color.mist,
         colorBgContainer: awesomicThemeTokens.color.snow,
+        colorMaskSubtle: awesomicThemeTokens.overlay.maskSubtle,
         colorText: awesomicThemeTokens.color.ink,
         colorTextSecondary: awesomicThemeTokens.color.steel,
         colorLinkSecondary: awesomicThemeTokens.color.linkSecondary,
@@ -294,6 +317,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-success": "#52c41a",
       "--app-color-status-strong-success": "#389e0d",
       "--app-color-fill-secondary": "rgba(0, 0, 0, 0.06)",
+      "--app-color-mask-subtle": "rgba(244, 244, 245, 0.18)",
       "--app-radius-indicator": "2px",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
@@ -303,6 +327,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-success": "#49aa19",
       "--app-color-status-strong-success": "#3c8618",
       "--app-color-fill-secondary": "rgba(255, 255, 255, 0.12)",
+      "--app-color-mask-subtle": "rgba(0, 0, 0, 0.18)",
       "--app-radius-indicator": "2px",
     });
   });

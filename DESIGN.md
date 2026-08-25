@@ -142,6 +142,19 @@ change the production paint.
 Status color is always paired with a translated strength label, rule text, or
 symbol. These roles are not CTA or decorative palette colors.
 
+## Tokens — Semantic Overlay
+
+App-owned overlay paint keeps alpha inside the color value so Ant Design can
+continue to own component lifecycle opacity and fade animation.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Subtle modal mask | Mist at 18% alpha | `--app-color-mask-subtle` | Local Drawer mask CSS |
+
+Do not recreate this role with element `opacity`, `filter`, or a component-local
+raw color. Alternate test themes must provide a distinct resolved value through
+the same L1-to-L2 bridge; they are never registered in production.
+
 ## Tokens — Typography
 
 ### Cosmica — The sole typeface across the entire system — every badge, button, nav link, heading, and body copy uses Cosmica. Its wide weight range means all typographic hierarchy is weight-driven rather than family-switching. At 56–64px the light-to-medium weights feel assertive without shouting; at 10–14px the medium-to-semibold weights keep small labels legible at compact density. · `--font-cosmica`
