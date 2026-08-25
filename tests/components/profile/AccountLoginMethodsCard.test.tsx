@@ -98,12 +98,12 @@ describe("AccountLoginMethodsCard", () => {
 
   it("keeps the shared Google mark default at 18 pixels", () => {
     const { container } = renderWithIntl(<GoogleMark />);
-    const googleMark = container.querySelector("svg");
+    const googleMark = container.querySelector("img");
 
     expect(googleMark?.getAttribute("width")).toBe("18");
     expect(googleMark?.getAttribute("height")).toBe("18");
     expect(googleMark?.getAttribute("aria-hidden")).toBe("true");
-    expect(googleMark?.getAttribute("focusable")).toBe("false");
+    expect(googleMark?.getAttribute("alt")).toBe("");
   });
 
   it("shows email and disconnected Google login methods", async () => {
@@ -125,7 +125,7 @@ describe("AccountLoginMethodsCard", () => {
     const googleCard = screen
       .getByText("Google login")
       .closest(".account-login-method");
-    const googleMark = googleCard?.querySelector("svg");
+    const googleMark = googleCard?.querySelector("img");
 
     expect(accountLoginMethodsSource).toContain(
       'import { GoogleMark } from "@/components/auth/GoogleMark";',
@@ -135,10 +135,12 @@ describe("AccountLoginMethodsCard", () => {
       /fill=["']#[0-9a-f]{6}["']/iu,
     );
     expect(googleMark?.getAttribute("aria-hidden")).toBe("true");
-    expect(googleMark?.getAttribute("focusable")).toBe("false");
+    expect(googleMark?.getAttribute("alt")).toBe("");
+    expect(decodeURIComponent(googleMark?.getAttribute("src") ?? "")).toContain(
+      "/assets/brands/google-g.png",
+    );
     expect(googleMark?.getAttribute("width")).toBe("20");
     expect(googleMark?.getAttribute("height")).toBe("20");
-    expect(googleMark?.getAttribute("viewBox")).toBe("0 0 18 18");
   });
 
   it("shows Google as connected when the identity exists", async () => {
