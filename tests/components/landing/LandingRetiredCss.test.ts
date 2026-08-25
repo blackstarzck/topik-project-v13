@@ -37,7 +37,10 @@ const retiredLegacyClassPrefixes = [
   "landing-step-list",
   "landing-footer",
 ] as const;
-const retiredClassFamilies = ["landing-layout-visual__grid"] as const;
+const retiredClassFamilies = [
+  "landing-layout-visual__grid",
+  "landing-hero-video-overlay",
+] as const;
 
 describe("retired landing CSS contract", () => {
   test("keeps obsolete pre-layout landing selectors out of global CSS", () => {

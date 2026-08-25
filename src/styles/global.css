@@ -1071,24 +1071,6 @@
   font-weight: 700;
 }
 
-.signup-form-surface .ant-input,
-.signup-form-surface .ant-input-affix-wrapper,
-.signup-social-button.ant-btn {
-  min-height: 46px;
-  border-radius: 10px;
-}
-
-.signup-form-surface .ant-btn-primary {
-  min-height: 48px;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-.signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled) {
-  color: var(--app-color-text);
-  background: var(--app-color-bg-container);
-}
-
 .landing-public-shell {
   background: #f7f3ef;
 }
@@ -1113,13 +1095,6 @@
   height: 100%;
   background-color: #ccc2b7;
   object-fit: cover;
-}
-
-.landing-hero-video-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(87, 0, 12, 0.34);
-  pointer-events: none;
 }
 
 .landing-hero-shell {
@@ -1721,7 +1696,7 @@
   justify-content: center;
   gap: 9px;
   min-height: 44px;
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   text-decoration: none;
   transition:
     background-color 160ms ease-out,
@@ -1731,9 +1706,9 @@
 }
 
 .landing-layout-pill {
-  border: 1px solid #e7e7e6;
-  background: #ffffff;
-  color: #0c0c0d;
+  border: 1px solid var(--app-color-landing-cta-ghost-border);
+  background: var(--app-color-landing-cta-ghost-surface);
+  color: var(--app-color-landing-cta-ghost-text);
   padding-inline: 22px;
   font-size: 16px;
   font-weight: 500;
@@ -1747,9 +1722,9 @@
 }
 
 .landing-layout-pill:hover {
-  border-color: #0c0c0d;
-  background: #0c0c0d;
-  color: #ffffff;
+  border-color: var(--app-color-landing-cta-ghost-text);
+  background: var(--app-color-landing-cta-ghost-text);
+  color: var(--app-color-landing-cta-ghost-surface);
 }
 
 .landing-layout-service-grid,

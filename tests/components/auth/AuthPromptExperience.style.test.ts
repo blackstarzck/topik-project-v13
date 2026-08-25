@@ -87,11 +87,6 @@ const tokenizedDeclarations = [
     "var(--app-color-text-secondary)",
   ],
   [`${SURFACE} .ant-form-item-label > label`, "color", "var(--app-color-text)"],
-  [
-    ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
-    "color",
-    "var(--app-color-text)",
-  ],
   [`${PANEL} .auth-input-icon`, "color", "var(--app-color-text-secondary)"],
   [
     `${PANEL} .auth-form-remember.ant-checkbox-wrapper`,
@@ -176,10 +171,17 @@ const removedOwnedVisualRules = [
   `${LOGIN} .ant-input:focus`,
   `${LOGIN} .ant-input-affix-wrapper-focused`,
 ] as const;
+const removedLegacyControlRules = [
+  ".signup-form-surface .ant-input",
+  ".signup-form-surface .ant-input-affix-wrapper",
+  ".signup-social-button.ant-btn",
+  ".signup-form-surface .ant-btn-primary",
+  ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
+] as const;
 
 describe("AuthPromptExperience visual tokens", () => {
   it("maps or removes each of the 24 audited auth prompt colors", () => {
-    expect(tokenizedDeclarations).toHaveLength(12);
+    expect(tokenizedDeclarations).toHaveLength(11);
     expect(removedStateDeclarations).toHaveLength(8);
     for (const [selector, property, value] of tokenizedDeclarations) {
       expect(
@@ -200,6 +202,9 @@ describe("AuthPromptExperience visual tokens", () => {
 
   it("moves live control geometry and state paint out of the global stylesheet", () => {
     for (const selector of removedOwnedVisualRules) {
+      expect(rulesFor(selector), selector).toEqual([]);
+    }
+    for (const selector of removedLegacyControlRules) {
       expect(rulesFor(selector), selector).toEqual([]);
     }
 
@@ -227,8 +232,16 @@ describe("AuthPromptExperience visual tokens", () => {
     );
     expect(retrySource).not.toContain("signup-social-button");
     expect(retrySource).not.toContain('type="primary"');
-    expect(globalCss).toContain(
-      ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
+    expect(
+      rulesFor(
+        ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
+      ),
+    ).toEqual([]);
+
+    const legacyClusterStart = globalCss.indexOf(".signup-form-surface {");
+    const legacyClusterEnd = globalCss.indexOf(
+      ".landing-public-shell {",
+      legacyClusterStart,
     );
 
     const clusterStart = globalCss.indexOf(
@@ -252,12 +265,18 @@ describe("AuthPromptExperience visual tokens", () => {
         path: "src/components/auth/AuthPromptExperience.module.css",
         content: moduleCss,
       },
+      {
+        path: "src/styles/legacy-auth-controls.css",
+        content: globalCss.slice(legacyClusterStart, legacyClusterEnd),
+      },
     ]).violations.filter(({ ruleId }: { ruleId: string }) =>
       actionableRules.has(ruleId),
     );
 
     expect(clusterStart).toBeGreaterThanOrEqual(0);
     expect(clusterEnd).toBeGreaterThan(clusterStart);
+    expect(legacyClusterStart).toBeGreaterThanOrEqual(0);
+    expect(legacyClusterEnd).toBeGreaterThan(legacyClusterStart);
     expect(actionableViolations).toEqual([]);
   });
 

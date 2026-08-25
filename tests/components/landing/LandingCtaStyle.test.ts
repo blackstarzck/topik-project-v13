@@ -84,6 +84,32 @@ describe("live landing CTA style contract", () => {
     expect(ghostHover).toContain(
       "color: var(--app-color-landing-cta-ghost-surface);",
     );
+
+    const layoutPill = declarationsFor(".landing-layout-pill");
+    expect(layoutPill).toContain("border-radius: var(--app-radius-pill);");
+    expect(layoutPill).toContain(
+      "border: 1px solid var(--app-color-landing-cta-ghost-border);",
+    );
+    expect(layoutPill).toContain(
+      "background: var(--app-color-landing-cta-ghost-surface);",
+    );
+    expect(layoutPill).toContain(
+      "color: var(--app-color-landing-cta-ghost-text);",
+    );
+
+    const layoutPillHover = declarationsFor(".landing-layout-pill:hover");
+    expect(layoutPillHover).toContain(
+      "border-color: var(--app-color-landing-cta-ghost-text);",
+    );
+    expect(layoutPillHover).toContain(
+      "background: var(--app-color-landing-cta-ghost-text);",
+    );
+    expect(layoutPillHover).toContain(
+      "color: var(--app-color-landing-cta-ghost-surface);",
+    );
+    expect(`${layoutPill} ${layoutPillHover}`).not.toMatch(
+      /(?:#[\da-f]{3,8}|rgba?\()/iu,
+    );
   });
 
   test("leaves focus and disabled lifecycle to AntD and removes the unused secondary variant", () => {

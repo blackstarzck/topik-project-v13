@@ -60,7 +60,7 @@ describe("retired auth CSS contract", () => {
     ]);
   });
 
-  test("preserves the live auth prompt, character, form, and state selectors", () => {
+  test("preserves the live auth prompt while excluding module-owned controls", () => {
     expect(globalCss).toContain(".signup-prompt-shell {");
     expect(globalCss).toContain(".signup-prompt-layout {");
     expect(globalCss).toContain(".signup-prompt-hero {");
@@ -68,9 +68,13 @@ describe("retired auth CSS contract", () => {
     expect(globalCss).toContain(".signup-character-stage {");
     expect(globalCss).toContain(".signup-character--purple {");
     expect(globalCss).toContain(".signup-form-surface {");
-    expect(globalCss).toContain(".signup-social-button.ant-btn {");
+    expect(globalCss).not.toContain(".signup-social-button.ant-btn {");
+    expect(globalCss).not.toContain(".signup-form-surface .ant-btn-primary {");
+    expect(globalCss).not.toContain(
+      ".signup-social-button.ant-btn:not(:disabled):not(.ant-btn-disabled)",
+    );
     expect(globalCss).toContain("@keyframes auth-progressive-step-in {");
-    expect(globalCss).toContain(".ant-btn-primary:disabled");
-    expect(globalCss).toContain(".ant-input-affix-wrapper-focused");
+    expect(globalCss).not.toContain(".ant-btn-primary:disabled");
+    expect(globalCss).not.toContain(".ant-input-affix-wrapper-focused");
   });
 });
