@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { QUESTION_NOS, type QuestionNo } from "@/lib/practice/types";
 import { questionTypeIcon } from "./question-type-icons";
+import styles from "./ProblemTypeTabs.module.css";
 
 type Props = {
   active: QuestionNo | null;
@@ -28,19 +29,41 @@ function TabLabel({
   text,
   badge,
   ariaLabel,
+  active,
 }: {
   icon: ReactNode;
   text: string;
   badge?: string;
   ariaLabel?: string;
+  active: boolean;
 }) {
   return (
-    <span className="problem-type-tabs__label" aria-label={ariaLabel}>
-      <span className="problem-type-tabs__icon" aria-hidden="true">
+    <span
+      className={["problem-type-tabs__label", styles.label].join(" ")}
+      aria-label={ariaLabel}
+    >
+      <span
+        className={["problem-type-tabs__icon", styles.icon].join(" ")}
+        aria-hidden="true"
+      >
         {icon}
       </span>
-      <span className="problem-type-tabs__text">{text}</span>
-      {badge ? <span className="problem-type-tabs__badge">{badge}</span> : null}
+      <span
+        className={[
+          "problem-type-tabs__text",
+          styles.text,
+          active ? styles.activeText : null,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {text}
+      </span>
+      {badge ? (
+        <span className={["problem-type-tabs__badge", styles.badge].join(" ")}>
+          {badge}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -66,6 +89,7 @@ export function ProblemTypeTabs({
                 icon={<ListFilter size={16} />}
                 text={allLabel}
                 ariaLabel={allLabel}
+                active={selectedValue === ALL_VALUE}
               />
             ),
           },
@@ -80,6 +104,7 @@ export function ProblemTypeTabs({
           text={label}
           badge={locked ? tRecommendations("locked") : undefined}
           ariaLabel={locked ? t("typeTabLockedAria", { no: n }) : label}
+          active={selectedValue === n}
         />
       );
       return {
@@ -101,6 +126,7 @@ export function ProblemTypeTabs({
       type="card"
       className={[
         "problem-type-tabs",
+        styles.root,
         includeAll ? "problem-type-tabs--with-all" : null,
       ]
         .filter(Boolean)

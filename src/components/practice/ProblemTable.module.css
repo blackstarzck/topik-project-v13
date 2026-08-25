@@ -28,3 +28,12 @@
 .columnTitleIcon svg {
   stroke-width: 1.8;
 }
+
+.actionButton {
+  min-width: 82px;
+  height: 32px;
+  padding-inline: 16px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+}

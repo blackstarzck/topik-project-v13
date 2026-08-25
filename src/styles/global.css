@@ -3735,125 +3735,8 @@
   align-items: center;
 }
 
-.problem-table__action-button.ant-btn {
-  min-width: 82px;
-  height: 32px;
-  border-radius: var(--app-radius);
-  padding-inline: 16px;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.problem-table__action-button--primary.ant-btn {
-  border-color: var(--app-color-primary);
-  background: var(--app-color-primary);
-  color: var(--app-color-bg-container);
-  font-weight: 400;
-}
-
-.problem-table__action-button--secondary.ant-btn {
-  border-color: var(--app-color-border);
-  background: var(--app-color-bg-container);
-  color: var(--app-color-text);
-  font-weight: 400;
-}
-
-.problem-table__bookmark-button.ant-btn,
-.writing-exam-header__bookmark-button.ant-btn {
-  flex: 0 0 32px;
-  width: 32px;
-  min-width: 32px;
-  max-width: 32px;
-  height: 32px;
-  border-radius: var(--app-radius);
-  padding-inline: 0;
-  line-height: 1;
-}
-
 .writing-exam-header__bookmark-button.ant-btn {
   align-self: center;
-}
-
-.problem-bookmark-toggle--saved.ant-btn {
-  border-color: color-mix(in srgb, var(--app-color-primary) 45%, transparent);
-  background: var(--app-color-bg-container);
-  color: var(--app-color-primary);
-}
-
-.problem-bookmark-toggle--saved.ant-btn:not(:disabled):hover,
-.problem-bookmark-toggle--saved.ant-btn:not(:disabled):focus-visible {
-  border-color: var(--app-color-primary);
-  background: var(--app-color-bg-layout);
-  color: var(--app-color-primary);
-}
-
-.problem-table__action-button--primary.ant-btn:not(:disabled):hover,
-.problem-table__action-button--primary.ant-btn:not(:disabled):focus-visible {
-  border-color: var(--app-color-primary);
-  background: var(--app-color-primary);
-  color: var(--app-color-bg-container);
-}
-
-.problem-table__action-button--secondary.ant-btn:not(:disabled):hover,
-.problem-table__action-button--secondary.ant-btn:not(:disabled):focus-visible {
-  border-color: var(--app-color-primary);
-  background: var(--app-color-bg-layout);
-  color: var(--app-color-text);
-}
-
-/*
- * C-01/C-02 question-type selector. AntD card-type Tabs gives the requested
- * "Card type tab" look and tablist semantics; the matching content is rendered
- * separately below, so the empty tab panel is collapsed and the nav margin is
- * removed to let the surrounding layout own the spacing.
- */
-.problem-type-tabs.ant-tabs > .ant-tabs-nav {
-  margin: 0;
-}
-
-.problem-type-tabs.ant-tabs .ant-tabs-content-holder {
-  display: none;
-}
-
-.problem-type-tabs__label {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 8px;
-}
-
-.problem-type-tabs__icon {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  color: inherit;
-}
-
-.problem-type-tabs__text {
-  min-width: 0;
-  overflow: hidden;
-  /* Unselected tabs read lighter so the active (bold) tab stands out. */
-  font-weight: 400;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.problem-type-tabs .ant-tabs-tab-active .problem-type-tabs__text {
-  font-weight: 700;
-}
-
-.library-item-delete-button.ant-btn {
-  background: transparent;
-  box-shadow: none;
-}
-
-.library-item-delete-button.ant-btn:not(:disabled):not(.ant-btn-disabled):hover,
-.library-item-delete-button.ant-btn:not(:disabled):not(
-    .ant-btn-disabled
-  ):focus-visible {
-  background: transparent;
 }
 
 .library-review-swiper .swiper-wrapper {
@@ -3892,19 +3775,6 @@
     background: var(--app-color-bg-container);
     padding-block-start: 12px;
   }
-}
-
-.problem-type-tabs__badge {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  min-height: 20px;
-  border-radius: 999px;
-  background: var(--app-color-bg-layout);
-  padding: 0 8px;
-  color: var(--app-color-text-secondary);
-  font-size: 12px;
-  font-weight: 600;
 }
 
 /* Layout only — the surface (border, radius, background, padding) is provided

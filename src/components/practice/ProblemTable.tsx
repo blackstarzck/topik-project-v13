@@ -352,16 +352,22 @@ export function ProblemTable({
 
         const solveButton = analysisHandoff ? (
           <Button
-            className="problem-table__action-button problem-table__action-button--secondary"
-            variant="outlined"
+            className={[
+              "problem-table__action-button problem-table__action-button--secondary",
+              styles.actionButton,
+            ].join(" ")}
+            type="default"
             disabled
           >
             {t("analysisStatusAction")}
           </Button>
         ) : rowHasPriorWork ? (
           <Button
-            className="problem-table__action-button problem-table__action-button--secondary"
-            variant="outlined"
+            className={[
+              "problem-table__action-button problem-table__action-button--secondary",
+              styles.actionButton,
+            ].join(" ")}
+            type="default"
             onClick={() => onRetryClick(row)}
             disabled={disabled}
           >
@@ -369,7 +375,11 @@ export function ProblemTable({
           </Button>
         ) : (
           <Button
-            className="problem-table__action-button problem-table__action-button--primary"
+            className={[
+              "problem-table__action-button problem-table__action-button--primary",
+              styles.actionButton,
+            ].join(" ")}
+            type="primary"
             disabled={disabled}
           >
             {t("startProblem")}

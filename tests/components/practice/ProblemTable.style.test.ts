@@ -29,6 +29,26 @@ const problemTableStylesPath = path.join(
 const problemTableStylesSource = existsSync(problemTableStylesPath)
   ? readFileSync(problemTableStylesPath, "utf8")
   : "";
+const problemBookmarkSource = readFileSync(
+  path.join(
+    process.cwd(),
+    "src",
+    "components",
+    "practice",
+    "ProblemBookmarkToggle.tsx",
+  ),
+  "utf8",
+);
+const problemBookmarkStylesPath = path.join(
+  process.cwd(),
+  "src",
+  "components",
+  "practice",
+  "ProblemBookmarkToggle.module.css",
+);
+const problemBookmarkStylesSource = existsSync(problemBookmarkStylesPath)
+  ? readFileSync(problemBookmarkStylesPath, "utf8")
+  : "";
 
 const columnTitleModuleRules = [
   [
@@ -51,6 +71,19 @@ const formerGlobalColumnTitleSelectors = [
   ".problem-table__column-title-icon svg",
 ] as const;
 const retiredStatusPillClassFamilies = ["problem-table__status-pill"] as const;
+const formerGlobalProblemActionSelectors = [
+  ".problem-table__action-button.ant-btn",
+  ".problem-table__action-button--primary.ant-btn",
+  ".problem-table__action-button--secondary.ant-btn",
+  ".problem-table__bookmark-button.ant-btn",
+  ".problem-bookmark-toggle--saved.ant-btn",
+  ".problem-bookmark-toggle--saved.ant-btn:not(:disabled):hover",
+  ".problem-bookmark-toggle--saved.ant-btn:not(:disabled):focus-visible",
+  ".problem-table__action-button--primary.ant-btn:not(:disabled):hover",
+  ".problem-table__action-button--primary.ant-btn:not(:disabled):focus-visible",
+  ".problem-table__action-button--secondary.ant-btn:not(:disabled):hover",
+  ".problem-table__action-button--secondary.ant-btn:not(:disabled):focus-visible",
+] as const;
 
 function cssRule(selector: string) {
   const escaped = selector
@@ -360,6 +393,47 @@ describe("ProblemTable styles", () => {
         true,
       );
     }
+  });
+
+  test("lets AntD own problem action paint while local modules own control geometry", () => {
+    const missingContracts = [
+      ...formerGlobalProblemActionSelectors
+        .filter((selector) => hasCssSelector(css, selector))
+        .map((selector) => `global selector: ${selector}`),
+      ...(!hasExactTopLevelRule(
+        problemTableStylesSource,
+        ".actionButton",
+        "min-width: 82px; height: 32px; padding-inline: 16px; font-size: 14px; font-weight: 400; line-height: 1;",
+      )
+        ? ["module rule: .actionButton"]
+        : []),
+      ...(!existsSync(problemBookmarkStylesPath)
+        ? ["bookmark component stylesheet"]
+        : []),
+      ...(!hasExactTopLevelRule(
+        problemBookmarkStylesSource,
+        ".button",
+        "flex: 0 0 32px; width: 32px; min-width: 32px; max-width: 32px; height: 32px; padding-inline: 0; line-height: 1;",
+      )
+        ? ["module rule: .button"]
+        : []),
+    ];
+
+    expect(missingContracts).toEqual([]);
+    expect(problemTableSource).toContain("styles.actionButton");
+    expect(problemTableSource).toContain('type="primary"');
+    expect(problemTableSource).toContain('type="default"');
+    expect(problemBookmarkSource).toContain(
+      'import styles from "./ProblemBookmarkToggle.module.css";',
+    );
+    expect(problemBookmarkSource).toContain("styles.button");
+    expect(problemBookmarkSource).toContain("aria-pressed={saved}");
+    expect(problemBookmarkSource).toContain(
+      'fill={saved ? "currentColor" : "none"}',
+    );
+    expect(problemBookmarkSource).not.toContain(
+      "problem-bookmark-toggle--saved",
+    );
   });
 
   test("distinguishes top-level ownership from nested, duplicate, and grouped rules", () => {

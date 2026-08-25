@@ -14,13 +14,21 @@ const tokenizedRadiusRules = [
   ".landing-layout-testimonials article",
   ".landing-layout-stat",
   ".landing-layout-feature",
-  ".problem-table__action-button.ant-btn",
-  ".problem-table__bookmark-button.ant-btn, .writing-exam-header__bookmark-button.ant-btn",
   ".writing-material-card__cell",
   ".writing-guide-accordion.ant-collapse > .ant-collapse-item",
   ".writing-guide-accordion.ant-collapse > .ant-collapse-item:first-child, .writing-guide-accordion.ant-collapse > .ant-collapse-item:last-child, .writing-guide-accordion.ant-collapse > .ant-collapse-item",
 ] as const;
 const tokenizedRadiusRuleSet = new Set<string>(tokenizedRadiusRules);
+const problemTypeTabsCss = readFileSync(
+  path.join(
+    process.cwd(),
+    "src",
+    "components",
+    "practice",
+    "ProblemTypeTabs.module.css",
+  ),
+  "utf8",
+);
 
 function normalizeSelector(selector: string) {
   return selector.replace(/\s+/gu, " ").trim();
@@ -58,5 +66,13 @@ describe("global CSS radius token contract", () => {
     for (const value of asymmetricRadii) {
       expect(globalCss).toContain(`border-radius: ${value};`);
     }
+  });
+
+  test("keeps the problem type lock badge on the shared pill radius", () => {
+    expect(globalCss).not.toContain(".problem-type-tabs__badge");
+    expect(problemTypeTabsCss).toContain(
+      "border-radius: var(--app-radius-pill);",
+    );
+    expect(problemTypeTabsCss).not.toContain("border-radius: 999px;");
   });
 });

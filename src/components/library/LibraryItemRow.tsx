@@ -99,7 +99,6 @@ export function LibraryItemRow({
     >
       <Button
         aria-label={t("delete")}
-        className="library-item-delete-button"
         danger
         icon={<Trash2 aria-hidden="true" size={16} />}
         loading={deleteItem.isPending}
