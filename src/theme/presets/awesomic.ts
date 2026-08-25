@@ -15,6 +15,11 @@ const awesomicToken = {
   colorLink: awesomicThemeTokens.color.graphite,
   colorLinkHover: awesomicThemeTokens.color.obsidian,
   colorLinkActive: awesomicThemeTokens.color.obsidian,
+  // Status seed values stay appearance-neutral. AntD's active algorithm owns
+  // the resolved light/dark status, fill, and compact-radius aliases.
+  colorError: awesomicThemeTokens.status.light.error,
+  colorWarning: awesomicThemeTokens.status.light.warning,
+  colorSuccess: awesomicThemeTokens.status.light.success,
   borderRadius: awesomicThemeTokens.radius.base,
   borderRadiusSM: awesomicThemeTokens.radius.badge,
   borderRadiusLG: awesomicThemeTokens.radius.base,

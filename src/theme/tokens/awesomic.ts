@@ -21,6 +21,25 @@ export const awesomicThemeTokens = {
     card: 8,
     compactCard: 6,
     input: 6,
+    indicator: 2,
+  },
+  // AntD owns status semantics. These resolved light/dark values lock the
+  // existing meter paint while allowing the same roles to reach Tailwind.
+  status: {
+    light: {
+      error: "#ff4d4f",
+      warning: "#faad14",
+      success: "#52c41a",
+      strongSuccess: "#389e0d",
+      fillSecondary: "rgba(0, 0, 0, 0.06)",
+    },
+    dark: {
+      error: "#dc4446",
+      warning: "#d89614",
+      success: "#49aa19",
+      strongSuccess: "#3c8618",
+      fillSecondary: "rgba(255, 255, 255, 0.12)",
+    },
   },
   shadow: {
     elevated: "rgba(0, 0, 0, 0.04) 0px 4px 12px 0px",
@@ -43,24 +62,42 @@ export const awesomicThemeTokens = {
   },
 } as const;
 
-export const awesomicBridgeVars = {
-  "--app-color-primary": awesomicThemeTokens.color.obsidian,
-  "--app-color-bg-layout": awesomicThemeTokens.color.mist,
-  "--app-color-bg-container": awesomicThemeTokens.color.snow,
-  "--app-color-text": awesomicThemeTokens.color.ink,
-  "--app-color-text-secondary": awesomicThemeTokens.color.steel,
-  "--app-color-link-secondary": awesomicThemeTokens.color.linkSecondary,
-  "--app-color-border": awesomicThemeTokens.color.pebble,
-  "--app-radius": `${awesomicThemeTokens.radius.base}px`,
-  "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
-  "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
-  "--app-font-size-body": awesomicThemeTokens.fontSize.body,
-  "--app-font-size-body-lg": awesomicThemeTokens.fontSize.bodyLg,
-  "--app-font-size-subheading": awesomicThemeTokens.fontSize.subheading,
-  "--app-font-size-heading-sm": awesomicThemeTokens.fontSize.headingSm,
-  "--app-font-size-heading": awesomicThemeTokens.fontSize.heading,
-  "--app-font-size-heading-lg": awesomicThemeTokens.fontSize.headingLg,
-  "--app-font-size-display-sm": awesomicThemeTokens.fontSize.displaySm,
-  "--app-font-size-display": awesomicThemeTokens.fontSize.display,
-  "--app-shadow-elevated": awesomicThemeTokens.shadow.elevated,
-} as const satisfies AppBridgeVars;
+function createAwesomicBridgeVars(appearance: "light" | "dark") {
+  const status = awesomicThemeTokens.status[appearance];
+
+  return {
+    "--app-color-primary": awesomicThemeTokens.color.obsidian,
+    "--app-color-bg-layout": awesomicThemeTokens.color.mist,
+    "--app-color-bg-container": awesomicThemeTokens.color.snow,
+    "--app-color-text": awesomicThemeTokens.color.ink,
+    "--app-color-text-secondary": awesomicThemeTokens.color.steel,
+    "--app-color-link-secondary": awesomicThemeTokens.color.linkSecondary,
+    "--app-color-border": awesomicThemeTokens.color.pebble,
+    "--app-color-status-error": status.error,
+    "--app-color-status-warning": status.warning,
+    "--app-color-status-success": status.success,
+    "--app-color-status-strong-success": status.strongSuccess,
+    "--app-color-fill-secondary": status.fillSecondary,
+    "--app-radius": `${awesomicThemeTokens.radius.base}px`,
+    "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
+    "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
+    "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
+    "--app-font-size-body": awesomicThemeTokens.fontSize.body,
+    "--app-font-size-body-lg": awesomicThemeTokens.fontSize.bodyLg,
+    "--app-font-size-subheading": awesomicThemeTokens.fontSize.subheading,
+    "--app-font-size-heading-sm": awesomicThemeTokens.fontSize.headingSm,
+    "--app-font-size-heading": awesomicThemeTokens.fontSize.heading,
+    "--app-font-size-heading-lg": awesomicThemeTokens.fontSize.headingLg,
+    "--app-font-size-display-sm": awesomicThemeTokens.fontSize.displaySm,
+    "--app-font-size-display": awesomicThemeTokens.fontSize.display,
+    "--app-shadow-elevated": awesomicThemeTokens.shadow.elevated,
+  } as const satisfies AppBridgeVars;
+}
+
+export const awesomicBridgeVarsByAppearance = {
+  light: createAwesomicBridgeVars("light"),
+  dark: createAwesomicBridgeVars("dark"),
+} as const;
+
+// Compatibility export for the light-only documented Awesomic source.
+export const awesomicBridgeVars = awesomicBridgeVarsByAppearance.light;

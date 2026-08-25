@@ -28,10 +28,35 @@ const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
     format: asString,
   },
   "--app-color-border": { token: "colorBorder", format: asString },
+  "--app-color-status-error": { token: "colorError", format: asString },
+  "--app-color-status-warning": { token: "colorWarning", format: asString },
+  "--app-color-status-success": { token: "colorSuccess", format: asString },
+  "--app-color-status-strong-success": {
+    token: "colorSuccessActive",
+    format: asString,
+  },
+  "--app-color-fill-secondary": {
+    token: "colorFillSecondary",
+    format: asString,
+  },
   "--app-radius": { token: "borderRadius", format: asPx },
+  "--app-radius-indicator": { token: "borderRadiusXS", format: asPx },
   "--app-font-family": { token: "fontFamily", format: asString },
   "--app-shadow-elevated": { token: "boxShadowSecondary", format: asString },
 };
+
+const STATUS_BRIDGE_TOKEN_MAP = Object.fromEntries(
+  Object.entries(ANT_D_BACKED_BRIDGE_TOKEN_MAP).filter(([varName]) =>
+    [
+      "--app-color-status-error",
+      "--app-color-status-warning",
+      "--app-color-status-success",
+      "--app-color-status-strong-success",
+      "--app-color-fill-secondary",
+      "--app-radius-indicator",
+    ].includes(varName),
+  ),
+) as typeof ANT_D_BACKED_BRIDGE_TOKEN_MAP;
 
 function normalize(value: string): string {
   return value
@@ -73,6 +98,26 @@ describe("theme bridge ↔ AntD token parity (Awesomic selected theme)", () => {
       const expected = format(resolved?.[token]);
       expect(bridge[varName]).toBeTruthy();
       expect(normalize(bridge[varName])).toBe(normalize(expected));
+    }
+  });
+
+  test("dark semantic status bridge values match resolved AntD tokens", () => {
+    const bridge = getResolvedBridgeVars(defaultThemeName, "dark");
+    const resolved = resolveTokens("dark");
+
+    expect(resolved).toBeTruthy();
+
+    for (const [varName, { token, format }] of Object.entries(
+      STATUS_BRIDGE_TOKEN_MAP,
+    ) as Array<
+      [
+        AppBridgeVarName,
+        NonNullable<(typeof STATUS_BRIDGE_TOKEN_MAP)[AppBridgeVarName]>,
+      ]
+    >) {
+      expect(normalize(bridge[varName])).toBe(
+        normalize(format(resolved?.[token])),
+      );
     }
   });
 

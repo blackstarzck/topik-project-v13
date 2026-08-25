@@ -122,6 +122,26 @@ difficulty.
   `src/theme` into `--app-*` and update the theme contract tests (per the
   runtime policy above).
 
+## Tokens — Semantic Status
+
+Ant Design is the L1 owner of interface status meaning. App-owned Tailwind
+consumers use the matching L2 bridge aliases below; they do not read
+`--ant-*` variables directly. The light/dark values are the resolved Ant Design
+status and fill values already used by the product, so promoting them does not
+change the production paint.
+
+| Meaning | Ant Design owner | App bridge | Tailwind alias |
+| --- | --- | --- | --- |
+| Error / weak | `colorError` | `--app-color-status-error` | `status-error` |
+| Warning / fair | `colorWarning` | `--app-color-status-warning` | `status-warning` |
+| Success / good | `colorSuccess` | `--app-color-status-success` | `status-success` |
+| Strong success | `colorSuccessActive` | `--app-color-status-strong-success` | `status-strong-success` |
+| Inactive indicator fill | `colorFillSecondary` | `--app-color-fill-secondary` | `fill-secondary` |
+| Indicator corner | `borderRadiusXS` | `--app-radius-indicator` | `indicator` |
+
+Status color is always paired with a translated strength label, rule text, or
+symbol. These roles are not CTA or decorative palette colors.
+
 ## Tokens — Typography
 
 ### Cosmica — The sole typeface across the entire system — every badge, button, nav link, heading, and body copy uses Cosmica. Its wide weight range means all typographic hierarchy is weight-driven rather than family-switching. At 56–64px the light-to-medium weights feel assertive without shouting; at 10–14px the medium-to-semibold weights keep small labels legible at compact density. · `--font-cosmica`

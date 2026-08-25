@@ -6,7 +6,13 @@ export const allowedAppBridgeVars = [
   "--app-color-text-secondary",
   "--app-color-link-secondary",
   "--app-color-border",
+  "--app-color-status-error",
+  "--app-color-status-warning",
+  "--app-color-status-success",
+  "--app-color-status-strong-success",
+  "--app-color-fill-secondary",
   "--app-radius",
+  "--app-radius-indicator",
   "--app-font-family",
   "--app-font-size-caption",
   "--app-font-size-body",
@@ -31,7 +37,13 @@ export type AppBridgeTokenSource = {
   colorTextSecondary: string;
   colorLinkSecondary: string;
   colorBorder: string;
+  colorStatusError: string;
+  colorStatusWarning: string;
+  colorStatusSuccess: string;
+  colorStatusStrongSuccess: string;
+  colorFillSecondary: string;
   radius: string;
+  radiusIndicator: string;
   fontFamily: string;
   fontSizeCaption: string;
   fontSizeBody: string;
@@ -56,7 +68,13 @@ export function createAppBridgeVars(
     "--app-color-text-secondary": source.colorTextSecondary,
     "--app-color-link-secondary": source.colorLinkSecondary,
     "--app-color-border": source.colorBorder,
+    "--app-color-status-error": source.colorStatusError,
+    "--app-color-status-warning": source.colorStatusWarning,
+    "--app-color-status-success": source.colorStatusSuccess,
+    "--app-color-status-strong-success": source.colorStatusStrongSuccess,
+    "--app-color-fill-secondary": source.colorFillSecondary,
     "--app-radius": source.radius,
+    "--app-radius-indicator": source.radiusIndicator,
     "--app-font-family": source.fontFamily,
     "--app-font-size-caption": source.fontSizeCaption,
     "--app-font-size-body": source.fontSizeBody,

@@ -76,6 +76,22 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.color.linkSecondary).toBe(
       tokenValue("color.link-secondary"),
     );
+    expect(awesomicThemeTokens.status).toEqual({
+      light: {
+        error: "#ff4d4f",
+        warning: "#faad14",
+        success: "#52c41a",
+        strongSuccess: "#389e0d",
+        fillSecondary: "rgba(0, 0, 0, 0.06)",
+      },
+      dark: {
+        error: "#dc4446",
+        warning: "#d89614",
+        success: "#49aa19",
+        strongSuccess: "#3c8618",
+        fillSecondary: "rgba(255, 255, 255, 0.12)",
+      },
+    });
     expect(awesomicThemeTokens.fontSize).toEqual({
       caption: typographyFontSize("typography.xs"),
       body: typographyFontSize("typography.sm-9"),
@@ -127,6 +143,7 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.radius.card).toBe(8);
     expect(awesomicThemeTokens.radius.compactCard).toBe(6);
     expect(awesomicThemeTokens.radius.badge).toBe(4);
+    expect(awesomicThemeTokens.radius.indicator).toBe(2);
 
     expect(awesomicThemeTokens.radius.card).toBeLessThan(
       tokenPx("radius.3xl-3"),

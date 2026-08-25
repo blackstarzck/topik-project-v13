@@ -3,7 +3,7 @@ import type { ThemeConfig } from "antd";
 import { themeSettings } from "./config";
 import type { ThemeAppearance } from "./types";
 import type { AppBridgeVars } from "./bridge-contract";
-import { awesomicBridgeVars } from "./tokens/awesomic";
+import { awesomicBridgeVarsByAppearance } from "./tokens/awesomic";
 import { appFontFamily } from "./global/shared-seed";
 
 export type ResolvedBridgeVars = AppBridgeVars;
@@ -34,7 +34,13 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-text-secondary": "rgba(0, 0, 0, 0.65)",
     "--app-color-link-secondary": "#3254F2",
     "--app-color-border": "#d9d9d9",
+    "--app-color-status-error": "#ff4d4f",
+    "--app-color-status-warning": "#faad14",
+    "--app-color-status-success": "#52c41a",
+    "--app-color-status-strong-success": "#389e0d",
+    "--app-color-fill-secondary": "rgba(0, 0, 0, 0.06)",
     "--app-radius": "6px",
+    "--app-radius-indicator": "2px",
     "--app-font-family": appFontFamily,
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_LIGHT_SHADOW_ELEVATED,
@@ -47,7 +53,13 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-text-secondary": "rgba(255, 255, 255, 0.65)",
     "--app-color-link-secondary": "#3254F2",
     "--app-color-border": "#424242",
+    "--app-color-status-error": "#dc4446",
+    "--app-color-status-warning": "#d89614",
+    "--app-color-status-success": "#49aa19",
+    "--app-color-status-strong-success": "#3c8618",
+    "--app-color-fill-secondary": "rgba(255, 255, 255, 0.12)",
     "--app-radius": "6px",
+    "--app-radius-indicator": "2px",
     "--app-font-family": appFontFamily,
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_DARK_SHADOW_ELEVATED,
@@ -55,10 +67,8 @@ const DEFAULT_BRIDGE_VARS = {
 } as const satisfies Record<ThemeAppearance, AppBridgeVars>;
 
 const AWESOMIC_BRIDGE_VARS = {
-  light: awesomicBridgeVars,
-  // DESIGN/Awesomic is light-only today. Keep dark infrastructure callable, but
-  // do not invent a second undocumented dark palette.
-  dark: awesomicBridgeVars,
+  light: awesomicBridgeVarsByAppearance.light,
+  dark: awesomicBridgeVarsByAppearance.dark,
 } as const satisfies Record<ThemeAppearance, AppBridgeVars>;
 
 const BRIDGE_VARS_BY_THEME = {

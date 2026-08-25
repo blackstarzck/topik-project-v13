@@ -349,3 +349,108 @@ test("authenticated read-only UI survives a browser-only alternate theme", async
   expect(runtimeErrors).toEqual([]);
   expect(unexpectedWrites).toEqual([]);
 });
+
+test.describe("public password-strength theme bridge", () => {
+  test.use({
+    extraHTTPHeaders: { "Accept-Language": "ko-KR,ko;q=0.9" },
+    locale: "ko-KR",
+    storageState: { cookies: [], origins: [] },
+  });
+
+  test("changes computed meter status, inactive fill, and indicator radius", async ({
+    page,
+  }) => {
+    const runtimeErrors: string[] = [];
+    const unexpectedWrites: string[] = [];
+
+    page.on("pageerror", (error) => {
+      runtimeErrors.push(`pageerror: ${error.message}`);
+    });
+    page.on("console", (message) => {
+      if (message.type() === "error") {
+        runtimeErrors.push(`console: ${message.text()}`);
+      }
+    });
+    page.on("response", (response) => {
+      if (response.status() >= 500) {
+        runtimeErrors.push(
+          `response: ${response.status()} ${safeRequestLabel(
+            response.request().method(),
+            response.url(),
+          )}`,
+        );
+      }
+    });
+
+    await page.route("**/*", async (route) => {
+      const request = route.request();
+      const method = request.method().toUpperCase();
+
+      if (!READ_ONLY_METHODS.has(method)) {
+        unexpectedWrites.push(safeRequestLabel(method, request.url()));
+        await route.fulfill({
+          status: 405,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "phase5d_read_only_guard" }),
+        });
+        return;
+      }
+
+      await route.continue();
+    });
+
+    await page.goto("/sign-up", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/sign-up/);
+
+    await page.locator("#displayName").fill("Theme Check");
+    await page.locator("#displayName").blur();
+    await page.getByTestId("country-region-select").click();
+    await page.locator(".ant-select-item-option").first().click();
+    await page.locator("#email").fill("theme-check@example.com");
+    await page.locator("#email").blur();
+    await page.locator("#password").fill("abcdefghijkl");
+
+    const meter = page.getByTestId("password-strength");
+    const segments = meter
+      .locator(":scope > div")
+      .first()
+      .locator(":scope > div");
+    const filledSegment = segments.first();
+    const inactiveSegment = segments.nth(2);
+    const strengthLabel = meter.locator(".ant-typography").first();
+
+    await expect(meter).toBeVisible();
+    await expect(segments).toHaveCount(4);
+
+    const baselinePaint = {
+      filled: await computedPaint(filledSegment),
+      inactive: await computedPaint(inactiveSegment),
+      label: await computedPaint(strengthLabel),
+    };
+
+    expect(baselinePaint.filled.backgroundColor).toBe("rgb(250, 173, 20)");
+    expect(baselinePaint.inactive.backgroundColor).toBe("rgba(0, 0, 0, 0.06)");
+    expect(baselinePaint.label.color).toBe("rgb(250, 173, 20)");
+    expect(baselinePaint.filled.borderRadius).toBe("2px");
+    expect(baselinePaint.inactive.borderRadius).toBe("2px");
+
+    await injectAlternateTheme(page);
+
+    const themedPaint = {
+      filled: await computedPaint(filledSegment),
+      inactive: await computedPaint(inactiveSegment),
+      label: await computedPaint(strengthLabel),
+    };
+
+    expect(themedPaint.filled.backgroundColor).toBe("rgb(122, 81, 0)");
+    expect(themedPaint.inactive.backgroundColor).toBe("rgba(36, 16, 79, 0.24)");
+    expect(themedPaint.label.color).toBe("rgb(122, 81, 0)");
+    expect(themedPaint.filled.borderRadius).toBe("5px");
+    expect(themedPaint.inactive.borderRadius).toBe("5px");
+    expect(themedPaint).not.toEqual(baselinePaint);
+
+    await expectNoHorizontalOverflow(page);
+    expect(runtimeErrors).toEqual([]);
+    expect(unexpectedWrites).toEqual([]);
+  });
+});

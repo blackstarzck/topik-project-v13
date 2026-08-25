@@ -102,7 +102,13 @@
   --color-text-secondary: var(--app-color-text-secondary);
   --color-link-secondary: var(--app-color-link-secondary);
   --color-border: var(--app-color-border);
+  --color-status-error: var(--app-color-status-error);
+  --color-status-warning: var(--app-color-status-warning);
+  --color-status-success: var(--app-color-status-success);
+  --color-status-strong-success: var(--app-color-status-strong-success);
+  --color-fill-secondary: var(--app-color-fill-secondary);
   --radius-default: var(--app-radius);
+  --radius-indicator: var(--app-radius-indicator);
   --font-sans: var(--app-font-family);
   --text-caption: var(--app-font-size-caption);
   --text-body: var(--app-font-size-body);
