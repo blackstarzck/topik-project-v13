@@ -278,7 +278,6 @@
   min-height: 30px;
   height: 30px;
   border-radius: var(--app-radius);
-  box-shadow: none;
   font-size: 13px;
   font-weight: 600;
 }
@@ -291,7 +290,6 @@
   outline: 2px solid var(--app-color-primary);
   outline-offset: 0;
   background: var(--app-color-bg-container);
-  box-shadow: none;
 }
 
 .retry-modal.ant-modal {
@@ -3309,20 +3307,6 @@
   width: 100%;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.selectable-app-card__cue {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 0.25rem;
-  border-radius: 999px;
-  background: var(--app-color-primary);
-  color: var(--app-color-bg-container);
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  line-height: 1.5;
 }
 
 .problem-list-card.app-card.app-surface .problem-list-card__body {
