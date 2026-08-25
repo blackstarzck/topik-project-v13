@@ -36,6 +36,7 @@ describe("writing style contract helpers", () => {
       [class^="writing-prefix"] { display: grid; }
       [class$="suffix-panel"] { display: grid; }
       [class*="middle-fragment"] { display: grid; }
+      [class="WRITING-INSENSITIVE" i] { display: grid; }
       [class="foo-writing-panel"] { display: none; }
     `;
 
@@ -50,6 +51,7 @@ describe("writing style contract helpers", () => {
         "writing-prefix-panel",
         "writing-suffix-panel",
         "writing-middle-fragment-panel",
+        "writing-insensitive",
       ]),
     ).toEqual([
       ".writing-panel.compact",
@@ -61,15 +63,18 @@ describe("writing style contract helpers", () => {
       '[class^="writing-prefix"]',
       '[class$="suffix-panel"]',
       '[class*="middle-fragment"]',
+      '[class="WRITING-INSENSITIVE" i]',
     ]);
 
     expect(
       findClassOwners(
-        '[class="writing-command-bar"] { display: grid; }',
+        `[class="writing-command-bar"] { display: grid; }
+         [class*="writing-command"] { display: grid; }
+         [class*="foo-writing-command"] { display: none; }`,
         ["writing-command"],
         { includeSuffix: true },
       ),
-    ).toEqual(['[class="writing-command-bar"]']);
+    ).toEqual(['[class="writing-command-bar"]', '[class*="writing-command"]']);
   });
 
   it("requires the exact imported module class beside the stable class", () => {

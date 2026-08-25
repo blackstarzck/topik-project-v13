@@ -171,43 +171,47 @@ function selectorContainsClass(
   }
 
   const classAttributePattern =
-    /\[\s*class\s*(=|~=|\|=|\^=|\$=|\*=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))/giu;
+    /\[\s*class\s*(=|~=|\|=|\^=|\$=|\*=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))\s*([is])?\s*\]/giu;
   return Array.from(decodedSelector.matchAll(classAttributePattern)).some(
     (match) => {
       const operator = match[1];
       const value = match[2] ?? match[3] ?? match[4] ?? "";
+      const normalize = (candidate: string) =>
+        match[5]?.toLowerCase() === "i" ? candidate.toLowerCase() : candidate;
+      const normalizedClassName = normalize(className);
+      const normalizedValue = normalize(value);
       const matchesClass = (candidate: string) =>
         includeSuffix
-          ? candidate.startsWith(className)
-          : candidate === className;
+          ? normalize(candidate).startsWith(normalizedClassName)
+          : normalize(candidate) === normalizedClassName;
 
       if (operator === "=") {
-        return value.split(/\s+/u).some(matchesClass);
+        return normalizedValue.split(/\s+/u).some(matchesClass);
       }
-      if (operator === "~=") return matchesClass(value);
+      if (operator === "~=") return matchesClass(normalizedValue);
       if (operator === "|=") {
         return (
-          matchesClass(value) ||
-          className === value ||
-          className.startsWith(`${value}-`)
+          matchesClass(normalizedValue) ||
+          normalizedClassName === normalizedValue ||
+          normalizedClassName.startsWith(`${normalizedValue}-`)
         );
       }
       if (operator === "^=") {
         return (
-          className.startsWith(value) ||
-          (includeSuffix && value.startsWith(className))
+          normalizedClassName.startsWith(normalizedValue) ||
+          (includeSuffix && normalizedValue.startsWith(normalizedClassName))
         );
       }
       if (operator === "$=") {
         return (
-          className.endsWith(value) ||
-          (includeSuffix && value.startsWith(className))
+          normalizedClassName.endsWith(normalizedValue) ||
+          (includeSuffix && normalizedValue.startsWith(normalizedClassName))
         );
       }
       if (operator === "*=") {
         return (
-          className.includes(value) ||
-          (includeSuffix && value.includes(className))
+          normalizedClassName.includes(normalizedValue) ||
+          (includeSuffix && normalizedValue.startsWith(normalizedClassName))
         );
       }
       return false;
