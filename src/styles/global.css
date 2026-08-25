@@ -4526,10 +4526,10 @@
 
 /* Section title is rendered as a real <h2> so the page exposes an accessible
    h1 (page) > h2 (section) outline. DESIGN.md "heading-sm" role: 20px / 1.35
-   (the documented --text-* tokens are not yet implemented as CSS variables). */
+   through the shared font-size bridge. */
 .notification-settings-section-heading {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--app-font-size-heading-sm);
   line-height: 1.35;
   font-weight: 600;
   color: var(--app-color-text);

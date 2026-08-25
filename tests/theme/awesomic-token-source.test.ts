@@ -34,6 +34,30 @@ function tokenPx(path: string): number {
   return Number.parseFloat(value);
 }
 
+function typographyFontSize(path: string): string {
+  const value = tokenValue(path);
+  if (
+    !value ||
+    typeof value !== "object" ||
+    typeof value.fontSize !== "string"
+  ) {
+    throw new Error(`Expected ${path} to be a typography token`);
+  }
+  return value.fontSize;
+}
+
+const documentedFontSizeAliases = {
+  caption: "--text-caption",
+  body: "--text-body",
+  bodyLg: "--text-body-lg",
+  subheading: "--text-subheading",
+  headingSm: "--text-heading-sm",
+  heading: "--text-heading",
+  headingLg: "--text-heading-lg",
+  displaySm: "--text-display-sm",
+  display: "--text-display",
+} as const;
+
 describe("Awesomic token source contract", () => {
   test("selected theme is registered", () => {
     expect(themeSettings.main).toBe("awesomic");
@@ -52,6 +76,48 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.color.linkSecondary).toBe(
       tokenValue("color.link-secondary"),
     );
+    expect(awesomicThemeTokens.fontSize).toEqual({
+      caption: typographyFontSize("typography.xs"),
+      body: typographyFontSize("typography.sm-9"),
+      bodyLg: typographyFontSize("typography.base-7"),
+      subheading: typographyFontSize("typography.lg"),
+      headingSm: typographyFontSize("typography.xl"),
+      heading: typographyFontSize("typography.3xl"),
+      headingLg: typographyFontSize("typography.4xl"),
+      displaySm: typographyFontSize("typography.5xl"),
+      display: typographyFontSize("typography.5xl-2"),
+    });
+  });
+
+  test("foundation CSS maps every documented text alias to the app bridge", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/styles/foundation.css"),
+      "utf8",
+    );
+
+    Object.entries(documentedFontSizeAliases).forEach(([role, alias]) => {
+      const bridgeRole = role.replace(
+        /[A-Z]/g,
+        (letter) => `-${letter.toLowerCase()}`,
+      );
+
+      expect(css).toContain(`${alias}: var(--app-font-size-${bridgeRole});`);
+    });
+  });
+
+  test("notification settings heading consumes heading-sm without changing its default style", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/styles/global.css"),
+      "utf8",
+    );
+    const headingRule = css.match(
+      /\.notification-settings-section-heading\s*\{(?<declarations>[^}]*)\}/,
+    )?.groups?.declarations;
+
+    expect(headingRule).toContain(
+      "font-size: var(--app-font-size-heading-sm);",
+    );
+    expect(headingRule).toContain("line-height: 1.35;");
   });
 
   test("runtime radius tokens are reduced from the raw rounded reference", () => {

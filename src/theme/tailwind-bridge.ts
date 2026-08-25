@@ -13,6 +13,18 @@ const DEFAULT_LIGHT_SHADOW_ELEVATED =
 const DEFAULT_DARK_SHADOW_ELEVATED =
   "0 6px 16px 0 rgba(255, 255, 255, 0.016), 0 3px 6px -4px rgba(255, 255, 255, 0.024), 0 9px 28px 8px rgba(255, 255, 255, 0.01)";
 
+const DEFAULT_FONT_SIZE_BRIDGE_VARS = {
+  "--app-font-size-caption": "10px",
+  "--app-font-size-body": "14px",
+  "--app-font-size-body-lg": "16px",
+  "--app-font-size-subheading": "18px",
+  "--app-font-size-heading-sm": "20px",
+  "--app-font-size-heading": "32px",
+  "--app-font-size-heading-lg": "40px",
+  "--app-font-size-display-sm": "56px",
+  "--app-font-size-display": "64px",
+} as const;
+
 const DEFAULT_BRIDGE_VARS = {
   light: {
     "--app-color-primary": "#1677ff",
@@ -24,6 +36,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-border": "#d9d9d9",
     "--app-radius": "6px",
     "--app-font-family": appFontFamily,
+    ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_LIGHT_SHADOW_ELEVATED,
   },
   dark: {
@@ -36,6 +49,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-border": "#424242",
     "--app-radius": "6px",
     "--app-font-family": appFontFamily,
+    ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_DARK_SHADOW_ELEVATED,
   },
 } as const satisfies Record<ThemeAppearance, AppBridgeVars>;

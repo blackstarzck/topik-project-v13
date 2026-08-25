@@ -104,6 +104,15 @@
   --color-border: var(--app-color-border);
   --radius-default: var(--app-radius);
   --font-sans: var(--app-font-family);
+  --text-caption: var(--app-font-size-caption);
+  --text-body: var(--app-font-size-body);
+  --text-body-lg: var(--app-font-size-body-lg);
+  --text-subheading: var(--app-font-size-subheading);
+  --text-heading-sm: var(--app-font-size-heading-sm);
+  --text-heading: var(--app-font-size-heading);
+  --text-heading-lg: var(--app-font-size-heading-lg);
+  --text-display-sm: var(--app-font-size-display-sm);
+  --text-display: var(--app-font-size-display);
   --shadow-elevated: var(--app-shadow-elevated);
 }
 

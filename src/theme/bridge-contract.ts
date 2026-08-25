@@ -8,6 +8,15 @@ export const allowedAppBridgeVars = [
   "--app-color-border",
   "--app-radius",
   "--app-font-family",
+  "--app-font-size-caption",
+  "--app-font-size-body",
+  "--app-font-size-body-lg",
+  "--app-font-size-subheading",
+  "--app-font-size-heading-sm",
+  "--app-font-size-heading",
+  "--app-font-size-heading-lg",
+  "--app-font-size-display-sm",
+  "--app-font-size-display",
   "--app-shadow-elevated",
 ] as const;
 
@@ -24,6 +33,15 @@ export type AppBridgeTokenSource = {
   colorBorder: string;
   radius: string;
   fontFamily: string;
+  fontSizeCaption: string;
+  fontSizeBody: string;
+  fontSizeBodyLg: string;
+  fontSizeSubheading: string;
+  fontSizeHeadingSm: string;
+  fontSizeHeading: string;
+  fontSizeHeadingLg: string;
+  fontSizeDisplaySm: string;
+  fontSizeDisplay: string;
   shadowElevated: string;
 };
 
@@ -40,6 +58,15 @@ export function createAppBridgeVars(
     "--app-color-border": source.colorBorder,
     "--app-radius": source.radius,
     "--app-font-family": source.fontFamily,
+    "--app-font-size-caption": source.fontSizeCaption,
+    "--app-font-size-body": source.fontSizeBody,
+    "--app-font-size-body-lg": source.fontSizeBodyLg,
+    "--app-font-size-subheading": source.fontSizeSubheading,
+    "--app-font-size-heading-sm": source.fontSizeHeadingSm,
+    "--app-font-size-heading": source.fontSizeHeading,
+    "--app-font-size-heading-lg": source.fontSizeHeadingLg,
+    "--app-font-size-display-sm": source.fontSizeDisplaySm,
+    "--app-font-size-display": source.fontSizeDisplay,
     "--app-shadow-elevated": source.shadowElevated,
   };
 }

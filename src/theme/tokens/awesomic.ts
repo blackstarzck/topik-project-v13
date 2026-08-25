@@ -30,6 +30,17 @@ export const awesomicThemeTokens = {
     documentedFamily: "Cosmica",
     runtimeFamily: appFontFamily,
   },
+  fontSize: {
+    caption: "10px",
+    body: "14px",
+    bodyLg: "16px",
+    subheading: "18px",
+    headingSm: "20px",
+    heading: "32px",
+    headingLg: "40px",
+    displaySm: "56px",
+    display: "64px",
+  },
 } as const;
 
 export const awesomicBridgeVars = {
@@ -42,5 +53,14 @@ export const awesomicBridgeVars = {
   "--app-color-border": awesomicThemeTokens.color.pebble,
   "--app-radius": `${awesomicThemeTokens.radius.base}px`,
   "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
+  "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
+  "--app-font-size-body": awesomicThemeTokens.fontSize.body,
+  "--app-font-size-body-lg": awesomicThemeTokens.fontSize.bodyLg,
+  "--app-font-size-subheading": awesomicThemeTokens.fontSize.subheading,
+  "--app-font-size-heading-sm": awesomicThemeTokens.fontSize.headingSm,
+  "--app-font-size-heading": awesomicThemeTokens.fontSize.heading,
+  "--app-font-size-heading-lg": awesomicThemeTokens.fontSize.headingLg,
+  "--app-font-size-display-sm": awesomicThemeTokens.fontSize.displaySm,
+  "--app-font-size-display": awesomicThemeTokens.fontSize.display,
   "--app-shadow-elevated": awesomicThemeTokens.shadow.elevated,
 } as const satisfies AppBridgeVars;

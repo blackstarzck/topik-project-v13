@@ -12,8 +12,8 @@
 > - `src/theme/bridge-contract.ts`: theme-neutral L2 token-to-Tailwind bridge
 >   contract. Test-only themes use the same projection without entering the
 >   production theme registry.
-> - `src/styles/global.css`: Tailwind v4 `@theme inline` bridge and approved
->   global runtime styles.
+> - `src/styles/foundation.css`: Tailwind v4 `@theme inline` bridge;
+>   `src/styles/global.css` imports it before approved global runtime styles.
 
 > Runtime policy: one project theme source is projected into two adapters. AntD
 > receives values through `ConfigProvider`, `theme.token`, and
@@ -45,7 +45,7 @@ icon.
 - `src/theme/config.ts`가 active preset을 선택한다. 현재 product preset은 `awesomic`이고 stock Ant Design은 fallback이다.
 - `DESIGN/tokens.json`은 가져온 machine-readable source이고 `src/theme/tokens/awesomic.ts`는 이를 정규화한 runtime mapping이다.
 - Ant Design은 component adapter다. 전역 값과 component state 값은 `ConfigProvider`, `theme.token`, `theme.components` 또는 scoped provider가 소유한다.
-- Tailwind는 layout·responsive와 앱이 직접 소유한 표면의 제한된 시각 보조 adapter다. 시각 utility는 `src/theme/tailwind-bridge.ts`와 `src/styles/global.css`의 `@theme inline`을 통해 계산된 L2 의미 토큰(`--app-*`)만 사용한다. 별도의 palette, font, radius, shadow scale을 만들거나 AntD 내부 상태를 다시 그리지 않는다.
+- Tailwind는 layout·responsive와 앱이 직접 소유한 표면의 제한된 시각 보조 adapter다. 시각 utility는 `src/theme/tailwind-bridge.ts`와 `src/styles/foundation.css`의 `@theme inline`을 통해 계산된 L2 의미 토큰(`--app-*`)만 사용한다. `src/styles/global.css`는 이 foundation을 import한다. 별도의 palette, font, radius, shadow scale을 만들거나 AntD 내부 상태를 다시 그리지 않는다.
 - 새 `--app-*` 변수에는 source token, 실제 Tailwind/plain-CSS consumer, theme contract test가 모두 필요하다. 계산된 값은 first render에 존재해야 하고 `var(--ant-*)`를 다시 가리키면 안 된다.
 - 기존 project wrapper와 AntD props를 우선한다. 프로젝트가 작성한 visual inline style, 광범위한 `.ant-*` override, 생성된 AntD class selector, page-specific global CSS를 추가하지 않는다.
 
@@ -145,6 +145,10 @@ difficulty.
 | heading-lg | 40px | 1.25 | — | `--text-heading-lg` |
 | display-sm | 56px | 1.12 | — | `--text-display-sm` |
 | display | 64px | 1 | — | `--text-display` |
+
+기존 Tailwind `--text-*` 별칭은 같은 역할의 L2 `--app-font-size-*` bridge
+변수를 통해 계산된다. 따라서 글자 크기도 color, radius, shadow, font family와
+같이 선택된 theme source에서 first render에 함께 결정된다.
 
 ### Runtime UI Hierarchy Contract
 
@@ -505,8 +509,8 @@ The block below shows the raw exported Tailwind token shape. In the TALKPIK app,
 equivalent Tailwind utilities must be produced from `src/theme` through
 `@theme inline` aliases that read resolved `--app-*` variables. If a token below
 is promoted into the app bridge, update `src/theme/tokens/*`,
-`src/theme/tailwind-bridge.ts`, `src/styles/global.css`, and `tests/theme/*`
-together.
+`src/theme/tailwind-bridge.ts`, `src/styles/foundation.css`, the real consumer,
+and `tests/theme/*` together.
 
 ```css
 @theme {
