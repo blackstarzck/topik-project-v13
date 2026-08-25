@@ -4979,37 +4979,6 @@
   padding-right: 0;
 }
 
-.problem-table__column-title {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 6px;
-  color: var(--app-color-text-secondary);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.35;
-  white-space: nowrap;
-}
-
-.problem-table__column-title--center {
-  justify-content: center;
-}
-
-.problem-table__column-title--problem {
-  justify-content: flex-start;
-  padding-left: 66px;
-}
-
-.problem-table__column-title-icon {
-  display: inline-flex;
-  flex: 0 0 auto;
-  color: var(--app-color-text-secondary);
-}
-
-.problem-table__column-title-icon svg {
-  stroke-width: 1.8;
-}
-
 .problem-table__row--disabled {
   opacity: 0.68;
 }

@@ -24,6 +24,7 @@ import { ProblemTagIcon } from "./problem-tag-icons";
 import { getProblemRowDisplayMeta } from "./problem-list-display";
 import type { UserProblemRow } from "./problem-list-data";
 import { ProblemBookmarkToggle } from "./ProblemBookmarkToggle";
+import styles from "./ProblemTable.module.css";
 
 type Props = {
   rows: UserProblemRow[];
@@ -64,9 +65,19 @@ function ColumnTitle({
       className={[
         "problem-table__column-title",
         `problem-table__column-title--${variant}`,
+        styles.columnTitle,
+        variant === "problem"
+          ? styles.columnTitleProblem
+          : styles.columnTitleCenter,
       ].join(" ")}
     >
-      <span className="problem-table__column-title-icon" aria-hidden="true">
+      <span
+        className={[
+          "problem-table__column-title-icon",
+          styles.columnTitleIcon,
+        ].join(" ")}
+        aria-hidden="true"
+      >
         {icon}
       </span>
       {children}
