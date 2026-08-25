@@ -16,6 +16,7 @@ export const allowedAppBridgeVars = [
   "--app-color-status-strong-success",
   "--app-color-fill-secondary",
   "--app-color-writing-exam-header-surface",
+  "--app-color-writing-material-row-active-surface",
   "--app-color-landing-cta-primary",
   "--app-color-landing-cta-primary-hover",
   "--app-color-landing-cta-foreground",
@@ -67,6 +68,7 @@ export const allowedAppBridgeVars = [
   "--app-radius-landing-portfolio-media",
   "--app-radius-landing-portfolio-round",
   "--app-radius-landing-portfolio-tag-pill",
+  "--app-radius-writing-material-compact-surface",
   "--app-size-auth-prompt-control",
   "--app-font-family",
   "--app-font-landing-portfolio-display",
@@ -84,6 +86,7 @@ export const allowedAppBridgeVars = [
   "--app-shadow-floating-action",
   "--app-shadow-popover",
   "--app-shadow-message",
+  "--app-shadow-writing-material-tooltip",
   "--app-shadow-auth-prompt-focus",
   "--app-shadow-auth-prompt-login-focus",
 ] as const;
@@ -109,6 +112,7 @@ export type AppBridgeTokenSource = {
   colorStatusStrongSuccess: string;
   colorFillSecondary: string;
   colorWritingExamHeaderSurface: string;
+  colorWritingMaterialRowActiveSurface: string;
   colorLandingCtaPrimary: string;
   colorLandingCtaPrimaryHover: string;
   colorLandingCtaForeground: string;
@@ -160,6 +164,7 @@ export type AppBridgeTokenSource = {
   radiusLandingPortfolioMedia: string;
   radiusLandingPortfolioRound: string;
   radiusLandingPortfolioTagPill: string;
+  radiusWritingMaterialCompactSurface: string;
   sizeAuthPromptControl: string;
   fontFamily: string;
   fontLandingPortfolioDisplay: string;
@@ -177,6 +182,7 @@ export type AppBridgeTokenSource = {
   shadowFloatingAction: string;
   shadowPopover: string;
   shadowMessage: string;
+  shadowWritingMaterialTooltip: string;
   shadowAuthPromptFocus: string;
   shadowAuthPromptLoginFocus: string;
 };
@@ -203,6 +209,8 @@ export function createAppBridgeVars(
     "--app-color-fill-secondary": source.colorFillSecondary,
     "--app-color-writing-exam-header-surface":
       source.colorWritingExamHeaderSurface,
+    "--app-color-writing-material-row-active-surface":
+      source.colorWritingMaterialRowActiveSurface,
     "--app-color-landing-cta-primary": source.colorLandingCtaPrimary,
     "--app-color-landing-cta-primary-hover": source.colorLandingCtaPrimaryHover,
     "--app-color-landing-cta-foreground": source.colorLandingCtaForeground,
@@ -272,6 +280,8 @@ export function createAppBridgeVars(
     "--app-radius-landing-portfolio-round": source.radiusLandingPortfolioRound,
     "--app-radius-landing-portfolio-tag-pill":
       source.radiusLandingPortfolioTagPill,
+    "--app-radius-writing-material-compact-surface":
+      source.radiusWritingMaterialCompactSurface,
     "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
     "--app-font-landing-portfolio-display": source.fontLandingPortfolioDisplay,
@@ -289,6 +299,8 @@ export function createAppBridgeVars(
     "--app-shadow-floating-action": source.shadowFloatingAction,
     "--app-shadow-popover": source.shadowPopover,
     "--app-shadow-message": source.shadowMessage,
+    "--app-shadow-writing-material-tooltip":
+      source.shadowWritingMaterialTooltip,
     "--app-shadow-auth-prompt-focus": source.shadowAuthPromptFocus,
     "--app-shadow-auth-prompt-login-focus": source.shadowAuthPromptLoginFocus,
   };

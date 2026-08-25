@@ -23,6 +23,7 @@ const alternateSource = {
   colorStatusStrongSuccess: "#004b2a",
   colorFillSecondary: "rgba(36, 16, 79, 0.24)",
   colorWritingExamHeaderSurface: "rgba(255, 75, 199, 0.84)",
+  colorWritingMaterialRowActiveSurface: "rgba(255, 111, 0, 0.23)",
   colorLandingCtaPrimary: "#6f2cff",
   colorLandingCtaPrimaryHover: "#43158f",
   colorLandingCtaForeground: "#fff0d8",
@@ -79,6 +80,7 @@ const alternateSource = {
   radiusLandingPortfolioMedia: "6.25px",
   radiusLandingPortfolioRound: "47.375%",
   radiusLandingPortfolioTagPill: "887px",
+  radiusWritingMaterialCompactSurface: "7.25px",
   sizeAuthPromptControl: "58px",
   shadowElevated: "11px 13px 0 rgba(36, 16, 79, 0.42)",
   shadowFloatingAction: "0 9px 24px rgba(72, 18, 112, 0.22)",
@@ -86,6 +88,7 @@ const alternateSource = {
     "0 20px 52px rgba(51, 16, 91, 0.28), 0 5px 16px rgba(4, 120, 100, 0.18)",
   shadowMessage:
     "0 8px 20px 0 rgba(81, 24, 115, 0.2), 0 3px 8px -2px rgba(0, 140, 116, 0.15)",
+  shadowWritingMaterialTooltip: "0 7px 19px rgb(73 12 117 / 24%)",
   shadowAuthPromptFocus: "0 0 0 4px rgba(111, 44, 255, 0.29)",
   shadowAuthPromptLoginFocus: "0 0 0 5px rgba(255, 75, 199, 0.31)",
   fontFamily: '"Courier New", Courier, monospace',

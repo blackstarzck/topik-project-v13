@@ -32,6 +32,18 @@ export const awesomicThemeTokens = {
         "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
     },
   },
+  writingMaterial: {
+    color: {
+      rowActiveSurface:
+        "color-mix(in srgb, var(--app-color-primary) 8%, transparent)",
+    },
+    radius: {
+      compactSurface: 4,
+    },
+    shadow: {
+      tooltip: "0 4px 12px rgb(0 0 0 / 6%)",
+    },
+  },
   landingCta: {
     // The live landing page uses two deliberate color modes: a dark action on
     // video and a light ghost action on the translucent header. These values
@@ -197,6 +209,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-fill-secondary": status.fillSecondary,
     "--app-color-writing-exam-header-surface":
       awesomicThemeTokens.writingExam.color.headerSurface,
+    "--app-color-writing-material-row-active-surface":
+      awesomicThemeTokens.writingMaterial.color.rowActiveSurface,
     "--app-color-landing-cta-primary": awesomicThemeTokens.landingCta.primary,
     "--app-color-landing-cta-primary-hover":
       awesomicThemeTokens.landingCta.primaryHover,
@@ -286,6 +300,7 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-radius-landing-portfolio-round":
       awesomicThemeTokens.landingPortfolio.radius.round,
     "--app-radius-landing-portfolio-tag-pill": `${awesomicThemeTokens.landingPortfolio.radius.tagPill}px`,
+    "--app-radius-writing-material-compact-surface": `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
     "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-landing-portfolio-display":
@@ -305,6 +320,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-shadow-floating-action": awesomicThemeTokens.shadow.floatingAction,
     "--app-shadow-popover": awesomicThemeTokens.shadow.popover,
     "--app-shadow-message": awesomicThemeTokens.shadow.message,
+    "--app-shadow-writing-material-tooltip":
+      awesomicThemeTokens.writingMaterial.shadow.tooltip,
     "--app-shadow-auth-prompt-focus":
       awesomicThemeTokens.authPrompt.focusShadow,
     "--app-shadow-auth-prompt-login-focus":

@@ -2,8 +2,37 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { cleanup, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import postcss from "postcss";
+
+vi.mock("recharts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("recharts")>();
+  const React = await import("react");
+  const Passthrough = ({ children }: { children?: ReactNode }) =>
+    React.createElement(React.Fragment, null, children);
+  const EmptyChartPart = () => null;
+
+  return {
+    ...actual,
+    Bar: EmptyChartPart,
+    BarChart: Passthrough,
+    CartesianGrid: EmptyChartPart,
+    Cell: EmptyChartPart,
+    Line: EmptyChartPart,
+    LineChart: Passthrough,
+    Pie: EmptyChartPart,
+    PieChart: Passthrough,
+    ResponsiveContainer: Passthrough,
+    Tooltip: ({ active, content }: { active?: boolean; content?: unknown }) =>
+      React.isValidElement<{ active?: boolean }>(content)
+        ? React.cloneElement(content, { active })
+        : null,
+    XAxis: EmptyChartPart,
+    YAxis: EmptyChartPart,
+  };
+});
 
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 import { Writing53MaterialCards } from "../../../src/components/writing/Writing53MaterialCards";
@@ -16,6 +45,27 @@ import {
 } from "./writing-style-contract";
 
 afterEach(() => cleanup());
+
+const globalCss = readFileSync("src/styles/global.css", "utf8");
+
+function declarationsForSelector(source: string, selector: string) {
+  const normalizedSelector = selector.replace(/\s+/gu, " ").trim();
+  let declarations: Record<string, string> | null = null;
+
+  postcss.parse(source).walkRules((rule) => {
+    const selectors = rule.selector
+      .split(",")
+      .map((candidate) => candidate.replace(/\s+/gu, " ").trim());
+    if (!selectors.includes(normalizedSelector)) return;
+    declarations = Object.fromEntries(
+      (rule.nodes ?? [])
+        .filter((node) => node.type === "decl")
+        .map((node) => [node.prop, node.value.replace(/\s+/gu, " ").trim()]),
+    );
+  });
+
+  return declarations;
+}
 
 const cards: NormalizedMaterialCard[] = [
   {
@@ -90,6 +140,34 @@ describe("Writing53MaterialCards", () => {
     expect(
       hasExactCssRule(moduleCss, ".radialChart", "min-height: 156px;"),
     ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".tooltip",
+        "border-radius: var(--app-radius-writing-material-compact-surface); box-shadow: var(--app-shadow-writing-material-tooltip);",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".tooltipValue",
+        "color: var(--app-color-primary);",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".valueRow",
+        "border-radius: var(--app-radius-writing-material-compact-surface);",
+      ),
+    ).toBe(true);
+    expect(
+      hasExactCssRule(
+        moduleCss,
+        ".valueRow:is(:hover, :focus-visible, .valueRowActive)",
+        "background: var(--app-color-writing-material-row-active-surface);",
+      ),
+    ).toBe(true);
     expect(source).toContain(
       'import styles from "./Writing53MaterialCards.module.css";',
     );
@@ -98,6 +176,8 @@ describe("Writing53MaterialCards", () => {
     );
     expect(source.match(/styles\.chart\b/gu)).toHaveLength(3);
     expect(source).toContain("styles.radialChart");
+    expect(source).toContain("styles.tooltip");
+    expect(source).toContain("styles.tooltipValue");
     expect(source).toContain('"var(--app-color-border-secondary)"');
     expect(source).toContain('"var(--app-color-chart-series-primary)"');
     expect(source).toContain('"var(--app-color-status-success)"');
@@ -105,6 +185,40 @@ describe("Writing53MaterialCards", () => {
     expect(source).toContain('"var(--app-color-chart-accent)"');
     expect(source).toContain('"var(--app-color-status-error)"');
     expect(source).not.toMatch(/#[0-9a-f]{3,8}/iu);
+    expect(moduleCss).not.toContain("#1677ff");
+    expect(
+      declarationsForSelector(globalCss, ".writing-material-chart-tooltip"),
+    ).not.toMatchObject({
+      "border-radius": expect.anything(),
+      "box-shadow": expect.anything(),
+    });
+    expect(
+      declarationsForSelector(
+        globalCss,
+        ".writing-material-chart-tooltip__value",
+      ),
+    ).not.toHaveProperty("color");
+    expect(
+      declarationsForSelector(globalCss, ".writing-material-value-list__row"),
+    ).not.toHaveProperty("border-radius");
+    for (const selector of [
+      ".writing-material-value-list__row:hover",
+      ".writing-material-value-list__row:focus-visible",
+      ".writing-material-value-list__row--active",
+    ]) {
+      expect(declarationsForSelector(globalCss, selector)?.background).toBe(
+        undefined,
+      );
+    }
+    expect(
+      declarationsForSelector(
+        globalCss,
+        ".writing-material-value-list__row:focus-visible",
+      ),
+    ).toMatchObject({
+      outline:
+        "2px solid color-mix(in srgb, var(--app-color-primary) 42%, transparent)",
+    });
     for (const [selector, token] of [
       [".valueBulletColor0", "--app-color-chart-series-primary"],
       [".valueBulletColor1", "--app-color-status-success"],
@@ -128,6 +242,82 @@ describe("Writing53MaterialCards", () => {
         "writing-material-value-bullet--color-4",
       ]),
     ).toEqual([]);
+  });
+
+  it("keeps stable and scoped row and tooltip styles across pointer and keyboard states", () => {
+    renderWithIntl(<Writing53MaterialCards cards={[cards[1]]} />);
+
+    const row = screen.getAllByTestId("q53-material-value-row")[0];
+    expect(
+      hasStableAndScopedClasses(
+        row,
+        "writing-material-value-list__row",
+        materialStyles.valueRow,
+      ),
+    ).toBe(true);
+    expect(
+      row.classList.contains("writing-material-value-list__row--active"),
+    ).toBe(false);
+    expect(row.classList.contains(materialStyles.valueRowActive)).toBe(false);
+
+    fireEvent.mouseEnter(row);
+
+    expect(
+      hasStableAndScopedClasses(
+        row,
+        "writing-material-value-list__row--active",
+        materialStyles.valueRowActive,
+      ),
+    ).toBe(true);
+    fireEvent.mouseLeave(row);
+
+    expect(
+      row.classList.contains("writing-material-value-list__row--active"),
+    ).toBe(false);
+    expect(row.classList.contains(materialStyles.valueRowActive)).toBe(false);
+
+    fireEvent.focus(row);
+
+    expect(
+      hasStableAndScopedClasses(
+        row,
+        "writing-material-value-list__row--active",
+        materialStyles.valueRowActive,
+      ),
+    ).toBe(true);
+    const tooltip = document.querySelector(".writing-material-chart-tooltip");
+    expect(
+      hasStableAndScopedClasses(
+        tooltip,
+        "writing-material-chart-tooltip",
+        materialStyles.tooltip,
+      ),
+    ).toBe(true);
+    expect(
+      tooltip?.querySelector(".writing-material-chart-tooltip__label")
+        ?.textContent,
+    ).toBe("Home");
+    const tooltipValue = tooltip?.querySelector(
+      ".writing-material-chart-tooltip__value",
+    );
+    expect(
+      hasStableAndScopedClasses(
+        tooltipValue,
+        "writing-material-chart-tooltip__value",
+        materialStyles.tooltipValue,
+      ),
+    ).toBe(true);
+    expect(tooltipValue?.textContent).toContain("78");
+
+    fireEvent.blur(row);
+
+    expect(
+      row.classList.contains("writing-material-value-list__row--active"),
+    ).toBe(false);
+    expect(row.classList.contains(materialStyles.valueRowActive)).toBe(false);
+    expect(
+      document.querySelector(".writing-material-chart-tooltip"),
+    ).toBeNull();
   });
 
   it("keeps every chart series paint paired with its bullet class", () => {

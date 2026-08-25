@@ -41,6 +41,7 @@ const testAlternateSource = {
   colorStatusStrongSuccess: "#005f45",
   colorFillSecondary: "rgba(18, 52, 86, 0.19)",
   colorWritingExamHeaderSurface: "rgba(91, 43, 196, 0.79)",
+  colorWritingMaterialRowActiveSurface: "rgba(253, 126, 20, 0.21)",
   colorLandingCtaPrimary: "#5b2bc4",
   colorLandingCtaPrimaryHover: "#351474",
   colorLandingCtaForeground: "#fff2cf",
@@ -97,6 +98,7 @@ const testAlternateSource = {
   radiusLandingPortfolioMedia: "6px",
   radiusLandingPortfolioRound: "46%",
   radiusLandingPortfolioTagPill: "889px",
+  radiusWritingMaterialCompactSurface: "7px",
   sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontLandingPortfolioDisplay: '"Bridge Display", serif',
@@ -116,6 +118,7 @@ const testAlternateSource = {
     "0 22px 54px rgba(45, 13, 86, 0.27), 0 6px 18px rgba(2, 112, 94, 0.17)",
   shadowMessage:
     "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
+  shadowWritingMaterialTooltip: "0 8px 18px rgb(91 43 196 / 22%)",
   shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
   shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
 } as const;
@@ -245,6 +248,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-strong-success": "#005f45",
       "--app-color-fill-secondary": "rgba(18, 52, 86, 0.19)",
       "--app-color-writing-exam-header-surface": "rgba(91, 43, 196, 0.79)",
+      "--app-color-writing-material-row-active-surface":
+        "rgba(253, 126, 20, 0.21)",
       "--app-color-landing-cta-primary": "#5b2bc4",
       "--app-color-landing-cta-primary-hover": "#351474",
       "--app-color-landing-cta-foreground": "#fff2cf",
@@ -298,6 +303,7 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-landing-portfolio-media": "6px",
       "--app-radius-landing-portfolio-round": "46%",
       "--app-radius-landing-portfolio-tag-pill": "889px",
+      "--app-radius-writing-material-compact-surface": "7px",
       "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-landing-portfolio-display": '"Bridge Display", serif',
@@ -317,6 +323,8 @@ describe("generic app theme bridge contract", () => {
         "0 22px 54px rgba(45, 13, 86, 0.27), 0 6px 18px rgba(2, 112, 94, 0.17)",
       "--app-shadow-message":
         "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
+      "--app-shadow-writing-material-tooltip":
+        "0 8px 18px rgb(91 43 196 / 22%)",
       "--app-shadow-auth-prompt-focus": "0 0 0 3px rgba(91, 43, 196, 0.23)",
       "--app-shadow-auth-prompt-login-focus":
         "0 0 0 4px rgba(224, 63, 159, 0.27)",
@@ -454,6 +462,23 @@ describe("generic app theme bridge contract", () => {
         "--app-color-writing-exam-header-surface"
       ],
     ).not.toBe(awesomicThemeTokens.writingExam.color.headerSurface);
+    const writingMaterialBridgeVars = [
+      "--app-color-writing-material-row-active-surface",
+      "--app-radius-writing-material-compact-surface",
+      "--app-shadow-writing-material-tooltip",
+    ] as const;
+    const productionWritingMaterialValues = [
+      awesomicThemeTokens.writingMaterial.color.rowActiveSurface,
+      `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
+      awesomicThemeTokens.writingMaterial.shadow.tooltip,
+    ];
+    const alternateWritingMaterialValues = writingMaterialBridgeVars.map(
+      (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+    );
+    expect(new Set(alternateWritingMaterialValues)).toHaveLength(3);
+    alternateWritingMaterialValues.forEach((value, index) => {
+      expect(value).not.toBe(productionWritingMaterialValues[index]);
+    });
     expect(phase5dAlternateTheme.appBridgeVars["--app-radius-card"]).toBe(
       "23px",
     );
@@ -668,6 +693,15 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-writing-exam-header-surface"
       ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-writing-material-row-active-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-radius-writing-material-compact-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-writing-material-tooltip"
+      ],
       phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-primary"],
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-landing-cta-primary-hover"
@@ -750,6 +784,8 @@ describe("generic app theme bridge contract", () => {
         colorFillSecondary: awesomicThemeTokens.status.light.fillSecondary,
         colorWritingExamHeaderSurface:
           awesomicThemeTokens.writingExam.color.headerSurface,
+        colorWritingMaterialRowActiveSurface:
+          awesomicThemeTokens.writingMaterial.color.rowActiveSurface,
         colorLandingCtaPrimary: awesomicThemeTokens.landingCta.primary,
         colorLandingCtaPrimaryHover:
           awesomicThemeTokens.landingCta.primaryHover,
@@ -832,6 +868,7 @@ describe("generic app theme bridge contract", () => {
         radiusLandingPortfolioRound:
           awesomicThemeTokens.landingPortfolio.radius.round,
         radiusLandingPortfolioTagPill: `${awesomicThemeTokens.landingPortfolio.radius.tagPill}px`,
+        radiusWritingMaterialCompactSurface: `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
         sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontLandingPortfolioDisplay:
@@ -851,6 +888,8 @@ describe("generic app theme bridge contract", () => {
         shadowFloatingAction: awesomicThemeTokens.shadow.floatingAction,
         shadowPopover: awesomicThemeTokens.shadow.popover,
         shadowMessage: awesomicThemeTokens.shadow.message,
+        shadowWritingMaterialTooltip:
+          awesomicThemeTokens.writingMaterial.shadow.tooltip,
         shadowAuthPromptFocus: awesomicThemeTokens.authPrompt.focusShadow,
         shadowAuthPromptLoginFocus:
           awesomicThemeTokens.authPrompt.loginFocusShadow,
@@ -875,6 +914,10 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-pill": "10000px",
       "--app-color-writing-exam-header-surface":
         "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
+      "--app-color-writing-material-row-active-surface":
+        "color-mix(in srgb, var(--app-color-primary) 8%, transparent)",
+      "--app-radius-writing-material-compact-surface": "4px",
+      "--app-shadow-writing-material-tooltip": "0 4px 12px rgb(0 0 0 / 6%)",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
       "--app-font-size-heading-sm": "20px",
@@ -892,6 +935,10 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-pill": "10000px",
       "--app-color-writing-exam-header-surface":
         "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
+      "--app-color-writing-material-row-active-surface":
+        "color-mix(in srgb, var(--app-color-primary) 8%, transparent)",
+      "--app-radius-writing-material-compact-surface": "4px",
+      "--app-shadow-writing-material-tooltip": "0 4px 12px rgb(0 0 0 / 6%)",
     });
   });
 });

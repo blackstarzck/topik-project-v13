@@ -204,6 +204,24 @@ five states; writing CSS must not replace them with one blanket success paint.
 The shell module retains only the badge's existing zero margin, zero border,
 12px type size, and 700 weight so the visual geometry does not regress.
 
+## Tokens — Writing Material Surfaces
+
+Writing 53 chart tooltips and value rows use a compact visual cluster owned by
+`Writing53MaterialCards.module.css`. The 4px corner is an app-specific compact
+surface role, not the semantic badge radius. Tooltip depth and the shared
+hover/focus/active row surface also have dedicated roles so alternate themes can
+replace the cluster without changing its interaction contract.
+
+| Meaning | Production value | App bridge |
+| --- | --- | --- |
+| Compact tooltip/value-row corner | `4px` | `--app-radius-writing-material-compact-surface` |
+| Chart tooltip depth | `0 4px 12px rgb(0 0 0 / 6%)` | `--app-shadow-writing-material-tooltip` |
+| Hover/focus/active value-row surface | `color-mix(in srgb, var(--app-color-primary) 8%, transparent)` | `--app-color-writing-material-row-active-surface` |
+
+Tooltip emphasis and keyboard focus continue to use `--app-color-primary`
+directly. App bridge availability is guaranteed, so writing CSS does not carry
+a raw `#1677ff` fallback.
+
 ## Tokens — Landing CTA
 
 The live landing page has two intentional CTA color modes: a dark primary

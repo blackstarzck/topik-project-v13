@@ -13,6 +13,23 @@
   min-height: 156px;
 }
 
+.tooltip {
+  border-radius: var(--app-radius-writing-material-compact-surface);
+  box-shadow: var(--app-shadow-writing-material-tooltip);
+}
+
+.tooltipValue {
+  color: var(--app-color-primary);
+}
+
+.valueRow {
+  border-radius: var(--app-radius-writing-material-compact-surface);
+}
+
+.valueRow:is(:hover, :focus-visible, .valueRowActive) {
+  background: var(--app-color-writing-material-row-active-surface);
+}
+
 .valueBulletColor0 {
   background: var(--app-color-chart-series-primary);
 }

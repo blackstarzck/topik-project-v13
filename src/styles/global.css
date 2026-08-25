@@ -4511,11 +4511,9 @@
   gap: 4px;
   max-width: 184px;
   border: 1px solid var(--app-color-border);
-  border-radius: 4px;
   background: var(--app-color-bg-container);
   color: var(--app-color-text);
   padding: 8px 10px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 6%);
 }
 
 .writing-material-chart-tooltip__label,
@@ -4535,7 +4533,6 @@
   align-items: flex-start;
   gap: 7px;
   overflow-wrap: anywhere;
-  color: var(--app-color-primary, #1677ff);
   font-weight: 700;
   word-break: break-word;
 }
@@ -4566,23 +4563,12 @@
   align-items: start;
   gap: 10px;
   padding: 7px 6px;
-  border-radius: 4px;
   transition: background-color 0.16s ease;
-}
-
-.writing-material-value-list__row:hover,
-.writing-material-value-list__row:focus-visible,
-.writing-material-value-list__row--active {
-  background: color-mix(
-    in srgb,
-    var(--app-color-primary, #1677ff) 8%,
-    transparent
-  );
 }
 
 .writing-material-value-list__row:focus-visible {
   outline: 2px solid
-    color-mix(in srgb, var(--app-color-primary, #1677ff) 42%, transparent);
+    color-mix(in srgb, var(--app-color-primary) 42%, transparent);
   outline-offset: 1px;
 }
 

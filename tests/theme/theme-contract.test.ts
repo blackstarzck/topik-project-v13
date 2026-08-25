@@ -151,6 +151,33 @@ describe("app theme contract", () => {
     }
   });
 
+  test("owns compact writing material surfaces in every production theme", () => {
+    expect(awesomicThemeTokens).toHaveProperty("writingMaterial", {
+      color: {
+        rowActiveSurface:
+          "color-mix(in srgb, var(--app-color-primary) 8%, transparent)",
+      },
+      radius: { compactSurface: 4 },
+      shadow: { tooltip: "0 4px 12px rgb(0 0 0 / 6%)" },
+    });
+
+    const expectedBridge = {
+      "--app-color-writing-material-row-active-surface":
+        awesomicThemeTokens.writingMaterial.color.rowActiveSurface,
+      "--app-radius-writing-material-compact-surface": `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
+      "--app-shadow-writing-material-tooltip":
+        awesomicThemeTokens.writingMaterial.shadow.tooltip,
+    };
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject(
+          expectedBridge,
+        );
+      }
+    }
+  });
+
   test("owns the landing hero and header paint in every production theme", () => {
     expect(awesomicThemeTokens).toHaveProperty("landingHero", {
       color: {
@@ -390,15 +417,18 @@ describe("app theme contract", () => {
       "--app-color-landing-cta-ghost-text",
       "--app-color-landing-cta-ghost-border",
       "--app-color-writing-exam-header-surface",
+      "--app-color-writing-material-row-active-surface",
       "--app-radius",
       "--app-radius-card",
       "--app-radius-pill",
       "--app-radius-landing-hero-cta",
+      "--app-radius-writing-material-compact-surface",
       "--app-font-family",
       "--app-shadow-elevated",
       "--app-shadow-floating-action",
       "--app-shadow-popover",
       "--app-shadow-message",
+      "--app-shadow-writing-material-tooltip",
     ];
 
     requiredKeys.forEach((key) => {

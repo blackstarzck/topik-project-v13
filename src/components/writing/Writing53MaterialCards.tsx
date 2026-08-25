@@ -267,7 +267,9 @@ function ChartValueList({
               aria-label={`${row.label} ${row.value}`}
               className={[
                 "writing-material-value-list__row",
+                styles.valueRow,
                 isActive ? "writing-material-value-list__row--active" : "",
+                isActive ? styles.valueRowActive : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -314,9 +316,16 @@ function ChartValueTooltipContent({
   if (!active) return null;
 
   return (
-    <div className="writing-material-chart-tooltip">
+    <div
+      className={["writing-material-chart-tooltip", styles.tooltip].join(" ")}
+    >
       <p className="writing-material-chart-tooltip__label">{target.label}</p>
-      <p className="writing-material-chart-tooltip__value">
+      <p
+        className={[
+          "writing-material-chart-tooltip__value",
+          styles.tooltipValue,
+        ].join(" ")}
+      >
         {target.colorIndex !== null ? (
           <span
             aria-hidden
