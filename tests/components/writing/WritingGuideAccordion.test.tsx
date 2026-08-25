@@ -55,4 +55,38 @@ describe("WritingGuideAccordion", () => {
     expect(screen.getByTestId("guide-body").textContent).toBe("조건 내용");
     expect(screen.queryByText("불러오기 실패")).toBeNull();
   });
+
+  it("tracks expanded icon motion without depending on AntD state classes", () => {
+    renderWithIntl(
+      <WritingGuideAccordion
+        loadFailed={false}
+        loadFailedLabel="불러오기 실패"
+        defaultActiveKeys={["guide"]}
+        items={[
+          {
+            key: "guide",
+            title: "조건 점검",
+            children: <div>조건 내용</div>,
+          },
+        ]}
+      />,
+    );
+
+    const header = screen.getByText("조건 점검").closest('[role="button"]');
+    const icon = document.querySelector(
+      ".writing-guide-accordion__expand-icon",
+    );
+
+    expect(header?.getAttribute("aria-expanded")).toBe("true");
+    expect(
+      icon?.classList.contains("writing-guide-accordion__expand-icon--active"),
+    ).toBe(true);
+
+    fireEvent.click(header as HTMLElement);
+
+    expect(header?.getAttribute("aria-expanded")).toBe("false");
+    expect(
+      icon?.classList.contains("writing-guide-accordion__expand-icon--active"),
+    ).toBe(false);
+  });
 });

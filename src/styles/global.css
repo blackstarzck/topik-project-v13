@@ -5385,24 +5385,6 @@
 }
 
 .writing-guide-accordion.ant-collapse
-  > .ant-collapse-item
-  > .ant-collapse-header {
-  border-radius: 6px 6px 0 0;
-}
-
-.writing-guide-accordion.ant-collapse
-  > .ant-collapse-item:not(.ant-collapse-item-active)
-  > .ant-collapse-header {
-  border-radius: var(--app-radius);
-}
-
-.writing-guide-accordion.ant-collapse
-  > .ant-collapse-item
-  > .ant-collapse-content {
-  border-radius: 0 0 6px 6px;
-}
-
-.writing-guide-accordion.ant-collapse
   > .ant-collapse-item.writing-guide-accordion__item--tutor {
   background: var(--app-color-bg-container);
 }
@@ -5429,19 +5411,11 @@
   min-width: 0;
 }
 
-.writing-guide-accordion.ant-collapse
-  > .ant-collapse-item
-  > .ant-collapse-header
-  .ant-collapse-expand-icon
-  svg {
+.writing-guide-accordion__expand-icon {
   transition: transform 160ms ease;
 }
 
-.writing-guide-accordion.ant-collapse
-  > .ant-collapse-item-active
-  > .ant-collapse-header
-  .ant-collapse-expand-icon
-  svg {
+.writing-guide-accordion__expand-icon--active {
   transform: rotate(45deg);
 }
 
@@ -5459,15 +5433,6 @@
   padding: 0 18px 18px;
 }
 
-.writing-guide-card {
-  display: grid;
-  gap: 12px;
-  border: 1px solid var(--app-color-border);
-  border-radius: var(--app-radius);
-  background: var(--app-color-bg-container);
-  padding: 18px;
-}
-
 .writing-guide-card__title {
   display: flex;
   align-items: center;
@@ -5477,11 +5442,6 @@
 .writing-guide-card__status {
   margin-inline-start: auto;
   margin-inline-end: 0;
-}
-
-.writing-guide-card p {
-  margin: 0;
-  color: var(--app-color-text-secondary);
 }
 
 .writing-guide-accordion--support p {

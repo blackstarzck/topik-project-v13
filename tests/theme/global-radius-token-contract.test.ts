@@ -19,8 +19,6 @@ const tokenizedRadiusRules = [
   ".writing-material-card__cell",
   ".writing-guide-accordion.ant-collapse > .ant-collapse-item",
   ".writing-guide-accordion.ant-collapse > .ant-collapse-item:first-child, .writing-guide-accordion.ant-collapse > .ant-collapse-item:last-child, .writing-guide-accordion.ant-collapse > .ant-collapse-item",
-  ".writing-guide-accordion.ant-collapse > .ant-collapse-item:not(.ant-collapse-item-active) > .ant-collapse-header",
-  ".writing-guide-card",
 ] as const;
 const tokenizedRadiusRuleSet = new Set<string>(tokenizedRadiusRules);
 
@@ -55,12 +53,7 @@ describe("global CSS radius token contract", () => {
   });
 
   test("preserves asymmetric radii that define composite shapes", () => {
-    const asymmetricRadii = [
-      "14px 14px 6px 6px",
-      "6px 6px 2px 2px",
-      "6px 6px 0 0",
-      "0 0 6px 6px",
-    ];
+    const asymmetricRadii = ["14px 14px 6px 6px", "6px 6px 2px 2px"];
 
     for (const value of asymmetricRadii) {
       expect(globalCss).toContain(`border-radius: ${value};`);
