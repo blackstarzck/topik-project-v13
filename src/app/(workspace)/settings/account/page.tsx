@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { AccountDeletionCard } from "@/components/profile/AccountDeletionCard";
 import { AccountLoginMethodsCard } from "@/components/profile/AccountLoginMethodsCard";
 import { ProfileLogoutForm } from "@/components/profile/ProfileLogoutForm";
 import { StatusHelpCard } from "@/components/profile/StatusHelpCard";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { SettingsPageFrame } from "@/components/shared/SettingsPageFrame";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -50,26 +50,24 @@ export default async function AccountSettingsPage() {
   };
 
   return (
-    <WorkspaceBody>
-      <div className="w-full max-w-[640px]">
-        <PageHeader title={t("pageHeading")} />
-        <div className="account-settings-redesign">
-          <AccountLoginMethodsCard
-            accountEmail={user.email ?? null}
-            labels={loginMethodLabels}
+    <SettingsPageFrame>
+      <PageHeader title={t("pageHeading")} />
+      <div className="account-settings-redesign">
+        <AccountLoginMethodsCard
+          accountEmail={user.email ?? null}
+          labels={loginMethodLabels}
+        />
+        {profileMeta ? (
+          <StatusHelpCard
+            joinedAt={profileMeta.created_at}
+            appRole={profileMeta.app_role}
+            planLabel={profileMeta.plan_label}
+            affiliationCode={profileMeta.affiliation_code}
           />
-          {profileMeta ? (
-            <StatusHelpCard
-              joinedAt={profileMeta.created_at}
-              appRole={profileMeta.app_role}
-              planLabel={profileMeta.plan_label}
-              affiliationCode={profileMeta.affiliation_code}
-            />
-          ) : null}
-          <ProfileLogoutForm label={tNav("logout")} userId={user.id} />
-          <AccountDeletionCard userId={user.id} />
-        </div>
+        ) : null}
+        <ProfileLogoutForm label={tNav("logout")} userId={user.id} />
+        <AccountDeletionCard userId={user.id} />
       </div>
-    </WorkspaceBody>
+    </SettingsPageFrame>
   );
 }
