@@ -1394,7 +1394,7 @@
 .landing-layout-motion-root {
   position: relative;
   z-index: 0;
-  background: #ffffff;
+  background: var(--app-color-landing-portfolio-canvas);
   font-size: 16px;
 }
 
@@ -1414,7 +1414,7 @@
   position: relative;
   z-index: 0;
   padding-block: clamp(72px, 9vw, 128px);
-  background: #ffffff;
+  background: var(--app-color-landing-portfolio-canvas);
   scroll-margin-top: 78px;
 }
 
@@ -1536,11 +1536,8 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 4px;
-  background:
-    repeating-linear-gradient(135deg, #e9e9e8 0 10px, #f1f1f0 10px 20px),
-    #ececeb;
-  color: #9a9a98;
+  border-radius: var(--app-radius-landing-portfolio-media);
+  background: var(--app-background-landing-portfolio-media-placeholder);
 }
 
 .landing-layout-work .landing-layout-visual {
@@ -1551,11 +1548,7 @@
   position: absolute;
   z-index: 1;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(0, 0, 0, 0.04)
-  );
+  background: var(--app-background-landing-portfolio-media-overlay);
   content: "";
 }
 
@@ -1571,29 +1564,17 @@
 
 .landing-layout-visual--dark,
 .landing-layout-post--dark .landing-layout-visual {
-  background: #0c0c0d;
-}
-
-.landing-layout-visual > em {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  color: #ffffff;
-  font-style: normal;
+  background: var(--app-color-landing-portfolio-dark-surface);
 }
 
 .landing-layout-visual > span {
   position: relative;
   z-index: 2;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: var(--app-radius-landing-portfolio-tag-pill);
+  background: var(--app-color-landing-portfolio-tag-surface);
   padding: 5px 11px;
-  color: #8b8b8e;
-  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  color: var(--app-color-landing-portfolio-muted);
+  font-family: var(--app-font-landing-portfolio-display);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0;
@@ -1708,7 +1689,7 @@
   flex-direction: column;
   justify-content: space-between;
   border-radius: var(--app-radius);
-  background: #fbfbfb;
+  background: var(--app-color-landing-portfolio-card-surface);
   padding: 22px;
 }
 
@@ -1729,10 +1710,6 @@
   user-select: none;
 }
 
-.landing-layout-service__frame--image .landing-layout-service__strip {
-  display: none;
-}
-
 .landing-layout-service__frame > span {
   position: relative;
   z-index: 1;
@@ -1741,19 +1718,6 @@
   font-variant-numeric: tabular-nums;
   font-size: 16px;
   font-weight: 500;
-}
-
-.landing-layout-service__strip {
-  display: flex;
-  gap: 8px;
-}
-
-.landing-layout-service__strip i {
-  flex: 1;
-  aspect-ratio: 1 / 1;
-  border-radius: 3px;
-  background:
-    repeating-linear-gradient(135deg, #e2e2e0 0 8px, #ededec 8px 16px), #e6e6e4;
 }
 
 .landing-layout-service h3,
@@ -1831,7 +1795,7 @@
   flex-direction: column;
   justify-content: space-between;
   border-radius: var(--app-radius);
-  background: #fbfbfb;
+  background: var(--app-color-landing-portfolio-card-surface);
   padding: 30px;
 }
 
@@ -1863,10 +1827,10 @@
   height: 54px;
   flex: 0 0 54px;
   overflow: hidden;
-  border-radius: 50%;
-  background: #ffffff;
+  border-radius: var(--app-radius-landing-portfolio-round);
+  background: var(--app-color-landing-portfolio-canvas);
   padding: 5px;
-  color: #77777b;
+  color: var(--app-color-landing-portfolio-supporting);
   font-size: 16px;
   font-weight: 800;
 }
@@ -1874,7 +1838,7 @@
 .landing-layout-testimonials__avatar > img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--app-radius-landing-portfolio-round);
   object-fit: contain;
   user-select: none;
 }
@@ -1921,7 +1885,7 @@
   justify-content: center;
   gap: 8px;
   border-radius: var(--app-radius);
-  background: #fbfbfb;
+  background: var(--app-color-landing-portfolio-card-surface);
   text-align: center;
 }
 
@@ -1950,7 +1914,7 @@
   min-height: 230px;
   flex-direction: column;
   border-radius: var(--app-radius);
-  background: #fbfbfb;
+  background: var(--app-color-landing-portfolio-card-surface);
   padding: 30px;
 }
 
@@ -2012,7 +1976,7 @@
   right: 0;
   left: 0;
   height: 1.5px;
-  background: #b9b9b3;
+  background: var(--app-color-landing-portfolio-divider);
   content: "";
   transform: scaleX(var(--landing-line-scale));
   transform-origin: left center;
@@ -2081,8 +2045,8 @@
   display: flex;
   min-height: 529px;
   flex-direction: column;
-  border-radius: 8px;
-  background: #fbfbfb;
+  border-radius: var(--app-radius-card);
+  background: var(--app-color-landing-portfolio-card-surface);
   padding: 34px 32px;
   text-align: left;
 }
@@ -2105,7 +2069,7 @@
   height: 1px;
   margin: 26px 0;
   border: 0;
-  background: #dededc;
+  background: var(--app-color-landing-portfolio-divider-subtle);
 }
 
 .landing-layout-path > strong {
@@ -2144,15 +2108,15 @@
   width: 20px;
   height: 20px;
   flex: 0 0 20px;
-  border-radius: 50%;
-  background: #0c0c0d;
-  color: #ffffff;
+  border-radius: var(--app-radius-landing-portfolio-round);
+  background: var(--app-color-landing-portfolio-dark-surface);
+  color: var(--app-color-landing-portfolio-inverse-foreground);
 }
 
 .landing-layout-dark-button {
   margin-top: auto;
-  background: #0c0c0d;
-  color: #ffffff;
+  background: var(--app-color-landing-portfolio-dark-surface);
+  color: var(--app-color-landing-portfolio-inverse-foreground);
   padding: 15px 18px;
   width: 100%;
   font-size: 16px;
@@ -2160,13 +2124,13 @@
 }
 
 .landing-layout-dark-button:hover {
-  background: #1c1c1f;
-  color: #ffffff;
+  background: var(--app-color-landing-portfolio-action-hover);
+  color: var(--app-color-landing-portfolio-inverse-foreground);
   transform: translateY(-1px);
 }
 
 .landing-layout-footer {
-  background: #fbfbfb;
+  background: var(--app-color-landing-portfolio-card-surface);
 }
 
 .landing-layout-footer__inner {
@@ -2212,7 +2176,7 @@
 .landing-layout-footer__cta:focus-visible {
   outline: 2px solid #0c0c0d;
   outline-offset: 8px;
-  border-radius: 8px;
+  border-radius: var(--app-radius-card);
 }
 
 .landing-layout-footer p {

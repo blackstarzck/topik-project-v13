@@ -199,8 +199,7 @@ new landing CTA mode.
 The portfolio content below the hero owns a restrained editorial palette and
 two display stacks. These are content foreground and typography roles, not CTA
 states: do not reuse `landingCta` tokens for headings, copy, icons, labels, or
-footer links. Surface, card, divider, radius, and hero/header paint remain
-outside this token group.
+footer links. Hero and header paint remain outside this token group.
 
 | Meaning | Current value | App bridge |
 | --- | --- | --- |
@@ -215,8 +214,35 @@ outside this token group.
 | Numeric marker stack | `Montserrat` + app fallback | `--app-font-landing-portfolio-numeric` |
 
 Production light and dark appearances preserve the current portfolio paint.
-The Phase 5D alternate fixture must replace every role above with a distinct
+The Phase 5D alternate fixture must replace every portfolio role with a distinct
 value and remain excluded from `src/**`.
+
+### Portfolio surfaces and shapes
+
+The portfolio cards and content sections use their own surface, divider,
+placeholder, and shape roles. These roles must not borrow CTA state tokens.
+Exact common geometry continues to use the shared card radius; the media,
+circular avatar/check, and visual tag shapes remain portfolio-owned.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Page and avatar canvas | `#ffffff` | `--app-color-landing-portfolio-canvas` |
+| Dark media/action surface | `#0c0c0d` | `--app-color-landing-portfolio-dark-surface` |
+| Foreground on dark surfaces | `#ffffff` | `--app-color-landing-portfolio-inverse-foreground` |
+| Visual tag surface | `rgba(255, 255, 255, 0.72)` | `--app-color-landing-portfolio-tag-surface` |
+| Card and footer surface | `#fbfbfb` | `--app-color-landing-portfolio-card-surface` |
+| Step divider | `#b9b9b3` | `--app-color-landing-portfolio-divider` |
+| Subtle path divider | `#dededc` | `--app-color-landing-portfolio-divider-subtle` |
+| Dark action hover | `#1c1c1f` | `--app-color-landing-portfolio-action-hover` |
+| Media placeholder pattern | Existing repeating gradient | `--app-background-landing-portfolio-media-placeholder` |
+| Media overlay | Existing linear gradient | `--app-background-landing-portfolio-media-overlay` |
+| Media corner | `4px` | `--app-radius-landing-portfolio-media` |
+| Avatar/check circle | `50%` | `--app-radius-landing-portfolio-round` |
+| Visual tag pill | `999px` | `--app-radius-landing-portfolio-tag-pill` |
+
+Path cards and footer focus treatment reuse `--app-radius-card` because their
+current `8px` geometry exactly matches the shared card role. The visual tag
+also reuses the existing portfolio muted foreground and display font roles.
 
 ## Tokens — Auth Prompt Controls
 

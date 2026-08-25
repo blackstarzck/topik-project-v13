@@ -28,6 +28,16 @@ export const allowedAppBridgeVars = [
   "--app-color-landing-portfolio-faint",
   "--app-color-landing-portfolio-label",
   "--app-color-landing-portfolio-footer-hover",
+  "--app-color-landing-portfolio-canvas",
+  "--app-color-landing-portfolio-dark-surface",
+  "--app-color-landing-portfolio-inverse-foreground",
+  "--app-color-landing-portfolio-tag-surface",
+  "--app-color-landing-portfolio-card-surface",
+  "--app-color-landing-portfolio-divider",
+  "--app-color-landing-portfolio-divider-subtle",
+  "--app-color-landing-portfolio-action-hover",
+  "--app-background-landing-portfolio-media-placeholder",
+  "--app-background-landing-portfolio-media-overlay",
   "--app-color-auth-prompt-focus-outline",
   "--app-color-auth-prompt-login-focus-border",
   "--app-color-auth-character-purple",
@@ -45,6 +55,9 @@ export const allowedAppBridgeVars = [
   "--app-radius-auth-character-base-edge",
   "--app-radius-auth-character-body-top",
   "--app-radius-auth-character-pill",
+  "--app-radius-landing-portfolio-media",
+  "--app-radius-landing-portfolio-round",
+  "--app-radius-landing-portfolio-tag-pill",
   "--app-size-auth-prompt-control",
   "--app-font-family",
   "--app-font-landing-portfolio-display",
@@ -96,6 +109,16 @@ export type AppBridgeTokenSource = {
   colorLandingPortfolioFaint: string;
   colorLandingPortfolioLabel: string;
   colorLandingPortfolioFooterHover: string;
+  colorLandingPortfolioCanvas: string;
+  colorLandingPortfolioDarkSurface: string;
+  colorLandingPortfolioInverseForeground: string;
+  colorLandingPortfolioTagSurface: string;
+  colorLandingPortfolioCardSurface: string;
+  colorLandingPortfolioDivider: string;
+  colorLandingPortfolioDividerSubtle: string;
+  colorLandingPortfolioActionHover: string;
+  backgroundLandingPortfolioMediaPlaceholder: string;
+  backgroundLandingPortfolioMediaOverlay: string;
   colorAuthPromptFocusOutline: string;
   colorAuthPromptLoginFocusBorder: string;
   colorAuthCharacterPurple: string;
@@ -113,6 +136,9 @@ export type AppBridgeTokenSource = {
   radiusAuthCharacterBaseEdge: string;
   radiusAuthCharacterBodyTop: string;
   radiusAuthCharacterPill: string;
+  radiusLandingPortfolioMedia: string;
+  radiusLandingPortfolioRound: string;
+  radiusLandingPortfolioTagPill: string;
   sizeAuthPromptControl: string;
   fontFamily: string;
   fontLandingPortfolioDisplay: string;
@@ -168,6 +194,25 @@ export function createAppBridgeVars(
     "--app-color-landing-portfolio-label": source.colorLandingPortfolioLabel,
     "--app-color-landing-portfolio-footer-hover":
       source.colorLandingPortfolioFooterHover,
+    "--app-color-landing-portfolio-canvas": source.colorLandingPortfolioCanvas,
+    "--app-color-landing-portfolio-dark-surface":
+      source.colorLandingPortfolioDarkSurface,
+    "--app-color-landing-portfolio-inverse-foreground":
+      source.colorLandingPortfolioInverseForeground,
+    "--app-color-landing-portfolio-tag-surface":
+      source.colorLandingPortfolioTagSurface,
+    "--app-color-landing-portfolio-card-surface":
+      source.colorLandingPortfolioCardSurface,
+    "--app-color-landing-portfolio-divider":
+      source.colorLandingPortfolioDivider,
+    "--app-color-landing-portfolio-divider-subtle":
+      source.colorLandingPortfolioDividerSubtle,
+    "--app-color-landing-portfolio-action-hover":
+      source.colorLandingPortfolioActionHover,
+    "--app-background-landing-portfolio-media-placeholder":
+      source.backgroundLandingPortfolioMediaPlaceholder,
+    "--app-background-landing-portfolio-media-overlay":
+      source.backgroundLandingPortfolioMediaOverlay,
     "--app-color-auth-prompt-focus-outline": source.colorAuthPromptFocusOutline,
     "--app-color-auth-prompt-login-focus-border":
       source.colorAuthPromptLoginFocusBorder,
@@ -186,6 +231,10 @@ export function createAppBridgeVars(
     "--app-radius-auth-character-base-edge": source.radiusAuthCharacterBaseEdge,
     "--app-radius-auth-character-body-top": source.radiusAuthCharacterBodyTop,
     "--app-radius-auth-character-pill": source.radiusAuthCharacterPill,
+    "--app-radius-landing-portfolio-media": source.radiusLandingPortfolioMedia,
+    "--app-radius-landing-portfolio-round": source.radiusLandingPortfolioRound,
+    "--app-radius-landing-portfolio-tag-pill":
+      source.radiusLandingPortfolioTagPill,
     "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
     "--app-font-landing-portfolio-display": source.fontLandingPortfolioDisplay,

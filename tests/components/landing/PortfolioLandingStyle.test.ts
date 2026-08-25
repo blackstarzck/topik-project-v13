@@ -16,7 +16,7 @@ const ownerSource = readFileSync(
   "utf8",
 );
 
-function declarationValue(selector: string, property: string) {
+function declarationValues(selector: string, property: string) {
   const values: string[] = [];
 
   postcss.parse(globalCss).walkRules((rule) => {
@@ -32,6 +32,12 @@ function declarationValue(selector: string, property: string) {
 
     rule.walkDecls(property, (declaration) => values.push(declaration.value));
   });
+
+  return values;
+}
+
+function declarationValue(selector: string, property: string) {
+  const values = declarationValues(selector, property);
 
   expect(values, `${selector} { ${property} }`).toHaveLength(1);
   return values[0];
@@ -200,6 +206,167 @@ const auditedDeclarations = [
   ],
 ] as const;
 
+const auditedSurfaceDeclarations = [
+  [
+    ".landing-layout-motion-root",
+    "background",
+    "var(--app-color-landing-portfolio-canvas)",
+  ],
+  [
+    ".landing-layout-section",
+    "background",
+    "var(--app-color-landing-portfolio-canvas)",
+  ],
+  [
+    ".landing-layout-visual",
+    "border-radius",
+    "var(--app-radius-landing-portfolio-media)",
+  ],
+  [
+    ".landing-layout-visual",
+    "background",
+    "var(--app-background-landing-portfolio-media-placeholder)",
+  ],
+  [
+    ".landing-layout-visual::before",
+    "background",
+    "var(--app-background-landing-portfolio-media-overlay)",
+  ],
+  [
+    ".landing-layout-visual--dark",
+    "background",
+    "var(--app-color-landing-portfolio-dark-surface)",
+  ],
+  [
+    ".landing-layout-visual > span",
+    "border-radius",
+    "var(--app-radius-landing-portfolio-tag-pill)",
+  ],
+  [
+    ".landing-layout-visual > span",
+    "background",
+    "var(--app-color-landing-portfolio-tag-surface)",
+  ],
+  [
+    ".landing-layout-visual > span",
+    "color",
+    "var(--app-color-landing-portfolio-muted)",
+  ],
+  [
+    ".landing-layout-visual > span",
+    "font-family",
+    "var(--app-font-landing-portfolio-display)",
+  ],
+  [
+    ".landing-layout-service__frame",
+    "background",
+    "var(--app-color-landing-portfolio-card-surface)",
+  ],
+  [
+    ".landing-layout-testimonials article",
+    "background",
+    "var(--app-color-landing-portfolio-card-surface)",
+  ],
+  [
+    ".landing-layout-testimonials__avatar",
+    "border-radius",
+    "var(--app-radius-landing-portfolio-round)",
+  ],
+  [
+    ".landing-layout-testimonials__avatar",
+    "background",
+    "var(--app-color-landing-portfolio-canvas)",
+  ],
+  [
+    ".landing-layout-testimonials__avatar",
+    "color",
+    "var(--app-color-landing-portfolio-supporting)",
+  ],
+  [
+    ".landing-layout-testimonials__avatar > img",
+    "border-radius",
+    "var(--app-radius-landing-portfolio-round)",
+  ],
+  [
+    ".landing-layout-stat",
+    "background",
+    "var(--app-color-landing-portfolio-card-surface)",
+  ],
+  [
+    ".landing-layout-feature",
+    "background",
+    "var(--app-color-landing-portfolio-card-surface)",
+  ],
+  [
+    ".landing-layout-step-list article::before",
+    "background",
+    "var(--app-color-landing-portfolio-divider)",
+  ],
+  [".landing-layout-path", "border-radius", "var(--app-radius-card)"],
+  [
+    ".landing-layout-path",
+    "background",
+    "var(--app-color-landing-portfolio-card-surface)",
+  ],
+  [
+    ".landing-layout-path hr",
+    "background",
+    "var(--app-color-landing-portfolio-divider-subtle)",
+  ],
+  [
+    ".landing-layout-check",
+    "border-radius",
+    "var(--app-radius-landing-portfolio-round)",
+  ],
+  [
+    ".landing-layout-check",
+    "background",
+    "var(--app-color-landing-portfolio-dark-surface)",
+  ],
+  [
+    ".landing-layout-check",
+    "color",
+    "var(--app-color-landing-portfolio-inverse-foreground)",
+  ],
+  [
+    ".landing-layout-dark-button",
+    "background",
+    "var(--app-color-landing-portfolio-dark-surface)",
+  ],
+  [
+    ".landing-layout-dark-button",
+    "color",
+    "var(--app-color-landing-portfolio-inverse-foreground)",
+  ],
+  [
+    ".landing-layout-dark-button:hover",
+    "background",
+    "var(--app-color-landing-portfolio-action-hover)",
+  ],
+  [
+    ".landing-layout-dark-button:hover",
+    "color",
+    "var(--app-color-landing-portfolio-inverse-foreground)",
+  ],
+  [
+    ".landing-layout-footer",
+    "background",
+    "var(--app-color-landing-portfolio-card-surface)",
+  ],
+  [
+    ".landing-layout-footer__cta:focus-visible",
+    "border-radius",
+    "var(--app-radius-card)",
+  ],
+] as const;
+
+const removedDeadSurfaceDeclarations = [
+  [".landing-layout-visual", "color"],
+  [".landing-layout-visual > em", "color"],
+  [".landing-layout-service__strip i", "border-radius"],
+  [".landing-layout-service__strip i", "background"],
+] as const;
+
 describe("portfolio landing text and foreground tokens", () => {
   test("routes the exact audited 27 colors and 5 font declarations through landing portfolio tokens", () => {
     expect(auditedDeclarations).toHaveLength(32);
@@ -243,6 +410,63 @@ describe("portfolio landing text and foreground tokens", () => {
       "landing-layout-step-content",
       "landing-layout-path",
       "landing-layout-footer",
+    ]) {
+      expect(ownerSource, className).toContain(className);
+    }
+  });
+});
+
+describe("portfolio landing surface and shape tokens", () => {
+  test("resolves the exact audited 26 colors, 8 radii, and shape-label font through tokens or deletion", () => {
+    expect(auditedSurfaceDeclarations).toHaveLength(31);
+    expect(
+      auditedSurfaceDeclarations.length + removedDeadSurfaceDeclarations.length,
+    ).toBe(35);
+
+    for (const [selector, property, value] of auditedSurfaceDeclarations) {
+      expect(declarationValue(selector, property)).toBe(value);
+    }
+  });
+
+  test("clears the exact audited surface scanner cluster", () => {
+    const auditedCss = auditedSurfaceDeclarations.map(
+      ([selector, property]) =>
+        `${selector} { ${property}: ${declarationValue(selector, property)}; }`,
+    );
+    const actionableViolations = scanUiContract([
+      {
+        path: "portfolio-landing-surfaces.css",
+        content: auditedCss.join("\n"),
+      },
+    ]).violations.filter(({ ruleId }: { ruleId: string }) =>
+      ["visual.raw-color", "visual.raw-radius-shadow-font"].includes(ruleId),
+    );
+
+    expect(auditedCss.length + removedDeadSurfaceDeclarations.length).toBe(35);
+    expect(actionableViolations).toEqual([]);
+  });
+
+  test("deletes placeholder-only declarations instead of tokenizing dead paint", () => {
+    for (const [selector, property] of removedDeadSurfaceDeclarations) {
+      expect(declarationValues(selector, property)).toEqual([]);
+    }
+
+    expect(globalCss).not.toContain(".landing-layout-service__strip");
+    expect(globalCss).not.toContain(".landing-layout-visual > em");
+    expect(ownerSource).not.toContain("landing-layout-service__strip");
+  });
+
+  test("keeps the surface tokens connected to the live portfolio owner", () => {
+    for (const className of [
+      "landing-layout-motion-root",
+      "landing-layout-section",
+      "landing-layout-visual",
+      "landing-layout-testimonials__avatar",
+      "landing-layout-feature",
+      "landing-layout-step-list",
+      "landing-layout-check",
+      "landing-layout-dark-button",
+      "landing-layout-footer__cta",
     ]) {
       expect(ownerSource, className).toContain(className);
     }

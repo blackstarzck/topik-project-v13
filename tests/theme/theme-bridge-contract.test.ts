@@ -53,6 +53,18 @@ const testAlternateSource = {
   colorLandingPortfolioFaint: "#b66c1e",
   colorLandingPortfolioLabel: "#124d68",
   colorLandingPortfolioFooterHover: "#c12e68",
+  colorLandingPortfolioCanvas: "#fff4c2",
+  colorLandingPortfolioDarkSurface: "#31105e",
+  colorLandingPortfolioInverseForeground: "#f4ffe2",
+  colorLandingPortfolioTagSurface: "rgba(248, 81, 162, 0.61)",
+  colorLandingPortfolioCardSurface: "#e3f8ff",
+  colorLandingPortfolioDivider: "#019b88",
+  colorLandingPortfolioDividerSubtle: "#7950f2",
+  colorLandingPortfolioActionHover: "#c2255c",
+  backgroundLandingPortfolioMediaPlaceholder:
+    "repeating-linear-gradient(45deg, #fd7e14 0 6px, #7048e8 6px 12px), #12b886",
+  backgroundLandingPortfolioMediaOverlay:
+    "linear-gradient(120deg, rgba(112, 72, 232, 0.41), rgba(18, 184, 134, 0.33))",
   colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
   colorAuthPromptLoginFocusBorder: "#e03f9f",
   colorAuthCharacterPurple: "#7416a8",
@@ -73,6 +85,9 @@ const testAlternateSource = {
   radiusAuthCharacterBaseEdge: "2px",
   radiusAuthCharacterBodyTop: "11px",
   radiusAuthCharacterPill: "777px",
+  radiusLandingPortfolioMedia: "6px",
+  radiusLandingPortfolioRound: "46%",
+  radiusLandingPortfolioTagPill: "889px",
   sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontLandingPortfolioDisplay: '"Bridge Display", serif',
@@ -113,6 +128,19 @@ const landingPortfolioBridgeVars = [
   "--app-color-landing-portfolio-footer-hover",
   "--app-font-landing-portfolio-display",
   "--app-font-landing-portfolio-numeric",
+  "--app-color-landing-portfolio-canvas",
+  "--app-color-landing-portfolio-dark-surface",
+  "--app-color-landing-portfolio-inverse-foreground",
+  "--app-color-landing-portfolio-tag-surface",
+  "--app-color-landing-portfolio-card-surface",
+  "--app-color-landing-portfolio-divider",
+  "--app-color-landing-portfolio-divider-subtle",
+  "--app-color-landing-portfolio-action-hover",
+  "--app-background-landing-portfolio-media-placeholder",
+  "--app-background-landing-portfolio-media-overlay",
+  "--app-radius-landing-portfolio-media",
+  "--app-radius-landing-portfolio-round",
+  "--app-radius-landing-portfolio-tag-pill",
 ] as const;
 
 const productionSourceExtensions = new Set([
@@ -198,6 +226,18 @@ describe("generic app theme bridge contract", () => {
       "--app-color-landing-portfolio-faint": "#b66c1e",
       "--app-color-landing-portfolio-label": "#124d68",
       "--app-color-landing-portfolio-footer-hover": "#c12e68",
+      "--app-color-landing-portfolio-canvas": "#fff4c2",
+      "--app-color-landing-portfolio-dark-surface": "#31105e",
+      "--app-color-landing-portfolio-inverse-foreground": "#f4ffe2",
+      "--app-color-landing-portfolio-tag-surface": "rgba(248, 81, 162, 0.61)",
+      "--app-color-landing-portfolio-card-surface": "#e3f8ff",
+      "--app-color-landing-portfolio-divider": "#019b88",
+      "--app-color-landing-portfolio-divider-subtle": "#7950f2",
+      "--app-color-landing-portfolio-action-hover": "#c2255c",
+      "--app-background-landing-portfolio-media-placeholder":
+        "repeating-linear-gradient(45deg, #fd7e14 0 6px, #7048e8 6px 12px), #12b886",
+      "--app-background-landing-portfolio-media-overlay":
+        "linear-gradient(120deg, rgba(112, 72, 232, 0.41), rgba(18, 184, 134, 0.33))",
       "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
       "--app-color-auth-prompt-login-focus-border": "#e03f9f",
       "--app-color-auth-character-purple": "#7416a8",
@@ -215,6 +255,9 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-auth-character-base-edge": "2px",
       "--app-radius-auth-character-body-top": "11px",
       "--app-radius-auth-character-pill": "777px",
+      "--app-radius-landing-portfolio-media": "6px",
+      "--app-radius-landing-portfolio-round": "46%",
+      "--app-radius-landing-portfolio-tag-pill": "889px",
       "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-landing-portfolio-display": '"Bridge Display", serif',
@@ -437,6 +480,28 @@ describe("generic app theme bridge contract", () => {
         "--app-font-landing-portfolio-numeric",
         '"Montserrat", var(--app-font-family), sans-serif',
       ],
+      ["--app-color-landing-portfolio-canvas", "#ffffff"],
+      ["--app-color-landing-portfolio-dark-surface", "#0c0c0d"],
+      ["--app-color-landing-portfolio-inverse-foreground", "#ffffff"],
+      [
+        "--app-color-landing-portfolio-tag-surface",
+        "rgba(255, 255, 255, 0.72)",
+      ],
+      ["--app-color-landing-portfolio-card-surface", "#fbfbfb"],
+      ["--app-color-landing-portfolio-divider", "#b9b9b3"],
+      ["--app-color-landing-portfolio-divider-subtle", "#dededc"],
+      ["--app-color-landing-portfolio-action-hover", "#1c1c1f"],
+      [
+        "--app-background-landing-portfolio-media-placeholder",
+        "repeating-linear-gradient(135deg, #e9e9e8 0 10px, #f1f1f0 10px 20px), #ececeb",
+      ],
+      [
+        "--app-background-landing-portfolio-media-overlay",
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.04))",
+      ],
+      ["--app-radius-landing-portfolio-media", "4px"],
+      ["--app-radius-landing-portfolio-round", "50%"],
+      ["--app-radius-landing-portfolio-tag-pill", "999px"],
     ] as const;
 
     expect(productionLandingPortfolioValues).toHaveLength(
@@ -586,6 +651,26 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingPortfolio.color.label,
         colorLandingPortfolioFooterHover:
           awesomicThemeTokens.landingPortfolio.color.footerHover,
+        colorLandingPortfolioCanvas:
+          awesomicThemeTokens.landingPortfolio.color.canvas,
+        colorLandingPortfolioDarkSurface:
+          awesomicThemeTokens.landingPortfolio.color.darkSurface,
+        colorLandingPortfolioInverseForeground:
+          awesomicThemeTokens.landingPortfolio.color.inverseForeground,
+        colorLandingPortfolioTagSurface:
+          awesomicThemeTokens.landingPortfolio.color.tagSurface,
+        colorLandingPortfolioCardSurface:
+          awesomicThemeTokens.landingPortfolio.color.cardSurface,
+        colorLandingPortfolioDivider:
+          awesomicThemeTokens.landingPortfolio.color.divider,
+        colorLandingPortfolioDividerSubtle:
+          awesomicThemeTokens.landingPortfolio.color.dividerSubtle,
+        colorLandingPortfolioActionHover:
+          awesomicThemeTokens.landingPortfolio.color.actionHover,
+        backgroundLandingPortfolioMediaPlaceholder:
+          awesomicThemeTokens.landingPortfolio.background.mediaPlaceholder,
+        backgroundLandingPortfolioMediaOverlay:
+          awesomicThemeTokens.landingPortfolio.background.mediaOverlay,
         colorAuthPromptFocusOutline:
           awesomicThemeTokens.authPrompt.focusOutline,
         colorAuthPromptLoginFocusBorder:
@@ -608,6 +693,10 @@ describe("generic app theme bridge contract", () => {
         radiusAuthCharacterBaseEdge: `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
         radiusAuthCharacterBodyTop: `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
         radiusAuthCharacterPill: `${awesomicThemeTokens.authCharacter.radius.pill}px`,
+        radiusLandingPortfolioMedia: `${awesomicThemeTokens.landingPortfolio.radius.media}px`,
+        radiusLandingPortfolioRound:
+          awesomicThemeTokens.landingPortfolio.radius.round,
+        radiusLandingPortfolioTagPill: `${awesomicThemeTokens.landingPortfolio.radius.tagPill}px`,
         sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontLandingPortfolioDisplay:

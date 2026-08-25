@@ -48,10 +48,25 @@ const DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS = {
   "--app-color-landing-portfolio-faint": "#b6b6b8",
   "--app-color-landing-portfolio-label": "#1c1c1f",
   "--app-color-landing-portfolio-footer-hover": "#3c3c40",
+  "--app-color-landing-portfolio-canvas": "#ffffff",
+  "--app-color-landing-portfolio-dark-surface": "#0c0c0d",
+  "--app-color-landing-portfolio-inverse-foreground": "#ffffff",
+  "--app-color-landing-portfolio-tag-surface": "rgba(255, 255, 255, 0.72)",
+  "--app-color-landing-portfolio-card-surface": "#fbfbfb",
+  "--app-color-landing-portfolio-divider": "#b9b9b3",
+  "--app-color-landing-portfolio-divider-subtle": "#dededc",
+  "--app-color-landing-portfolio-action-hover": "#1c1c1f",
+  "--app-background-landing-portfolio-media-placeholder":
+    "repeating-linear-gradient(135deg, #e9e9e8 0 10px, #f1f1f0 10px 20px), #ececeb",
+  "--app-background-landing-portfolio-media-overlay":
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.04))",
   "--app-font-landing-portfolio-display":
     '"Space Grotesk", var(--app-font-family), sans-serif',
   "--app-font-landing-portfolio-numeric":
     '"Montserrat", var(--app-font-family), sans-serif',
+  "--app-radius-landing-portfolio-media": "4px",
+  "--app-radius-landing-portfolio-round": "50%",
+  "--app-radius-landing-portfolio-tag-pill": "999px",
 } as const;
 
 const DEFAULT_BRIDGE_VARS = {

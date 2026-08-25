@@ -46,10 +46,29 @@ export const awesomicThemeTokens = {
       faint: "#b6b6b8",
       label: "#1c1c1f",
       footerHover: "#3c3c40",
+      canvas: "#ffffff",
+      darkSurface: "#0c0c0d",
+      inverseForeground: "#ffffff",
+      tagSurface: "rgba(255, 255, 255, 0.72)",
+      cardSurface: "#fbfbfb",
+      divider: "#b9b9b3",
+      dividerSubtle: "#dededc",
+      actionHover: "#1c1c1f",
+    },
+    background: {
+      mediaPlaceholder:
+        "repeating-linear-gradient(135deg, #e9e9e8 0 10px, #f1f1f0 10px 20px), #ececeb",
+      mediaOverlay:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.04))",
     },
     font: {
       display: '"Space Grotesk", var(--app-font-family), sans-serif',
       numeric: '"Montserrat", var(--app-font-family), sans-serif',
+    },
+    radius: {
+      media: 4,
+      round: "50%",
+      tagPill: 999,
     },
   },
   authPrompt: {
@@ -178,6 +197,26 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingPortfolio.color.label,
     "--app-color-landing-portfolio-footer-hover":
       awesomicThemeTokens.landingPortfolio.color.footerHover,
+    "--app-color-landing-portfolio-canvas":
+      awesomicThemeTokens.landingPortfolio.color.canvas,
+    "--app-color-landing-portfolio-dark-surface":
+      awesomicThemeTokens.landingPortfolio.color.darkSurface,
+    "--app-color-landing-portfolio-inverse-foreground":
+      awesomicThemeTokens.landingPortfolio.color.inverseForeground,
+    "--app-color-landing-portfolio-tag-surface":
+      awesomicThemeTokens.landingPortfolio.color.tagSurface,
+    "--app-color-landing-portfolio-card-surface":
+      awesomicThemeTokens.landingPortfolio.color.cardSurface,
+    "--app-color-landing-portfolio-divider":
+      awesomicThemeTokens.landingPortfolio.color.divider,
+    "--app-color-landing-portfolio-divider-subtle":
+      awesomicThemeTokens.landingPortfolio.color.dividerSubtle,
+    "--app-color-landing-portfolio-action-hover":
+      awesomicThemeTokens.landingPortfolio.color.actionHover,
+    "--app-background-landing-portfolio-media-placeholder":
+      awesomicThemeTokens.landingPortfolio.background.mediaPlaceholder,
+    "--app-background-landing-portfolio-media-overlay":
+      awesomicThemeTokens.landingPortfolio.background.mediaOverlay,
     "--app-color-auth-prompt-focus-outline":
       awesomicThemeTokens.authPrompt.focusOutline,
     "--app-color-auth-prompt-login-focus-border":
@@ -203,6 +242,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-radius-auth-character-base-edge": `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
     "--app-radius-auth-character-body-top": `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
     "--app-radius-auth-character-pill": `${awesomicThemeTokens.authCharacter.radius.pill}px`,
+    "--app-radius-landing-portfolio-media": `${awesomicThemeTokens.landingPortfolio.radius.media}px`,
+    "--app-radius-landing-portfolio-round":
+      awesomicThemeTokens.landingPortfolio.radius.round,
+    "--app-radius-landing-portfolio-tag-pill": `${awesomicThemeTokens.landingPortfolio.radius.tagPill}px`,
     "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-landing-portfolio-display":
