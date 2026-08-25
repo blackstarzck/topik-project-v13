@@ -6591,26 +6591,6 @@
   display: none;
 }
 
-.writing-manuscript-preview {
-  display: grid;
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 8px;
-}
-
-.writing-manuscript-preview--compact {
-  grid-template-rows: minmax(0, 1fr);
-}
-
-.writing-manuscript-preview__title.ant-typography {
-  margin: 0;
-}
-
-.writing-manuscript-preview__meta.ant-typography {
-  display: block;
-}
-
 .writing-manuscript-preview__grid {
   display: grid;
   min-height: 0;

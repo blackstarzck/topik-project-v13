@@ -1,0 +1,19 @@
+.preview {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.compact {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.title:global(.ant-typography) {
+  margin: 0;
+}
+
+.meta:global(.ant-typography) {
+  display: block;
+}

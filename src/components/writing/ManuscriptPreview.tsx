@@ -2,6 +2,7 @@
 
 import { Typography } from "antd";
 import { useTranslations } from "next-intl";
+import styles from "./ManuscriptPreview.module.css";
 
 const { Text, Title } = Typography;
 const MIN_VISIBLE_LINES = 20;
@@ -56,7 +57,9 @@ export function ManuscriptPreview({
       aria-label={t("manuscriptTitle")}
       className={[
         "writing-manuscript-preview",
+        styles.preview,
         !showHeader ? "writing-manuscript-preview--compact" : "",
+        !showHeader ? styles.compact : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -64,10 +67,21 @@ export function ManuscriptPreview({
     >
       {showHeader ? (
         <>
-          <Title level={5} className="writing-manuscript-preview__title">
+          <Title
+            level={5}
+            className={[
+              "writing-manuscript-preview__title",
+              styles.title,
+            ].join(" ")}
+          >
             {t("manuscriptTitle")}
           </Title>
-          <Text type="secondary" className="writing-manuscript-preview__meta">
+          <Text
+            type="secondary"
+            className={["writing-manuscript-preview__meta", styles.meta].join(
+              " ",
+            )}
+          >
             {t("manuscriptPerLine", { charsPerLine })}
           </Text>
         </>
