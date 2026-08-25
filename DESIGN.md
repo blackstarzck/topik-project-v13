@@ -194,6 +194,30 @@ The header CTA uses the existing fully rounded control token
 variant; add a real consumer and explicit visual contract before introducing a
 new landing CTA mode.
 
+## Tokens — Portfolio Landing Foreground and Type
+
+The portfolio content below the hero owns a restrained editorial palette and
+two display stacks. These are content foreground and typography roles, not CTA
+states: do not reuse `landingCta` tokens for headings, copy, icons, labels, or
+footer links. Surface, card, divider, radius, and hero/header paint remain
+outside this token group.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Primary text and icon foreground | `#0c0c0d` | `--app-color-landing-portfolio-foreground` |
+| Muted heading span | `#a5a5aa` | `--app-color-landing-portfolio-heading-accent` |
+| Supporting intro copy | `#77777b` | `--app-color-landing-portfolio-supporting` |
+| Repeated secondary copy | `#8b8b8e` | `--app-color-landing-portfolio-muted` |
+| Faint caption metadata | `#b6b6b8` | `--app-color-landing-portfolio-faint` |
+| Service numeric label | `#1c1c1f` | `--app-color-landing-portfolio-label` |
+| Footer CTA hover foreground | `#3c3c40` | `--app-color-landing-portfolio-footer-hover` |
+| Editorial display stack | `Space Grotesk` + app fallback | `--app-font-landing-portfolio-display` |
+| Numeric marker stack | `Montserrat` + app fallback | `--app-font-landing-portfolio-numeric` |
+
+Production light and dark appearances preserve the current portfolio paint.
+The Phase 5D alternate fixture must replace every role above with a distinct
+value and remain excluded from `src/**`.
+
 ## Tokens — Auth Prompt Controls
 
 The live login and sign-up prompt owns one scoped Ant Design theme for Input and

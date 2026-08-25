@@ -129,6 +129,53 @@ describe("app theme contract", () => {
     }
   });
 
+  test("owns the portfolio landing foreground and typography in every production theme", () => {
+    expect(awesomicThemeTokens).toHaveProperty("landingPortfolio", {
+      color: {
+        foreground: "#0c0c0d",
+        headingAccent: "#a5a5aa",
+        supporting: "#77777b",
+        muted: "#8b8b8e",
+        faint: "#b6b6b8",
+        label: "#1c1c1f",
+        footerHover: "#3c3c40",
+      },
+      font: {
+        display: '"Space Grotesk", var(--app-font-family), sans-serif',
+        numeric: '"Montserrat", var(--app-font-family), sans-serif',
+      },
+    });
+
+    const expectedBridge = {
+      "--app-color-landing-portfolio-foreground":
+        awesomicThemeTokens.landingPortfolio.color.foreground,
+      "--app-color-landing-portfolio-heading-accent":
+        awesomicThemeTokens.landingPortfolio.color.headingAccent,
+      "--app-color-landing-portfolio-supporting":
+        awesomicThemeTokens.landingPortfolio.color.supporting,
+      "--app-color-landing-portfolio-muted":
+        awesomicThemeTokens.landingPortfolio.color.muted,
+      "--app-color-landing-portfolio-faint":
+        awesomicThemeTokens.landingPortfolio.color.faint,
+      "--app-color-landing-portfolio-label":
+        awesomicThemeTokens.landingPortfolio.color.label,
+      "--app-color-landing-portfolio-footer-hover":
+        awesomicThemeTokens.landingPortfolio.color.footerHover,
+      "--app-font-landing-portfolio-display":
+        awesomicThemeTokens.landingPortfolio.font.display,
+      "--app-font-landing-portfolio-numeric":
+        awesomicThemeTokens.landingPortfolio.font.numeric,
+    };
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject(
+          expectedBridge,
+        );
+      }
+    }
+  });
+
   test("getResolvedBridgeVars can resolve the stock AntD fallback theme", () => {
     const defaultVars = getResolvedBridgeVars("default", "light");
 

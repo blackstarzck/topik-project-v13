@@ -1406,7 +1406,7 @@
 }
 
 .landing-layout-number {
-  font-family: "Montserrat", var(--app-font-family), sans-serif;
+  font-family: var(--app-font-landing-portfolio-numeric);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1427,7 +1427,7 @@
   align-items: center;
   gap: 9px;
   margin: 0;
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0;
@@ -1443,7 +1443,7 @@
   width: 7px;
   height: 7px;
   flex: 0 0 7px;
-  background: #0c0c0d;
+  background: var(--app-color-landing-portfolio-foreground);
 }
 
 .landing-layout-heading {
@@ -1482,8 +1482,8 @@
 .landing-layout-process-head h2,
 .landing-layout-footer h2 {
   margin: 0;
-  color: #0c0c0d;
-  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  color: var(--app-color-landing-portfolio-foreground);
+  font-family: var(--app-font-landing-portfolio-display);
   font-size: clamp(30px, 3.9vw, 50px);
   font-weight: 700;
   letter-spacing: 0;
@@ -1505,14 +1505,14 @@
 .landing-layout-heading h2 span,
 .landing-layout-stats-row h2 span,
 .landing-layout-process-head h2 span {
-  color: #a5a5aa;
+  color: var(--app-color-landing-portfolio-heading-accent);
 }
 
 .landing-layout-heading p:not(.landing-layout-eyebrow),
 .landing-layout-stats-row p:not(.landing-layout-eyebrow),
 .landing-layout-process-head p:not(.landing-layout-eyebrow) {
   margin: 18px 0 0;
-  color: #77777b;
+  color: var(--app-color-landing-portfolio-supporting);
   font-size: 16px;
   line-height: 1.65;
   word-break: keep-all;
@@ -1615,20 +1615,20 @@
 
 .landing-layout-work__caption strong {
   flex: 0 0 auto;
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 16px;
   font-weight: 700;
 }
 
 .landing-layout-work__caption span {
-  color: #b6b6b8;
+  color: var(--app-color-landing-portfolio-faint);
 }
 
 .landing-layout-work__caption p {
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 16px;
   line-height: 1.45;
   -webkit-box-orient: vertical;
@@ -1736,8 +1736,8 @@
 .landing-layout-service__frame > span {
   position: relative;
   z-index: 1;
-  color: #1c1c1f;
-  font-family: "Montserrat", var(--app-font-family), sans-serif;
+  color: var(--app-color-landing-portfolio-label);
+  font-family: var(--app-font-landing-portfolio-numeric);
   font-variant-numeric: tabular-nums;
   font-size: 16px;
   font-weight: 500;
@@ -1762,8 +1762,8 @@
 .landing-layout-step-list h3,
 .landing-layout-path h3 {
   margin: 22px 0 10px;
-  color: #0c0c0d;
-  font-family: "Space Grotesk", var(--app-font-family), sans-serif;
+  color: var(--app-color-landing-portfolio-foreground);
+  font-family: var(--app-font-landing-portfolio-display);
   font-size: 21px;
   font-weight: 600;
   letter-spacing: 0;
@@ -1777,7 +1777,7 @@
 .landing-layout-step-list p,
 .landing-layout-path p {
   margin: 0;
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 16px;
   line-height: 1.58;
   word-break: keep-all;
@@ -1794,7 +1794,7 @@
   width: 30px;
   height: 30px;
   flex: 0 0 30px;
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
 }
 
 .landing-layout-icon svg {
@@ -1839,7 +1839,7 @@
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 16px;
   line-height: 1.5;
   white-space: pre-line;
@@ -1880,7 +1880,7 @@
 }
 
 .landing-layout-testimonials strong {
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 16px;
 }
 
@@ -1891,7 +1891,7 @@
 }
 
 .landing-layout-testimonials__who small {
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 14px;
   line-height: 1.35;
 }
@@ -1926,7 +1926,7 @@
 }
 
 .landing-layout-stat strong {
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: clamp(38px, 4vw, 52px);
   font-weight: 700;
   letter-spacing: 0;
@@ -1934,7 +1934,7 @@
 }
 
 .landing-layout-stat span {
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 16px;
 }
 
@@ -1975,7 +1975,7 @@
 .landing-layout-post > span {
   display: block;
   margin: 18px 0 8px;
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 16px;
 }
 
@@ -2063,8 +2063,8 @@
 }
 
 .landing-layout-step-content > span {
-  color: #0c0c0d;
-  font-family: "Montserrat", var(--app-font-family), sans-serif;
+  color: var(--app-color-landing-portfolio-foreground);
+  font-family: var(--app-font-landing-portfolio-numeric);
   font-variant-numeric: tabular-nums;
   font-size: 30px;
   font-weight: 700;
@@ -2088,7 +2088,7 @@
 }
 
 .landing-layout-path > span {
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 46px;
   font-weight: 850;
   letter-spacing: 0;
@@ -2109,7 +2109,7 @@
 }
 
 .landing-layout-path > strong {
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 46px;
   font-weight: 700;
   letter-spacing: 0;
@@ -2129,7 +2129,7 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 16px;
 }
 
@@ -2197,7 +2197,7 @@
 }
 
 .landing-layout-footer__cta:hover {
-  color: #3c3c40;
+  color: var(--app-color-landing-portfolio-footer-hover);
 }
 
 .landing-layout-footer__cta svg {
@@ -2218,7 +2218,7 @@
 .landing-layout-footer p {
   max-width: 36ch;
   margin: 20px 0 0;
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 17px;
   line-height: 1.58;
   word-break: keep-all;
@@ -2234,7 +2234,7 @@
 }
 
 .landing-layout-footer__bottom span {
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
   font-size: 16px;
 }
 
@@ -2253,7 +2253,7 @@
 }
 
 .landing-layout-footer__bottom a {
-  color: #0c0c0d;
+  color: var(--app-color-landing-portfolio-foreground);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0;
@@ -2262,7 +2262,7 @@
 }
 
 .landing-layout-footer__bottom a:hover {
-  color: #8b8b8e;
+  color: var(--app-color-landing-portfolio-muted);
 }
 
 @media (min-width: 621px) {

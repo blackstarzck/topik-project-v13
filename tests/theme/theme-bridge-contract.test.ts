@@ -46,6 +46,13 @@ const testAlternateSource = {
   colorLandingCtaGhostSurface: "#f1e7ff",
   colorLandingCtaGhostText: "#29104f",
   colorLandingCtaGhostBorder: "#51b9ad",
+  colorLandingPortfolioForeground: "#27104f",
+  colorLandingPortfolioHeadingAccent: "#7055a8",
+  colorLandingPortfolioSupporting: "#286f65",
+  colorLandingPortfolioMuted: "#8f2a61",
+  colorLandingPortfolioFaint: "#b66c1e",
+  colorLandingPortfolioLabel: "#124d68",
+  colorLandingPortfolioFooterHover: "#c12e68",
   colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
   colorAuthPromptLoginFocusBorder: "#e03f9f",
   colorAuthCharacterPurple: "#7416a8",
@@ -68,6 +75,8 @@ const testAlternateSource = {
   radiusAuthCharacterPill: "777px",
   sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
+  fontLandingPortfolioDisplay: '"Bridge Display", serif',
+  fontLandingPortfolioNumeric: '"Bridge Numeric", monospace',
   fontSizeCaption: "11px",
   fontSizeBody: "15px",
   fontSizeBodyLg: "17px",
@@ -92,6 +101,18 @@ const authCharacterBridgeVars = [
   "--app-radius-auth-character-base-edge",
   "--app-radius-auth-character-body-top",
   "--app-radius-auth-character-pill",
+] as const;
+
+const landingPortfolioBridgeVars = [
+  "--app-color-landing-portfolio-foreground",
+  "--app-color-landing-portfolio-heading-accent",
+  "--app-color-landing-portfolio-supporting",
+  "--app-color-landing-portfolio-muted",
+  "--app-color-landing-portfolio-faint",
+  "--app-color-landing-portfolio-label",
+  "--app-color-landing-portfolio-footer-hover",
+  "--app-font-landing-portfolio-display",
+  "--app-font-landing-portfolio-numeric",
 ] as const;
 
 const productionSourceExtensions = new Set([
@@ -170,6 +191,13 @@ describe("generic app theme bridge contract", () => {
       "--app-color-landing-cta-ghost-surface": "#f1e7ff",
       "--app-color-landing-cta-ghost-text": "#29104f",
       "--app-color-landing-cta-ghost-border": "#51b9ad",
+      "--app-color-landing-portfolio-foreground": "#27104f",
+      "--app-color-landing-portfolio-heading-accent": "#7055a8",
+      "--app-color-landing-portfolio-supporting": "#286f65",
+      "--app-color-landing-portfolio-muted": "#8f2a61",
+      "--app-color-landing-portfolio-faint": "#b66c1e",
+      "--app-color-landing-portfolio-label": "#124d68",
+      "--app-color-landing-portfolio-footer-hover": "#c12e68",
       "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
       "--app-color-auth-prompt-login-focus-border": "#e03f9f",
       "--app-color-auth-character-purple": "#7416a8",
@@ -189,6 +217,8 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-auth-character-pill": "777px",
       "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
+      "--app-font-landing-portfolio-display": '"Bridge Display", serif',
+      "--app-font-landing-portfolio-numeric": '"Bridge Numeric", monospace',
       "--app-font-size-caption": "11px",
       "--app-font-size-body": "15px",
       "--app-font-size-body-lg": "17px",
@@ -390,6 +420,41 @@ describe("generic app theme bridge contract", () => {
         productionValue,
       );
     }
+
+    const productionLandingPortfolioValues = [
+      ["--app-color-landing-portfolio-foreground", "#0c0c0d"],
+      ["--app-color-landing-portfolio-heading-accent", "#a5a5aa"],
+      ["--app-color-landing-portfolio-supporting", "#77777b"],
+      ["--app-color-landing-portfolio-muted", "#8b8b8e"],
+      ["--app-color-landing-portfolio-faint", "#b6b6b8"],
+      ["--app-color-landing-portfolio-label", "#1c1c1f"],
+      ["--app-color-landing-portfolio-footer-hover", "#3c3c40"],
+      [
+        "--app-font-landing-portfolio-display",
+        '"Space Grotesk", var(--app-font-family), sans-serif',
+      ],
+      [
+        "--app-font-landing-portfolio-numeric",
+        '"Montserrat", var(--app-font-family), sans-serif',
+      ],
+    ] as const;
+
+    expect(productionLandingPortfolioValues).toHaveLength(
+      landingPortfolioBridgeVars.length,
+    );
+    expect(
+      new Set(
+        landingPortfolioBridgeVars.map(
+          (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+        ),
+      ),
+    ).toHaveLength(landingPortfolioBridgeVars.length);
+    for (const [varName, productionValue] of productionLandingPortfolioValues) {
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).toBeTruthy();
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).not.toBe(
+        productionValue,
+      );
+    }
   });
 
   test("enforces the alternate fixture production-source and dependency boundary", () => {
@@ -450,6 +515,9 @@ describe("generic app theme bridge contract", () => {
       ...authCharacterBridgeVars.map(
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
+      ...landingPortfolioBridgeVars.map(
+        (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+      ),
       'radiusCard: "23px"',
       'radiusPill: "12000px"',
       'radiusLandingHeroCta: "17px"',
@@ -504,6 +572,20 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingCta.ghostSurface,
         colorLandingCtaGhostText: awesomicThemeTokens.landingCta.ghostText,
         colorLandingCtaGhostBorder: awesomicThemeTokens.landingCta.ghostBorder,
+        colorLandingPortfolioForeground:
+          awesomicThemeTokens.landingPortfolio.color.foreground,
+        colorLandingPortfolioHeadingAccent:
+          awesomicThemeTokens.landingPortfolio.color.headingAccent,
+        colorLandingPortfolioSupporting:
+          awesomicThemeTokens.landingPortfolio.color.supporting,
+        colorLandingPortfolioMuted:
+          awesomicThemeTokens.landingPortfolio.color.muted,
+        colorLandingPortfolioFaint:
+          awesomicThemeTokens.landingPortfolio.color.faint,
+        colorLandingPortfolioLabel:
+          awesomicThemeTokens.landingPortfolio.color.label,
+        colorLandingPortfolioFooterHover:
+          awesomicThemeTokens.landingPortfolio.color.footerHover,
         colorAuthPromptFocusOutline:
           awesomicThemeTokens.authPrompt.focusOutline,
         colorAuthPromptLoginFocusBorder:
@@ -528,6 +610,10 @@ describe("generic app theme bridge contract", () => {
         radiusAuthCharacterPill: `${awesomicThemeTokens.authCharacter.radius.pill}px`,
         sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
+        fontLandingPortfolioDisplay:
+          awesomicThemeTokens.landingPortfolio.font.display,
+        fontLandingPortfolioNumeric:
+          awesomicThemeTokens.landingPortfolio.font.numeric,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,
         fontSizeBody: awesomicThemeTokens.fontSize.body,
         fontSizeBodyLg: awesomicThemeTokens.fontSize.bodyLg,

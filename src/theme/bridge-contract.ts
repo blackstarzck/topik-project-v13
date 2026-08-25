@@ -21,6 +21,13 @@ export const allowedAppBridgeVars = [
   "--app-color-landing-cta-ghost-surface",
   "--app-color-landing-cta-ghost-text",
   "--app-color-landing-cta-ghost-border",
+  "--app-color-landing-portfolio-foreground",
+  "--app-color-landing-portfolio-heading-accent",
+  "--app-color-landing-portfolio-supporting",
+  "--app-color-landing-portfolio-muted",
+  "--app-color-landing-portfolio-faint",
+  "--app-color-landing-portfolio-label",
+  "--app-color-landing-portfolio-footer-hover",
   "--app-color-auth-prompt-focus-outline",
   "--app-color-auth-prompt-login-focus-border",
   "--app-color-auth-character-purple",
@@ -40,6 +47,8 @@ export const allowedAppBridgeVars = [
   "--app-radius-auth-character-pill",
   "--app-size-auth-prompt-control",
   "--app-font-family",
+  "--app-font-landing-portfolio-display",
+  "--app-font-landing-portfolio-numeric",
   "--app-font-size-caption",
   "--app-font-size-body",
   "--app-font-size-body-lg",
@@ -80,6 +89,13 @@ export type AppBridgeTokenSource = {
   colorLandingCtaGhostSurface: string;
   colorLandingCtaGhostText: string;
   colorLandingCtaGhostBorder: string;
+  colorLandingPortfolioForeground: string;
+  colorLandingPortfolioHeadingAccent: string;
+  colorLandingPortfolioSupporting: string;
+  colorLandingPortfolioMuted: string;
+  colorLandingPortfolioFaint: string;
+  colorLandingPortfolioLabel: string;
+  colorLandingPortfolioFooterHover: string;
   colorAuthPromptFocusOutline: string;
   colorAuthPromptLoginFocusBorder: string;
   colorAuthCharacterPurple: string;
@@ -99,6 +115,8 @@ export type AppBridgeTokenSource = {
   radiusAuthCharacterPill: string;
   sizeAuthPromptControl: string;
   fontFamily: string;
+  fontLandingPortfolioDisplay: string;
+  fontLandingPortfolioNumeric: string;
   fontSizeCaption: string;
   fontSizeBody: string;
   fontSizeBodyLg: string;
@@ -139,6 +157,17 @@ export function createAppBridgeVars(
     "--app-color-landing-cta-ghost-surface": source.colorLandingCtaGhostSurface,
     "--app-color-landing-cta-ghost-text": source.colorLandingCtaGhostText,
     "--app-color-landing-cta-ghost-border": source.colorLandingCtaGhostBorder,
+    "--app-color-landing-portfolio-foreground":
+      source.colorLandingPortfolioForeground,
+    "--app-color-landing-portfolio-heading-accent":
+      source.colorLandingPortfolioHeadingAccent,
+    "--app-color-landing-portfolio-supporting":
+      source.colorLandingPortfolioSupporting,
+    "--app-color-landing-portfolio-muted": source.colorLandingPortfolioMuted,
+    "--app-color-landing-portfolio-faint": source.colorLandingPortfolioFaint,
+    "--app-color-landing-portfolio-label": source.colorLandingPortfolioLabel,
+    "--app-color-landing-portfolio-footer-hover":
+      source.colorLandingPortfolioFooterHover,
     "--app-color-auth-prompt-focus-outline": source.colorAuthPromptFocusOutline,
     "--app-color-auth-prompt-login-focus-border":
       source.colorAuthPromptLoginFocusBorder,
@@ -159,6 +188,8 @@ export function createAppBridgeVars(
     "--app-radius-auth-character-pill": source.radiusAuthCharacterPill,
     "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
+    "--app-font-landing-portfolio-display": source.fontLandingPortfolioDisplay,
+    "--app-font-landing-portfolio-numeric": source.fontLandingPortfolioNumeric,
     "--app-font-size-caption": source.fontSizeCaption,
     "--app-font-size-body": source.fontSizeBody,
     "--app-font-size-body-lg": source.fontSizeBodyLg,

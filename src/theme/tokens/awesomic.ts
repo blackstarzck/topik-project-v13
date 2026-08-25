@@ -37,6 +37,21 @@ export const awesomicThemeTokens = {
     ghostText: "#0c0c0d",
     ghostBorder: "#e7e7e6",
   },
+  landingPortfolio: {
+    color: {
+      foreground: "#0c0c0d",
+      headingAccent: "#a5a5aa",
+      supporting: "#77777b",
+      muted: "#8b8b8e",
+      faint: "#b6b6b8",
+      label: "#1c1c1f",
+      footerHover: "#3c3c40",
+    },
+    font: {
+      display: '"Space Grotesk", var(--app-font-family), sans-serif',
+      numeric: '"Montserrat", var(--app-font-family), sans-serif',
+    },
+  },
   authPrompt: {
     controlHeight: 50,
     focusOutline: "rgba(24, 24, 24, 0.08)",
@@ -149,6 +164,20 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingCta.ghostText,
     "--app-color-landing-cta-ghost-border":
       awesomicThemeTokens.landingCta.ghostBorder,
+    "--app-color-landing-portfolio-foreground":
+      awesomicThemeTokens.landingPortfolio.color.foreground,
+    "--app-color-landing-portfolio-heading-accent":
+      awesomicThemeTokens.landingPortfolio.color.headingAccent,
+    "--app-color-landing-portfolio-supporting":
+      awesomicThemeTokens.landingPortfolio.color.supporting,
+    "--app-color-landing-portfolio-muted":
+      awesomicThemeTokens.landingPortfolio.color.muted,
+    "--app-color-landing-portfolio-faint":
+      awesomicThemeTokens.landingPortfolio.color.faint,
+    "--app-color-landing-portfolio-label":
+      awesomicThemeTokens.landingPortfolio.color.label,
+    "--app-color-landing-portfolio-footer-hover":
+      awesomicThemeTokens.landingPortfolio.color.footerHover,
     "--app-color-auth-prompt-focus-outline":
       awesomicThemeTokens.authPrompt.focusOutline,
     "--app-color-auth-prompt-login-focus-border":
@@ -176,6 +205,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-radius-auth-character-pill": `${awesomicThemeTokens.authCharacter.radius.pill}px`,
     "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
+    "--app-font-landing-portfolio-display":
+      awesomicThemeTokens.landingPortfolio.font.display,
+    "--app-font-landing-portfolio-numeric":
+      awesomicThemeTokens.landingPortfolio.font.numeric,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
     "--app-font-size-body": awesomicThemeTokens.fontSize.body,
     "--app-font-size-body-lg": awesomicThemeTokens.fontSize.bodyLg,
