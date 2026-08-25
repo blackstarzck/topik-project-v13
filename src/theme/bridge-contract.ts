@@ -20,6 +20,12 @@ export const allowedAppBridgeVars = [
   "--app-color-writing-material-row-active-surface",
   "--app-color-writing-blank-active-surface",
   "--app-color-writing-blank-filled-border",
+  "--app-color-writing-manuscript-intro-surface",
+  "--app-color-writing-manuscript-intro-border",
+  "--app-color-writing-manuscript-body-surface",
+  "--app-color-writing-manuscript-body-border",
+  "--app-color-writing-manuscript-conclusion-surface",
+  "--app-color-writing-manuscript-conclusion-border",
   "--app-color-landing-cta-primary",
   "--app-color-landing-cta-primary-hover",
   "--app-color-landing-cta-foreground",
@@ -77,6 +83,7 @@ export const allowedAppBridgeVars = [
   "--app-font-family",
   "--app-font-landing-portfolio-display",
   "--app-font-landing-portfolio-numeric",
+  "--app-font-writing-manuscript-mono",
   "--app-font-size-caption",
   "--app-font-size-body",
   "--app-font-size-body-lg",
@@ -93,6 +100,9 @@ export const allowedAppBridgeVars = [
   "--app-shadow-writing-material-tooltip",
   "--app-shadow-writing-blank-focus",
   "--app-shadow-writing-blank-active-inset",
+  "--app-shadow-writing-manuscript-intro-inset",
+  "--app-shadow-writing-manuscript-body-inset",
+  "--app-shadow-writing-manuscript-conclusion-inset",
   "--app-shadow-auth-prompt-focus",
   "--app-shadow-auth-prompt-login-focus",
 ] as const;
@@ -122,6 +132,12 @@ export type AppBridgeTokenSource = {
   colorWritingMaterialRowActiveSurface: string;
   colorWritingBlankActiveSurface: string;
   colorWritingBlankFilledBorder: string;
+  colorWritingManuscriptIntroSurface: string;
+  colorWritingManuscriptIntroBorder: string;
+  colorWritingManuscriptBodySurface: string;
+  colorWritingManuscriptBodyBorder: string;
+  colorWritingManuscriptConclusionSurface: string;
+  colorWritingManuscriptConclusionBorder: string;
   colorLandingCtaPrimary: string;
   colorLandingCtaPrimaryHover: string;
   colorLandingCtaForeground: string;
@@ -179,6 +195,7 @@ export type AppBridgeTokenSource = {
   fontFamily: string;
   fontLandingPortfolioDisplay: string;
   fontLandingPortfolioNumeric: string;
+  fontWritingManuscriptMono: string;
   fontSizeCaption: string;
   fontSizeBody: string;
   fontSizeBodyLg: string;
@@ -195,6 +212,9 @@ export type AppBridgeTokenSource = {
   shadowWritingMaterialTooltip: string;
   shadowWritingBlankFocus: string;
   shadowWritingBlankActiveInset: string;
+  shadowWritingManuscriptIntroInset: string;
+  shadowWritingManuscriptBodyInset: string;
+  shadowWritingManuscriptConclusionInset: string;
   shadowAuthPromptFocus: string;
   shadowAuthPromptLoginFocus: string;
 };
@@ -228,6 +248,18 @@ export function createAppBridgeVars(
       source.colorWritingBlankActiveSurface,
     "--app-color-writing-blank-filled-border":
       source.colorWritingBlankFilledBorder,
+    "--app-color-writing-manuscript-intro-surface":
+      source.colorWritingManuscriptIntroSurface,
+    "--app-color-writing-manuscript-intro-border":
+      source.colorWritingManuscriptIntroBorder,
+    "--app-color-writing-manuscript-body-surface":
+      source.colorWritingManuscriptBodySurface,
+    "--app-color-writing-manuscript-body-border":
+      source.colorWritingManuscriptBodyBorder,
+    "--app-color-writing-manuscript-conclusion-surface":
+      source.colorWritingManuscriptConclusionSurface,
+    "--app-color-writing-manuscript-conclusion-border":
+      source.colorWritingManuscriptConclusionBorder,
     "--app-color-landing-cta-primary": source.colorLandingCtaPrimary,
     "--app-color-landing-cta-primary-hover": source.colorLandingCtaPrimaryHover,
     "--app-color-landing-cta-foreground": source.colorLandingCtaForeground,
@@ -304,6 +336,7 @@ export function createAppBridgeVars(
     "--app-font-family": source.fontFamily,
     "--app-font-landing-portfolio-display": source.fontLandingPortfolioDisplay,
     "--app-font-landing-portfolio-numeric": source.fontLandingPortfolioNumeric,
+    "--app-font-writing-manuscript-mono": source.fontWritingManuscriptMono,
     "--app-font-size-caption": source.fontSizeCaption,
     "--app-font-size-body": source.fontSizeBody,
     "--app-font-size-body-lg": source.fontSizeBodyLg,
@@ -322,6 +355,12 @@ export function createAppBridgeVars(
     "--app-shadow-writing-blank-focus": source.shadowWritingBlankFocus,
     "--app-shadow-writing-blank-active-inset":
       source.shadowWritingBlankActiveInset,
+    "--app-shadow-writing-manuscript-intro-inset":
+      source.shadowWritingManuscriptIntroInset,
+    "--app-shadow-writing-manuscript-body-inset":
+      source.shadowWritingManuscriptBodyInset,
+    "--app-shadow-writing-manuscript-conclusion-inset":
+      source.shadowWritingManuscriptConclusionInset,
     "--app-shadow-auth-prompt-focus": source.shadowAuthPromptFocus,
     "--app-shadow-auth-prompt-login-focus": source.shadowAuthPromptLoginFocus,
   };

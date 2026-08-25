@@ -223,6 +223,69 @@ describe("app theme contract", () => {
     }
   });
 
+  test("owns manuscript section paint and monospace typography in every production theme", () => {
+    expect(awesomicThemeTokens).toHaveProperty("writingManuscript", {
+      font: {
+        mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+      },
+      section: {
+        intro: {
+          surface:
+            "color-mix(in srgb, var(--app-color-primary) 12%, var(--app-color-bg-container))",
+          border:
+            "color-mix(in srgb, var(--app-color-primary) 48%, var(--app-color-border))",
+          inset:
+            "inset 0 0 0 1px color-mix(in srgb, var(--app-color-primary) 30%, transparent)",
+        },
+        body: {
+          surface: { light: "#f6ffed", dark: "#162312" },
+          border:
+            "color-mix(in srgb, var(--app-color-status-success) 48%, var(--app-color-border))",
+          inset:
+            "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-success) 30%, transparent)",
+        },
+        conclusion: {
+          surface: { light: "#fffbe6", dark: "#2b2111" },
+          border:
+            "color-mix(in srgb, var(--app-color-status-warning) 48%, var(--app-color-border))",
+          inset:
+            "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-warning) 30%, transparent)",
+        },
+      },
+    });
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject({
+          "--app-font-writing-manuscript-mono":
+            awesomicThemeTokens.writingManuscript.font.mono,
+          "--app-color-writing-manuscript-intro-surface":
+            awesomicThemeTokens.writingManuscript.section.intro.surface,
+          "--app-color-writing-manuscript-intro-border":
+            awesomicThemeTokens.writingManuscript.section.intro.border,
+          "--app-shadow-writing-manuscript-intro-inset":
+            awesomicThemeTokens.writingManuscript.section.intro.inset,
+          "--app-color-writing-manuscript-body-surface":
+            awesomicThemeTokens.writingManuscript.section.body.surface[
+              appearance
+            ],
+          "--app-color-writing-manuscript-body-border":
+            awesomicThemeTokens.writingManuscript.section.body.border,
+          "--app-shadow-writing-manuscript-body-inset":
+            awesomicThemeTokens.writingManuscript.section.body.inset,
+          "--app-color-writing-manuscript-conclusion-surface":
+            awesomicThemeTokens.writingManuscript.section.conclusion.surface[
+              appearance
+            ],
+          "--app-color-writing-manuscript-conclusion-border":
+            awesomicThemeTokens.writingManuscript.section.conclusion.border,
+          "--app-shadow-writing-manuscript-conclusion-inset":
+            awesomicThemeTokens.writingManuscript.section.conclusion.inset,
+        });
+      }
+    }
+  });
+
   test("owns the landing hero and header paint in every production theme", () => {
     expect(awesomicThemeTokens).toHaveProperty("landingHero", {
       color: {
@@ -466,6 +529,12 @@ describe("app theme contract", () => {
       "--app-color-writing-material-row-active-surface",
       "--app-color-writing-blank-active-surface",
       "--app-color-writing-blank-filled-border",
+      "--app-color-writing-manuscript-intro-surface",
+      "--app-color-writing-manuscript-intro-border",
+      "--app-color-writing-manuscript-body-surface",
+      "--app-color-writing-manuscript-body-border",
+      "--app-color-writing-manuscript-conclusion-surface",
+      "--app-color-writing-manuscript-conclusion-border",
       "--app-radius",
       "--app-radius-none",
       "--app-radius-card",
@@ -480,6 +549,10 @@ describe("app theme contract", () => {
       "--app-shadow-writing-material-tooltip",
       "--app-shadow-writing-blank-focus",
       "--app-shadow-writing-blank-active-inset",
+      "--app-shadow-writing-manuscript-intro-inset",
+      "--app-shadow-writing-manuscript-body-inset",
+      "--app-shadow-writing-manuscript-conclusion-inset",
+      "--app-font-writing-manuscript-mono",
     ];
 
     requiredKeys.forEach((key) => {

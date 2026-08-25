@@ -17,3 +17,25 @@
 .meta:global(.ant-typography) {
   display: block;
 }
+
+.grid {
+  font-family: var(--app-font-writing-manuscript-mono);
+}
+
+.cell.intro.highlighted {
+  border-color: var(--app-color-writing-manuscript-intro-border);
+  background: var(--app-color-writing-manuscript-intro-surface);
+  box-shadow: var(--app-shadow-writing-manuscript-intro-inset);
+}
+
+.cell.body.highlighted {
+  border-color: var(--app-color-writing-manuscript-body-border);
+  background: var(--app-color-writing-manuscript-body-surface);
+  box-shadow: var(--app-shadow-writing-manuscript-body-inset);
+}
+
+.cell.conclusion.highlighted {
+  border-color: var(--app-color-writing-manuscript-conclusion-border);
+  background: var(--app-color-writing-manuscript-conclusion-surface);
+  box-shadow: var(--app-shadow-writing-manuscript-conclusion-inset);
+}

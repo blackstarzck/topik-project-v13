@@ -9,6 +9,12 @@ const MIN_VISIBLE_LINES = 20;
 
 export type ManuscriptSectionKey = "intro" | "body" | "conclusion";
 
+const SECTION_STYLE_BY_KEY = {
+  intro: styles.intro,
+  body: styles.body,
+  conclusion: styles.conclusion,
+} satisfies Record<ManuscriptSectionKey, string>;
+
 type ManuscriptCell = {
   char: string;
   section?: ManuscriptSectionKey | null;
@@ -86,7 +92,7 @@ export function ManuscriptPreview({
         </>
       ) : null}
       <div
-        className="writing-manuscript-preview__grid"
+        className={["writing-manuscript-preview__grid", styles.grid].join(" ")}
         data-testid="manuscript-preview-grid"
       >
         {lines.map((row, rowIdx) => (
@@ -98,6 +104,9 @@ export function ManuscriptPreview({
               );
               const sectionClass = cell?.section
                 ? `writing-manuscript-preview__cell--${cell.section}`
+                : "";
+              const sectionStyle = cell?.section
+                ? SECTION_STYLE_BY_KEY[cell.section]
                 : "";
               const sectionLabel = cell?.section
                 ? (sectionLabels?.[cell.section] ?? cell.section)
@@ -113,10 +122,13 @@ export function ManuscriptPreview({
                   }
                   className={[
                     "writing-manuscript-preview__cell",
+                    styles.cell,
                     sectionClass,
+                    sectionStyle,
                     highlighted
                       ? "writing-manuscript-preview__cell--highlighted"
                       : "",
+                    highlighted ? styles.highlighted : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}

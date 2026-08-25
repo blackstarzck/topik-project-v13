@@ -244,6 +244,30 @@ Composite corners are assembled from atomic roles: inline blanks use
 `--app-radius`. This keeps desktop and mobile geometry themeable without a
 selector-specific composite token.
 
+## Tokens — Writing Manuscript Preview
+
+`ManuscriptPreview.module.css` owns the manuscript grid font and the selected
+intro/body/conclusion paint. Stable global classes remain runtime and E2E hooks;
+global CSS keeps only shared grid geometry and base cell structure. The module
+consumes resolved app variables directly and does not rebuild section paint
+through local custom-property cascades or Ant Design runtime variables.
+
+| Meaning | Production value | App bridge |
+| --- | --- | --- |
+| Manuscript monospace stack | Existing system monospace stack | `--app-font-writing-manuscript-mono` |
+| Intro selected surface | Primary 12% mixed with container | `--app-color-writing-manuscript-intro-surface` |
+| Intro selected border | Primary 48% mixed with border | `--app-color-writing-manuscript-intro-border` |
+| Intro selected inset ring | Primary 30%, 1px inset | `--app-shadow-writing-manuscript-intro-inset` |
+| Body selected surface | Success background: light `#f6ffed`, dark `#162312` | `--app-color-writing-manuscript-body-surface` |
+| Body selected border | Success 48% mixed with border | `--app-color-writing-manuscript-body-border` |
+| Body selected inset ring | Success 30%, 1px inset | `--app-shadow-writing-manuscript-body-inset` |
+| Conclusion selected surface | Warning background: light `#fffbe6`, dark `#2b2111` | `--app-color-writing-manuscript-conclusion-surface` |
+| Conclusion selected border | Warning 48% mixed with border | `--app-color-writing-manuscript-conclusion-border` |
+| Conclusion selected inset ring | Warning 30%, 1px inset | `--app-shadow-writing-manuscript-conclusion-inset` |
+
+Alternate test themes replace all ten roles with mutually distinct values and
+remain outside production source and theme registration.
+
 ## Tokens — Landing CTA
 
 The live landing page has two intentional CTA color modes: a dark primary

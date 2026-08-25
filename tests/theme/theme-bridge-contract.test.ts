@@ -45,6 +45,12 @@ const testAlternateSource = {
   colorWritingMaterialRowActiveSurface: "rgba(253, 126, 20, 0.21)",
   colorWritingBlankActiveSurface: "rgba(36, 158, 128, 0.29)",
   colorWritingBlankFilledBorder: "#df4b91",
+  colorWritingManuscriptIntroSurface: "#f8ddff",
+  colorWritingManuscriptIntroBorder: "#7135d1",
+  colorWritingManuscriptBodySurface: "#dcfff0",
+  colorWritingManuscriptBodyBorder: "#058d73",
+  colorWritingManuscriptConclusionSurface: "#fff1b8",
+  colorWritingManuscriptConclusionBorder: "#b96500",
   colorLandingCtaPrimary: "#5b2bc4",
   colorLandingCtaPrimaryHover: "#351474",
   colorLandingCtaForeground: "#fff2cf",
@@ -107,6 +113,7 @@ const testAlternateSource = {
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontLandingPortfolioDisplay: '"Bridge Display", serif',
   fontLandingPortfolioNumeric: '"Bridge Numeric", monospace',
+  fontWritingManuscriptMono: '"Contract Manuscript Mono", monospace',
   fontSizeCaption: "11px",
   fontSizeBody: "15px",
   fontSizeBodyLg: "17px",
@@ -125,6 +132,10 @@ const testAlternateSource = {
   shadowWritingMaterialTooltip: "0 8px 18px rgb(91 43 196 / 22%)",
   shadowWritingBlankFocus: "0 0 0 5px rgba(48, 160, 125, 0.31)",
   shadowWritingBlankActiveInset: "inset 0 -4px 0 #8f2a61",
+  shadowWritingManuscriptIntroInset: "inset 0 0 0 3px rgba(113, 53, 209, 0.35)",
+  shadowWritingManuscriptBodyInset: "inset 0 0 0 4px rgba(5, 141, 115, 0.33)",
+  shadowWritingManuscriptConclusionInset:
+    "inset 0 0 0 5px rgba(185, 101, 0, 0.37)",
   shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
   shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
 } as const;
@@ -181,6 +192,19 @@ const landingPortfolioBridgeVars = [
   "--app-radius-landing-portfolio-media",
   "--app-radius-landing-portfolio-round",
   "--app-radius-landing-portfolio-tag-pill",
+] as const;
+
+const writingManuscriptBridgeVars = [
+  "--app-font-writing-manuscript-mono",
+  "--app-color-writing-manuscript-intro-surface",
+  "--app-color-writing-manuscript-intro-border",
+  "--app-shadow-writing-manuscript-intro-inset",
+  "--app-color-writing-manuscript-body-surface",
+  "--app-color-writing-manuscript-body-border",
+  "--app-shadow-writing-manuscript-body-inset",
+  "--app-color-writing-manuscript-conclusion-surface",
+  "--app-color-writing-manuscript-conclusion-border",
+  "--app-shadow-writing-manuscript-conclusion-inset",
 ] as const;
 
 const productionSourceExtensions = new Set([
@@ -259,6 +283,12 @@ describe("generic app theme bridge contract", () => {
         "rgba(253, 126, 20, 0.21)",
       "--app-color-writing-blank-active-surface": "rgba(36, 158, 128, 0.29)",
       "--app-color-writing-blank-filled-border": "#df4b91",
+      "--app-color-writing-manuscript-intro-surface": "#f8ddff",
+      "--app-color-writing-manuscript-intro-border": "#7135d1",
+      "--app-color-writing-manuscript-body-surface": "#dcfff0",
+      "--app-color-writing-manuscript-body-border": "#058d73",
+      "--app-color-writing-manuscript-conclusion-surface": "#fff1b8",
+      "--app-color-writing-manuscript-conclusion-border": "#b96500",
       "--app-color-landing-cta-primary": "#5b2bc4",
       "--app-color-landing-cta-primary-hover": "#351474",
       "--app-color-landing-cta-foreground": "#fff2cf",
@@ -318,6 +348,8 @@ describe("generic app theme bridge contract", () => {
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-landing-portfolio-display": '"Bridge Display", serif',
       "--app-font-landing-portfolio-numeric": '"Bridge Numeric", monospace',
+      "--app-font-writing-manuscript-mono":
+        '"Contract Manuscript Mono", monospace',
       "--app-font-size-caption": "11px",
       "--app-font-size-body": "15px",
       "--app-font-size-body-lg": "17px",
@@ -337,6 +369,12 @@ describe("generic app theme bridge contract", () => {
         "0 8px 18px rgb(91 43 196 / 22%)",
       "--app-shadow-writing-blank-focus": "0 0 0 5px rgba(48, 160, 125, 0.31)",
       "--app-shadow-writing-blank-active-inset": "inset 0 -4px 0 #8f2a61",
+      "--app-shadow-writing-manuscript-intro-inset":
+        "inset 0 0 0 3px rgba(113, 53, 209, 0.35)",
+      "--app-shadow-writing-manuscript-body-inset":
+        "inset 0 0 0 4px rgba(5, 141, 115, 0.33)",
+      "--app-shadow-writing-manuscript-conclusion-inset":
+        "inset 0 0 0 5px rgba(185, 101, 0, 0.37)",
       "--app-shadow-auth-prompt-focus": "0 0 0 3px rgba(91, 43, 196, 0.23)",
       "--app-shadow-auth-prompt-login-focus":
         "0 0 0 4px rgba(224, 63, 159, 0.27)",
@@ -512,6 +550,25 @@ describe("generic app theme bridge contract", () => {
     alternateWritingBlankValues.forEach((value, index) => {
       expect(value).not.toBe(productionWritingBlankValues[index]);
     });
+    const alternateWritingManuscriptValues = writingManuscriptBridgeVars.map(
+      (varName) =>
+        (phase5dAlternateTheme.appBridgeVars as Record<string, string>)[
+          varName
+        ],
+    );
+    expect(new Set(alternateWritingManuscriptValues)).toHaveLength(10);
+    for (const appearance of ["light", "dark"] as const) {
+      const production = getResolvedBridgeVars(
+        "awesomic",
+        appearance,
+      ) as Record<string, string>;
+      writingManuscriptBridgeVars.forEach((varName, index) => {
+        expect(alternateWritingManuscriptValues[index]).toBeTruthy();
+        expect(alternateWritingManuscriptValues[index]).not.toBe(
+          production[varName],
+        );
+      });
+    }
     expect(phase5dAlternateTheme.appBridgeVars["--app-radius-none"]).toBe(
       "0px",
     );
@@ -726,6 +783,16 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorWritingBlankFilledBorder,
       testAlternateSource.shadowWritingBlankFocus,
       testAlternateSource.shadowWritingBlankActiveInset,
+      testAlternateSource.fontWritingManuscriptMono,
+      testAlternateSource.colorWritingManuscriptIntroSurface,
+      testAlternateSource.colorWritingManuscriptIntroBorder,
+      testAlternateSource.shadowWritingManuscriptIntroInset,
+      testAlternateSource.colorWritingManuscriptBodySurface,
+      testAlternateSource.colorWritingManuscriptBodyBorder,
+      testAlternateSource.shadowWritingManuscriptBodyInset,
+      testAlternateSource.colorWritingManuscriptConclusionSurface,
+      testAlternateSource.colorWritingManuscriptConclusionBorder,
+      testAlternateSource.shadowWritingManuscriptConclusionInset,
       PHASE5D_ALTERNATE_THEME_MARKER,
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
@@ -788,6 +855,9 @@ describe("generic app theme bridge contract", () => {
       ...landingPortfolioBridgeVars.map(
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
+      ...writingManuscriptBridgeVars.map(
+        (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+      ),
       'radiusCard: "23px"',
       'radiusPill: "12000px"',
       'radiusLandingHeroCta: "17px"',
@@ -843,6 +913,19 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.writingBlank.color.activeSurface,
         colorWritingBlankFilledBorder:
           awesomicThemeTokens.writingBlank.color.filledBorder,
+        colorWritingManuscriptIntroSurface:
+          awesomicThemeTokens.writingManuscript.section.intro.surface,
+        colorWritingManuscriptIntroBorder:
+          awesomicThemeTokens.writingManuscript.section.intro.border,
+        colorWritingManuscriptBodySurface:
+          awesomicThemeTokens.writingManuscript.section.body.surface.light,
+        colorWritingManuscriptBodyBorder:
+          awesomicThemeTokens.writingManuscript.section.body.border,
+        colorWritingManuscriptConclusionSurface:
+          awesomicThemeTokens.writingManuscript.section.conclusion.surface
+            .light,
+        colorWritingManuscriptConclusionBorder:
+          awesomicThemeTokens.writingManuscript.section.conclusion.border,
         colorLandingCtaPrimary: awesomicThemeTokens.landingCta.primary,
         colorLandingCtaPrimaryHover:
           awesomicThemeTokens.landingCta.primaryHover,
@@ -933,6 +1016,8 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingPortfolio.font.display,
         fontLandingPortfolioNumeric:
           awesomicThemeTokens.landingPortfolio.font.numeric,
+        fontWritingManuscriptMono:
+          awesomicThemeTokens.writingManuscript.font.mono,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,
         fontSizeBody: awesomicThemeTokens.fontSize.body,
         fontSizeBodyLg: awesomicThemeTokens.fontSize.bodyLg,
@@ -951,6 +1036,12 @@ describe("generic app theme bridge contract", () => {
         shadowWritingBlankFocus: awesomicThemeTokens.writingBlank.shadow.focus,
         shadowWritingBlankActiveInset:
           awesomicThemeTokens.writingBlank.shadow.activeInset,
+        shadowWritingManuscriptIntroInset:
+          awesomicThemeTokens.writingManuscript.section.intro.inset,
+        shadowWritingManuscriptBodyInset:
+          awesomicThemeTokens.writingManuscript.section.body.inset,
+        shadowWritingManuscriptConclusionInset:
+          awesomicThemeTokens.writingManuscript.section.conclusion.inset,
         shadowAuthPromptFocus: awesomicThemeTokens.authPrompt.focusShadow,
         shadowAuthPromptLoginFocus:
           awesomicThemeTokens.authPrompt.loginFocusShadow,
@@ -975,6 +1066,24 @@ describe("generic app theme bridge contract", () => {
         "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
       "--app-color-writing-blank-filled-border":
         "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+      "--app-font-writing-manuscript-mono":
+        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+      "--app-color-writing-manuscript-intro-surface":
+        "color-mix(in srgb, var(--app-color-primary) 12%, var(--app-color-bg-container))",
+      "--app-color-writing-manuscript-intro-border":
+        "color-mix(in srgb, var(--app-color-primary) 48%, var(--app-color-border))",
+      "--app-shadow-writing-manuscript-intro-inset":
+        "inset 0 0 0 1px color-mix(in srgb, var(--app-color-primary) 30%, transparent)",
+      "--app-color-writing-manuscript-body-surface": "#f6ffed",
+      "--app-color-writing-manuscript-body-border":
+        "color-mix(in srgb, var(--app-color-status-success) 48%, var(--app-color-border))",
+      "--app-shadow-writing-manuscript-body-inset":
+        "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-success) 30%, transparent)",
+      "--app-color-writing-manuscript-conclusion-surface": "#fffbe6",
+      "--app-color-writing-manuscript-conclusion-border":
+        "color-mix(in srgb, var(--app-color-status-warning) 48%, var(--app-color-border))",
+      "--app-shadow-writing-manuscript-conclusion-inset":
+        "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-warning) 30%, transparent)",
       "--app-radius-none": "0px",
       "--app-radius-indicator": "2px",
       "--app-radius-card": "8px",
@@ -1006,6 +1115,24 @@ describe("generic app theme bridge contract", () => {
         "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
       "--app-color-writing-blank-filled-border":
         "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+      "--app-font-writing-manuscript-mono":
+        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+      "--app-color-writing-manuscript-intro-surface":
+        "color-mix(in srgb, var(--app-color-primary) 12%, var(--app-color-bg-container))",
+      "--app-color-writing-manuscript-intro-border":
+        "color-mix(in srgb, var(--app-color-primary) 48%, var(--app-color-border))",
+      "--app-shadow-writing-manuscript-intro-inset":
+        "inset 0 0 0 1px color-mix(in srgb, var(--app-color-primary) 30%, transparent)",
+      "--app-color-writing-manuscript-body-surface": "#162312",
+      "--app-color-writing-manuscript-body-border":
+        "color-mix(in srgb, var(--app-color-status-success) 48%, var(--app-color-border))",
+      "--app-shadow-writing-manuscript-body-inset":
+        "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-success) 30%, transparent)",
+      "--app-color-writing-manuscript-conclusion-surface": "#2b2111",
+      "--app-color-writing-manuscript-conclusion-border":
+        "color-mix(in srgb, var(--app-color-status-warning) 48%, var(--app-color-border))",
+      "--app-shadow-writing-manuscript-conclusion-inset":
+        "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-warning) 30%, transparent)",
       "--app-radius-none": "0px",
       "--app-radius-indicator": "2px",
       "--app-radius-card": "8px",

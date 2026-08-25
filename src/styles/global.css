@@ -4740,9 +4740,6 @@
   align-content: stretch;
   gap: 2px;
   overflow: auto;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
   grid-auto-rows: minmax(24px, 1fr);
 }
 
@@ -4761,33 +4758,6 @@
   border: 1px solid var(--app-color-border);
   padding-block: 2px;
   text-align: center;
-}
-
-.writing-manuscript-preview__cell--highlighted {
-  --writing-manuscript-section-color: var(--app-color-primary);
-  --writing-manuscript-section-bg: color-mix(
-    in srgb,
-    var(--writing-manuscript-section-color) 12%,
-    var(--app-color-bg-container)
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--writing-manuscript-section-color) 48%,
-    var(--app-color-border)
-  );
-  background: var(--writing-manuscript-section-bg);
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--writing-manuscript-section-color) 30%, transparent);
-}
-
-.writing-manuscript-preview__cell--body.writing-manuscript-preview__cell--highlighted {
-  --writing-manuscript-section-color: var(--ant-color-success);
-  --writing-manuscript-section-bg: var(--ant-color-success-bg);
-}
-
-.writing-manuscript-preview__cell--conclusion.writing-manuscript-preview__cell--highlighted {
-  --writing-manuscript-section-color: var(--ant-color-warning);
-  --writing-manuscript-section-bg: var(--ant-color-warning-bg);
 }
 
 .writing-answer-card__hint.ant-typography {

@@ -58,6 +58,35 @@ export const awesomicThemeTokens = {
       activeInset: "inset 0 -2px 0 var(--app-color-primary)",
     },
   },
+  writingManuscript: {
+    font: {
+      mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    },
+    section: {
+      intro: {
+        surface:
+          "color-mix(in srgb, var(--app-color-primary) 12%, var(--app-color-bg-container))",
+        border:
+          "color-mix(in srgb, var(--app-color-primary) 48%, var(--app-color-border))",
+        inset:
+          "inset 0 0 0 1px color-mix(in srgb, var(--app-color-primary) 30%, transparent)",
+      },
+      body: {
+        surface: { light: "#f6ffed", dark: "#162312" },
+        border:
+          "color-mix(in srgb, var(--app-color-status-success) 48%, var(--app-color-border))",
+        inset:
+          "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-success) 30%, transparent)",
+      },
+      conclusion: {
+        surface: { light: "#fffbe6", dark: "#2b2111" },
+        border:
+          "color-mix(in srgb, var(--app-color-status-warning) 48%, var(--app-color-border))",
+        inset:
+          "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-warning) 30%, transparent)",
+      },
+    },
+  },
   landingCta: {
     // The live landing page uses two deliberate color modes: a dark action on
     // video and a light ghost action on the translucent header. These values
@@ -231,6 +260,20 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.writingBlank.color.activeSurface,
     "--app-color-writing-blank-filled-border":
       awesomicThemeTokens.writingBlank.color.filledBorder,
+    "--app-color-writing-manuscript-intro-surface":
+      awesomicThemeTokens.writingManuscript.section.intro.surface,
+    "--app-color-writing-manuscript-intro-border":
+      awesomicThemeTokens.writingManuscript.section.intro.border,
+    "--app-color-writing-manuscript-body-surface":
+      awesomicThemeTokens.writingManuscript.section.body.surface[appearance],
+    "--app-color-writing-manuscript-body-border":
+      awesomicThemeTokens.writingManuscript.section.body.border,
+    "--app-color-writing-manuscript-conclusion-surface":
+      awesomicThemeTokens.writingManuscript.section.conclusion.surface[
+        appearance
+      ],
+    "--app-color-writing-manuscript-conclusion-border":
+      awesomicThemeTokens.writingManuscript.section.conclusion.border,
     "--app-color-landing-cta-primary": awesomicThemeTokens.landingCta.primary,
     "--app-color-landing-cta-primary-hover":
       awesomicThemeTokens.landingCta.primaryHover,
@@ -328,6 +371,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingPortfolio.font.display,
     "--app-font-landing-portfolio-numeric":
       awesomicThemeTokens.landingPortfolio.font.numeric,
+    "--app-font-writing-manuscript-mono":
+      awesomicThemeTokens.writingManuscript.font.mono,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
     "--app-font-size-body": awesomicThemeTokens.fontSize.body,
     "--app-font-size-body-lg": awesomicThemeTokens.fontSize.bodyLg,
@@ -347,6 +392,12 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.writingBlank.shadow.focus,
     "--app-shadow-writing-blank-active-inset":
       awesomicThemeTokens.writingBlank.shadow.activeInset,
+    "--app-shadow-writing-manuscript-intro-inset":
+      awesomicThemeTokens.writingManuscript.section.intro.inset,
+    "--app-shadow-writing-manuscript-body-inset":
+      awesomicThemeTokens.writingManuscript.section.body.inset,
+    "--app-shadow-writing-manuscript-conclusion-inset":
+      awesomicThemeTokens.writingManuscript.section.conclusion.inset,
     "--app-shadow-auth-prompt-focus":
       awesomicThemeTokens.authPrompt.focusShadow,
     "--app-shadow-auth-prompt-login-focus":

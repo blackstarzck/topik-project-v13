@@ -44,6 +44,25 @@ const DEFAULT_WRITING_BLANK_BRIDGE_VARS = {
     "inset 0 -2px 0 var(--app-color-primary)",
 } as const;
 
+const DEFAULT_WRITING_MANUSCRIPT_SHARED_BRIDGE_VARS = {
+  "--app-font-writing-manuscript-mono":
+    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+  "--app-color-writing-manuscript-intro-surface":
+    "color-mix(in srgb, var(--app-color-primary) 12%, var(--app-color-bg-container))",
+  "--app-color-writing-manuscript-intro-border":
+    "color-mix(in srgb, var(--app-color-primary) 48%, var(--app-color-border))",
+  "--app-shadow-writing-manuscript-intro-inset":
+    "inset 0 0 0 1px color-mix(in srgb, var(--app-color-primary) 30%, transparent)",
+  "--app-color-writing-manuscript-body-border":
+    "color-mix(in srgb, var(--app-color-status-success) 48%, var(--app-color-border))",
+  "--app-shadow-writing-manuscript-body-inset":
+    "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-success) 30%, transparent)",
+  "--app-color-writing-manuscript-conclusion-border":
+    "color-mix(in srgb, var(--app-color-status-warning) 48%, var(--app-color-border))",
+  "--app-shadow-writing-manuscript-conclusion-inset":
+    "inset 0 0 0 1px color-mix(in srgb, var(--app-color-status-warning) 30%, transparent)",
+} as const;
+
 const DEFAULT_FONT_SIZE_BRIDGE_VARS = {
   "--app-font-size-caption": "10px",
   "--app-font-size-body": "14px",
@@ -133,6 +152,9 @@ const DEFAULT_BRIDGE_VARS = {
     ...DEFAULT_WRITING_EXAM_BRIDGE_VARS,
     ...DEFAULT_WRITING_MATERIAL_BRIDGE_VARS,
     ...DEFAULT_WRITING_BLANK_BRIDGE_VARS,
+    ...DEFAULT_WRITING_MANUSCRIPT_SHARED_BRIDGE_VARS,
+    "--app-color-writing-manuscript-body-surface": "#f6ffed",
+    "--app-color-writing-manuscript-conclusion-surface": "#fffbe6",
     "--app-color-landing-cta-primary": "#070203",
     "--app-color-landing-cta-primary-hover": "#21080c",
     "--app-color-landing-cta-foreground": "#ffffff",
@@ -181,6 +203,9 @@ const DEFAULT_BRIDGE_VARS = {
     ...DEFAULT_WRITING_EXAM_BRIDGE_VARS,
     ...DEFAULT_WRITING_MATERIAL_BRIDGE_VARS,
     ...DEFAULT_WRITING_BLANK_BRIDGE_VARS,
+    ...DEFAULT_WRITING_MANUSCRIPT_SHARED_BRIDGE_VARS,
+    "--app-color-writing-manuscript-body-surface": "#162312",
+    "--app-color-writing-manuscript-conclusion-surface": "#2b2111",
     "--app-color-landing-cta-primary": "#070203",
     "--app-color-landing-cta-primary-hover": "#21080c",
     "--app-color-landing-cta-foreground": "#ffffff",
