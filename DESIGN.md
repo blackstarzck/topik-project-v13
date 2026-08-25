@@ -168,6 +168,19 @@ plain-CSS bridge values and must not add Tailwind aliases.
 | New-problem badge corner | 12px | `--app-radius-problem-new-badge` |
 | New-problem badge surface | secondary text at 12% over transparent | `--app-color-problem-new-badge-surface` |
 
+## Tokens — Analysis Handoff and Failure Actions
+
+The submitted-analysis handoff overlay and failure actions use two app-owned
+plain-CSS roles. The overlay keeps the existing container-at-62%-over-transparent
+paint, while the failure action corner preserves the current 10px geometry.
+Alternate themes must provide a visibly distinct overlay for each appearance.
+These roles do not add foundation Tailwind aliases.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Completed-analysis handoff overlay | container at 62% over transparent | `--app-color-analysis-handoff-overlay-surface` | `.analysis-state-card__overlay` |
+| Failed-analysis action corner | 10px | `--app-radius-analysis-failure-action` | `.analysis-loading__actions .ant-btn` |
+
 ## Tokens — Semantic Status
 
 Ant Design is the L1 owner of interface status meaning. App-owned Tailwind

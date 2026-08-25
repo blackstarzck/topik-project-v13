@@ -37,6 +37,7 @@ const testAlternateSource = {
   colorSharedCardSubtleOutline: "#5040c8",
   colorLibraryReviewScoreTrack: "#c7eff8",
   colorProblemNewBadgeSurface: "rgba(203, 56, 143, 0.19)",
+  colorAnalysisHandoffOverlaySurface: "rgba(198, 70, 255, 0.26)",
   colorChartSeriesPrimary: "#9c36b5",
   colorChartAccent: "#1971c2",
   colorStatusError: "#c21f52",
@@ -124,6 +125,7 @@ const testAlternateSource = {
   radiusPracticeRetrySummary: "13.25px",
   radiusPracticeRetryModeOption: "16.75px",
   radiusProblemNewBadge: "14.5px",
+  radiusAnalysisFailureAction: "18.25px",
   sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontLandingPortfolioDisplay: '"Bridge Display", serif',
@@ -295,6 +297,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-shared-card-subtle-outline": "#5040c8",
       "--app-color-library-review-score-track": "#c7eff8",
       "--app-color-problem-new-badge-surface": "rgba(203, 56, 143, 0.19)",
+      "--app-color-analysis-handoff-overlay-surface":
+        "rgba(198, 70, 255, 0.26)",
       "--app-color-chart-series-primary": "#9c36b5",
       "--app-color-chart-accent": "#1971c2",
       "--app-color-status-error": "#c21f52",
@@ -381,6 +385,7 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-practice-retry-summary": "13.25px",
       "--app-radius-practice-retry-mode-option": "16.75px",
       "--app-radius-problem-new-badge": "14.5px",
+      "--app-radius-analysis-failure-action": "18.25px",
       "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-landing-portfolio-display": '"Bridge Display", serif',
@@ -831,6 +836,8 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.radiusPracticeRetrySummary,
       testAlternateSource.radiusPracticeRetryModeOption,
       testAlternateSource.radiusProblemNewBadge,
+      testAlternateSource.colorAnalysisHandoffOverlaySurface,
+      testAlternateSource.radiusAnalysisFailureAction,
       testAlternateSource.colorChartSeriesPrimary,
       testAlternateSource.colorChartAccent,
       testAlternateSource.colorTextInverse,
@@ -889,8 +896,15 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
         "--app-shadow-selectable-card-selected"
       ],
+      phase5dAlternateTheme.appBridgeVars["--app-font-question-number-display"],
       phase5dAlternateTheme.appBridgeVars[
-        "--app-font-question-number-display"
+        "--app-color-analysis-handoff-overlay-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-color-analysis-handoff-overlay-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-radius-analysis-failure-action"
       ],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
@@ -1021,6 +1035,8 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.libraryReview.color.scoreTrack,
         colorProblemNewBadgeSurface:
           awesomicThemeTokens.problemNewBadge.color.surface,
+        colorAnalysisHandoffOverlaySurface:
+          awesomicThemeTokens.analysisHandoff.color.overlaySurface,
         colorChartSeriesPrimary: awesomicThemeTokens.chart.seriesPrimary,
         colorChartAccent: awesomicThemeTokens.chart.accent,
         colorStatusError: awesomicThemeTokens.status.light.error,
@@ -1149,6 +1165,7 @@ describe("generic app theme bridge contract", () => {
         radiusPracticeRetrySummary: `${awesomicThemeTokens.practiceRetry.radius.summary}px`,
         radiusPracticeRetryModeOption: `${awesomicThemeTokens.practiceRetry.radius.modeOption}px`,
         radiusProblemNewBadge: `${awesomicThemeTokens.problemNewBadge.radius}px`,
+        radiusAnalysisFailureAction: `${awesomicThemeTokens.analysisFailure.radius.action}px`,
         sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontLandingPortfolioDisplay:

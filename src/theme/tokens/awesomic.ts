@@ -57,6 +57,17 @@ export const awesomicThemeTokens = {
     },
     radius: 12,
   },
+  analysisHandoff: {
+    color: {
+      overlaySurface:
+        "color-mix(in srgb, var(--app-color-bg-container) 62%, transparent)",
+    },
+  },
+  analysisFailure: {
+    radius: {
+      action: 10,
+    },
+  },
   chart: {
     // AntD's blue and cyan seeds preserve the existing categorical chart
     // paints. The remaining chart colors reuse status roles exposed by the app.
@@ -318,6 +329,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.libraryReview.color.scoreTrack,
     "--app-color-problem-new-badge-surface":
       awesomicThemeTokens.problemNewBadge.color.surface,
+    "--app-color-analysis-handoff-overlay-surface":
+      awesomicThemeTokens.analysisHandoff.color.overlaySurface,
     "--app-color-chart-series-primary": awesomicThemeTokens.chart.seriesPrimary,
     "--app-color-chart-accent": awesomicThemeTokens.chart.accent,
     "--app-color-status-error": status.error,
@@ -454,6 +467,7 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-radius-practice-retry-summary": `${awesomicThemeTokens.practiceRetry.radius.summary}px`,
     "--app-radius-practice-retry-mode-option": `${awesomicThemeTokens.practiceRetry.radius.modeOption}px`,
     "--app-radius-problem-new-badge": `${awesomicThemeTokens.problemNewBadge.radius}px`,
+    "--app-radius-analysis-failure-action": `${awesomicThemeTokens.analysisFailure.radius.action}px`,
     "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-landing-portfolio-display":

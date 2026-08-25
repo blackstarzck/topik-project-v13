@@ -89,6 +89,7 @@ const alternateSource = {
   colorSharedCardSubtleOutline: "#4b39d1",
   colorLibraryReviewScoreTrack: "#d9f7ff",
   colorProblemNewBadgeSurface: "rgba(239, 66, 189, 0.22)",
+  colorAnalysisHandoffOverlaySurface: "rgba(239, 66, 189, 0.27)",
   colorAuthCharacterPurple: "#7b1fa2",
   colorAuthCharacterCharcoal: "#12313a",
   colorAuthCharacterCoral: "#ff4f81",
@@ -117,6 +118,7 @@ const alternateSource = {
   radiusPracticeRetrySummary: "13.75px",
   radiusPracticeRetryModeOption: "17.25px",
   radiusProblemNewBadge: "15.5px",
+  radiusAnalysisFailureAction: "18.5px",
   sizeAuthPromptControl: "58px",
   shadowElevated: "11px 13px 0 rgba(36, 16, 79, 0.42)",
   shadowFloatingAction: "0 9px 24px rgba(72, 18, 112, 0.22)",
@@ -211,6 +213,7 @@ const alternateSourceByAppearance = {
     colorStatusErrorSurface: alternateErrorAliasesByAppearance.dark.surface,
     colorLibraryReviewScoreTrack: "#17354a",
     colorProblemNewBadgeSurface: "rgba(85, 230, 193, 0.24)",
+    colorAnalysisHandoffOverlaySurface: "rgba(85, 230, 193, 0.29)",
     shadowSelectableCardSelected:
       "0 10px 26px rgba(0, 0, 0, 0.48), inset 0 0 0 3px #55e6c1",
   },

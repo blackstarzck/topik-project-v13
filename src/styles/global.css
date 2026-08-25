@@ -4846,7 +4846,6 @@
   width: 100%;
   border: 0;
   background: transparent;
-  box-shadow: none;
   overflow: visible;
 }
 
@@ -4867,7 +4866,6 @@
 .analysis-loading--failed .analysis-state-card {
   border: 0;
   border-radius: var(--app-radius);
-  box-shadow: none;
 }
 
 .analysis-state-card__copy {
@@ -4916,8 +4914,6 @@
 
 .analysis-loading__meta {
   border: 1px solid var(--app-color-border);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--app-color-bg-layout) 86%, transparent);
 }
 
 .analysis-loading__meta {
@@ -4932,7 +4928,7 @@
 /* D-M2 page: 예상 소요 시간을 border/배경 없이 14px 연한 description 톤으로 표시. */
 .analysis-loading--page .analysis-loading__meta {
   border: 0;
-  border-radius: 0;
+  border-radius: var(--app-radius-none);
   padding: 0;
   background: transparent;
   color: var(--app-color-text-secondary);
@@ -5054,11 +5050,7 @@
   place-items: center;
   align-content: center;
   gap: 12px;
-  background: color-mix(
-    in srgb,
-    var(--app-color-bg-container) 62%,
-    transparent
-  );
+  background: var(--app-color-analysis-handoff-overlay-surface);
 }
 
 .analysis-state-card__overlay-text.ant-typography {
@@ -5075,7 +5067,7 @@
 
 .analysis-loading__actions .ant-btn {
   min-height: 42px;
-  border-radius: 10px;
+  border-radius: var(--app-radius-analysis-failure-action);
   font-weight: 700;
 }
 
@@ -5091,10 +5083,6 @@
   .submitted-analysis-page {
     gap: 16px;
     padding: 8px 16px 24px;
-  }
-
-  .analysis-state-card {
-    border-radius: 20px;
   }
 
   .analysis-state-card__inner {

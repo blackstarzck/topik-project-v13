@@ -45,6 +45,12 @@ const DEFAULT_PRACTICE_FOUNDATION_BRIDGE_VARS = {
     "var(--app-shadow-elevated), 0 0 0 1.5px var(--app-color-primary) inset",
 } as const;
 
+const DEFAULT_ANALYSIS_FOUNDATION_BRIDGE_VARS = {
+  "--app-color-analysis-handoff-overlay-surface":
+    "color-mix(in srgb, var(--app-color-bg-container) 62%, transparent)",
+  "--app-radius-analysis-failure-action": "10px",
+} as const;
+
 const DEFAULT_WRITING_EXAM_BRIDGE_VARS = {
   "--app-color-writing-exam-header-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
@@ -187,6 +193,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-border-secondary": "#f0f0f0",
     ...DEFAULT_SHARED_CARD_BRIDGE_VARS,
     ...DEFAULT_PRACTICE_FOUNDATION_BRIDGE_VARS,
+    ...DEFAULT_ANALYSIS_FOUNDATION_BRIDGE_VARS,
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#ff4d4f",
@@ -245,6 +252,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-border-secondary": "#303030",
     ...DEFAULT_SHARED_CARD_BRIDGE_VARS,
     ...DEFAULT_PRACTICE_FOUNDATION_BRIDGE_VARS,
+    ...DEFAULT_ANALYSIS_FOUNDATION_BRIDGE_VARS,
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#dc4446",

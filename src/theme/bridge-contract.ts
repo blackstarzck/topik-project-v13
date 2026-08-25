@@ -12,6 +12,7 @@ export const allowedAppBridgeVars = [
   "--app-color-shared-card-subtle-outline",
   "--app-color-library-review-score-track",
   "--app-color-problem-new-badge-surface",
+  "--app-color-analysis-handoff-overlay-surface",
   "--app-color-chart-series-primary",
   "--app-color-chart-accent",
   "--app-color-status-error",
@@ -94,6 +95,7 @@ export const allowedAppBridgeVars = [
   "--app-radius-practice-retry-summary",
   "--app-radius-practice-retry-mode-option",
   "--app-radius-problem-new-badge",
+  "--app-radius-analysis-failure-action",
   "--app-size-auth-prompt-control",
   "--app-font-family",
   "--app-font-landing-portfolio-display",
@@ -143,6 +145,7 @@ export type AppBridgeTokenSource = {
   colorSharedCardSubtleOutline: string;
   colorLibraryReviewScoreTrack: string;
   colorProblemNewBadgeSurface: string;
+  colorAnalysisHandoffOverlaySurface: string;
   colorChartSeriesPrimary: string;
   colorChartAccent: string;
   colorStatusError: string;
@@ -225,6 +228,7 @@ export type AppBridgeTokenSource = {
   radiusPracticeRetrySummary: string;
   radiusPracticeRetryModeOption: string;
   radiusProblemNewBadge: string;
+  radiusAnalysisFailureAction: string;
   sizeAuthPromptControl: string;
   fontFamily: string;
   fontLandingPortfolioDisplay: string;
@@ -275,8 +279,9 @@ export function createAppBridgeVars(
       source.colorSharedCardSubtleOutline,
     "--app-color-library-review-score-track":
       source.colorLibraryReviewScoreTrack,
-    "--app-color-problem-new-badge-surface":
-      source.colorProblemNewBadgeSurface,
+    "--app-color-problem-new-badge-surface": source.colorProblemNewBadgeSurface,
+    "--app-color-analysis-handoff-overlay-surface":
+      source.colorAnalysisHandoffOverlaySurface,
     "--app-color-chart-series-primary": source.colorChartSeriesPrimary,
     "--app-color-chart-accent": source.colorChartAccent,
     "--app-color-status-error": source.colorStatusError,
@@ -389,11 +394,11 @@ export function createAppBridgeVars(
       source.radiusLandingPortfolioTagPill,
     "--app-radius-writing-material-compact-surface":
       source.radiusWritingMaterialCompactSurface,
-    "--app-radius-practice-retry-summary":
-      source.radiusPracticeRetrySummary,
+    "--app-radius-practice-retry-summary": source.radiusPracticeRetrySummary,
     "--app-radius-practice-retry-mode-option":
       source.radiusPracticeRetryModeOption,
     "--app-radius-problem-new-badge": source.radiusProblemNewBadge,
+    "--app-radius-analysis-failure-action": source.radiusAnalysisFailureAction,
     "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
     "--app-font-landing-portfolio-display": source.fontLandingPortfolioDisplay,
