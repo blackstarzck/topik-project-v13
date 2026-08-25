@@ -4040,18 +4040,8 @@
   background: var(--app-color-bg-layout);
 }
 
-.app-workspace-content {
-  padding: 24px;
-}
-
 .app-workspace-layout--exam .app-workspace-main {
   min-width: 0;
-}
-
-.app-workspace-content--exam {
-  min-height: 100dvh;
-  padding: 0;
-  background: var(--app-color-bg-layout);
 }
 
 .app-workspace-mobile-bar {
@@ -4113,10 +4103,6 @@
 }
 
 @media (max-width: 767.98px) {
-  .app-workspace-content {
-    padding: 16px;
-  }
-
   /* GNB stays pinned to the top of the viewport while the content scrolls. */
   .app-workspace-mobile-bar {
     position: sticky;

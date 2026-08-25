@@ -101,6 +101,17 @@ function cssRulesFrom(source: string, selector: string) {
   return Array.from(matches, (match) => match.groups?.body ?? "");
 }
 
+function cssSelectorsFrom(source: string) {
+  const withoutComments = source.replace(/\/\*[\s\S]*?\*\//gu, "");
+  const rulePreludes = withoutComments.matchAll(/([^{}]+)\{/gu);
+
+  return Array.from(rulePreludes, (match) => match[1]?.trim() ?? "")
+    .filter((prelude) => prelude && !prelude.startsWith("@"))
+    .flatMap((prelude) =>
+      prelude.split(",").map((selector) => selector.trim()),
+    );
+}
+
 vi.mock("next/navigation", () => ({
   usePathname: () => navMock.pathname,
   useRouter: () => ({
@@ -809,6 +820,66 @@ describe("WorkspaceShell", () => {
       ".app-workspace-content.ant-layout-content",
     );
     expect(contentRule).toContain("background: var(--app-color-bg-container);");
+  });
+
+  it("keeps workspace content layout ownership out of global CSS", () => {
+    const layoutRule = workspaceLayoutCssRule(
+      ".app-workspace-layout.ant-layout",
+    );
+    const desktopContentRule = workspaceLayoutCssRule(
+      ".app-workspace-content.ant-layout-content",
+    );
+    const mobileContentRule = workspaceLayoutCssRules(
+      ".app-workspace-content.ant-layout-content",
+    ).find((rule) => rule.includes("padding: 16px;"));
+    const desktopExamRule = workspaceLayoutCssRule(
+      ".app-workspace-content--exam.ant-layout-content",
+    );
+    const mobileExamRule = workspaceLayoutCssRules(
+      ".app-workspace-content--exam.ant-layout-content",
+    ).find((rule) => rule.includes("min-height: 100dvh;"));
+
+    expect(layoutRule).toContain("--workspace-content-padding-block: 24px;");
+    expect(desktopContentRule).toContain("min-height: 100vh;");
+    expect(desktopContentRule).toContain("min-height: max(100vh, 100dvh);");
+    expect(desktopContentRule).toContain(
+      "background: var(--app-color-bg-container);",
+    );
+    expect(desktopContentRule).toContain(
+      "padding: var(--workspace-content-padding-block) 24px;",
+    );
+    expect(mobileContentRule).toContain("padding: 16px;");
+    expect(mobileContentRule).toContain(
+      "calc(100vh - var(--workspace-mobile-bar-height))",
+    );
+    expect(mobileContentRule).toContain(
+      "calc(100dvh - var(--workspace-mobile-bar-height))",
+    );
+    expect(desktopExamRule).toContain("min-height: 100vh;");
+    expect(desktopExamRule).toContain("min-height: max(100vh, 100dvh);");
+    expect(desktopExamRule).toContain(
+      "background: var(--app-color-bg-layout);",
+    );
+    expect(desktopExamRule).toContain("padding: 0;");
+    expect(mobileExamRule).toContain("min-height: 100vh;");
+    expect(mobileExamRule).toContain("min-height: 100dvh;");
+    expect(mobileExamRule).toContain("padding: 0;");
+    const globalSelectors = cssSelectorsFrom(GLOBAL_CSS);
+    expect(globalSelectors).not.toContain(".app-workspace-content");
+    expect(globalSelectors).not.toContain(".app-workspace-content--exam");
+  });
+
+  it("finds workspace content selectors at every grouped and responsive position", () => {
+    const selectors = cssSelectorsFrom(`
+      .app-workspace-content, .other-first { color: red; }
+      .other-last, .app-workspace-content--exam { color: blue; }
+      @media (max-width: 768px) {
+        .app-workspace-content { padding: 16px; }
+      }
+    `);
+
+    expect(selectors).toContain(".app-workspace-content");
+    expect(selectors).toContain(".app-workspace-content--exam");
   });
 
   it("keeps writing exam pages on the layout canvas surface", () => {
