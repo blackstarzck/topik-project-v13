@@ -633,13 +633,13 @@ describe("WorkspaceShell", () => {
     ).toContain("border: 0");
     expect(
       cssRule(".app-notification-corner .app-notification-bell"),
-    ).toContain("box-shadow: none");
+    ).not.toContain("box-shadow:");
     expect(
       cssRule(".app-notification-corner .app-notification-bell:hover"),
     ).toContain("background: transparent");
     expect(
       cssRule(".app-notification-corner .app-notification-bell:hover"),
-    ).toContain("box-shadow: none");
+    ).not.toContain("box-shadow:");
   });
 
   it("opens profile actions in a notification-style popover", async () => {

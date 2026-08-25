@@ -155,6 +155,7 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.radius.compactCard).toBe(6);
     expect(awesomicThemeTokens.radius.badge).toBe(4);
     expect(awesomicThemeTokens.radius.indicator).toBe(2);
+    expect(awesomicThemeTokens.radius.pill).toBe(tokenPx("radius.full-6"));
 
     expect(awesomicThemeTokens.radius.card).toBeLessThan(
       tokenPx("radius.3xl-3"),

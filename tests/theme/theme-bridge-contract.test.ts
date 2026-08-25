@@ -42,6 +42,9 @@ const testAlternateSource = {
   colorFillSecondary: "rgba(18, 52, 86, 0.19)",
   radius: "12px",
   radiusNumber: 12,
+  radiusCard: "18px",
+  radiusCardNumber: 18,
+  radiusPill: "10000px",
   radiusIndicator: "3px",
   radiusIndicatorNumber: 3,
   fontFamily: '"Test Alternate Sans", sans-serif',
@@ -128,6 +131,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-status-strong-success": "#005f45",
       "--app-color-fill-secondary": "rgba(18, 52, 86, 0.19)",
       "--app-radius": "12px",
+      "--app-radius-card": "18px",
+      "--app-radius-pill": "10000px",
       "--app-radius-indicator": "3px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-size-caption": "11px",
@@ -166,10 +171,16 @@ describe("generic app theme bridge contract", () => {
             colorSuccessActive: testAlternateSource.colorStatusStrongSuccess,
             colorFillSecondary: testAlternateSource.colorFillSecondary,
             borderRadius: testAlternateSource.radiusNumber,
+            borderRadiusLG: testAlternateSource.radiusCardNumber,
             borderRadiusXS: testAlternateSource.radiusIndicatorNumber,
             fontFamily: testAlternateSource.fontFamily,
             fontSize: Number.parseFloat(testAlternateSource.fontSizeBodyLg),
             boxShadowSecondary: testAlternateSource.shadowElevated,
+          },
+          components: {
+            Card: {
+              borderRadiusLG: testAlternateSource.radiusCardNumber,
+            },
           },
         },
         dark: {
@@ -189,10 +200,16 @@ describe("generic app theme bridge contract", () => {
             colorSuccessActive: testAlternateSource.colorStatusStrongSuccess,
             colorFillSecondary: testAlternateSource.colorFillSecondary,
             borderRadius: testAlternateSource.radiusNumber,
+            borderRadiusLG: testAlternateSource.radiusCardNumber,
             borderRadiusXS: testAlternateSource.radiusIndicatorNumber,
             fontFamily: testAlternateSource.fontFamily,
             fontSize: Number.parseFloat(testAlternateSource.fontSizeBodyLg),
             boxShadowSecondary: testAlternateSource.shadowElevated,
+          },
+          components: {
+            Card: {
+              borderRadiusLG: testAlternateSource.radiusCardNumber,
+            },
           },
         },
       },
@@ -217,6 +234,7 @@ describe("generic app theme bridge contract", () => {
       colorSuccessActive: testAlternateSource.colorStatusStrongSuccess,
       colorFillSecondary: testAlternateSource.colorFillSecondary,
       borderRadius: testAlternateSource.radiusNumber,
+      borderRadiusLG: testAlternateSource.radiusCardNumber,
       borderRadiusXS: testAlternateSource.radiusIndicatorNumber,
       fontFamily: testAlternateSource.fontFamily,
       fontSize: 17,
@@ -224,9 +242,16 @@ describe("generic app theme bridge contract", () => {
     });
     expect(themeFamily.light.antd.token).toEqual(lightTheme.antd.token);
     expect(themeFamily.dark.antd.token).toMatchObject({
+      borderRadiusLG: testAlternateSource.radiusCardNumber,
       fontFamily: testAlternateSource.fontFamily,
       fontSize: 17,
     });
+    expect(lightTheme.antd.components?.Card?.borderRadiusLG).toBe(
+      testAlternateSource.radiusCardNumber,
+    );
+    expect(themeFamily.dark.antd.components?.Card?.borderRadiusLG).toBe(
+      testAlternateSource.radiusCardNumber,
+    );
     expect(themePresets).not.toHaveProperty("test-alternate");
   });
 
@@ -249,6 +274,16 @@ describe("generic app theme bridge contract", () => {
     expect(
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
     ).not.toBe(awesomicThemeTokens.chart.seriesPrimary);
+    expect(phase5dAlternateTheme.appBridgeVars["--app-radius-card"]).toBe(
+      "23px",
+    );
+    expect(phase5dAlternateTheme.appBridgeVars["--app-radius-pill"]).toBe(
+      "12000px",
+    );
+    expect(phase5dAlternateTheme.antdRadiusByAppearance).toEqual({
+      light: { card: "23px", global: "23px" },
+      dark: { card: "23px", global: "23px" },
+    });
   });
 
   test("enforces the alternate fixture production-source and dependency boundary", () => {
@@ -284,6 +319,8 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
+      'radiusCard: "23px"',
+      'radiusPill: "12000px"',
     ];
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
@@ -326,6 +363,8 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.status.light.strongSuccess,
         colorFillSecondary: awesomicThemeTokens.status.light.fillSecondary,
         radius: `${awesomicThemeTokens.radius.base}px`,
+        radiusCard: `${awesomicThemeTokens.radius.card}px`,
+        radiusPill: `${awesomicThemeTokens.radius.pill}px`,
         radiusIndicator: `${awesomicThemeTokens.radius.indicator}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,
@@ -355,6 +394,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-chart-series-primary": "#1677ff",
       "--app-color-chart-accent": "#13c2c2",
       "--app-radius-indicator": "2px",
+      "--app-radius-card": "8px",
+      "--app-radius-pill": "10000px",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
       "--app-font-size-heading-sm": "20px",
@@ -368,6 +409,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-chart-series-primary": "#1677ff",
       "--app-color-chart-accent": "#13c2c2",
       "--app-radius-indicator": "2px",
+      "--app-radius-card": "8px",
+      "--app-radius-pill": "10000px",
     });
   });
 });

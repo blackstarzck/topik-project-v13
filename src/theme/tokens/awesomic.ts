@@ -36,6 +36,7 @@ export const awesomicThemeTokens = {
     compactCard: 6,
     input: 6,
     indicator: 2,
+    pill: 10_000,
   },
   // AntD owns status semantics. These resolved light/dark values lock the
   // existing meter paint while allowing the same roles to reach Tailwind.
@@ -103,6 +104,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-status-strong-success": status.strongSuccess,
     "--app-color-fill-secondary": status.fillSecondary,
     "--app-radius": `${awesomicThemeTokens.radius.base}px`,
+    "--app-radius-card": `${awesomicThemeTokens.radius.card}px`,
+    "--app-radius-pill": `${awesomicThemeTokens.radius.pill}px`,
     "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,

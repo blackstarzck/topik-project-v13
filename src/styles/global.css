@@ -2670,7 +2670,7 @@
   min-width: 0;
   gap: 0;
   border: 1px solid var(--app-color-border);
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: var(--app-color-bg-container);
   box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
   padding: 8px;
@@ -2684,7 +2684,6 @@
   .app-workspace-mobile-bar .app-workspace-user-summary {
     border: 0;
     background: transparent;
-    box-shadow: none;
     padding: 0;
   }
 
@@ -4369,7 +4368,7 @@
   min-width: 0;
   gap: 0;
   border: 1px solid var(--app-color-border);
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: var(--app-color-bg-container);
   box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
   padding: 8px;
@@ -4387,16 +4386,14 @@
   text-align: left;
   cursor: pointer;
   border: 1px solid var(--app-color-border);
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: var(--app-color-bg-container);
-  box-shadow: 0 6px 18px rgba(42, 55, 89, 0.1);
   padding: 4px 10px 4px 4px;
 }
 
 .app-notification-corner .app-workspace-user-summary {
   border: 0;
   background: transparent;
-  box-shadow: none;
   padding: 0 10px 0 0;
 }
 
@@ -4441,22 +4438,19 @@
 
 .app-notification-corner .app-notification-bell {
   border: 0 !important;
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: transparent !important;
-  box-shadow: none !important;
 }
 
 .app-workspace-mobile-actions .app-notification-bell {
   border: 0 !important;
-  border-radius: 999px;
+  border-radius: var(--app-radius-pill);
   background: transparent !important;
-  box-shadow: none !important;
 }
 
 .app-notification-corner .app-notification-bell:hover {
   border: 0 !important;
   background: transparent !important;
-  box-shadow: none !important;
 }
 
 .app-notification-corner .app-notification-bell:focus,
@@ -4466,7 +4460,6 @@
 .app-workspace-mobile-actions .app-notification-bell:active {
   border: 0 !important;
   background: transparent !important;
-  box-shadow: none !important;
 }
 
 .ant-notification .ant-notification-notice.ant-notification-notice {
@@ -4476,7 +4469,7 @@
 .ant-notification
   .app-global-notification.ant-notification-notice.ant-notification-notice {
   width: min(360px, calc(100vw - 32px));
-  border: 1px solid var(--ant-color-border-secondary, var(--app-color-border));
+  border: 1px solid var(--app-color-border-secondary);
   border-radius: var(--app-radius);
   box-shadow: var(--app-shadow-elevated);
 }
@@ -4508,7 +4501,7 @@
 }
 
 .app-notification-panel__header {
-  border-bottom: 1px solid var(--ant-color-border-secondary);
+  border-bottom: 1px solid var(--app-color-border-secondary);
 }
 
 .app-profile-popover-action {
@@ -4518,7 +4511,7 @@
   align-items: center;
   overflow: hidden;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--app-radius-card);
   background: transparent;
   padding: 8px 12px;
   color: var(--app-color-text);
@@ -4532,7 +4525,6 @@
   position: absolute;
   z-index: 0;
   inset: 0;
-  border-radius: inherit;
   background: var(--app-color-bg-layout);
   opacity: 0;
   transition: opacity 160ms ease;
@@ -4572,7 +4564,7 @@
   gap: 8px;
   overflow: hidden;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--app-radius-card);
   background: transparent;
   padding: 8px 0;
   text-align: start;
@@ -4584,7 +4576,6 @@
 .app-notification-item__button::before {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
   background: var(--app-color-bg-layout);
   opacity: 0;
   transition: opacity 160ms ease;
@@ -4635,8 +4626,8 @@
   display: block;
   width: 6px;
   height: 6px;
-  border-radius: 999px;
-  background: var(--ant-color-error);
+  border-radius: var(--app-radius-pill);
+  background: var(--app-color-status-error);
 }
 
 .app-notification-item__content {
@@ -4701,7 +4692,7 @@
   align-items: flex-start;
   gap: 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--app-radius-card);
   background: transparent;
   padding: 8px 0;
   text-align: start;

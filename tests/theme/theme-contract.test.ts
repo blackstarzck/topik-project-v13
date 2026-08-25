@@ -58,6 +58,12 @@ describe("app theme contract", () => {
       awesomicThemeTokens.chart.seriesPrimary,
     );
     expect(vars["--app-radius"]).toBe(`${awesomicThemeTokens.radius.base}px`);
+    expect(vars["--app-radius-card"]).toBe(
+      `${awesomicThemeTokens.radius.card}px`,
+    );
+    expect(vars["--app-radius-pill"]).toBe(
+      `${awesomicThemeTokens.radius.pill}px`,
+    );
     expect(vars["--app-color-text"]).toBe(awesomicThemeTokens.color.ink);
     expect(vars["--app-color-text-secondary"]).toBe(
       awesomicThemeTokens.color.steel,
@@ -79,6 +85,8 @@ describe("app theme contract", () => {
     expect(defaultVars["--app-color-chart-series-primary"]).toBe("#1677ff");
     expect(defaultVars["--app-color-chart-accent"]).toBe("#13c2c2");
     expect(defaultVars["--app-radius"]).toBe("6px");
+    expect(defaultVars["--app-radius-card"]).toBe("8px");
+    expect(defaultVars["--app-radius-pill"]).toBe("10000px");
   });
 
   test("applies Awesomic global and component tokens to both appearances", () => {
@@ -106,6 +114,11 @@ describe("app theme contract", () => {
       expect(built.antd.components?.Card?.borderRadiusLG).toBe(
         awesomicThemeTokens.radius.card,
       );
+      expect(
+        getResolvedBridgeVars(defaultThemeName, appearance)[
+          "--app-radius-card"
+        ],
+      ).toBe(`${built.antd.components?.Card?.borderRadiusLG}px`);
       expect(built.antd.components?.Input?.borderRadius).toBe(
         awesomicThemeTokens.radius.input,
       );
@@ -135,6 +148,8 @@ describe("app theme contract", () => {
       "--app-color-chart-series-primary",
       "--app-color-chart-accent",
       "--app-radius",
+      "--app-radius-card",
+      "--app-radius-pill",
       "--app-font-family",
       "--app-shadow-elevated",
     ];

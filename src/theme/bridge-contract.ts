@@ -16,6 +16,8 @@ export const allowedAppBridgeVars = [
   "--app-color-status-strong-success",
   "--app-color-fill-secondary",
   "--app-radius",
+  "--app-radius-card",
+  "--app-radius-pill",
   "--app-radius-indicator",
   "--app-font-family",
   "--app-font-size-caption",
@@ -51,6 +53,8 @@ export type AppBridgeTokenSource = {
   colorStatusStrongSuccess: string;
   colorFillSecondary: string;
   radius: string;
+  radiusCard: string;
+  radiusPill: string;
   radiusIndicator: string;
   fontFamily: string;
   fontSizeCaption: string;
@@ -86,6 +90,8 @@ export function createAppBridgeVars(
     "--app-color-status-strong-success": source.colorStatusStrongSuccess,
     "--app-color-fill-secondary": source.colorFillSecondary,
     "--app-radius": source.radius,
+    "--app-radius-card": source.radiusCard,
+    "--app-radius-pill": source.radiusPill,
     "--app-radius-indicator": source.radiusIndicator,
     "--app-font-family": source.fontFamily,
     "--app-font-size-caption": source.fontSizeCaption,

@@ -24,6 +24,9 @@ const alternateSource = {
   colorFillSecondary: "rgba(36, 16, 79, 0.24)",
   radius: "19px",
   radiusNumber: 19,
+  radiusCard: "23px",
+  radiusCardNumber: 23,
+  radiusPill: "12000px",
   radiusIndicator: "5px",
   radiusIndicatorNumber: 5,
   shadowElevated: "11px 13px 0 rgba(36, 16, 79, 0.42)",
@@ -39,45 +42,64 @@ const alternateSource = {
   fontSizeDisplay: "73px",
 } as const;
 
+const alternateAppearance = {
+  token: {
+    colorPrimary: alternateSource.colorPrimary,
+    colorBgLayout: alternateSource.colorBgLayout,
+    colorBgContainer: alternateSource.colorBgContainer,
+    colorText: alternateSource.colorText,
+    colorTextSecondary: alternateSource.colorTextSecondary,
+    colorBorder: alternateSource.colorBorder,
+    colorBorderSecondary: alternateSource.colorBorderSecondary,
+    blue: alternateSource.colorChartSeriesPrimary,
+    cyan: alternateSource.colorChartAccent,
+    colorError: alternateSource.colorStatusError,
+    colorWarning: alternateSource.colorStatusWarning,
+    colorSuccess: alternateSource.colorStatusSuccess,
+    colorSuccessActive: alternateSource.colorStatusStrongSuccess,
+    colorFillSecondary: alternateSource.colorFillSecondary,
+    borderRadius: alternateSource.radiusNumber,
+    borderRadiusLG: alternateSource.radiusCardNumber,
+    borderRadiusXS: alternateSource.radiusIndicatorNumber,
+    fontFamily: alternateSource.fontFamily,
+    fontSize: Number.parseFloat(alternateSource.fontSizeBodyLg),
+    boxShadow: alternateSource.shadowElevated,
+    boxShadowSecondary: alternateSource.shadowElevated,
+  },
+  components: {
+    Card: {
+      borderRadiusLG: alternateSource.radiusCardNumber,
+    },
+  },
+} as const;
+
 const alternatePreset = {
   name: "phase5d-test-alternate",
   label: "Phase 5D test alternate",
   description: PHASE5D_ALTERNATE_THEME_MARKER,
   appearances: {
-    light: {
-      token: {
-        colorPrimary: alternateSource.colorPrimary,
-        colorBgLayout: alternateSource.colorBgLayout,
-        colorBgContainer: alternateSource.colorBgContainer,
-        colorText: alternateSource.colorText,
-        colorTextSecondary: alternateSource.colorTextSecondary,
-        colorBorder: alternateSource.colorBorder,
-        colorBorderSecondary: alternateSource.colorBorderSecondary,
-        blue: alternateSource.colorChartSeriesPrimary,
-        cyan: alternateSource.colorChartAccent,
-        colorError: alternateSource.colorStatusError,
-        colorWarning: alternateSource.colorStatusWarning,
-        colorSuccess: alternateSource.colorStatusSuccess,
-        colorSuccessActive: alternateSource.colorStatusStrongSuccess,
-        colorFillSecondary: alternateSource.colorFillSecondary,
-        borderRadius: alternateSource.radiusNumber,
-        borderRadiusLG: alternateSource.radiusNumber,
-        borderRadiusXS: alternateSource.radiusIndicatorNumber,
-        fontFamily: alternateSource.fontFamily,
-        fontSize: Number.parseFloat(alternateSource.fontSizeBodyLg),
-        boxShadow: alternateSource.shadowElevated,
-        boxShadowSecondary: alternateSource.shadowElevated,
-      },
-    },
-    dark: {},
+    light: alternateAppearance,
+    dark: alternateAppearance,
   },
 } satisfies AppThemePreset<"phase5d-test-alternate">;
 
-const alternateTheme = createTheme(alternatePreset, "light");
-const alternateToken = alternateTheme.antd.token;
+const alternateThemesByAppearance = {
+  light: createTheme(alternatePreset, "light"),
+  dark: createTheme(alternatePreset, "dark"),
+} as const;
+const alternateToken = alternateThemesByAppearance.light.antd.token;
 
 export const phase5dAlternateTheme = {
   appBridgeVars: createAppBridgeVars(alternateSource),
+  antdRadiusByAppearance: Object.fromEntries(
+    Object.entries(alternateThemesByAppearance).map(([appearance, value]) => [
+      appearance,
+      {
+        card: `${String(value.antd.components?.Card?.borderRadiusLG)}px`,
+        global: `${String(value.antd.token?.borderRadiusLG)}px`,
+      },
+    ]),
+  ) as Record<"light" | "dark", { card: string; global: string }>,
   antdCssVars: {
     "--ant-color-primary": String(alternateToken?.colorPrimary),
     "--ant-color-bg-layout": String(alternateToken?.colorBgLayout),

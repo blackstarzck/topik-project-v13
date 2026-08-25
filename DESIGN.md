@@ -158,6 +158,18 @@ change the production paint.
 Status color is always paired with a translated strength label, rule text, or
 symbol. These roles are not CTA or decorative palette colors.
 
+## Tokens — Semantic Radius
+
+App-owned CSS uses two shape roles in addition to the default workspace radius.
+The card radius preserves the existing 8px menu and notification-row corners;
+the pill radius comes from the imported Awesomic `radius.full-6` source and is
+used only where the rendered shape must stay fully rounded.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Compact card/action corner | Runtime card radius (8px) | `--app-radius-card` | Menu and notification rows |
+| Fully rounded control | `radius.full-6` (10000px) | `--app-radius-pill` | User/notification action groups and unread dot |
+
 ## Tokens — Semantic Overlay
 
 App-owned overlay paint keeps alpha inside the color value so Ant Design can

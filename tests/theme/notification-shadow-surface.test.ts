@@ -310,7 +310,7 @@ const componentOwnedNotificationPanelClasses = [
 ] as const;
 const allowedGlobalHeaderSelector = ".app-notification-panel__header";
 const allowedGlobalHeaderDeclarations =
-  "border-bottom: 1px solid var(--ant-color-border-secondary);";
+  "border-bottom: 1px solid var(--app-color-border-secondary);";
 
 function globalNotificationLayoutOwners(
   source: string,
@@ -384,7 +384,7 @@ describe("AntD Notification shadow surface", () => {
 
     expect(block).toContain("width: min(360px, calc(100vw - 32px))");
     expect(block).toContain(
-      "border: 1px solid var(--ant-color-border-secondary, var(--app-color-border))",
+      "border: 1px solid var(--app-color-border-secondary)",
     );
     expect(block).toContain("border-radius: var(--app-radius)");
     expect(block).toContain("box-shadow: var(--app-shadow-elevated)");
@@ -400,7 +400,7 @@ describe("In-app notification inbox item styles", () => {
       ...(!hasExactRule(
         css,
         ".app-notification-panel__header",
-        "border-bottom: 1px solid var(--ant-color-border-secondary);",
+        "border-bottom: 1px solid var(--app-color-border-secondary);",
       )
         ? ["global header border rule"]
         : []),
@@ -490,7 +490,7 @@ describe("In-app notification inbox item styles", () => {
         `@import url("./foundation.css");
         .app-notification-panel.app-notification-panel { width: 1px; }
         :where(.app-notification-panel__error) { display: block; }
-        .app-notification-panel__header { border-bottom: 1px solid var(--ant-color-border-secondary); }
+        .app-notification-panel__header { border-bottom: 1px solid var(--app-color-border-secondary); }
         .app-notification-panel__header.app-notification-panel__header { display: block; }
         body { & .app-notification-panel__mark-all { font-size: 30px; } }
         [class~="app-notification-panel"][class~="app-notification-panel"] { width: 640px; }
@@ -580,7 +580,7 @@ describe("In-app notification inbox item styles", () => {
 
   test("notification popover fixed header uses the AntD Card border color", () => {
     expect(blockFor(".app-notification-panel__header")).toContain(
-      "border-bottom: 1px solid var(--ant-color-border-secondary)",
+      "border-bottom: 1px solid var(--app-color-border-secondary)",
     );
   });
 
@@ -662,8 +662,63 @@ describe("In-app notification inbox item styles", () => {
       blockFor(".markAll:global(.ant-btn)", notificationBellStylesSource),
     ).toContain("font-size: 14px");
     expect(blockFor(".app-notification-item__unread-dot")).toContain(
-      "background: var(--ant-color-error)",
+      "background: var(--app-color-status-error)",
     );
+  });
+
+  test("workspace menu and notification chrome use semantic radius tokens without redundant shadow overrides", () => {
+    const pillSelectors = [
+      ".app-workspace-mobile-actions",
+      ".app-notification-corner",
+      ".app-workspace-user-summary",
+      ".app-notification-corner .app-notification-bell",
+      ".app-workspace-mobile-actions .app-notification-bell",
+      ".app-notification-item__unread-dot",
+    ];
+    const cardRadiusSelectors = [
+      ".app-profile-popover-action",
+      ".app-notification-item__button",
+      ".app-notification-feed-item__button",
+    ];
+    const shadowlessSelectors = [
+      ".app-workspace-user-summary",
+      ".app-notification-corner .app-workspace-user-summary",
+      ".app-notification-corner .app-notification-bell",
+      ".app-workspace-mobile-actions .app-notification-bell",
+      ".app-notification-corner .app-notification-bell:hover",
+      ".app-notification-corner .app-notification-bell:focus",
+    ];
+
+    for (const selector of pillSelectors) {
+      expect(blockFor(selector)).toContain(
+        "border-radius: var(--app-radius-pill)",
+      );
+    }
+    for (const selector of cardRadiusSelectors) {
+      expect(blockFor(selector)).toContain(
+        "border-radius: var(--app-radius-card)",
+      );
+    }
+    for (const selector of shadowlessSelectors) {
+      expect(blockFor(selector)).not.toContain("box-shadow:");
+    }
+
+    expect(blockFor(".app-profile-popover-action::before")).not.toContain(
+      "border-radius:",
+    );
+    expect(blockFor(".app-notification-item__button::before")).not.toContain(
+      "border-radius:",
+    );
+
+    for (const selector of [
+      ".app-workspace-mobile-actions",
+      ".app-notification-corner",
+      ".app-notification-popover .ant-popover-container",
+      ".app-notification-popover.app-notification-popover .ant-popover-container.ant-popover-container",
+      ".ant-message .ant-message-notice.ant-message-notice",
+    ]) {
+      expect(blockFor(selector)).toContain("box-shadow:");
+    }
   });
 
   test("dashboard notice feed keeps rows transparent and regular weight", () => {
