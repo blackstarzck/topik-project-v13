@@ -611,7 +611,7 @@ describe("ComparisonReportView next action chrome", () => {
 
     expect(titleQuestionNo.textContent).toBe("54");
     expect(titleQuestionNo.textContent).not.toContain("번");
-    expect(titleQuestionNo.className).toContain("font-['Space_Grotesk']");
+    expect(titleQuestionNo.className).not.toContain("font-['Space_Grotesk']");
     expect(titleQuestionNo.className).toContain("writing-question-number");
     expect(titleQuestionNo.className).toContain("writing-question-number--q54");
     expect(titleLabel.textContent).toBe("번 비교 리포트");
@@ -806,7 +806,7 @@ describe("ComparisonReportView next action chrome", () => {
     );
     const titleLabel = within(title).getByTestId("comparison-title-label");
     expect(titleQuestionNo.textContent).toBe("54");
-    expect(titleQuestionNo.className).toContain("font-['Space_Grotesk']");
+    expect(titleQuestionNo.className).not.toContain("font-['Space_Grotesk']");
     expect(titleQuestionNo.className).toContain("writing-question-number");
     expect(titleQuestionNo.className).toContain("writing-question-number--q54");
     expect(titleLabel.textContent).toBe("번 비교 리포트");

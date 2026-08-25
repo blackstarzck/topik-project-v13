@@ -420,7 +420,7 @@ function ComparisonReportTitle({
         <span
           data-testid="comparison-title-question-no"
           className={[
-            "writing-question-number font-['Space_Grotesk'] leading-none",
+            "writing-question-number leading-none",
             writingQuestionNeonClass("writing-question-number", questionNo),
           ]
             .filter(Boolean)

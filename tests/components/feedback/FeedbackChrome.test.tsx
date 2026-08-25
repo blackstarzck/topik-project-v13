@@ -681,7 +681,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     );
     expect(titleQuestionNo.textContent).toBe("51");
     expect(titleQuestionNo.textContent).not.toContain("번");
-    expect(titleQuestionNo.className).toContain("font-['Space_Grotesk']");
+    expect(titleQuestionNo.className).not.toContain("font-['Space_Grotesk']");
     expect(titleQuestionNo.className).toContain("writing-question-number");
     expect(titleQuestionNo.className).toContain("writing-question-number--q51");
     expect(
@@ -820,7 +820,7 @@ describe("FeedbackPageContent (short feedback fallback)", () => {
     );
     expect(titleQuestionNo.textContent).toBe("54");
     expect(titleQuestionNo.textContent).not.toContain("번");
-    expect(titleQuestionNo.className).toContain("font-['Space_Grotesk']");
+    expect(titleQuestionNo.className).not.toContain("font-['Space_Grotesk']");
     expect(titleQuestionNo.className).toContain("writing-question-number");
     expect(titleQuestionNo.className).toContain("writing-question-number--q54");
     expect(
