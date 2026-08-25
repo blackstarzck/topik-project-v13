@@ -1,0 +1,35 @@
+.optionsLayout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.layoutChoice {
+  border: 1px solid var(--app-color-border);
+}
+
+.layoutChoice[aria-checked="true"] {
+  border-color: var(--app-color-primary);
+}
+
+.manuscriptGrid {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      var(--app-color-border) 11px,
+      var(--app-color-border) 12px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 11px,
+      var(--app-color-border) 11px,
+      var(--app-color-border) 12px
+    );
+}
+
+@media (min-width: 1024px) {
+  .optionsLayout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}

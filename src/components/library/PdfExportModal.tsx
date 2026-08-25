@@ -30,6 +30,8 @@ import {
 } from "@/lib/export/pdf-options";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 
+import styles from "./PdfExportModal.module.css";
+
 const { Text, Title, Paragraph } = Typography;
 
 export type ExportSelectionItem = {
@@ -256,7 +258,7 @@ function PdfExportModalBody({
         />
       ) : null}
 
-      <div className="grid w-full gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={["grid w-full gap-5", styles.optionsLayout].join(" ")}>
         {/* ───────── 좌측: 옵션 컬럼 ───────── */}
         <div className="flex min-w-0 flex-col gap-5">
           {/* 1. 선택한 문제 */}
@@ -274,7 +276,7 @@ function PdfExportModalBody({
               {selection.map((item) => (
                 <label
                   key={item.itemId}
-                  className="flex cursor-pointer items-center justify-between gap-2 rounded-xl px-2 py-1.5 hover:bg-[var(--app-color-bg-layout)]"
+                  className="flex cursor-pointer items-center justify-between gap-2 rounded-xl px-2 py-1.5 hover:bg-surface"
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     <Checkbox
@@ -348,13 +350,10 @@ function PdfExportModalBody({
                     aria-checked={selected}
                     data-testid={`pdf-export-layout-${choice.value}`}
                     onClick={() => setLayout(choice.value)}
-                    className="flex cursor-pointer flex-col items-start gap-0.5 rounded-2xl border bg-transparent p-3 text-left"
-                    style={{
-                      borderColor: selected
-                        ? "var(--app-color-primary)"
-                        : "var(--app-color-border)",
-                      borderWidth: 1,
-                    }}
+                    className={[
+                      "flex cursor-pointer flex-col items-start gap-0.5 rounded-2xl bg-transparent p-3 text-left",
+                      styles.layoutChoice,
+                    ].join(" ")}
                   >
                     <Text strong>{choice.title}</Text>
                     <Text type="secondary" className="text-xs">
@@ -427,13 +426,13 @@ function PdfExportModalBody({
           </SectionHeading>
 
           {/* 종이 모사 미리보기 (hifi region 3) — 1페이지 축약 */}
-          <div className="rounded-2xl border border-border bg-[var(--app-color-bg-layout)] p-3">
+          <div className="rounded-2xl border border-border bg-surface p-3">
             <div
               data-testid="pdf-export-preview"
               aria-label={t("previewAriaLabel")}
-              className="flex flex-col gap-2 rounded-md border border-border bg-[var(--app-color-bg-container)] px-4 py-5 shadow-sm"
+              className="flex flex-col gap-2 rounded-md border border-border bg-background px-4 py-5 shadow-sm"
             >
-              <Text type="secondary" className="text-center !text-[10px]">
+              <Text type="secondary" className="text-center !text-caption">
                 {t("previewBrand")}
               </Text>
               <Title level={5} className="!my-0 text-center">
@@ -445,11 +444,10 @@ function PdfExportModalBody({
               {/* 원고지 모사 장식 — 시각적 축약일 뿐 실제 내용 아님 */}
               <div
                 aria-hidden
-                className="h-10 rounded-sm border border-border opacity-60"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(90deg, transparent, transparent 11px, var(--app-color-border) 11px, var(--app-color-border) 12px), repeating-linear-gradient(0deg, transparent, transparent 11px, var(--app-color-border) 11px, var(--app-color-border) 12px)",
-                }}
+                className={[
+                  "h-10 rounded-sm border border-border opacity-60",
+                  styles.manuscriptGrid,
+                ].join(" ")}
               />
               <ol className="m-0 flex list-decimal flex-col gap-0.5 pl-5">
                 {enabledItems.map((item) => (
@@ -468,7 +466,7 @@ function PdfExportModalBody({
                   </li>
                 ))}
               </ol>
-              <Text type="secondary" className="text-center !text-[10px]">
+              <Text type="secondary" className="text-center !text-caption">
                 1 / {estimatedPages}
               </Text>
             </div>
@@ -476,7 +474,7 @@ function PdfExportModalBody({
 
           <Paragraph
             type="secondary"
-            className="!mb-0 rounded-2xl bg-[var(--app-color-bg-layout)] p-3 !text-xs"
+            className="!mb-0 rounded-2xl bg-surface p-3 !text-xs"
           >
             {t("previewNote")}
           </Paragraph>
