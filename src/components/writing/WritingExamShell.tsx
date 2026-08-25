@@ -10,6 +10,7 @@ import { ProblemBookmarkToggle } from "@/components/practice/ProblemBookmarkTogg
 import { useLibraryItems } from "@/lib/library/queries";
 import type { AutosaveStatus } from "@/lib/writing/types";
 import { AutosaveBadge } from "./AutosaveBadge";
+import styles from "./WritingExamShell.module.css";
 
 const { Text } = Typography;
 
@@ -88,7 +89,7 @@ export function WritingExamShell({
   const t = useTranslations("writing.editor");
 
   return (
-    <div className="writing-exam-shell">
+    <div className={["writing-exam-shell", styles.shell].join(" ")}>
       <header className="writing-exam-header">
         <div className="writing-exam-header__identity">
           <AppBackControl
@@ -152,7 +153,9 @@ export function WritingExamShell({
         </div>
       </header>
 
-      <main className="writing-exam-main">{children}</main>
+      <main className={["writing-exam-main", styles.main].join(" ")}>
+        {children}
+      </main>
     </div>
   );
 }

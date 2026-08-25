@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { existsSync, readFileSync } from "node:fs";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -107,6 +108,50 @@ afterEach(() => {
 });
 
 describe("WritingExamShell", () => {
+  it("owns its shell layout in a scoped CSS module", () => {
+    const modulePath = "src/components/writing/WritingExamShell.module.css";
+    const source = readFileSync(
+      "src/components/writing/WritingExamShell.tsx",
+      "utf8",
+    );
+    const globalCss = readFileSync("src/styles/global.css", "utf8");
+
+    expect(existsSync(modulePath)).toBe(true);
+    expect(readFileSync(modulePath, "utf8").trim()).toBe(`.shell {
+  min-height: 100dvh;
+  background: var(--app-color-bg-layout);
+}
+
+.main {
+  width: min(100%, 1320px);
+  margin-inline: auto;
+  padding: 28px 28px 48px;
+}
+
+.main :global(.writing-workspace) {
+  gap: 20px;
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: 18px 16px 40px;
+  }
+}`);
+    expect(source).toContain(
+      'import styles from "./WritingExamShell.module.css";',
+    );
+    expect(source).toContain(
+      'className={["writing-exam-shell", styles.shell].join(" ")}',
+    );
+    expect(source).toContain(
+      'className={["writing-exam-main", styles.main].join(" ")}',
+    );
+    expect(globalCss).not.toMatch(/\.writing-exam-(?:shell|main)\s*\{/);
+    expect(globalCss).not.toContain(
+      ".writing-exam-main .writing-workspace {",
+    );
+  });
+
   it("labels the header save action as draft save and delegates it", () => {
     const onSave = vi.fn();
     renderWithIntl(

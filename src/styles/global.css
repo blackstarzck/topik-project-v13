@@ -6040,11 +6040,6 @@
   gap: 18px;
 }
 
-.writing-exam-shell {
-  min-height: 100dvh;
-  background: var(--app-color-bg-layout);
-}
-
 .writing-exam-header {
   position: sticky;
   z-index: 20;
@@ -6192,16 +6187,6 @@
 
 .writing-exam-header__save-button.ant-btn {
   background: var(--app-color-bg-container);
-}
-
-.writing-exam-main {
-  width: min(100%, 1320px);
-  margin-inline: auto;
-  padding: 28px 28px 48px;
-}
-
-.writing-exam-main .writing-workspace {
-  gap: 20px;
 }
 
 .writing-empty-state {
@@ -7460,10 +7445,6 @@
 
   .writing-exam-header__actions .ant-btn {
     flex: 1 1 auto;
-  }
-
-  .writing-exam-main {
-    padding: 18px 16px 40px;
   }
 
   .signup-page {

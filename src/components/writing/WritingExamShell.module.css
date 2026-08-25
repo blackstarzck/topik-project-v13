@@ -1,0 +1,20 @@
+.shell {
+  min-height: 100dvh;
+  background: var(--app-color-bg-layout);
+}
+
+.main {
+  width: min(100%, 1320px);
+  margin-inline: auto;
+  padding: 28px 28px 48px;
+}
+
+.main :global(.writing-workspace) {
+  gap: 20px;
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding: 18px 16px 40px;
+  }
+}
