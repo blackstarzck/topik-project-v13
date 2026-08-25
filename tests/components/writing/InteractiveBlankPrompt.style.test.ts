@@ -44,7 +44,7 @@ describe("InteractiveBlankPrompt styles", () => {
     expect(body).toContain("line-height: 1;");
   });
 
-  it("moves interactive paint and composite radius to the scoped owner", () => {
+  it("assembles each blank corner from one atomic app radius", () => {
     const globalCss = readFileSync(cssPath, "utf8");
     const moduleCss = readFileSync(modulePath, "utf8");
 
@@ -52,7 +52,7 @@ describe("InteractiveBlankPrompt styles", () => {
       hasExactCssRule(
         moduleCss,
         ".blank",
-        "border-radius: var(--app-radius) var(--app-radius) var(--app-radius-indicator) var(--app-radius-indicator);",
+        "border-start-start-radius: var(--app-radius); border-start-end-radius: var(--app-radius); border-end-end-radius: var(--app-radius-indicator); border-end-start-radius: var(--app-radius-indicator);",
       ),
     ).toBe(true);
     expect(

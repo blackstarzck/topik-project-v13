@@ -78,10 +78,10 @@ describe("global CSS radius token contract", () => {
     );
   });
 
-  test("moves the inline blank composite radius to atomic app roles", () => {
+  test("assembles the inline blank corners from atomic app roles", () => {
     expect(globalCss).not.toContain("border-radius: 6px 6px 2px 2px;");
     expect(interactiveBlankCss.replace(/\s+/gu, " ")).toContain(
-      "border-radius: var(--app-radius) var(--app-radius) var(--app-radius-indicator) var(--app-radius-indicator);",
+      "border-start-start-radius: var(--app-radius); border-start-end-radius: var(--app-radius); border-end-end-radius: var(--app-radius-indicator); border-end-start-radius: var(--app-radius-indicator);",
     );
   });
 

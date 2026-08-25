@@ -72,12 +72,12 @@ describe("ShortAnswerWriting51Workspace structure", () => {
       ],
       [
         ".blankTab",
-        "border-radius: var(--app-radius-card) var(--app-radius-card) var(--app-radius-none) var(--app-radius-none);",
+        "border-start-start-radius: var(--app-radius-card); border-start-end-radius: var(--app-radius-card); border-end-end-radius: var(--app-radius-none); border-end-start-radius: var(--app-radius-none);",
       ],
       [".blankTab.blankTabActive", "color: var(--app-color-text-inverse);"],
       [
         ".answerCard",
-        "border-radius: var(--app-radius-none) var(--app-radius) var(--app-radius) var(--app-radius);",
+        "border-start-start-radius: var(--app-radius-none); border-start-end-radius: var(--app-radius); border-end-end-radius: var(--app-radius); border-end-start-radius: var(--app-radius);",
       ],
     ] as const;
 
@@ -96,7 +96,7 @@ describe("ShortAnswerWriting51Workspace structure", () => {
       hasExactCssRule(
         sharedStyles,
         ".answerCard",
-        "border-radius: var(--app-radius);",
+        "border-start-start-radius: var(--app-radius); border-start-end-radius: var(--app-radius); border-end-end-radius: var(--app-radius); border-end-start-radius: var(--app-radius);",
         ["@media (max-width: 767px)"],
       ),
     ).toBe(true);
