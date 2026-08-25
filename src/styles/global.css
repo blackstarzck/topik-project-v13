@@ -302,7 +302,7 @@
 
 .retry-modal-summary .ant-descriptions-view {
   overflow: hidden;
-  border-radius: 10px !important;
+  border-radius: var(--app-radius-practice-retry-summary) !important;
 }
 
 .retry-modal-summary .ant-descriptions-item-label {
@@ -330,7 +330,7 @@
   min-height: 46px !important;
   align-items: center !important;
   margin-inline-start: 0 !important;
-  border-radius: 12px !important;
+  border-radius: var(--app-radius-practice-retry-mode-option) !important;
   padding: 12px 14px !important;
 }
 
