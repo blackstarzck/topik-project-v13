@@ -150,6 +150,24 @@ primary role, so their state remains visually stronger than the shared outline.
 | --- | --- | --- | --- |
 | Shared card subtle outline | border at 25% mixed with layout | `--app-color-shared-card-subtle-outline` | `.app-cards-bordered` AppCard outline |
 
+## Tokens — Practice and Review Visual Roles
+
+Practice and review surfaces reserve seven app-owned roles for the bounded
+consumer cleanup that follows this foundation change. The production values
+preserve the existing light and dark paint exactly; alternate themes resolve
+appearance-sensitive color and shadow roles independently. These roles are
+plain-CSS bridge values and must not add Tailwind aliases.
+
+| Meaning | Awesomic source | App bridge |
+| --- | --- | --- |
+| Retry summary corner | 10px | `--app-radius-practice-retry-summary` |
+| Retry mode option corner | 12px | `--app-radius-practice-retry-mode-option` |
+| Library score track | border at 18% mixed with container | `--app-color-library-review-score-track` |
+| Selected card elevation and inset ring | elevated shadow plus 1.5px primary inset | `--app-shadow-selectable-card-selected` |
+| Question number display type | Space Grotesk over the app family | `--app-font-question-number-display` |
+| New-problem badge corner | 12px | `--app-radius-problem-new-badge` |
+| New-problem badge surface | secondary text at 12% over transparent | `--app-color-problem-new-badge-surface` |
+
 ## Tokens — Semantic Status
 
 Ant Design is the L1 owner of interface status meaning. App-owned Tailwind

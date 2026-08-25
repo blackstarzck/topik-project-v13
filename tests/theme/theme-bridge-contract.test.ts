@@ -35,6 +35,8 @@ const testAlternateSource = {
   colorBorder: "#90a0b0",
   colorBorderSecondary: "#718293",
   colorSharedCardSubtleOutline: "#5040c8",
+  colorLibraryReviewScoreTrack: "#c7eff8",
+  colorProblemNewBadgeSurface: "rgba(203, 56, 143, 0.19)",
   colorChartSeriesPrimary: "#9c36b5",
   colorChartAccent: "#1971c2",
   colorStatusError: "#c21f52",
@@ -119,11 +121,16 @@ const testAlternateSource = {
   radiusLandingPortfolioRound: "46%",
   radiusLandingPortfolioTagPill: "889px",
   radiusWritingMaterialCompactSurface: "7px",
+  radiusPracticeRetrySummary: "13.25px",
+  radiusPracticeRetryModeOption: "16.75px",
+  radiusProblemNewBadge: "14.5px",
   sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontLandingPortfolioDisplay: '"Bridge Display", serif',
   fontLandingPortfolioNumeric: '"Bridge Numeric", monospace',
   fontWritingManuscriptMono: '"Contract Manuscript Mono", monospace',
+  fontQuestionNumberDisplay:
+    '"Contract Question Display", var(--app-font-family), sans-serif',
   fontSizeCaption: "11px",
   fontSizeBody: "15px",
   fontSizeBodyLg: "17px",
@@ -140,6 +147,8 @@ const testAlternateSource = {
   shadowMessage:
     "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
   shadowNotificationChannelSelected: "0 0 0 4px #1971c2",
+  shadowSelectableCardSelected:
+    "0 12px 28px rgba(44, 20, 96, 0.23), inset 0 0 0 2.5px #d43b9d",
   shadowWritingMaterialTooltip: "0 8px 18px rgb(91 43 196 / 22%)",
   shadowWritingBlankFocus: "0 0 0 5px rgba(48, 160, 125, 0.31)",
   shadowWritingBlankActiveInset: "inset 0 -4px 0 #8f2a61",
@@ -284,6 +293,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-border": "#90a0b0",
       "--app-color-border-secondary": "#718293",
       "--app-color-shared-card-subtle-outline": "#5040c8",
+      "--app-color-library-review-score-track": "#c7eff8",
+      "--app-color-problem-new-badge-surface": "rgba(203, 56, 143, 0.19)",
       "--app-color-chart-series-primary": "#9c36b5",
       "--app-color-chart-accent": "#1971c2",
       "--app-color-status-error": "#c21f52",
@@ -367,12 +378,17 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-landing-portfolio-round": "46%",
       "--app-radius-landing-portfolio-tag-pill": "889px",
       "--app-radius-writing-material-compact-surface": "7px",
+      "--app-radius-practice-retry-summary": "13.25px",
+      "--app-radius-practice-retry-mode-option": "16.75px",
+      "--app-radius-problem-new-badge": "14.5px",
       "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-landing-portfolio-display": '"Bridge Display", serif',
       "--app-font-landing-portfolio-numeric": '"Bridge Numeric", monospace',
       "--app-font-writing-manuscript-mono":
         '"Contract Manuscript Mono", monospace',
+      "--app-font-question-number-display":
+        '"Contract Question Display", var(--app-font-family), sans-serif',
       "--app-font-size-caption": "11px",
       "--app-font-size-body": "15px",
       "--app-font-size-body-lg": "17px",
@@ -389,6 +405,8 @@ describe("generic app theme bridge contract", () => {
       "--app-shadow-message":
         "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
       "--app-shadow-notification-channel-selected": "0 0 0 4px #1971c2",
+      "--app-shadow-selectable-card-selected":
+        "0 12px 28px rgba(44, 20, 96, 0.23), inset 0 0 0 2.5px #d43b9d",
       "--app-shadow-writing-material-tooltip":
         "0 8px 18px rgb(91 43 196 / 22%)",
       "--app-shadow-writing-blank-focus": "0 0 0 5px rgba(48, 160, 125, 0.31)",
@@ -806,6 +824,13 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorMaskSubtle,
       testAlternateSource.colorBorderSecondary,
       testAlternateSource.colorSharedCardSubtleOutline,
+      testAlternateSource.colorLibraryReviewScoreTrack,
+      testAlternateSource.colorProblemNewBadgeSurface,
+      testAlternateSource.shadowSelectableCardSelected,
+      testAlternateSource.fontQuestionNumberDisplay,
+      testAlternateSource.radiusPracticeRetrySummary,
+      testAlternateSource.radiusPracticeRetryModeOption,
+      testAlternateSource.radiusProblemNewBadge,
       testAlternateSource.colorChartSeriesPrimary,
       testAlternateSource.colorChartAccent,
       testAlternateSource.colorTextInverse,
@@ -845,6 +870,27 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
       phase5dAlternateTheme.appBridgeVars[
         "--app-color-shared-card-subtle-outline"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-library-review-score-track"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-color-library-review-score-track"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-problem-new-badge-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-color-problem-new-badge-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-selectable-card-selected"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-shadow-selectable-card-selected"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-font-question-number-display"
       ],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
@@ -971,6 +1017,10 @@ describe("generic app theme bridge contract", () => {
         colorBorderSecondary: awesomicThemeTokens.border.secondary.light,
         colorSharedCardSubtleOutline:
           awesomicThemeTokens.sharedCard.color.subtleOutline,
+        colorLibraryReviewScoreTrack:
+          awesomicThemeTokens.libraryReview.color.scoreTrack,
+        colorProblemNewBadgeSurface:
+          awesomicThemeTokens.problemNewBadge.color.surface,
         colorChartSeriesPrimary: awesomicThemeTokens.chart.seriesPrimary,
         colorChartAccent: awesomicThemeTokens.chart.accent,
         colorStatusError: awesomicThemeTokens.status.light.error,
@@ -1096,6 +1146,9 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingPortfolio.radius.round,
         radiusLandingPortfolioTagPill: `${awesomicThemeTokens.landingPortfolio.radius.tagPill}px`,
         radiusWritingMaterialCompactSurface: `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
+        radiusPracticeRetrySummary: `${awesomicThemeTokens.practiceRetry.radius.summary}px`,
+        radiusPracticeRetryModeOption: `${awesomicThemeTokens.practiceRetry.radius.modeOption}px`,
+        radiusProblemNewBadge: `${awesomicThemeTokens.problemNewBadge.radius}px`,
         sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontLandingPortfolioDisplay:
@@ -1104,6 +1157,8 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.landingPortfolio.font.numeric,
         fontWritingManuscriptMono:
           awesomicThemeTokens.writingManuscript.font.mono,
+        fontQuestionNumberDisplay:
+          awesomicThemeTokens.questionNumber.font.display,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,
         fontSizeBody: awesomicThemeTokens.fontSize.body,
         fontSizeBodyLg: awesomicThemeTokens.fontSize.bodyLg,
@@ -1119,6 +1174,8 @@ describe("generic app theme bridge contract", () => {
         shadowMessage: awesomicThemeTokens.shadow.message,
         shadowNotificationChannelSelected:
           awesomicThemeTokens.notification.shadow.channelSelected,
+        shadowSelectableCardSelected:
+          awesomicThemeTokens.selectableCard.shadow.selected,
         shadowWritingMaterialTooltip:
           awesomicThemeTokens.writingMaterial.shadow.tooltip,
         shadowWritingBlankFocus: awesomicThemeTokens.writingBlank.shadow.focus,

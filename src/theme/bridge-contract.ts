@@ -10,6 +10,8 @@ export const allowedAppBridgeVars = [
   "--app-color-border",
   "--app-color-border-secondary",
   "--app-color-shared-card-subtle-outline",
+  "--app-color-library-review-score-track",
+  "--app-color-problem-new-badge-surface",
   "--app-color-chart-series-primary",
   "--app-color-chart-accent",
   "--app-color-status-error",
@@ -89,11 +91,15 @@ export const allowedAppBridgeVars = [
   "--app-radius-landing-portfolio-round",
   "--app-radius-landing-portfolio-tag-pill",
   "--app-radius-writing-material-compact-surface",
+  "--app-radius-practice-retry-summary",
+  "--app-radius-practice-retry-mode-option",
+  "--app-radius-problem-new-badge",
   "--app-size-auth-prompt-control",
   "--app-font-family",
   "--app-font-landing-portfolio-display",
   "--app-font-landing-portfolio-numeric",
   "--app-font-writing-manuscript-mono",
+  "--app-font-question-number-display",
   "--app-font-size-caption",
   "--app-font-size-body",
   "--app-font-size-body-lg",
@@ -108,6 +114,7 @@ export const allowedAppBridgeVars = [
   "--app-shadow-popover",
   "--app-shadow-message",
   "--app-shadow-notification-channel-selected",
+  "--app-shadow-selectable-card-selected",
   "--app-shadow-writing-material-tooltip",
   "--app-shadow-writing-blank-focus",
   "--app-shadow-writing-blank-active-inset",
@@ -134,6 +141,8 @@ export type AppBridgeTokenSource = {
   colorBorder: string;
   colorBorderSecondary: string;
   colorSharedCardSubtleOutline: string;
+  colorLibraryReviewScoreTrack: string;
+  colorProblemNewBadgeSurface: string;
   colorChartSeriesPrimary: string;
   colorChartAccent: string;
   colorStatusError: string;
@@ -213,11 +222,15 @@ export type AppBridgeTokenSource = {
   radiusLandingPortfolioRound: string;
   radiusLandingPortfolioTagPill: string;
   radiusWritingMaterialCompactSurface: string;
+  radiusPracticeRetrySummary: string;
+  radiusPracticeRetryModeOption: string;
+  radiusProblemNewBadge: string;
   sizeAuthPromptControl: string;
   fontFamily: string;
   fontLandingPortfolioDisplay: string;
   fontLandingPortfolioNumeric: string;
   fontWritingManuscriptMono: string;
+  fontQuestionNumberDisplay: string;
   fontSizeCaption: string;
   fontSizeBody: string;
   fontSizeBodyLg: string;
@@ -232,6 +245,7 @@ export type AppBridgeTokenSource = {
   shadowPopover: string;
   shadowMessage: string;
   shadowNotificationChannelSelected: string;
+  shadowSelectableCardSelected: string;
   shadowWritingMaterialTooltip: string;
   shadowWritingBlankFocus: string;
   shadowWritingBlankActiveInset: string;
@@ -259,6 +273,10 @@ export function createAppBridgeVars(
     "--app-color-border-secondary": source.colorBorderSecondary,
     "--app-color-shared-card-subtle-outline":
       source.colorSharedCardSubtleOutline,
+    "--app-color-library-review-score-track":
+      source.colorLibraryReviewScoreTrack,
+    "--app-color-problem-new-badge-surface":
+      source.colorProblemNewBadgeSurface,
     "--app-color-chart-series-primary": source.colorChartSeriesPrimary,
     "--app-color-chart-accent": source.colorChartAccent,
     "--app-color-status-error": source.colorStatusError,
@@ -371,11 +389,17 @@ export function createAppBridgeVars(
       source.radiusLandingPortfolioTagPill,
     "--app-radius-writing-material-compact-surface":
       source.radiusWritingMaterialCompactSurface,
+    "--app-radius-practice-retry-summary":
+      source.radiusPracticeRetrySummary,
+    "--app-radius-practice-retry-mode-option":
+      source.radiusPracticeRetryModeOption,
+    "--app-radius-problem-new-badge": source.radiusProblemNewBadge,
     "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
     "--app-font-landing-portfolio-display": source.fontLandingPortfolioDisplay,
     "--app-font-landing-portfolio-numeric": source.fontLandingPortfolioNumeric,
     "--app-font-writing-manuscript-mono": source.fontWritingManuscriptMono,
+    "--app-font-question-number-display": source.fontQuestionNumberDisplay,
     "--app-font-size-caption": source.fontSizeCaption,
     "--app-font-size-body": source.fontSizeBody,
     "--app-font-size-body-lg": source.fontSizeBodyLg,
@@ -391,6 +415,8 @@ export function createAppBridgeVars(
     "--app-shadow-message": source.shadowMessage,
     "--app-shadow-notification-channel-selected":
       source.shadowNotificationChannelSelected,
+    "--app-shadow-selectable-card-selected":
+      source.shadowSelectableCardSelected,
     "--app-shadow-writing-material-tooltip":
       source.shadowWritingMaterialTooltip,
     "--app-shadow-writing-blank-focus": source.shadowWritingBlankFocus,

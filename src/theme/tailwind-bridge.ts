@@ -31,6 +31,20 @@ const DEFAULT_SHARED_CARD_BRIDGE_VARS = {
     "color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout))",
 } as const;
 
+const DEFAULT_PRACTICE_FOUNDATION_BRIDGE_VARS = {
+  "--app-color-library-review-score-track":
+    "color-mix(in srgb, var(--app-color-border) 18%, var(--app-color-bg-container))",
+  "--app-color-problem-new-badge-surface":
+    "color-mix(in srgb, var(--app-color-text-secondary) 12%, transparent)",
+  "--app-radius-practice-retry-summary": "10px",
+  "--app-radius-practice-retry-mode-option": "12px",
+  "--app-radius-problem-new-badge": "12px",
+  "--app-font-question-number-display":
+    '"Space Grotesk", var(--app-font-family), sans-serif',
+  "--app-shadow-selectable-card-selected":
+    "var(--app-shadow-elevated), 0 0 0 1.5px var(--app-color-primary) inset",
+} as const;
+
 const DEFAULT_WRITING_EXAM_BRIDGE_VARS = {
   "--app-color-writing-exam-header-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
@@ -172,6 +186,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-border": "#d9d9d9",
     "--app-color-border-secondary": "#f0f0f0",
     ...DEFAULT_SHARED_CARD_BRIDGE_VARS,
+    ...DEFAULT_PRACTICE_FOUNDATION_BRIDGE_VARS,
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#ff4d4f",
@@ -229,6 +244,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-border": "#424242",
     "--app-color-border-secondary": "#303030",
     ...DEFAULT_SHARED_CARD_BRIDGE_VARS,
+    ...DEFAULT_PRACTICE_FOUNDATION_BRIDGE_VARS,
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#dc4446",

@@ -87,6 +87,8 @@ const alternateSource = {
   colorAuthVerifyEmailCardBorder: "#ef42bd",
   colorAuthVerifyEmailSummarySurface: "#c8f7ff",
   colorSharedCardSubtleOutline: "#4b39d1",
+  colorLibraryReviewScoreTrack: "#d9f7ff",
+  colorProblemNewBadgeSurface: "rgba(239, 66, 189, 0.22)",
   colorAuthCharacterPurple: "#7b1fa2",
   colorAuthCharacterCharcoal: "#12313a",
   colorAuthCharacterCoral: "#ff4f81",
@@ -112,6 +114,9 @@ const alternateSource = {
   radiusLandingPortfolioRound: "47.375%",
   radiusLandingPortfolioTagPill: "887px",
   radiusWritingMaterialCompactSurface: "7.25px",
+  radiusPracticeRetrySummary: "13.75px",
+  radiusPracticeRetryModeOption: "17.25px",
+  radiusProblemNewBadge: "15.5px",
   sizeAuthPromptControl: "58px",
   shadowElevated: "11px 13px 0 rgba(36, 16, 79, 0.42)",
   shadowFloatingAction: "0 9px 24px rgba(72, 18, 112, 0.22)",
@@ -120,6 +125,8 @@ const alternateSource = {
   shadowMessage:
     "0 8px 20px 0 rgba(81, 24, 115, 0.2), 0 3px 8px -2px rgba(0, 140, 116, 0.15)",
   shadowNotificationChannelSelected: "0 0 0 3px #ff8a00",
+  shadowSelectableCardSelected:
+    "0 10px 26px rgba(72, 34, 145, 0.24), inset 0 0 0 3px #ef42bd",
   shadowWritingMaterialTooltip: "0 7px 19px rgb(73 12 117 / 24%)",
   shadowWritingBlankFocus: "0 0 0 5px rgba(0, 165, 138, 0.32)",
   shadowWritingBlankActiveInset: "inset 0 -4px 0 #d10068",
@@ -134,6 +141,8 @@ const alternateSource = {
   fontLandingPortfolioDisplay: '"Phase5D Display", serif',
   fontLandingPortfolioNumeric: '"Phase5D Numeric", monospace',
   fontWritingManuscriptMono: '"Phase5D Manuscript Mono", monospace',
+  fontQuestionNumberDisplay:
+    '"Phase5D Question Display", var(--app-font-family), sans-serif',
   fontSizeCaption: "11px",
   fontSizeBody: "13px",
   fontSizeBodyLg: "18px",
@@ -200,6 +209,10 @@ const alternateSourceByAppearance = {
       "linear-gradient(135deg, #120823 0%, #00473d 100%)",
     colorStatusErrorBorder: alternateErrorAliasesByAppearance.dark.border,
     colorStatusErrorSurface: alternateErrorAliasesByAppearance.dark.surface,
+    colorLibraryReviewScoreTrack: "#17354a",
+    colorProblemNewBadgeSurface: "rgba(85, 230, 193, 0.24)",
+    shadowSelectableCardSelected:
+      "0 10px 26px rgba(0, 0, 0, 0.48), inset 0 0 0 3px #55e6c1",
   },
 } as const;
 

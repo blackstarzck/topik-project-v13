@@ -27,6 +27,36 @@ export const awesomicThemeTokens = {
         "color-mix(in srgb, var(--app-color-border) 25%, var(--app-color-bg-layout))",
     },
   },
+  practiceRetry: {
+    radius: {
+      summary: 10,
+      modeOption: 12,
+    },
+  },
+  libraryReview: {
+    color: {
+      scoreTrack:
+        "color-mix(in srgb, var(--app-color-border) 18%, var(--app-color-bg-container))",
+    },
+  },
+  selectableCard: {
+    shadow: {
+      selected:
+        "var(--app-shadow-elevated), 0 0 0 1.5px var(--app-color-primary) inset",
+    },
+  },
+  questionNumber: {
+    font: {
+      display: '"Space Grotesk", var(--app-font-family), sans-serif',
+    },
+  },
+  problemNewBadge: {
+    color: {
+      surface:
+        "color-mix(in srgb, var(--app-color-text-secondary) 12%, transparent)",
+    },
+    radius: 12,
+  },
   chart: {
     // AntD's blue and cyan seeds preserve the existing categorical chart
     // paints. The remaining chart colors reuse status roles exposed by the app.
@@ -284,6 +314,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.border.secondary[appearance],
     "--app-color-shared-card-subtle-outline":
       awesomicThemeTokens.sharedCard.color.subtleOutline,
+    "--app-color-library-review-score-track":
+      awesomicThemeTokens.libraryReview.color.scoreTrack,
+    "--app-color-problem-new-badge-surface":
+      awesomicThemeTokens.problemNewBadge.color.surface,
     "--app-color-chart-series-primary": awesomicThemeTokens.chart.seriesPrimary,
     "--app-color-chart-accent": awesomicThemeTokens.chart.accent,
     "--app-color-status-error": status.error,
@@ -417,6 +451,9 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingPortfolio.radius.round,
     "--app-radius-landing-portfolio-tag-pill": `${awesomicThemeTokens.landingPortfolio.radius.tagPill}px`,
     "--app-radius-writing-material-compact-surface": `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
+    "--app-radius-practice-retry-summary": `${awesomicThemeTokens.practiceRetry.radius.summary}px`,
+    "--app-radius-practice-retry-mode-option": `${awesomicThemeTokens.practiceRetry.radius.modeOption}px`,
+    "--app-radius-problem-new-badge": `${awesomicThemeTokens.problemNewBadge.radius}px`,
     "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-landing-portfolio-display":
@@ -425,6 +462,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.landingPortfolio.font.numeric,
     "--app-font-writing-manuscript-mono":
       awesomicThemeTokens.writingManuscript.font.mono,
+    "--app-font-question-number-display":
+      awesomicThemeTokens.questionNumber.font.display,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,
     "--app-font-size-body": awesomicThemeTokens.fontSize.body,
     "--app-font-size-body-lg": awesomicThemeTokens.fontSize.bodyLg,
@@ -440,6 +479,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-shadow-message": awesomicThemeTokens.shadow.message,
     "--app-shadow-notification-channel-selected":
       awesomicThemeTokens.notification.shadow.channelSelected,
+    "--app-shadow-selectable-card-selected":
+      awesomicThemeTokens.selectableCard.shadow.selected,
     "--app-shadow-writing-material-tooltip":
       awesomicThemeTokens.writingMaterial.shadow.tooltip,
     "--app-shadow-writing-blank-focus":
