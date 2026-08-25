@@ -22,6 +22,10 @@
   list-style: none;
 }
 
+.workspaceDrawer :global(.ant-drawer-body) {
+  padding: 0;
+}
+
 .mobileBrand {
   position: absolute;
   left: 50%;

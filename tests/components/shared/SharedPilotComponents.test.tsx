@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import type { DrawerProps, ModalProps } from "antd";
@@ -11,6 +13,27 @@ import { PageHeader } from "../../../src/components/shared/PageHeader";
 import { PublicShell } from "../../../src/components/shared/PublicShell";
 import { SelectableAppCard } from "../../../src/components/shared/SelectableAppCard";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
+
+const APP_DRAWER_SOURCE = readFileSync(
+  join(process.cwd(), "src/components/shared/AppDrawer.tsx"),
+  "utf8",
+);
+const APP_DRAWER_CSS_PATH = join(
+  process.cwd(),
+  "src/components/shared/AppDrawer.module.css",
+);
+const APP_DRAWER_CSS = existsSync(APP_DRAWER_CSS_PATH)
+  ? readFileSync(APP_DRAWER_CSS_PATH, "utf8")
+  : "";
+
+function appDrawerCssRule(selector: string) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = APP_DRAWER_CSS.match(
+    new RegExp(`${escapedSelector}\\s*\\{(?<body>[^}]*)\\}`, "m"),
+  );
+
+  return match?.groups?.body ?? "";
+}
 
 const routerReplaceMock = vi.hoisted(() => vi.fn());
 
@@ -230,7 +253,7 @@ describe("AppDrawer (overlay sentinel)", () => {
     expect(document.querySelector(".app-drawer")).toBeTruthy();
   });
 
-  it("expands the body height baseline while preserving caller body styles", () => {
+  it("owns the shared body baseline in CSS while preserving caller body styles", () => {
     renderWithIntl(
       <AppDrawer
         open
@@ -244,11 +267,18 @@ describe("AppDrawer (overlay sentinel)", () => {
         <span>menu</span>
       </AppDrawer>,
     );
-    const body = document.querySelector(".ant-drawer-body");
-    const style = body?.getAttribute("style") ?? "";
-    expect(style).toContain("display: grid");
-    expect(style).toContain("min-height: calc(100dvh - 56px)");
-    expect(style).toContain("padding: 0px");
+    const body = document.querySelector<HTMLElement>(".ant-drawer-body");
+    const baselineRule = appDrawerCssRule(".root :global(.ant-drawer-body)");
+
+    expect(APP_DRAWER_SOURCE).toContain(
+      'import drawerStyles from "./AppDrawer.module.css";',
+    );
+    expect(baselineRule).toContain("display: flex;");
+    expect(baselineRule).toContain("flex-direction: column;");
+    expect(baselineRule).toContain("min-height: calc(100dvh - 56px);");
+    expect(body?.style.display).toBe("grid");
+    expect(body?.style.padding).toBe("0px");
+    expect(body?.style.minHeight).toBe("");
     expect(
       document.querySelector<HTMLElement>(".ant-drawer-header")?.style
         .paddingTop,
@@ -281,7 +311,7 @@ describe("AppDrawer (overlay sentinel)", () => {
 
     expect(styles).toHaveBeenCalled();
     expect(body?.style.display).toBe("grid");
-    expect(body?.style.flexDirection).toBe("column");
+    expect(body?.style.flexDirection).toBe("");
     expect(body?.style.minHeight).toBe("42px");
     expect(body?.style.paddingBottom).toBe("13px");
     expect(footer?.style.borderTopWidth).toBe("4px");

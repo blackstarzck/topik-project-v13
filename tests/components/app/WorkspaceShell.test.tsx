@@ -1556,13 +1556,21 @@ describe("WorkspaceShell", () => {
     expect(GLOBAL_CSS).not.toMatch(/\.app-workspace-sider\s*\{/u);
   });
 
-  it("uses the drawer public body style API without an internal DOM override", () => {
+  it("owns the workspace drawer body padding in its local CSS module", () => {
     const source = readFileSync(
       join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
       "utf8",
     );
+    const drawerBodyRule = cssRuleFrom(
+      WORKSPACE_SHELL_CSS,
+      ".workspaceDrawer :global(.ant-drawer-body)",
+    );
 
-    expect(source).toContain("styles={{ body: { padding: 0 } }}");
+    expect(source).toMatch(
+      /rootClassName=\{\[\s*"app-workspace-drawer",\s*styles\.workspaceDrawer,?\s*\]\.join\(\s*" "\s*,?\s*\)\}/u,
+    );
+    expect(source).not.toContain("styles={{ body: { padding: 0 } }}");
+    expect(drawerBodyRule).toContain("padding: 0;");
     expect(GLOBAL_CSS).not.toContain(".app-workspace-drawer .ant-drawer-body");
   });
 

@@ -374,12 +374,13 @@ export function WorkspaceShell({
 
       {hidesWorkspaceChrome ? null : (
         <AppDrawer
-          rootClassName="app-workspace-drawer"
+          rootClassName={["app-workspace-drawer", styles.workspaceDrawer].join(
+            " ",
+          )}
           placement="left"
           size={300}
           open={showDrawer}
           onClose={() => setDrawerOpen(false)}
-          styles={{ body: { padding: 0 } }}
           title={t("menu")}
         >
           <SidebarNav
