@@ -50,9 +50,7 @@ export async function WritingPageContent({
         description={
           <div className="flex flex-col gap-2">
             <h1
-              className={["writing-empty-state__title", styles.title].join(
-                " ",
-              )}
+              className={["writing-empty-state__title", styles.title].join(" ")}
             >
               {showUnavailableTitle
                 ? t("problemUnavailableTitle", { questionNo })

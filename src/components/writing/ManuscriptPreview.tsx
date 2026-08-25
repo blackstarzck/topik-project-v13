@@ -69,10 +69,9 @@ export function ManuscriptPreview({
         <>
           <Title
             level={5}
-            className={[
-              "writing-manuscript-preview__title",
-              styles.title,
-            ].join(" ")}
+            className={["writing-manuscript-preview__title", styles.title].join(
+              " ",
+            )}
           >
             {t("manuscriptTitle")}
           </Title>

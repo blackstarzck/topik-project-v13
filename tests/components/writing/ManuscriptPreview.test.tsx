@@ -51,10 +51,8 @@ describe("ManuscriptPreview", () => {
     expect(source).toContain(
       'import styles from "./ManuscriptPreview.module.css";',
     );
-    expect(source).toMatch(
-      /"writing-manuscript-preview",\s*styles\.preview/u,
-    );
-    expect(source).toContain("!showHeader ? styles.compact : \"\"");
+    expect(source).toMatch(/"writing-manuscript-preview",\s*styles\.preview/u);
+    expect(source).toContain('!showHeader ? styles.compact : ""');
     expect(source).toMatch(
       /"writing-manuscript-preview__title",\s*styles\.title/u,
     );
