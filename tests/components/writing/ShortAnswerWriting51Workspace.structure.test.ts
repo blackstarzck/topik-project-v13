@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import postcss from "postcss";
 
 import {
   build51AnswerText,
@@ -32,6 +33,29 @@ const sharedStylesPath = join(
   process.cwd(),
   "src/components/writing/ShortAnswerWritingWorkspace.module.css",
 );
+const globalStylesPath = join(process.cwd(), "src/styles/global.css");
+
+function declarationNamesForSelector(source: string, selector: string) {
+  const normalizedSelector = selector.replace(/\s+/gu, " ").trim();
+  const names = new Set<string>();
+
+  postcss.parse(source).walkRules((rule) => {
+    const selectors = rule.selector
+      .split(",")
+      .map((candidate) => candidate.replace(/\s+/gu, " ").trim());
+    if (!selectors.includes(normalizedSelector)) return;
+    for (const node of rule.nodes ?? []) {
+      if (node.type === "decl") names.add(node.prop);
+    }
+  });
+
+  return names;
+}
+
+function classSpecificity(selector: string) {
+  return selector.match(/\.[\w-]+/gu)?.length ?? 0;
+}
+
 describe("ShortAnswerWriting51Workspace structure", () => {
   it("shares concise writing layouts while preserving q51 and q52 stable classes", () => {
     const sources = [sourcePath, q52SourcePath].map((path) =>
@@ -46,6 +70,15 @@ describe("ShortAnswerWriting51Workspace structure", () => {
         ".blankTabs",
         "display: flex; gap: 8px; overflow-x: auto; padding-inline: 0;",
       ],
+      [
+        ".blankTab",
+        "border-radius: var(--app-radius-card) var(--app-radius-card) var(--app-radius-none) var(--app-radius-none);",
+      ],
+      [".blankTab.blankTabActive", "color: var(--app-color-text-inverse);"],
+      [
+        ".answerCard",
+        "border-radius: var(--app-radius-none) var(--app-radius) var(--app-radius) var(--app-radius);",
+      ],
     ] as const;
 
     expect(
@@ -56,6 +89,17 @@ describe("ShortAnswerWriting51Workspace structure", () => {
         )
         .map(([selector]) => selector),
     ).toEqual([]);
+    expect(classSpecificity(".blankTab.blankTabActive")).toBeGreaterThan(
+      classSpecificity(".writing-blank-tab"),
+    );
+    expect(
+      hasExactCssRule(
+        sharedStyles,
+        ".answerCard",
+        "border-radius: var(--app-radius);",
+        ["@media (max-width: 767px)"],
+      ),
+    ).toBe(true);
     expect(
       findGlobalCssOwners([
         "writing-guide-hints",
@@ -78,7 +122,30 @@ describe("ShortAnswerWriting51Workspace structure", () => {
         '"writing-answer-panel", styles.answerPanel',
       );
       expect(compactSource).toContain('"writing-blank-tabs", styles.blankTabs');
+      expect(compactSource).toContain('"writing-blank-tab", styles.blankTab');
+      expect(compactSource).toContain("styles.blankTabActive");
+      expect(compactSource).toContain(
+        '"writing-answer-card", styles.answerCard',
+      );
     }
+
+    const globalStyles = readFileSync(globalStylesPath, "utf8");
+    expect(
+      declarationNamesForSelector(globalStyles, ".writing-blank-tab").has(
+        "border-radius",
+      ),
+    ).toBe(false);
+    expect(
+      declarationNamesForSelector(
+        globalStyles,
+        ".writing-blank-tab--active",
+      ).has("color"),
+    ).toBe(false);
+    expect(
+      declarationNamesForSelector(globalStyles, ".writing-answer-card").has(
+        "border-radius",
+      ),
+    ).toBe(false);
   });
 
   it("keeps the q51 JSON version, answer text order, and character count contract", () => {

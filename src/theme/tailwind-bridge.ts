@@ -33,6 +33,17 @@ const DEFAULT_WRITING_MATERIAL_BRIDGE_VARS = {
   "--app-shadow-writing-material-tooltip": "0 4px 12px rgb(0 0 0 / 6%)",
 } as const;
 
+const DEFAULT_WRITING_BLANK_BRIDGE_VARS = {
+  "--app-color-writing-blank-active-surface":
+    "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
+  "--app-color-writing-blank-filled-border":
+    "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+  "--app-shadow-writing-blank-focus":
+    "0 0 0 2px color-mix(in srgb, var(--app-color-primary) 18%, transparent)",
+  "--app-shadow-writing-blank-active-inset":
+    "inset 0 -2px 0 var(--app-color-primary)",
+} as const;
+
 const DEFAULT_FONT_SIZE_BRIDGE_VARS = {
   "--app-font-size-caption": "10px",
   "--app-font-size-body": "14px",
@@ -108,6 +119,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-mask-subtle": "rgba(244, 244, 245, 0.18)",
     "--app-color-text": "rgba(0, 0, 0, 0.88)",
     "--app-color-text-secondary": "rgba(0, 0, 0, 0.65)",
+    "--app-color-text-inverse": "#ffffff",
     "--app-color-link-secondary": "#3254F2",
     "--app-color-border": "#d9d9d9",
     "--app-color-border-secondary": "#f0f0f0",
@@ -120,6 +132,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-fill-secondary": "rgba(0, 0, 0, 0.06)",
     ...DEFAULT_WRITING_EXAM_BRIDGE_VARS,
     ...DEFAULT_WRITING_MATERIAL_BRIDGE_VARS,
+    ...DEFAULT_WRITING_BLANK_BRIDGE_VARS,
     "--app-color-landing-cta-primary": "#070203",
     "--app-color-landing-cta-primary-hover": "#21080c",
     "--app-color-landing-cta-foreground": "#ffffff",
@@ -132,6 +145,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
     ...DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS,
     "--app-radius": "6px",
+    "--app-radius-none": "0px",
     "--app-radius-card": "8px",
     "--app-radius-pill": "10000px",
     "--app-radius-indicator": "2px",
@@ -153,6 +167,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-mask-subtle": "rgba(0, 0, 0, 0.18)",
     "--app-color-text": "rgba(255, 255, 255, 0.85)",
     "--app-color-text-secondary": "rgba(255, 255, 255, 0.65)",
+    "--app-color-text-inverse": "#ffffff",
     "--app-color-link-secondary": "#3254F2",
     "--app-color-border": "#424242",
     "--app-color-border-secondary": "#303030",
@@ -165,6 +180,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-fill-secondary": "rgba(255, 255, 255, 0.12)",
     ...DEFAULT_WRITING_EXAM_BRIDGE_VARS,
     ...DEFAULT_WRITING_MATERIAL_BRIDGE_VARS,
+    ...DEFAULT_WRITING_BLANK_BRIDGE_VARS,
     "--app-color-landing-cta-primary": "#070203",
     "--app-color-landing-cta-primary-hover": "#21080c",
     "--app-color-landing-cta-foreground": "#ffffff",
@@ -177,6 +193,7 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
     ...DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS,
     "--app-radius": "6px",
+    "--app-radius-none": "0px",
     "--app-radius-card": "8px",
     "--app-radius-pill": "10000px",
     "--app-radius-indicator": "2px",

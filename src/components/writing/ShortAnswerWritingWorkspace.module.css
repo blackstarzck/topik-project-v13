@@ -19,3 +19,23 @@
   overflow-x: auto;
   padding-inline: 0;
 }
+
+.blankTab {
+  border-radius: var(--app-radius-card) var(--app-radius-card)
+    var(--app-radius-none) var(--app-radius-none);
+}
+
+.blankTab.blankTabActive {
+  color: var(--app-color-text-inverse);
+}
+
+.answerCard {
+  border-radius: var(--app-radius-none) var(--app-radius) var(--app-radius)
+    var(--app-radius);
+}
+
+@media (max-width: 767px) {
+  .answerCard {
+    border-radius: var(--app-radius);
+  }
+}

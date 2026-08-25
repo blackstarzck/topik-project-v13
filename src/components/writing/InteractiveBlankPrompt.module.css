@@ -1,0 +1,17 @@
+.blank {
+  border-radius: var(--app-radius) var(--app-radius) var(--app-radius-indicator)
+    var(--app-radius-indicator);
+}
+
+.blank:focus-visible {
+  box-shadow: var(--app-shadow-writing-blank-focus);
+}
+
+.blank.active {
+  background: var(--app-color-writing-blank-active-surface);
+  box-shadow: var(--app-shadow-writing-blank-active-inset);
+}
+
+.filled:not(.active) {
+  border-color: var(--app-color-writing-blank-filled-border);
+}

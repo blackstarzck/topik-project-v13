@@ -222,6 +222,28 @@ Tooltip emphasis and keyboard focus continue to use `--app-color-primary`
 directly. App bridge availability is guaranteed, so writing CSS does not carry
 a raw `#1677ff` fallback.
 
+## Tokens — Writing Blank Controls
+
+`InteractiveBlankPrompt.module.css` owns inline blank radius and focus/active/
+filled paint. `ShortAnswerWritingWorkspace.module.css` owns the shared Q51/Q52
+tab and answer-card radius, including the mobile answer-card override. Stable
+global class names remain markup hooks but do not own these properties.
+
+| Meaning | Production value | App bridge |
+| --- | --- | --- |
+| Selected tab inverse text | `#ffffff` | `--app-color-text-inverse` |
+| Inline blank active surface | Primary 6% mixed with container | `--app-color-writing-blank-active-surface` |
+| Filled inline blank border | Primary 42% mixed with border | `--app-color-writing-blank-filled-border` |
+| Zero corner | `0px` | `--app-radius-none` |
+| Inline blank keyboard focus ring | Primary 18%, 2px ring | `--app-shadow-writing-blank-focus` |
+| Inline blank active inset | Primary 2px bottom inset | `--app-shadow-writing-blank-active-inset` |
+
+Composite corners are assembled from atomic roles: inline blanks use
+`--app-radius` with `--app-radius-indicator`, tabs use `--app-radius-card` with
+`--app-radius-none`, and answer cards use `--app-radius-none` with
+`--app-radius`. This keeps desktop and mobile geometry themeable without a
+selector-specific composite token.
+
 ## Tokens — Landing CTA
 
 The live landing page has two intentional CTA color modes: a dark primary

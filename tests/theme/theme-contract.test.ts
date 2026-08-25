@@ -73,9 +73,15 @@ describe("app theme contract", () => {
     expect(vars["--app-radius-pill"]).toBe(
       `${awesomicThemeTokens.radius.pill}px`,
     );
+    expect(vars["--app-radius-none"]).toBe(
+      `${awesomicThemeTokens.radius.none}px`,
+    );
     expect(vars["--app-color-text"]).toBe(awesomicThemeTokens.color.ink);
     expect(vars["--app-color-text-secondary"]).toBe(
       awesomicThemeTokens.color.steel,
+    );
+    expect(vars["--app-color-text-inverse"]).toBe(
+      awesomicThemeTokens.color.textInverse,
     );
     expect(
       (awesomicThemeTokens.color as Record<string, string>).linkSecondary,
@@ -167,6 +173,45 @@ describe("app theme contract", () => {
       "--app-radius-writing-material-compact-surface": `${awesomicThemeTokens.writingMaterial.radius.compactSurface}px`,
       "--app-shadow-writing-material-tooltip":
         awesomicThemeTokens.writingMaterial.shadow.tooltip,
+    };
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject(
+          expectedBridge,
+        );
+      }
+    }
+  });
+
+  test("owns interactive writing blank paint and shared inverse geometry roles", () => {
+    expect(awesomicThemeTokens.color.textInverse).toBe("#ffffff");
+    expect(awesomicThemeTokens.radius.none).toBe(0);
+    expect(awesomicThemeTokens).toHaveProperty("writingBlank", {
+      color: {
+        activeSurface:
+          "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
+        filledBorder:
+          "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+      },
+      shadow: {
+        focus:
+          "0 0 0 2px color-mix(in srgb, var(--app-color-primary) 18%, transparent)",
+        activeInset: "inset 0 -2px 0 var(--app-color-primary)",
+      },
+    });
+
+    const expectedBridge = {
+      "--app-color-text-inverse": awesomicThemeTokens.color.textInverse,
+      "--app-color-writing-blank-active-surface":
+        awesomicThemeTokens.writingBlank.color.activeSurface,
+      "--app-color-writing-blank-filled-border":
+        awesomicThemeTokens.writingBlank.color.filledBorder,
+      "--app-radius-none": `${awesomicThemeTokens.radius.none}px`,
+      "--app-shadow-writing-blank-focus":
+        awesomicThemeTokens.writingBlank.shadow.focus,
+      "--app-shadow-writing-blank-active-inset":
+        awesomicThemeTokens.writingBlank.shadow.activeInset,
     };
 
     for (const themeName of ["default", defaultThemeName] as const) {
@@ -405,6 +450,7 @@ describe("app theme contract", () => {
       "--app-color-bg-container",
       "--app-color-text",
       "--app-color-text-secondary",
+      "--app-color-text-inverse",
       "--app-color-link-secondary",
       "--app-color-border",
       "--app-color-border-secondary",
@@ -418,7 +464,10 @@ describe("app theme contract", () => {
       "--app-color-landing-cta-ghost-border",
       "--app-color-writing-exam-header-surface",
       "--app-color-writing-material-row-active-surface",
+      "--app-color-writing-blank-active-surface",
+      "--app-color-writing-blank-filled-border",
       "--app-radius",
+      "--app-radius-none",
       "--app-radius-card",
       "--app-radius-pill",
       "--app-radius-landing-hero-cta",
@@ -429,6 +478,8 @@ describe("app theme contract", () => {
       "--app-shadow-popover",
       "--app-shadow-message",
       "--app-shadow-writing-material-tooltip",
+      "--app-shadow-writing-blank-focus",
+      "--app-shadow-writing-blank-active-inset",
     ];
 
     requiredKeys.forEach((key) => {

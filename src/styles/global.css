@@ -4631,7 +4631,6 @@
   vertical-align: middle;
   border: 1px solid var(--app-color-border);
   border-bottom-width: 2px;
-  border-radius: 6px 6px 2px 2px;
   background: var(--app-color-bg-container);
   color: var(--app-color-text-secondary);
   font: inherit;
@@ -4648,28 +4647,9 @@
   outline: none;
 }
 
-.writing-inline-blank:focus-visible {
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--app-color-primary) 18%, transparent);
-}
-
 .writing-inline-blank--active {
   border-color: var(--app-color-primary);
-  background: color-mix(
-    in srgb,
-    var(--app-color-primary) 6%,
-    var(--app-color-bg-container)
-  );
   color: var(--app-color-text);
-  box-shadow: inset 0 -2px 0 var(--app-color-primary);
-}
-
-.writing-inline-blank--filled:not(.writing-inline-blank--active) {
-  border-color: color-mix(
-    in srgb,
-    var(--app-color-primary) 42%,
-    var(--app-color-border)
-  );
 }
 
 .writing-inline-blank__index {
@@ -4688,7 +4668,6 @@
   min-width: 124px;
   border: 1px solid var(--app-color-border);
   border-bottom: 0;
-  border-radius: 8px 8px 0 0;
   background: var(--app-color-bg-container);
   color: var(--app-color-text-secondary);
   cursor: pointer;
@@ -4700,14 +4679,12 @@
 .writing-blank-tab--active {
   border-color: var(--app-color-primary);
   background: var(--app-color-primary);
-  color: #ffffff;
 }
 
 .writing-answer-card {
   display: grid;
   gap: 12px;
   border: 1px solid var(--app-color-border);
-  border-radius: 0 var(--app-radius) var(--app-radius) var(--app-radius);
   background: var(--app-color-bg-container);
   padding: 18px;
 }
@@ -5436,7 +5413,6 @@
   }
 
   .writing-answer-card {
-    border-radius: var(--app-radius);
     padding: 16px;
   }
 }

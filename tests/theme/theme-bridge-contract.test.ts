@@ -30,6 +30,7 @@ const testAlternateSource = {
   colorMaskSubtle: "rgba(31, 96, 168, 0.27)",
   colorText: "#102030",
   colorTextSecondary: "#506070",
+  colorTextInverse: "#fff6d6",
   colorLinkSecondary: "#405de6",
   colorBorder: "#90a0b0",
   colorBorderSecondary: "#718293",
@@ -42,6 +43,8 @@ const testAlternateSource = {
   colorFillSecondary: "rgba(18, 52, 86, 0.19)",
   colorWritingExamHeaderSurface: "rgba(91, 43, 196, 0.79)",
   colorWritingMaterialRowActiveSurface: "rgba(253, 126, 20, 0.21)",
+  colorWritingBlankActiveSurface: "rgba(36, 158, 128, 0.29)",
+  colorWritingBlankFilledBorder: "#df4b91",
   colorLandingCtaPrimary: "#5b2bc4",
   colorLandingCtaPrimaryHover: "#351474",
   colorLandingCtaForeground: "#fff2cf",
@@ -84,6 +87,7 @@ const testAlternateSource = {
   colorAuthCharacterInk: "#221142",
   colorAuthCharacterEye: "#ecffff",
   radius: "12px",
+  radiusNone: "0px",
   radiusNumber: 12,
   radiusCard: "18px",
   radiusCardNumber: 18,
@@ -119,6 +123,8 @@ const testAlternateSource = {
   shadowMessage:
     "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
   shadowWritingMaterialTooltip: "0 8px 18px rgb(91 43 196 / 22%)",
+  shadowWritingBlankFocus: "0 0 0 5px rgba(48, 160, 125, 0.31)",
+  shadowWritingBlankActiveInset: "inset 0 -4px 0 #8f2a61",
   shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
   shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
 } as const;
@@ -237,6 +243,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-mask-subtle": "rgba(31, 96, 168, 0.27)",
       "--app-color-text": "#102030",
       "--app-color-text-secondary": "#506070",
+      "--app-color-text-inverse": "#fff6d6",
       "--app-color-link-secondary": "#405de6",
       "--app-color-border": "#90a0b0",
       "--app-color-border-secondary": "#718293",
@@ -250,6 +257,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-writing-exam-header-surface": "rgba(91, 43, 196, 0.79)",
       "--app-color-writing-material-row-active-surface":
         "rgba(253, 126, 20, 0.21)",
+      "--app-color-writing-blank-active-surface": "rgba(36, 158, 128, 0.29)",
+      "--app-color-writing-blank-filled-border": "#df4b91",
       "--app-color-landing-cta-primary": "#5b2bc4",
       "--app-color-landing-cta-primary-hover": "#351474",
       "--app-color-landing-cta-foreground": "#fff2cf",
@@ -292,6 +301,7 @@ describe("generic app theme bridge contract", () => {
       "--app-color-auth-character-ink": "#221142",
       "--app-color-auth-character-eye": "#ecffff",
       "--app-radius": "12px",
+      "--app-radius-none": "0px",
       "--app-radius-card": "18px",
       "--app-radius-pill": "10000px",
       "--app-radius-indicator": "3px",
@@ -325,6 +335,8 @@ describe("generic app theme bridge contract", () => {
         "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
       "--app-shadow-writing-material-tooltip":
         "0 8px 18px rgb(91 43 196 / 22%)",
+      "--app-shadow-writing-blank-focus": "0 0 0 5px rgba(48, 160, 125, 0.31)",
+      "--app-shadow-writing-blank-active-inset": "inset 0 -4px 0 #8f2a61",
       "--app-shadow-auth-prompt-focus": "0 0 0 3px rgba(91, 43, 196, 0.23)",
       "--app-shadow-auth-prompt-login-focus":
         "0 0 0 4px rgba(224, 63, 159, 0.27)",
@@ -479,6 +491,30 @@ describe("generic app theme bridge contract", () => {
     alternateWritingMaterialValues.forEach((value, index) => {
       expect(value).not.toBe(productionWritingMaterialValues[index]);
     });
+    const writingBlankBridgeVars = [
+      "--app-color-writing-blank-active-surface",
+      "--app-color-writing-blank-filled-border",
+      "--app-shadow-writing-blank-focus",
+      "--app-shadow-writing-blank-active-inset",
+      "--app-color-text-inverse",
+    ] as const;
+    const productionWritingBlankValues = [
+      awesomicThemeTokens.writingBlank.color.activeSurface,
+      awesomicThemeTokens.writingBlank.color.filledBorder,
+      awesomicThemeTokens.writingBlank.shadow.focus,
+      awesomicThemeTokens.writingBlank.shadow.activeInset,
+      awesomicThemeTokens.color.textInverse,
+    ];
+    const alternateWritingBlankValues = writingBlankBridgeVars.map(
+      (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+    );
+    expect(new Set(alternateWritingBlankValues)).toHaveLength(5);
+    alternateWritingBlankValues.forEach((value, index) => {
+      expect(value).not.toBe(productionWritingBlankValues[index]);
+    });
+    expect(phase5dAlternateTheme.appBridgeVars["--app-radius-none"]).toBe(
+      "0px",
+    );
     expect(phase5dAlternateTheme.appBridgeVars["--app-radius-card"]).toBe(
       "23px",
     );
@@ -685,6 +721,11 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorBorderSecondary,
       testAlternateSource.colorChartSeriesPrimary,
       testAlternateSource.colorChartAccent,
+      testAlternateSource.colorTextInverse,
+      testAlternateSource.colorWritingBlankActiveSurface,
+      testAlternateSource.colorWritingBlankFilledBorder,
+      testAlternateSource.shadowWritingBlankFocus,
+      testAlternateSource.shadowWritingBlankActiveInset,
       PHASE5D_ALTERNATE_THEME_MARKER,
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
@@ -701,6 +742,17 @@ describe("generic app theme bridge contract", () => {
       ],
       phase5dAlternateTheme.appBridgeVars[
         "--app-shadow-writing-material-tooltip"
+      ],
+      phase5dAlternateTheme.appBridgeVars["--app-color-text-inverse"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-writing-blank-active-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-writing-blank-filled-border"
+      ],
+      phase5dAlternateTheme.appBridgeVars["--app-shadow-writing-blank-focus"],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-writing-blank-active-inset"
       ],
       phase5dAlternateTheme.appBridgeVars["--app-color-landing-cta-primary"],
       phase5dAlternateTheme.appBridgeVars[
@@ -771,6 +823,7 @@ describe("generic app theme bridge contract", () => {
         colorMaskSubtle: awesomicThemeTokens.overlay.maskSubtle,
         colorText: awesomicThemeTokens.color.ink,
         colorTextSecondary: awesomicThemeTokens.color.steel,
+        colorTextInverse: awesomicThemeTokens.color.textInverse,
         colorLinkSecondary: awesomicThemeTokens.color.linkSecondary,
         colorBorder: awesomicThemeTokens.color.pebble,
         colorBorderSecondary: awesomicThemeTokens.border.secondary.light,
@@ -786,6 +839,10 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.writingExam.color.headerSurface,
         colorWritingMaterialRowActiveSurface:
           awesomicThemeTokens.writingMaterial.color.rowActiveSurface,
+        colorWritingBlankActiveSurface:
+          awesomicThemeTokens.writingBlank.color.activeSurface,
+        colorWritingBlankFilledBorder:
+          awesomicThemeTokens.writingBlank.color.filledBorder,
         colorLandingCtaPrimary: awesomicThemeTokens.landingCta.primary,
         colorLandingCtaPrimaryHover:
           awesomicThemeTokens.landingCta.primaryHover,
@@ -856,6 +913,7 @@ describe("generic app theme bridge contract", () => {
         colorAuthCharacterInk: awesomicThemeTokens.authCharacter.color.ink,
         colorAuthCharacterEye: awesomicThemeTokens.authCharacter.color.eye,
         radius: `${awesomicThemeTokens.radius.base}px`,
+        radiusNone: `${awesomicThemeTokens.radius.none}px`,
         radiusCard: `${awesomicThemeTokens.radius.card}px`,
         radiusPill: `${awesomicThemeTokens.radius.pill}px`,
         radiusIndicator: `${awesomicThemeTokens.radius.indicator}px`,
@@ -890,6 +948,9 @@ describe("generic app theme bridge contract", () => {
         shadowMessage: awesomicThemeTokens.shadow.message,
         shadowWritingMaterialTooltip:
           awesomicThemeTokens.writingMaterial.shadow.tooltip,
+        shadowWritingBlankFocus: awesomicThemeTokens.writingBlank.shadow.focus,
+        shadowWritingBlankActiveInset:
+          awesomicThemeTokens.writingBlank.shadow.activeInset,
         shadowAuthPromptFocus: awesomicThemeTokens.authPrompt.focusShadow,
         shadowAuthPromptLoginFocus:
           awesomicThemeTokens.authPrompt.loginFocusShadow,
@@ -909,6 +970,12 @@ describe("generic app theme bridge contract", () => {
       "--app-color-border-secondary": "#f0f0f0",
       "--app-color-chart-series-primary": "#1677ff",
       "--app-color-chart-accent": "#13c2c2",
+      "--app-color-text-inverse": "#ffffff",
+      "--app-color-writing-blank-active-surface":
+        "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
+      "--app-color-writing-blank-filled-border":
+        "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+      "--app-radius-none": "0px",
       "--app-radius-indicator": "2px",
       "--app-radius-card": "8px",
       "--app-radius-pill": "10000px",
@@ -918,6 +985,10 @@ describe("generic app theme bridge contract", () => {
         "color-mix(in srgb, var(--app-color-primary) 8%, transparent)",
       "--app-radius-writing-material-compact-surface": "4px",
       "--app-shadow-writing-material-tooltip": "0 4px 12px rgb(0 0 0 / 6%)",
+      "--app-shadow-writing-blank-focus":
+        "0 0 0 2px color-mix(in srgb, var(--app-color-primary) 18%, transparent)",
+      "--app-shadow-writing-blank-active-inset":
+        "inset 0 -2px 0 var(--app-color-primary)",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
       "--app-font-size-heading-sm": "20px",
@@ -930,6 +1001,12 @@ describe("generic app theme bridge contract", () => {
       "--app-color-border-secondary": "#303030",
       "--app-color-chart-series-primary": "#1677ff",
       "--app-color-chart-accent": "#13c2c2",
+      "--app-color-text-inverse": "#ffffff",
+      "--app-color-writing-blank-active-surface":
+        "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
+      "--app-color-writing-blank-filled-border":
+        "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+      "--app-radius-none": "0px",
       "--app-radius-indicator": "2px",
       "--app-radius-card": "8px",
       "--app-radius-pill": "10000px",
@@ -939,6 +1016,10 @@ describe("generic app theme bridge contract", () => {
         "color-mix(in srgb, var(--app-color-primary) 8%, transparent)",
       "--app-radius-writing-material-compact-surface": "4px",
       "--app-shadow-writing-material-tooltip": "0 4px 12px rgb(0 0 0 / 6%)",
+      "--app-shadow-writing-blank-focus":
+        "0 0 0 2px color-mix(in srgb, var(--app-color-primary) 18%, transparent)",
+      "--app-shadow-writing-blank-active-inset":
+        "inset 0 -2px 0 var(--app-color-primary)",
     });
   });
 });

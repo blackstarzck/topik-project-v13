@@ -5,6 +5,7 @@ export const allowedAppBridgeVars = [
   "--app-color-mask-subtle",
   "--app-color-text",
   "--app-color-text-secondary",
+  "--app-color-text-inverse",
   "--app-color-link-secondary",
   "--app-color-border",
   "--app-color-border-secondary",
@@ -17,6 +18,8 @@ export const allowedAppBridgeVars = [
   "--app-color-fill-secondary",
   "--app-color-writing-exam-header-surface",
   "--app-color-writing-material-row-active-surface",
+  "--app-color-writing-blank-active-surface",
+  "--app-color-writing-blank-filled-border",
   "--app-color-landing-cta-primary",
   "--app-color-landing-cta-primary-hover",
   "--app-color-landing-cta-foreground",
@@ -57,6 +60,7 @@ export const allowedAppBridgeVars = [
   "--app-color-auth-character-ink",
   "--app-color-auth-character-eye",
   "--app-radius",
+  "--app-radius-none",
   "--app-radius-card",
   "--app-radius-pill",
   "--app-radius-indicator",
@@ -87,6 +91,8 @@ export const allowedAppBridgeVars = [
   "--app-shadow-popover",
   "--app-shadow-message",
   "--app-shadow-writing-material-tooltip",
+  "--app-shadow-writing-blank-focus",
+  "--app-shadow-writing-blank-active-inset",
   "--app-shadow-auth-prompt-focus",
   "--app-shadow-auth-prompt-login-focus",
 ] as const;
@@ -101,6 +107,7 @@ export type AppBridgeTokenSource = {
   colorMaskSubtle: string;
   colorText: string;
   colorTextSecondary: string;
+  colorTextInverse: string;
   colorLinkSecondary: string;
   colorBorder: string;
   colorBorderSecondary: string;
@@ -113,6 +120,8 @@ export type AppBridgeTokenSource = {
   colorFillSecondary: string;
   colorWritingExamHeaderSurface: string;
   colorWritingMaterialRowActiveSurface: string;
+  colorWritingBlankActiveSurface: string;
+  colorWritingBlankFilledBorder: string;
   colorLandingCtaPrimary: string;
   colorLandingCtaPrimaryHover: string;
   colorLandingCtaForeground: string;
@@ -153,6 +162,7 @@ export type AppBridgeTokenSource = {
   colorAuthCharacterInk: string;
   colorAuthCharacterEye: string;
   radius: string;
+  radiusNone: string;
   radiusCard: string;
   radiusPill: string;
   radiusIndicator: string;
@@ -183,6 +193,8 @@ export type AppBridgeTokenSource = {
   shadowPopover: string;
   shadowMessage: string;
   shadowWritingMaterialTooltip: string;
+  shadowWritingBlankFocus: string;
+  shadowWritingBlankActiveInset: string;
   shadowAuthPromptFocus: string;
   shadowAuthPromptLoginFocus: string;
 };
@@ -197,6 +209,7 @@ export function createAppBridgeVars(
     "--app-color-mask-subtle": source.colorMaskSubtle,
     "--app-color-text": source.colorText,
     "--app-color-text-secondary": source.colorTextSecondary,
+    "--app-color-text-inverse": source.colorTextInverse,
     "--app-color-link-secondary": source.colorLinkSecondary,
     "--app-color-border": source.colorBorder,
     "--app-color-border-secondary": source.colorBorderSecondary,
@@ -211,6 +224,10 @@ export function createAppBridgeVars(
       source.colorWritingExamHeaderSurface,
     "--app-color-writing-material-row-active-surface":
       source.colorWritingMaterialRowActiveSurface,
+    "--app-color-writing-blank-active-surface":
+      source.colorWritingBlankActiveSurface,
+    "--app-color-writing-blank-filled-border":
+      source.colorWritingBlankFilledBorder,
     "--app-color-landing-cta-primary": source.colorLandingCtaPrimary,
     "--app-color-landing-cta-primary-hover": source.colorLandingCtaPrimaryHover,
     "--app-color-landing-cta-foreground": source.colorLandingCtaForeground,
@@ -268,6 +285,7 @@ export function createAppBridgeVars(
     "--app-color-auth-character-ink": source.colorAuthCharacterInk,
     "--app-color-auth-character-eye": source.colorAuthCharacterEye,
     "--app-radius": source.radius,
+    "--app-radius-none": source.radiusNone,
     "--app-radius-card": source.radiusCard,
     "--app-radius-pill": source.radiusPill,
     "--app-radius-indicator": source.radiusIndicator,
@@ -301,6 +319,9 @@ export function createAppBridgeVars(
     "--app-shadow-message": source.shadowMessage,
     "--app-shadow-writing-material-tooltip":
       source.shadowWritingMaterialTooltip,
+    "--app-shadow-writing-blank-focus": source.shadowWritingBlankFocus,
+    "--app-shadow-writing-blank-active-inset":
+      source.shadowWritingBlankActiveInset,
     "--app-shadow-auth-prompt-focus": source.shadowAuthPromptFocus,
     "--app-shadow-auth-prompt-login-focus": source.shadowAuthPromptLoginFocus,
   };

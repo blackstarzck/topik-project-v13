@@ -37,6 +37,16 @@ const problemTypeTabsCss = readFileSync(
   ),
   "utf8",
 );
+const interactiveBlankCss = readFileSync(
+  path.join(
+    process.cwd(),
+    "src",
+    "components",
+    "writing",
+    "InteractiveBlankPrompt.module.css",
+  ),
+  "utf8",
+);
 
 function normalizeSelector(selector: string) {
   return selector.replace(/\s+/gu, " ").trim();
@@ -68,12 +78,11 @@ describe("global CSS radius token contract", () => {
     );
   });
 
-  test("preserves asymmetric radii that define composite shapes", () => {
-    const asymmetricRadii = ["14px 14px 6px 6px", "6px 6px 2px 2px"];
-
-    for (const value of asymmetricRadii) {
-      expect(globalCss).toContain(`border-radius: ${value};`);
-    }
+  test("moves the inline blank composite radius to atomic app roles", () => {
+    expect(globalCss).not.toContain("border-radius: 6px 6px 2px 2px;");
+    expect(interactiveBlankCss.replace(/\s+/gu, " ")).toContain(
+      "border-radius: var(--app-radius) var(--app-radius) var(--app-radius-indicator) var(--app-radius-indicator);",
+    );
   });
 
   test("keeps the problem type lock badge on the shared pill radius", () => {

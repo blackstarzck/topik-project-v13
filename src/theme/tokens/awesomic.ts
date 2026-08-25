@@ -10,6 +10,7 @@ export const awesomicThemeTokens = {
     pebble: "#d4d4d8",
     mist: "#f4f4f5",
     snow: "#ffffff",
+    textInverse: "#ffffff",
     linkSecondary: "#3254F2",
   },
   border: {
@@ -42,6 +43,19 @@ export const awesomicThemeTokens = {
     },
     shadow: {
       tooltip: "0 4px 12px rgb(0 0 0 / 6%)",
+    },
+  },
+  writingBlank: {
+    color: {
+      activeSurface:
+        "color-mix(in srgb, var(--app-color-primary) 6%, var(--app-color-bg-container))",
+      filledBorder:
+        "color-mix(in srgb, var(--app-color-primary) 42%, var(--app-color-border))",
+    },
+    shadow: {
+      focus:
+        "0 0 0 2px color-mix(in srgb, var(--app-color-primary) 18%, transparent)",
+      activeInset: "inset 0 -2px 0 var(--app-color-primary)",
     },
   },
   landingCta: {
@@ -128,6 +142,7 @@ export const awesomicThemeTokens = {
     // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
     base: 6,
+    none: 0,
     badge: 4,
     button: 6,
     card: 8,
@@ -196,6 +211,7 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-mask-subtle": awesomicThemeTokens.overlay.maskSubtle,
     "--app-color-text": awesomicThemeTokens.color.ink,
     "--app-color-text-secondary": awesomicThemeTokens.color.steel,
+    "--app-color-text-inverse": awesomicThemeTokens.color.textInverse,
     "--app-color-link-secondary": awesomicThemeTokens.color.linkSecondary,
     "--app-color-border": awesomicThemeTokens.color.pebble,
     "--app-color-border-secondary":
@@ -211,6 +227,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.writingExam.color.headerSurface,
     "--app-color-writing-material-row-active-surface":
       awesomicThemeTokens.writingMaterial.color.rowActiveSurface,
+    "--app-color-writing-blank-active-surface":
+      awesomicThemeTokens.writingBlank.color.activeSurface,
+    "--app-color-writing-blank-filled-border":
+      awesomicThemeTokens.writingBlank.color.filledBorder,
     "--app-color-landing-cta-primary": awesomicThemeTokens.landingCta.primary,
     "--app-color-landing-cta-primary-hover":
       awesomicThemeTokens.landingCta.primaryHover,
@@ -288,6 +308,7 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-auth-character-eye":
       awesomicThemeTokens.authCharacter.color.eye,
     "--app-radius": `${awesomicThemeTokens.radius.base}px`,
+    "--app-radius-none": `${awesomicThemeTokens.radius.none}px`,
     "--app-radius-card": `${awesomicThemeTokens.radius.card}px`,
     "--app-radius-pill": `${awesomicThemeTokens.radius.pill}px`,
     "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
@@ -322,6 +343,10 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-shadow-message": awesomicThemeTokens.shadow.message,
     "--app-shadow-writing-material-tooltip":
       awesomicThemeTokens.writingMaterial.shadow.tooltip,
+    "--app-shadow-writing-blank-focus":
+      awesomicThemeTokens.writingBlank.shadow.focus,
+    "--app-shadow-writing-blank-active-inset":
+      awesomicThemeTokens.writingBlank.shadow.activeInset,
     "--app-shadow-auth-prompt-focus":
       awesomicThemeTokens.authPrompt.focusShadow,
     "--app-shadow-auth-prompt-login-focus":

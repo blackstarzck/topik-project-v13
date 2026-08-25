@@ -353,11 +353,16 @@ export function ShortAnswerWriting51Workspace({
                     type="button"
                     role="tab"
                     aria-selected={index === activeBlankIndex}
-                    className={
+                    className={[
+                      "writing-blank-tab",
+                      styles.blankTab,
                       index === activeBlankIndex
-                        ? "writing-blank-tab writing-blank-tab--active"
-                        : "writing-blank-tab"
-                    }
+                        ? "writing-blank-tab--active"
+                        : "",
+                      index === activeBlankIndex ? styles.blankTabActive : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     onClick={() => setActiveBlankIndex(index)}
                   >
                     {blankDisplay(blank, index)}
@@ -365,7 +370,9 @@ export function ShortAnswerWriting51Workspace({
                 ))}
               </div>
 
-              <div className="writing-answer-card">
+              <div
+                className={["writing-answer-card", styles.answerCard].join(" ")}
+              >
                 <div className="writing-answer-card__head">
                   <Text
                     type={inRecommended ? "success" : "secondary"}
