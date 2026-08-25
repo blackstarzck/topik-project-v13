@@ -24,6 +24,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { clearClientRecoveryForLogout } from "@/lib/writing/client-recovery-cleanup";
 import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
+import styles from "./WorkspaceShell.module.css";
 
 const { Content } = Layout;
 const { Text } = Typography;
@@ -313,10 +314,17 @@ export function WorkspaceShell({
             {/* Absolutely centered in the bar so it stays put regardless of the
                 menu/bell widths (e.g. an unread badge on the bell). */}
             <span
-              className="app-workspace-mobile-brand"
+              className={[
+                "app-workspace-mobile-brand",
+                styles.mobileBrand,
+              ].join(" ")}
               aria-label={t("brand")}
             >
-              <BrandLogo height={48} loading="eager" />
+              <BrandLogo
+                height={48}
+                loading="eager"
+                imageClassName={[styles.mobileBrandImage].join(" ")}
+              />
             </span>
             {hidesGlobalFloatingActions ? null : (
               <div className="app-workspace-mobile-actions">{userActions}</div>

@@ -34,6 +34,13 @@ const SIDEBAR_NAV_CSS_PATH = join(
 const SIDEBAR_NAV_CSS = existsSync(SIDEBAR_NAV_CSS_PATH)
   ? readFileSync(SIDEBAR_NAV_CSS_PATH, "utf8")
   : "";
+const WORKSPACE_SHELL_CSS_PATH = join(
+  process.cwd(),
+  "src/components/app/WorkspaceShell.module.css",
+);
+const WORKSPACE_SHELL_CSS = existsSync(WORKSPACE_SHELL_CSS_PATH)
+  ? readFileSync(WORKSPACE_SHELL_CSS_PATH, "utf8")
+  : "";
 
 const navMock = vi.hoisted(() => ({
   routerPush: vi.fn(),
@@ -1091,20 +1098,67 @@ describe("WorkspaceShell", () => {
   });
 
   it("keeps the responsive workspace logo 48px tall", () => {
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
     const source = readFileSync(
       join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
       "utf8",
     );
-    const mobileBrandRule = cssRule(".app-workspace-mobile-brand");
-    const mobileLogoRule = cssRule(
-      ".app-workspace-mobile-brand .brand-logo__image",
+    const mobileBrandRule = cssRuleFrom(WORKSPACE_SHELL_CSS, ".mobileBrand");
+    const mobileLogoRule = cssRuleFrom(
+      WORKSPACE_SHELL_CSS,
+      ".mobileBrand .mobileBrandImage",
     );
+    const responsiveMobileBrandRule = cssRulesFrom(
+      WORKSPACE_SHELL_CSS,
+      ".mobileBrand",
+    ).find((rule) => rule.includes("overflow: hidden;"));
+    const mobileBrand = container.querySelector(".app-workspace-mobile-brand");
+    const mobileLogo = mobileBrand?.querySelector(".brand-logo__image");
+    const globalSelectors = cssSelectorsFrom(GLOBAL_CSS);
 
-    expect(source).toContain('<BrandLogo height={48} loading="eager" />');
+    expect(source).toContain(
+      'import styles from "./WorkspaceShell.module.css";',
+    );
+    expect(source).toMatch(
+      /className=\{\[\s*"app-workspace-mobile-brand",\s*styles\.mobileBrand,?\s*\]\.join\(" "\)\}/u,
+    );
+    expect(source).toContain(
+      'imageClassName={[styles.mobileBrandImage].join(" ")}',
+    );
+    expect(mobileBrand?.classList.contains("app-workspace-mobile-brand")).toBe(
+      true,
+    );
+    expect(mobileBrand?.classList.length).toBe(2);
+    expect(mobileLogo?.classList.contains("brand-logo__image")).toBe(true);
+    expect(mobileLogo?.classList.length).toBe(2);
+    expect(mobileBrandRule).toContain("position: absolute;");
+    expect(mobileBrandRule).toContain("left: 50%;");
+    expect(mobileBrandRule).toContain("top: 50%;");
+    expect(mobileBrandRule).toContain("transform: translate(-50%, -50%);");
+    expect(mobileBrandRule).toContain("display: inline-flex;");
+    expect(mobileBrandRule).toContain("align-items: center;");
     expect(mobileBrandRule).toContain("height: 48px;");
     expect(mobileBrandRule).toContain("justify-content: center;");
+    expect(mobileBrandRule).toContain("min-width: 0;");
+    expect(mobileBrandRule).toContain("max-width: 48vw;");
+    expect(mobileBrandRule).toContain("line-height: 0;");
     expect(mobileLogoRule).toContain("width: auto;");
     expect(mobileLogoRule).toContain("height: 48px;");
+    expect(responsiveMobileBrandRule).toContain("overflow: hidden;");
+    expect(responsiveMobileBrandRule).toContain("max-width: 48vw;");
+    expect(globalSelectors).not.toContain(".app-workspace-mobile-brand");
+    expect(globalSelectors).not.toContain(
+      ".app-workspace-mobile-brand .brand-logo__image",
+    );
   });
 
   it("pins the mobile GNB to the top and aligns its icons to the content edge", () => {

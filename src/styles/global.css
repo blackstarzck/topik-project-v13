@@ -4023,25 +4023,6 @@
   }
 }
 
-.app-workspace-mobile-brand {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: 48px;
-  max-width: 48vw;
-  line-height: 0;
-}
-
-.app-workspace-mobile-brand .brand-logo__image {
-  width: auto;
-  height: 48px;
-}
-
 .app-workspace-mobile-actions {
   position: relative;
   z-index: 1;
@@ -4057,11 +4038,6 @@
 }
 
 @media (max-width: 767.98px) {
-  .app-workspace-mobile-brand {
-    overflow: hidden;
-    max-width: 48vw;
-  }
-
   .app-workspace-mobile-bar .ant-typography-secondary {
     display: none;
   }

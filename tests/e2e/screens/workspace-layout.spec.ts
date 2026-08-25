@@ -308,6 +308,11 @@ async function getShellMetrics(page: Page) {
     const mobileBar = document.querySelector<HTMLElement>(
       ".app-workspace-mobile-bar",
     );
+    const mobileBrand = document.querySelector<HTMLElement>(
+      ".app-workspace-mobile-brand",
+    );
+    const mobileBrandImage =
+      mobileBrand?.querySelector<HTMLElement>(".brand-logo__image");
 
     if (!content || !main) throw new Error("Missing workspace shell content");
 
@@ -316,6 +321,9 @@ async function getShellMetrics(page: Page) {
     const siderRect = sider?.getBoundingClientRect() ?? null;
     const siderStyle = sider ? window.getComputedStyle(sider) : null;
     const mobileBarRect = mobileBar?.getBoundingClientRect() ?? null;
+    const mobileBrandRect = mobileBrand?.getBoundingClientRect() ?? null;
+    const mobileBrandImageRect =
+      mobileBrandImage?.getBoundingClientRect() ?? null;
     const mobileBarStyle = mobileBar
       ? window.getComputedStyle(mobileBar)
       : null;
@@ -324,6 +332,17 @@ async function getShellMetrics(page: Page) {
       contentHeight: contentRect.height,
       contentLeft: contentRect.left,
       mainLeft: mainRect.left,
+      mobileBrandCenterDelta:
+        mobileBarRect && mobileBrandRect
+          ? Math.abs(
+              mobileBrandRect.left +
+                mobileBrandRect.width / 2 -
+                (mobileBarRect.left + mobileBarRect.width / 2),
+            )
+          : null,
+      mobileBrandHeight: mobileBrandRect?.height ?? null,
+      mobileBrandImageHeight: mobileBrandImageRect?.height ?? null,
+      mobileBrandTagName: mobileBrand?.tagName ?? null,
       mobileBarDisplay: mobileBarStyle?.display ?? null,
       mobileBarFlex: mobileBarStyle?.flex ?? null,
       mobileBarHeight: mobileBarRect?.height ?? 0,
@@ -428,6 +447,7 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
 
   if (isDesktop) {
     expect(metrics.mobileBarTagName).toBeNull();
+    expect(metrics.mobileBrandTagName).toBeNull();
     expect(metrics.siderDisplay).not.toBe("none");
     expect(
       Math.abs((metrics.siderWidth ?? Number.NaN) - 300),
@@ -457,6 +477,12 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
     expect(metrics.mobileBarPosition).toBe("sticky");
     expect(metrics.mobileBarTop).toBe("0px");
     expect(metrics.mobileBarZIndex).toBe("100");
+    expect(metrics.mobileBrandTagName).toBe("SPAN");
+    expect(metrics.mobileBrandHeight).toBe(48);
+    expect(metrics.mobileBrandImageHeight).toBe(48);
+    expect(metrics.mobileBrandCenterDelta ?? Number.NaN).toBeLessThanOrEqual(
+      0.5,
+    );
     expect(metrics.siderDisplay).toBe("none");
   }
 

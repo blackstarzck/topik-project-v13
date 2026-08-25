@@ -1,0 +1,25 @@
+.mobileBrand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 48px;
+  max-width: 48vw;
+  line-height: 0;
+}
+
+.mobileBrand .mobileBrandImage {
+  width: auto;
+  height: 48px;
+}
+
+@media (max-width: 767.98px) {
+  .mobileBrand {
+    overflow: hidden;
+    max-width: 48vw;
+  }
+}
