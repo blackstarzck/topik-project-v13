@@ -25,7 +25,7 @@ import { clearClientRecoveryForLogout } from "@/lib/writing/client-recovery-clea
 import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
@@ -303,7 +303,7 @@ export function WorkspaceShell({
       )}
       <Layout className="app-workspace-main">
         {hidesWorkspaceChrome ? null : isMobile ? (
-          <Header className="app-workspace-mobile-bar">
+          <header className="app-workspace-mobile-bar">
             <Button
               type="text"
               aria-label={t("openMenu")}
@@ -321,7 +321,7 @@ export function WorkspaceShell({
             {hidesGlobalFloatingActions ? null : (
               <div className="app-workspace-mobile-actions">{userActions}</div>
             )}
-          </Header>
+          </header>
         ) : hidesGlobalFloatingActions ? null : (
           /* No desktop header exists, so global user actions float fixed at
              the top-right corner on regular workspace pages. */

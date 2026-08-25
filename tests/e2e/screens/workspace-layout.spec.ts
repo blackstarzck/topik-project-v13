@@ -316,12 +316,26 @@ async function getShellMetrics(page: Page) {
     const siderRect = sider?.getBoundingClientRect() ?? null;
     const siderStyle = sider ? window.getComputedStyle(sider) : null;
     const mobileBarRect = mobileBar?.getBoundingClientRect() ?? null;
+    const mobileBarStyle = mobileBar
+      ? window.getComputedStyle(mobileBar)
+      : null;
 
     return {
       contentHeight: contentRect.height,
       contentLeft: contentRect.left,
       mainLeft: mainRect.left,
+      mobileBarDisplay: mobileBarStyle?.display ?? null,
+      mobileBarFlex: mobileBarStyle?.flex ?? null,
       mobileBarHeight: mobileBarRect?.height ?? 0,
+      mobileBarIsAntHeader:
+        mobileBar?.classList.contains("ant-layout-header") ?? false,
+      mobileBarLineHeight: mobileBarStyle?.lineHeight ?? null,
+      mobileBarPaddingInlineEnd: mobileBarStyle?.paddingInlineEnd ?? null,
+      mobileBarPaddingInlineStart: mobileBarStyle?.paddingInlineStart ?? null,
+      mobileBarPosition: mobileBarStyle?.position ?? null,
+      mobileBarTagName: mobileBar?.tagName ?? null,
+      mobileBarTop: mobileBarStyle?.top ?? null,
+      mobileBarZIndex: mobileBarStyle?.zIndex ?? null,
       siderDisplay: siderStyle?.display ?? null,
       siderHeight: siderRect?.height ?? null,
       siderRight: siderRect?.right ?? null,
@@ -413,6 +427,7 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
   );
 
   if (isDesktop) {
+    expect(metrics.mobileBarTagName).toBeNull();
     expect(metrics.siderDisplay).not.toBe("none");
     expect(
       Math.abs((metrics.siderWidth ?? Number.NaN) - 300),
@@ -431,6 +446,17 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
       metrics.viewportHeight - 1,
     );
   } else {
+    expect(metrics.mobileBarTagName).toBe("HEADER");
+    expect(metrics.mobileBarIsAntHeader).toBe(false);
+    expect(metrics.mobileBarDisplay).toBe("flex");
+    expect(metrics.mobileBarFlex).toBe("0 0 auto");
+    expect(metrics.mobileBarHeight).toBe(68);
+    expect(metrics.mobileBarPaddingInlineStart).toBe("6px");
+    expect(metrics.mobileBarPaddingInlineEnd).toBe("6px");
+    expect(metrics.mobileBarLineHeight).toBe("normal");
+    expect(metrics.mobileBarPosition).toBe("sticky");
+    expect(metrics.mobileBarTop).toBe("0px");
+    expect(metrics.mobileBarZIndex).toBe("100");
     expect(metrics.siderDisplay).toBe("none");
   }
 
@@ -446,6 +472,11 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
   if (isDesktop) {
     const scrolledTop = await page
       .locator(".app-workspace-sider")
+      .evaluate((node) => node.getBoundingClientRect().top);
+    expect(Math.abs(scrolledTop)).toBeLessThanOrEqual(1);
+  } else {
+    const scrolledTop = await page
+      .locator("header.app-workspace-mobile-bar")
       .evaluate((node) => node.getBoundingClientRect().top);
     expect(Math.abs(scrolledTop)).toBeLessThanOrEqual(1);
   }

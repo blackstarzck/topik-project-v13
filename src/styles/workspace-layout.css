@@ -24,6 +24,21 @@
   background: var(--app-color-bg-layout);
 }
 
+.app-workspace-mobile-bar {
+  display: flex;
+  flex: 0 0 auto;
+  min-height: 68px;
+  height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--app-color-border);
+  background: var(--app-color-bg-container);
+  color: var(--app-color-text);
+  line-height: normal;
+  padding-block: 0;
+  padding-inline: 6px;
+}
+
 .app-workspace-content.ant-layout-content {
   min-height: 100vh;
   min-height: max(100vh, 100dvh);
@@ -122,6 +137,12 @@
 
   .app-workspace-sider {
     display: none;
+  }
+
+  .app-workspace-mobile-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
   .app-workspace-content.ant-layout-content {

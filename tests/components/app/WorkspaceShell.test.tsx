@@ -1108,15 +1108,57 @@ describe("WorkspaceShell", () => {
   });
 
   it("pins the mobile GNB to the top and aligns its icons to the content edge", () => {
-    const stickyRule = cssRulesFrom(
-      GLOBAL_CSS,
+    const { container } = renderWithIntl(
+      <WorkspaceShell
+        role="learner"
+        userId="user-1"
+        email="learner@example.com"
+        planLabel="premium"
+      >
+        <div>body</div>
+      </WorkspaceShell>,
+    );
+    const source = readFileSync(
+      join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
+      "utf8",
+    );
+    const layoutRule = workspaceLayoutCssRule(
+      ".app-workspace-layout.ant-layout",
+    );
+    const headerRule = workspaceLayoutCssRule(".app-workspace-mobile-bar");
+    const stickyRule = workspaceLayoutCssRules(
       ".app-workspace-mobile-bar",
     ).find((body) => body.includes("position: sticky;"));
-    const headerRule = cssRule(".app-workspace-mobile-bar.ant-layout-header");
+    const globalSelectors = cssSelectorsFrom(GLOBAL_CSS);
 
+    expect(
+      container.querySelector("header.app-workspace-mobile-bar"),
+    ).toBeTruthy();
+    expect(container.querySelector(".ant-layout-header")).toBeNull();
+    expect(source).not.toContain("const { Header, Content } = Layout;");
+    expect(source).toContain('<header className="app-workspace-mobile-bar">');
+    expect(layoutRule).toContain("--workspace-mobile-bar-height: 64px;");
+    expect(headerRule).toContain("display: flex;");
+    expect(headerRule).toContain("flex: 0 0 auto;");
+    expect(headerRule).toContain("min-height: 68px;");
+    expect(headerRule).toContain("height: 68px;");
+    expect(headerRule).toContain("align-items: center;");
+    expect(headerRule).toContain("justify-content: space-between;");
+    expect(headerRule).toContain(
+      "border-bottom: 1px solid var(--app-color-border);",
+    );
+    expect(headerRule).toContain("background: var(--app-color-bg-container);");
+    expect(headerRule).toContain("color: var(--app-color-text);");
+    expect(headerRule).toContain("line-height: normal;");
+    expect(headerRule).toContain("padding-block: 0;");
+    expect(headerRule).toContain("padding-inline: 6px;");
     expect(stickyRule).toBeTruthy();
     expect(stickyRule).toContain("top: 0;");
-    expect(headerRule).toContain("padding-inline: 6px;");
+    expect(stickyRule).toContain("z-index: 100;");
+    expect(globalSelectors).not.toContain(".app-workspace-mobile-bar");
+    expect(globalSelectors).not.toContain(
+      ".app-workspace-mobile-bar.ant-layout-header",
+    );
   });
 
   it("keeps growth dashboard available for free-plan learners", () => {
