@@ -90,6 +90,15 @@ const DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS = {
   "--app-radius-auth-character-pill": "999px",
 } as const;
 
+const DEFAULT_AUTH_SURFACE_BRIDGE_VARS = {
+  "--app-color-auth-consent-document-surface":
+    "color-mix(in srgb, var(--app-color-bg-container) 94%, var(--app-color-bg-layout))",
+  "--app-radius-auth-verify-email-card": "28px",
+  "--app-radius-auth-verify-email-card-compact": "12px",
+  "--app-shadow-auth-verify-email-card":
+    "0 18px 44px color-mix(in srgb, var(--app-color-primary) 10%, transparent), var(--app-shadow-elevated)",
+} as const;
+
 const DEFAULT_LANDING_HERO_BRIDGE_VARS = {
   "--app-color-landing-hero-outer-canvas": "#f7f3ef",
   "--app-color-landing-hero-media-fallback": "#ccc2b7",
@@ -165,6 +174,7 @@ const DEFAULT_BRIDGE_VARS = {
     ...DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS,
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
+    ...DEFAULT_AUTH_SURFACE_BRIDGE_VARS,
     ...DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS,
     "--app-radius": "6px",
     "--app-radius-none": "0px",
@@ -216,6 +226,7 @@ const DEFAULT_BRIDGE_VARS = {
     ...DEFAULT_LANDING_PORTFOLIO_BRIDGE_VARS,
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
+    ...DEFAULT_AUTH_SURFACE_BRIDGE_VARS,
     ...DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS,
     "--app-radius": "6px",
     "--app-radius-none": "0px",

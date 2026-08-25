@@ -384,6 +384,26 @@ value through the same source contract.
 | Control corner | `8px` | `--app-radius-auth-prompt-control` |
 | Control height | `50px` | `--app-size-auth-prompt-control` |
 
+## Tokens — Auth Completion Surfaces
+
+The required-document card on `/auth/consent` and the verification card on
+`/auth/verify-email` own semantic surface recipes. The consent role applies only
+to the nested document card; the outer consent card keeps its existing shared
+surface. The verification card uses a compact corner below `479.98px` while its
+shadow remains the same recipe. Light and dark currently preserve the same
+values, but alternate themes must replace all four roles through the bridge.
+
+| Meaning | Awesomic value | App bridge |
+| --- | --- | --- |
+| Consent document surface | container at 94% mixed with layout | `--app-color-auth-consent-document-surface` |
+| Verify card corner | `28px` | `--app-radius-auth-verify-email-card` |
+| Verify compact corner | `12px` | `--app-radius-auth-verify-email-card-compact` |
+| Verify card shadow | primary-tinted lift plus elevated shadow | `--app-shadow-auth-verify-email-card` |
+
+The global stylesheet consumes these app bridge variables directly. They do not
+have Tailwind foundation aliases, and resend, cooldown, loading, success, and
+error behavior remain outside this visual token contract.
+
 ## Tokens — Auth Character Illustration
 
 로그인·회원가입 프롬프트의 네 캐릭터는 인터페이스 상태색이 아니라 제품 삽화다.

@@ -152,6 +152,19 @@ export const awesomicThemeTokens = {
     loginFocusShadow: "0 0 0 2px rgba(82, 102, 255, 0.1)",
     radius: 8,
   },
+  authConsent: {
+    documentSurface:
+      "color-mix(in srgb, var(--app-color-bg-container) 94%, var(--app-color-bg-layout))",
+  },
+  authVerifyEmail: {
+    radius: {
+      card: 28,
+      compact: 12,
+    },
+    shadow: {
+      card: "0 18px 44px color-mix(in srgb, var(--app-color-primary) 10%, transparent), var(--app-shadow-elevated)",
+    },
+  },
   authCharacter: {
     color: {
       purple: "#6c3ff5",
@@ -338,6 +351,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.authPrompt.focusOutline,
     "--app-color-auth-prompt-login-focus-border":
       awesomicThemeTokens.authPrompt.loginFocusBorder,
+    "--app-color-auth-consent-document-surface":
+      awesomicThemeTokens.authConsent.documentSurface,
     "--app-color-auth-character-purple":
       awesomicThemeTokens.authCharacter.color.purple,
     "--app-color-auth-character-charcoal":
@@ -357,6 +372,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
     "--app-radius-landing-hero-cta": `${awesomicThemeTokens.radius.landingHeroCta}px`,
     "--app-radius-auth-prompt-control": `${awesomicThemeTokens.authPrompt.radius}px`,
+    "--app-radius-auth-verify-email-card": `${awesomicThemeTokens.authVerifyEmail.radius.card}px`,
+    "--app-radius-auth-verify-email-card-compact": `${awesomicThemeTokens.authVerifyEmail.radius.compact}px`,
     "--app-radius-auth-character-base-edge": `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
     "--app-radius-auth-character-body-top": `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
     "--app-radius-auth-character-pill": `${awesomicThemeTokens.authCharacter.radius.pill}px`,
@@ -402,6 +419,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.authPrompt.focusShadow,
     "--app-shadow-auth-prompt-login-focus":
       awesomicThemeTokens.authPrompt.loginFocusShadow,
+    "--app-shadow-auth-verify-email-card":
+      awesomicThemeTokens.authVerifyEmail.shadow.card,
   } as const satisfies AppBridgeVars;
 }
 

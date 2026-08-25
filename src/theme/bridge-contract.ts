@@ -59,6 +59,7 @@ export const allowedAppBridgeVars = [
   "--app-background-landing-portfolio-media-overlay",
   "--app-color-auth-prompt-focus-outline",
   "--app-color-auth-prompt-login-focus-border",
+  "--app-color-auth-consent-document-surface",
   "--app-color-auth-character-purple",
   "--app-color-auth-character-charcoal",
   "--app-color-auth-character-coral",
@@ -72,6 +73,8 @@ export const allowedAppBridgeVars = [
   "--app-radius-indicator",
   "--app-radius-landing-hero-cta",
   "--app-radius-auth-prompt-control",
+  "--app-radius-auth-verify-email-card",
+  "--app-radius-auth-verify-email-card-compact",
   "--app-radius-auth-character-base-edge",
   "--app-radius-auth-character-body-top",
   "--app-radius-auth-character-pill",
@@ -105,6 +108,7 @@ export const allowedAppBridgeVars = [
   "--app-shadow-writing-manuscript-conclusion-inset",
   "--app-shadow-auth-prompt-focus",
   "--app-shadow-auth-prompt-login-focus",
+  "--app-shadow-auth-verify-email-card",
 ] as const;
 
 export type AppBridgeVarName = (typeof allowedAppBridgeVars)[number];
@@ -171,6 +175,7 @@ export type AppBridgeTokenSource = {
   backgroundLandingPortfolioMediaOverlay: string;
   colorAuthPromptFocusOutline: string;
   colorAuthPromptLoginFocusBorder: string;
+  colorAuthConsentDocumentSurface: string;
   colorAuthCharacterPurple: string;
   colorAuthCharacterCharcoal: string;
   colorAuthCharacterCoral: string;
@@ -184,6 +189,8 @@ export type AppBridgeTokenSource = {
   radiusIndicator: string;
   radiusLandingHeroCta: string;
   radiusAuthPromptControl: string;
+  radiusAuthVerifyEmailCard: string;
+  radiusAuthVerifyEmailCardCompact: string;
   radiusAuthCharacterBaseEdge: string;
   radiusAuthCharacterBodyTop: string;
   radiusAuthCharacterPill: string;
@@ -217,6 +224,7 @@ export type AppBridgeTokenSource = {
   shadowWritingManuscriptConclusionInset: string;
   shadowAuthPromptFocus: string;
   shadowAuthPromptLoginFocus: string;
+  shadowAuthVerifyEmailCard: string;
 };
 
 export function createAppBridgeVars(
@@ -310,6 +318,8 @@ export function createAppBridgeVars(
     "--app-color-auth-prompt-focus-outline": source.colorAuthPromptFocusOutline,
     "--app-color-auth-prompt-login-focus-border":
       source.colorAuthPromptLoginFocusBorder,
+    "--app-color-auth-consent-document-surface":
+      source.colorAuthConsentDocumentSurface,
     "--app-color-auth-character-purple": source.colorAuthCharacterPurple,
     "--app-color-auth-character-charcoal": source.colorAuthCharacterCharcoal,
     "--app-color-auth-character-coral": source.colorAuthCharacterCoral,
@@ -323,6 +333,9 @@ export function createAppBridgeVars(
     "--app-radius-indicator": source.radiusIndicator,
     "--app-radius-landing-hero-cta": source.radiusLandingHeroCta,
     "--app-radius-auth-prompt-control": source.radiusAuthPromptControl,
+    "--app-radius-auth-verify-email-card": source.radiusAuthVerifyEmailCard,
+    "--app-radius-auth-verify-email-card-compact":
+      source.radiusAuthVerifyEmailCardCompact,
     "--app-radius-auth-character-base-edge": source.radiusAuthCharacterBaseEdge,
     "--app-radius-auth-character-body-top": source.radiusAuthCharacterBodyTop,
     "--app-radius-auth-character-pill": source.radiusAuthCharacterPill,
@@ -363,5 +376,6 @@ export function createAppBridgeVars(
       source.shadowWritingManuscriptConclusionInset,
     "--app-shadow-auth-prompt-focus": source.shadowAuthPromptFocus,
     "--app-shadow-auth-prompt-login-focus": source.shadowAuthPromptLoginFocus,
+    "--app-shadow-auth-verify-email-card": source.shadowAuthVerifyEmailCard,
   };
 }

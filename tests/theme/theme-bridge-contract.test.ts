@@ -86,6 +86,7 @@ const testAlternateSource = {
     "linear-gradient(120deg, rgba(112, 72, 232, 0.41), rgba(18, 184, 134, 0.33))",
   colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
   colorAuthPromptLoginFocusBorder: "#e03f9f",
+  colorAuthConsentDocumentSurface: "#f7c8ea",
   colorAuthCharacterPurple: "#7416a8",
   colorAuthCharacterCharcoal: "#17343c",
   colorAuthCharacterCoral: "#f94f78",
@@ -102,6 +103,8 @@ const testAlternateSource = {
   radiusIndicatorNumber: 3,
   radiusLandingHeroCta: "13px",
   radiusAuthPromptControl: "20px",
+  radiusAuthVerifyEmailCard: "29px",
+  radiusAuthVerifyEmailCardCompact: "13px",
   radiusAuthCharacterBaseEdge: "2px",
   radiusAuthCharacterBodyTop: "11px",
   radiusAuthCharacterPill: "777px",
@@ -138,6 +141,7 @@ const testAlternateSource = {
     "inset 0 0 0 5px rgba(185, 101, 0, 0.37)",
   shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
   shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
+  shadowAuthVerifyEmailCard: "0 12px 30px rgba(91, 43, 196, 0.28)",
 } as const;
 
 const authCharacterBridgeVars = [
@@ -324,6 +328,7 @@ describe("generic app theme bridge contract", () => {
         "linear-gradient(120deg, rgba(112, 72, 232, 0.41), rgba(18, 184, 134, 0.33))",
       "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
       "--app-color-auth-prompt-login-focus-border": "#e03f9f",
+      "--app-color-auth-consent-document-surface": "#f7c8ea",
       "--app-color-auth-character-purple": "#7416a8",
       "--app-color-auth-character-charcoal": "#17343c",
       "--app-color-auth-character-coral": "#f94f78",
@@ -337,6 +342,8 @@ describe("generic app theme bridge contract", () => {
       "--app-radius-indicator": "3px",
       "--app-radius-landing-hero-cta": "13px",
       "--app-radius-auth-prompt-control": "20px",
+      "--app-radius-auth-verify-email-card": "29px",
+      "--app-radius-auth-verify-email-card-compact": "13px",
       "--app-radius-auth-character-base-edge": "2px",
       "--app-radius-auth-character-body-top": "11px",
       "--app-radius-auth-character-pill": "777px",
@@ -378,6 +385,8 @@ describe("generic app theme bridge contract", () => {
       "--app-shadow-auth-prompt-focus": "0 0 0 3px rgba(91, 43, 196, 0.23)",
       "--app-shadow-auth-prompt-login-focus":
         "0 0 0 4px rgba(224, 63, 159, 0.27)",
+      "--app-shadow-auth-verify-email-card":
+        "0 12px 30px rgba(91, 43, 196, 0.28)",
     });
   });
 
@@ -793,6 +802,8 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorWritingManuscriptConclusionSurface,
       testAlternateSource.colorWritingManuscriptConclusionBorder,
       testAlternateSource.shadowWritingManuscriptConclusionInset,
+      testAlternateSource.colorAuthConsentDocumentSurface,
+      testAlternateSource.shadowAuthVerifyEmailCard,
       PHASE5D_ALTERNATE_THEME_MARKER,
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
@@ -843,6 +854,12 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars[
         "--app-shadow-auth-prompt-login-focus"
       ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-auth-consent-document-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-auth-verify-email-card"
+      ],
       ...authCharacterBridgeVars.map(
         (varName) => phase5dAlternateTheme.appBridgeVars[varName],
       ),
@@ -862,6 +879,8 @@ describe("generic app theme bridge contract", () => {
       'radiusPill: "12000px"',
       'radiusLandingHeroCta: "17px"',
       'radiusAuthPromptControl: "25px"',
+      'radiusAuthVerifyEmailCard: "31px"',
+      'radiusAuthVerifyEmailCardCompact: "14px"',
       'sizeAuthPromptControl: "58px"',
     ].filter((value): value is string => typeof value === "string");
     const sourceValueViolations = productionSourceFiles.flatMap(
@@ -986,6 +1005,8 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.authPrompt.focusOutline,
         colorAuthPromptLoginFocusBorder:
           awesomicThemeTokens.authPrompt.loginFocusBorder,
+        colorAuthConsentDocumentSurface:
+          awesomicThemeTokens.authConsent.documentSurface,
         colorAuthCharacterPurple:
           awesomicThemeTokens.authCharacter.color.purple,
         colorAuthCharacterCharcoal:
@@ -1002,6 +1023,8 @@ describe("generic app theme bridge contract", () => {
         radiusIndicator: `${awesomicThemeTokens.radius.indicator}px`,
         radiusLandingHeroCta: `${awesomicThemeTokens.radius.landingHeroCta}px`,
         radiusAuthPromptControl: `${awesomicThemeTokens.authPrompt.radius}px`,
+        radiusAuthVerifyEmailCard: `${awesomicThemeTokens.authVerifyEmail.radius.card}px`,
+        radiusAuthVerifyEmailCardCompact: `${awesomicThemeTokens.authVerifyEmail.radius.compact}px`,
         radiusAuthCharacterBaseEdge: `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
         radiusAuthCharacterBodyTop: `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
         radiusAuthCharacterPill: `${awesomicThemeTokens.authCharacter.radius.pill}px`,
@@ -1045,6 +1068,8 @@ describe("generic app theme bridge contract", () => {
         shadowAuthPromptFocus: awesomicThemeTokens.authPrompt.focusShadow,
         shadowAuthPromptLoginFocus:
           awesomicThemeTokens.authPrompt.loginFocusShadow,
+        shadowAuthVerifyEmailCard:
+          awesomicThemeTokens.authVerifyEmail.shadow.card,
       }),
     ).toEqual(awesomicBridgeVars);
   });
