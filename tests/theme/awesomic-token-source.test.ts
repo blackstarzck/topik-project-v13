@@ -111,8 +111,8 @@ describe("Awesomic token source contract", () => {
       "utf8",
     );
     const headingRule = css.match(
-      /\.notification-settings-section-heading\s*\{(?<declarations>[^}]*)\}/,
-    )?.groups?.declarations;
+      /\.notification-settings-section-heading\s*\{([^}]*)\}/,
+    )?.[1];
 
     expect(headingRule).toContain(
       "font-size: var(--app-font-size-heading-sm);",

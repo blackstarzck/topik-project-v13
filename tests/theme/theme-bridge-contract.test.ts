@@ -180,6 +180,7 @@ describe("generic app theme bridge contract", () => {
   test("enforces the alternate fixture production-source and dependency boundary", () => {
     const sourceDirectory = resolve(process.cwd(), "src");
     const productionSourceFiles = readdirSync(sourceDirectory, {
+      encoding: "utf8",
       recursive: true,
     })
       .filter(
