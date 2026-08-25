@@ -34,3 +34,50 @@
   width: auto;
   height: 68px;
 }
+
+.shell:hover .menuScroll {
+  scrollbar-color: color-mix(
+      in srgb,
+      var(--app-color-text-secondary) 58%,
+      transparent
+    )
+    transparent;
+}
+
+.menuScroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menuScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menuScroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--app-radius);
+  background-color: initial;
+  background-clip: content-box;
+}
+
+.shell:hover .menuScroll::-webkit-scrollbar-thumb {
+  background-color: var(--app-color-text-secondary);
+  opacity: 0.58;
+}
+
+.menu:global(.ant-menu) {
+  border-inline-end: 0;
+  background: transparent;
+}
+
+.shell .menu:global(.ant-menu-root):global(.ant-menu-inline) {
+  border-inline-end: 0;
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+}

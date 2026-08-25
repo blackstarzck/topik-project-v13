@@ -119,6 +119,10 @@ function cssSelectorsFrom(source: string) {
     );
 }
 
+function compactCssRule(source: string, selector: string) {
+  return cssRuleFrom(source, selector).replace(/\s+/gu, " ").trim();
+}
+
 vi.mock("next/navigation", () => ({
   usePathname: () => navMock.pathname,
   useRouter: () => ({
@@ -1049,6 +1053,70 @@ describe("WorkspaceShell", () => {
     expect(scrollRule).toContain("scrollbar-width: thin;");
     expect(globalSelectors).not.toContain(".app-sidebar-shell");
     expect(globalSelectors).not.toContain(".app-sidebar-menu-scroll");
+  });
+
+  it("scopes sidebar decoration styles to SidebarNav", () => {
+    const globalSelectors = cssSelectorsFrom(GLOBAL_CSS);
+    const formerGlobalSelectors = [
+      ".app-sidebar-shell:hover .app-sidebar-menu-scroll",
+      ".app-sidebar-menu-scroll::-webkit-scrollbar",
+      ".app-sidebar-menu-scroll::-webkit-scrollbar-track",
+      ".app-sidebar-menu-scroll::-webkit-scrollbar-thumb",
+      ".app-sidebar-shell:hover .app-sidebar-menu-scroll::-webkit-scrollbar-thumb",
+      ".app-sidebar-menu.ant-menu",
+      ".app-sidebar-shell .app-sidebar-menu.ant-menu-root.ant-menu-inline",
+      ".app-sidebar-icon",
+    ];
+
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'className={["app-sidebar-shell", styles.shell].join(" ")}',
+    );
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'className={["app-sidebar-menu-scroll", styles.menuScroll].join(" ")}',
+    );
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'className={["app-sidebar-menu", styles.menu].join(" ")}',
+    );
+    expect(SIDEBAR_NAV_SOURCE).toContain(
+      'className={["app-sidebar-icon", styles.icon, className]',
+    );
+
+    for (const selector of formerGlobalSelectors) {
+      expect(globalSelectors).not.toContain(selector);
+    }
+
+    expect(compactCssRule(SIDEBAR_NAV_CSS, ".shell:hover .menuScroll")).toBe(
+      "scrollbar-color: color-mix( in srgb, var(--app-color-text-secondary) 58%, transparent ) transparent;",
+    );
+    expect(
+      compactCssRule(SIDEBAR_NAV_CSS, ".menuScroll::-webkit-scrollbar"),
+    ).toBe("width: 8px;");
+    expect(
+      compactCssRule(SIDEBAR_NAV_CSS, ".menuScroll::-webkit-scrollbar-track"),
+    ).toBe("background: transparent;");
+    expect(
+      compactCssRule(SIDEBAR_NAV_CSS, ".menuScroll::-webkit-scrollbar-thumb"),
+    ).toBe(
+      "border: 2px solid transparent; border-radius: var(--app-radius); background-color: initial; background-clip: content-box;",
+    );
+    expect(
+      compactCssRule(
+        SIDEBAR_NAV_CSS,
+        ".shell:hover .menuScroll::-webkit-scrollbar-thumb",
+      ),
+    ).toBe("background-color: var(--app-color-text-secondary); opacity: 0.58;");
+    expect(compactCssRule(SIDEBAR_NAV_CSS, ".menu:global(.ant-menu)")).toBe(
+      "border-inline-end: 0; background: transparent;",
+    );
+    expect(
+      compactCssRule(
+        SIDEBAR_NAV_CSS,
+        ".shell .menu:global(.ant-menu-root):global(.ant-menu-inline)",
+      ),
+    ).toBe("border-inline-end: 0;");
+    expect(compactCssRule(SIDEBAR_NAV_CSS, ".icon")).toBe(
+      "display: inline-flex; flex-shrink: 0; width: 18px; height: 18px; align-items: center; justify-content: center;",
+    );
   });
 
   it("sets sidebar icon spacing", () => {

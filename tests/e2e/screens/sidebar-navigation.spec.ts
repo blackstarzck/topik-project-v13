@@ -99,7 +99,7 @@ test("sidebar keeps an 8px visual gap between Iconsax icons and labels", async (
   await openMobileDrawerIfNeeded(page);
 
   const sidebarMenu = page
-    .locator(".app-sidebar-menu:not(.ant-menu-inline-collapsed)")
+    .locator(".app-sidebar-menu:not(.ant-menu-inline-collapsed):visible")
     .first();
   const growthTitle = sidebarMenu.locator(".ant-menu-submenu-title", {
     hasText: "성장 리포트",
@@ -117,7 +117,7 @@ test("sidebar keeps an 8px visual gap between Iconsax icons and labels", async (
   ).toBeVisible();
 
   const measurements = await page
-    .locator(".app-sidebar-menu:not(.ant-menu-inline-collapsed)")
+    .locator(".app-sidebar-menu:not(.ant-menu-inline-collapsed):visible")
     .first()
     .evaluate((menu) => {
       const items = Array.from(

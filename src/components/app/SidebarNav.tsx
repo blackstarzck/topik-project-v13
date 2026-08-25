@@ -214,7 +214,9 @@ function SidebarIcon({
 }) {
   return (
     <span
-      className={`app-sidebar-icon${className ? ` ${className}` : ""}`}
+      className={["app-sidebar-icon", styles.icon, className]
+        .filter(Boolean)
+        .join(" ")}
       data-sidebar-icon-kind="svg"
       data-sidebar-icon-library="iconsax"
       data-sidebar-icon-name={iconName}
@@ -310,7 +312,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
   );
 
   return (
-    <div className="app-sidebar-shell">
+    <div className={["app-sidebar-shell", styles.shell].join(" ")}>
       <button
         type="button"
         className={["app-sidebar-brand", styles.brand].join(" ")}
@@ -327,7 +329,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
           loading="eager"
         />
       </button>
-      <div className="app-sidebar-menu-scroll">
+      <div className={["app-sidebar-menu-scroll", styles.menuScroll].join(" ")}>
         <ConfigProvider theme={sidebarMenuTheme}>
           <Menu
             mode="inline"
@@ -343,7 +345,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
               }
             }}
             items={items}
-            className="app-sidebar-menu"
+            className={["app-sidebar-menu", styles.menu].join(" ")}
           />
         </ConfigProvider>
       </div>
