@@ -293,12 +293,12 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
           activeBarWidth: 0,
           iconMarginInlineEnd: 8,
           itemActiveBg: token.colorFillSecondary,
-          itemBorderRadius: 8,
+          itemBorderRadius: token.borderRadiusLG,
           itemHoverBg: token.colorFillTertiary,
           itemHoverColor: token.colorText,
           itemSelectedBg: token.colorPrimary,
           itemSelectedColor: token.colorWhite,
-          subMenuItemBorderRadius: 8,
+          subMenuItemBorderRadius: token.borderRadiusLG,
         },
       },
     }),
@@ -308,6 +308,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
       token.colorPrimary,
       token.colorText,
       token.colorWhite,
+      token.borderRadiusLG,
     ],
   );
 
