@@ -24,6 +24,7 @@ import {
   InstitutionInvitationModal,
   type InstitutionInvitationModalStatus,
 } from "./InstitutionInvitationModal";
+import styles from "./NotificationBell.module.css";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import {
   createClientOperationalEvent,
@@ -258,13 +259,17 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
   }, [pathname, reloadList, router, searchParams]);
 
   const content = (
-    <div className="app-notification-panel">
-      <div className="app-notification-panel__header">
+    <div className={["app-notification-panel", styles.panel].join(" ")}>
+      <div
+        className={["app-notification-panel__header", styles.header].join(" ")}
+      >
         <Text strong>{t("title")}</Text>
         <Button
           type="link"
           size="small"
-          className="app-notification-panel__mark-all"
+          className={["app-notification-panel__mark-all", styles.markAll].join(
+            " ",
+          )}
           loading={markAll.pending}
           disabled={unreadCount === 0 || markAll.pending}
           onClick={() => void markAll.run()}
@@ -275,7 +280,9 @@ export function NotificationBell({ userId, affiliationCode }: Props) {
       {listLoad.status === "loading" ? (
         <Skeleton active paragraph={{ rows: 3 }} />
       ) : listLoad.status === "error" ? (
-        <div className="app-notification-panel__error">
+        <div
+          className={["app-notification-panel__error", styles.error].join(" ")}
+        >
           <Text type="danger">{t("loadError")}</Text>
           <Button
             size="small"

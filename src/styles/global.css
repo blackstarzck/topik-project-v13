@@ -5801,40 +5801,8 @@
     0 2px 6px -2px rgba(0, 0, 0, 0.08);
 }
 
-.app-notification-panel {
-  width: 320px;
-  max-width: 78vw;
-  font-size: 14px;
-}
-
-.app-notification-panel .ant-typography {
-  font-size: 14px;
-}
-
-.app-notification-panel .ant-btn {
-  font-size: 14px;
-}
-
 .app-notification-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   border-bottom: 1px solid var(--ant-color-border-secondary);
-  padding-bottom: 8px;
-  margin-bottom: 6px;
-}
-
-.app-notification-panel__mark-all.ant-btn {
-  font-size: 14px;
-}
-
-.app-notification-panel__error {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 0;
 }
 
 .app-profile-popover-panel {
@@ -6089,12 +6057,6 @@
 .app-notification-feed-item__time.ant-typography {
   flex: 0 0 auto;
   font-size: 14px;
-}
-
-@media (max-width: 767.98px) {
-  .app-notification-panel {
-    max-width: calc(100vw - 48px);
-  }
 }
 
 .writing-workspace {
