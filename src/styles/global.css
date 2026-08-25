@@ -6189,23 +6189,6 @@
   background: var(--app-color-bg-container);
 }
 
-.writing-empty-state {
-  display: flex;
-  min-height: 100dvh;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.writing-empty-state__title {
-  margin: 0;
-  color: var(--app-color-text);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
 .writing-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
