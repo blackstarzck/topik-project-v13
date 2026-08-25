@@ -78,20 +78,6 @@
     "heroCtaLearningGoal": "학습 목표 설정하기",
     "heroCtaContinueSetup": "설정 계속하기",
     "heroCtaRetry": "다시 시도",
-    "preview": {
-      "sectionTitle": "써보기 전에 미리 보기",
-      "sectionBody": "실제 화면 그대로의 대시보드, 피드백, 리포트를 확인해보세요.",
-      "imageAlt": "{title} 화면 미리보기",
-      "dashboardBadge": "📊 대시보드",
-      "dashboardTitle": "학습 현황 한눈에",
-      "dashboardSummary": "오늘의 목표, 최근 제출, 추천 문제를 홈에서 바로 확인합니다.",
-      "feedbackBadge": "✍️ AI 피드백",
-      "feedbackTitle": "기준별 피드백",
-      "feedbackSummary": "내용·전개·어휘·문법 차원별 점수와 문장 단위 코멘트를 받습니다.",
-      "reportBadge": "📈 성장 리포트",
-      "reportTitle": "점수 변화 비교",
-      "reportSummary": "이전 답안과 비교해 점수 변화와 약점 영역을 그래프로 봅니다."
-    },
     "features": {
       "correctionTitle": "AI 첨삭",
       "correctionDescription": "TOPIK 51~54번 글쓰기 환경 그대로. AI가 차원별 점수와 첨삭을 제공합니다.",
