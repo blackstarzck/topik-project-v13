@@ -21,6 +21,11 @@ const DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS = {
     "0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)",
 } as const;
 
+const DEFAULT_NOTIFICATION_BRIDGE_VARS = {
+  "--app-shadow-notification-channel-selected":
+    "0 0 0 1px var(--app-color-primary)",
+} as const;
+
 const DEFAULT_WRITING_EXAM_BRIDGE_VARS = {
   "--app-color-writing-exam-header-surface":
     "color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)",
@@ -154,6 +159,8 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#ff4d4f",
+    "--app-color-status-error-border": "#ffccc7",
+    "--app-color-status-error-surface": "#fff2f0",
     "--app-color-status-warning": "#faad14",
     "--app-color-status-success": "#52c41a",
     "--app-color-status-strong-success": "#389e0d",
@@ -189,6 +196,7 @@ const DEFAULT_BRIDGE_VARS = {
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_LIGHT_SHADOW_ELEVATED,
     ...DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS,
+    ...DEFAULT_NOTIFICATION_BRIDGE_VARS,
     "--app-shadow-auth-prompt-focus": "0 0 0 2px rgba(24, 24, 24, 0.08)",
     "--app-shadow-auth-prompt-login-focus": "0 0 0 2px rgba(82, 102, 255, 0.1)",
   },
@@ -206,6 +214,8 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-chart-series-primary": "#1677ff",
     "--app-color-chart-accent": "#13c2c2",
     "--app-color-status-error": "#dc4446",
+    "--app-color-status-error-border": "#5b2526",
+    "--app-color-status-error-surface": "#2c1618",
     "--app-color-status-warning": "#d89614",
     "--app-color-status-success": "#49aa19",
     "--app-color-status-strong-success": "#3c8618",
@@ -241,6 +251,7 @@ const DEFAULT_BRIDGE_VARS = {
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
     "--app-shadow-elevated": DEFAULT_DARK_SHADOW_ELEVATED,
     ...DEFAULT_SHARED_OVERLAY_SHADOW_BRIDGE_VARS,
+    ...DEFAULT_NOTIFICATION_BRIDGE_VARS,
     "--app-shadow-auth-prompt-focus": "0 0 0 2px rgba(24, 24, 24, 0.08)",
     "--app-shadow-auth-prompt-login-focus": "0 0 0 2px rgba(82, 102, 255, 0.1)",
   },

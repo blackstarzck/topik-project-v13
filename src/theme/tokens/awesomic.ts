@@ -199,6 +199,8 @@ export const awesomicThemeTokens = {
   status: {
     light: {
       error: "#ff4d4f",
+      errorBorder: "#ffccc7",
+      errorSurface: "#fff2f0",
       warning: "#faad14",
       success: "#52c41a",
       strongSuccess: "#389e0d",
@@ -206,6 +208,8 @@ export const awesomicThemeTokens = {
     },
     dark: {
       error: "#dc4446",
+      errorBorder: "#5b2526",
+      errorSurface: "#2c1618",
       warning: "#d89614",
       success: "#49aa19",
       strongSuccess: "#3c8618",
@@ -216,6 +220,11 @@ export const awesomicThemeTokens = {
     // App-owned subtle overlay derived from Mist at 18% opacity. Keeping the
     // alpha in the token lets AntD retain ownership of Drawer fade opacity.
     maskSubtle: "rgba(244, 244, 245, 0.18)",
+  },
+  notification: {
+    shadow: {
+      channelSelected: "0 0 0 1px var(--app-color-primary)",
+    },
   },
   shadow: {
     elevated: "rgba(0, 0, 0, 0.04) 0px 4px 12px 0px",
@@ -261,6 +270,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-chart-series-primary": awesomicThemeTokens.chart.seriesPrimary,
     "--app-color-chart-accent": awesomicThemeTokens.chart.accent,
     "--app-color-status-error": status.error,
+    "--app-color-status-error-border": status.errorBorder,
+    "--app-color-status-error-surface": status.errorSurface,
     "--app-color-status-warning": status.warning,
     "--app-color-status-success": status.success,
     "--app-color-status-strong-success": status.strongSuccess,
@@ -403,6 +414,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-shadow-floating-action": awesomicThemeTokens.shadow.floatingAction,
     "--app-shadow-popover": awesomicThemeTokens.shadow.popover,
     "--app-shadow-message": awesomicThemeTokens.shadow.message,
+    "--app-shadow-notification-channel-selected":
+      awesomicThemeTokens.notification.shadow.channelSelected,
     "--app-shadow-writing-material-tooltip":
       awesomicThemeTokens.writingMaterial.shadow.tooltip,
     "--app-shadow-writing-blank-focus":

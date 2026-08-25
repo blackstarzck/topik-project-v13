@@ -312,4 +312,18 @@ describe("NotificationPrefsForm", () => {
       container.querySelectorAll(".notification-settings-channel-copy svg"),
     ).toHaveLength(3);
   });
+
+  it("reflects the in-app channel toggle through aria-pressed without saving", async () => {
+    renderInApp(<NotificationPrefsForm userId="user-1" initialPrefs={{}} />);
+    const channel = await screen.findByTestId("notification-channel-in_app");
+
+    await waitFor(() =>
+      expect(channel.getAttribute("aria-pressed")).toBe("true"),
+    );
+    fireEvent.click(channel);
+
+    expect(channel.getAttribute("aria-pressed")).toBe("false");
+    expect(upsertNotificationSettingsMock).not.toHaveBeenCalled();
+    expect(mutateAsyncMock).not.toHaveBeenCalled();
+  });
 });

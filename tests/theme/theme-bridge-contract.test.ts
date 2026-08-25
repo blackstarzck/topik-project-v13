@@ -37,6 +37,8 @@ const testAlternateSource = {
   colorChartSeriesPrimary: "#9c36b5",
   colorChartAccent: "#1971c2",
   colorStatusError: "#c21f52",
+  colorStatusErrorBorder: "#e895a7",
+  colorStatusErrorSurface: "#fff0f2",
   colorStatusWarning: "#9a6700",
   colorStatusSuccess: "#087f5b",
   colorStatusStrongSuccess: "#005f45",
@@ -132,6 +134,7 @@ const testAlternateSource = {
     "0 22px 54px rgba(45, 13, 86, 0.27), 0 6px 18px rgba(2, 112, 94, 0.17)",
   shadowMessage:
     "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
+  shadowNotificationChannelSelected: "0 0 0 4px #1971c2",
   shadowWritingMaterialTooltip: "0 8px 18px rgb(91 43 196 / 22%)",
   shadowWritingBlankFocus: "0 0 0 5px rgba(48, 160, 125, 0.31)",
   shadowWritingBlankActiveInset: "inset 0 -4px 0 #8f2a61",
@@ -278,6 +281,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-chart-series-primary": "#9c36b5",
       "--app-color-chart-accent": "#1971c2",
       "--app-color-status-error": "#c21f52",
+      "--app-color-status-error-border": "#e895a7",
+      "--app-color-status-error-surface": "#fff0f2",
       "--app-color-status-warning": "#9a6700",
       "--app-color-status-success": "#087f5b",
       "--app-color-status-strong-success": "#005f45",
@@ -372,6 +377,7 @@ describe("generic app theme bridge contract", () => {
         "0 22px 54px rgba(45, 13, 86, 0.27), 0 6px 18px rgba(2, 112, 94, 0.17)",
       "--app-shadow-message":
         "0 9px 22px 0 rgba(74, 18, 106, 0.19), 0 4px 9px -2px rgba(0, 131, 109, 0.14)",
+      "--app-shadow-notification-channel-selected": "0 0 0 4px #1971c2",
       "--app-shadow-writing-material-tooltip":
         "0 8px 18px rgb(91 43 196 / 22%)",
       "--app-shadow-writing-blank-focus": "0 0 0 5px rgba(48, 160, 125, 0.31)",
@@ -779,6 +785,9 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.fontFamily,
       testAlternateSource.shadowElevated,
       testAlternateSource.colorStatusError,
+      testAlternateSource.colorStatusErrorBorder,
+      testAlternateSource.colorStatusErrorSurface,
+      testAlternateSource.shadowNotificationChannelSelected,
       testAlternateSource.colorStatusWarning,
       testAlternateSource.colorStatusSuccess,
       testAlternateSource.colorStatusStrongSuccess,
@@ -805,6 +814,21 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorAuthConsentDocumentSurface,
       testAlternateSource.shadowAuthVerifyEmailCard,
       PHASE5D_ALTERNATE_THEME_MARKER,
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-status-error-border"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-color-status-error-surface"
+      ],
+      phase5dAlternateTheme.appBridgeVars[
+        "--app-shadow-notification-channel-selected"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-color-status-error-border"
+      ],
+      phase5dAlternateTheme.appBridgeVarsByAppearance.dark[
+        "--app-color-status-error-surface"
+      ],
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
       phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
@@ -919,6 +943,8 @@ describe("generic app theme bridge contract", () => {
         colorChartSeriesPrimary: awesomicThemeTokens.chart.seriesPrimary,
         colorChartAccent: awesomicThemeTokens.chart.accent,
         colorStatusError: awesomicThemeTokens.status.light.error,
+        colorStatusErrorBorder: awesomicThemeTokens.status.light.errorBorder,
+        colorStatusErrorSurface: awesomicThemeTokens.status.light.errorSurface,
         colorStatusWarning: awesomicThemeTokens.status.light.warning,
         colorStatusSuccess: awesomicThemeTokens.status.light.success,
         colorStatusStrongSuccess:
@@ -1054,6 +1080,8 @@ describe("generic app theme bridge contract", () => {
         shadowFloatingAction: awesomicThemeTokens.shadow.floatingAction,
         shadowPopover: awesomicThemeTokens.shadow.popover,
         shadowMessage: awesomicThemeTokens.shadow.message,
+        shadowNotificationChannelSelected:
+          awesomicThemeTokens.notification.shadow.channelSelected,
         shadowWritingMaterialTooltip:
           awesomicThemeTokens.writingMaterial.shadow.tooltip,
         shadowWritingBlankFocus: awesomicThemeTokens.writingBlank.shadow.focus,

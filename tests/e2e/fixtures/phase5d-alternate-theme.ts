@@ -5,6 +5,17 @@ import type { AppThemePreset } from "../../../src/theme/types";
 export const PHASE5D_ALTERNATE_THEME_MARKER =
   "phase5d-e2e-alternate-theme-9f42c7";
 
+const alternateErrorAliasesByAppearance = {
+  light: {
+    border: "#d667a0",
+    surface: "#f0d8e3",
+  },
+  dark: {
+    border: "#430e2f",
+    surface: "#20111b",
+  },
+} as const;
+
 const alternateSource = {
   colorPrimary: "#8b2cff",
   colorBgLayout: "#d8fff4",
@@ -19,6 +30,8 @@ const alternateSource = {
   colorChartSeriesPrimary: "#ff6b00",
   colorChartAccent: "#e000c7",
   colorStatusError: "#b0006d",
+  colorStatusErrorBorder: alternateErrorAliasesByAppearance.light.border,
+  colorStatusErrorSurface: alternateErrorAliasesByAppearance.light.surface,
   colorStatusWarning: "#7a5100",
   colorStatusSuccess: "#006b3c",
   colorStatusStrongSuccess: "#004b2a",
@@ -101,6 +114,7 @@ const alternateSource = {
     "0 20px 52px rgba(51, 16, 91, 0.28), 0 5px 16px rgba(4, 120, 100, 0.18)",
   shadowMessage:
     "0 8px 20px 0 rgba(81, 24, 115, 0.2), 0 3px 8px -2px rgba(0, 140, 116, 0.15)",
+  shadowNotificationChannelSelected: "0 0 0 3px #ff8a00",
   shadowWritingMaterialTooltip: "0 7px 19px rgb(73 12 117 / 24%)",
   shadowWritingBlankFocus: "0 0 0 5px rgba(0, 165, 138, 0.32)",
   shadowWritingBlankActiveInset: "inset 0 -4px 0 #d10068",
@@ -171,20 +185,26 @@ const alternateThemesByAppearance = {
   light: createTheme(alternatePreset, "light"),
   dark: createTheme(alternatePreset, "dark"),
 } as const;
-const alternateToken = alternateThemesByAppearance.light.antd.token;
 
-export const phase5dAlternateTheme = {
-  appBridgeVars: createAppBridgeVars(alternateSource),
-  antdRadiusByAppearance: Object.fromEntries(
-    Object.entries(alternateThemesByAppearance).map(([appearance, value]) => [
-      appearance,
-      {
-        card: `${String(value.antd.components?.Card?.borderRadiusLG)}px`,
-        global: `${String(value.antd.token?.borderRadiusLG)}px`,
-      },
-    ]),
-  ) as Record<"light" | "dark", { card: string; global: string }>,
-  antdCssVars: {
+const alternateSourceByAppearance = {
+  light: alternateSource,
+  dark: {
+    ...alternateSource,
+    colorStatusErrorBorder: alternateErrorAliasesByAppearance.dark.border,
+    colorStatusErrorSurface: alternateErrorAliasesByAppearance.dark.surface,
+  },
+} as const;
+
+const appBridgeVarsByAppearance = {
+  light: createAppBridgeVars(alternateSourceByAppearance.light),
+  dark: createAppBridgeVars(alternateSourceByAppearance.dark),
+} as const;
+
+function createAlternateAntdCssVars(appearance: "light" | "dark") {
+  const alternateToken = alternateThemesByAppearance[appearance].antd.token;
+  const errorAliases = alternateErrorAliasesByAppearance[appearance];
+
+  return {
     "--ant-color-primary": String(alternateToken?.colorPrimary),
     "--ant-color-bg-layout": String(alternateToken?.colorBgLayout),
     "--ant-color-bg-container": String(alternateToken?.colorBgContainer),
@@ -197,6 +217,8 @@ export const phase5dAlternateTheme = {
     "--ant-blue": String(alternateToken?.blue),
     "--ant-cyan": String(alternateToken?.cyan),
     "--ant-color-error": String(alternateToken?.colorError),
+    "--ant-color-error-border": errorAliases.border,
+    "--ant-color-error-bg": errorAliases.surface,
     "--ant-color-warning": String(alternateToken?.colorWarning),
     "--ant-color-success": String(alternateToken?.colorSuccess),
     "--ant-color-success-active": String(alternateToken?.colorSuccessActive),
@@ -208,7 +230,28 @@ export const phase5dAlternateTheme = {
     "--ant-font-size": `${String(alternateToken?.fontSize)}px`,
     "--ant-box-shadow": String(alternateToken?.boxShadow),
     "--ant-box-shadow-secondary": String(alternateToken?.boxShadowSecondary),
-  },
+  } as const;
+}
+
+const antdCssVarsByAppearance = {
+  light: createAlternateAntdCssVars("light"),
+  dark: createAlternateAntdCssVars("dark"),
+} as const;
+
+export const phase5dAlternateTheme = {
+  appBridgeVars: appBridgeVarsByAppearance.light,
+  appBridgeVarsByAppearance,
+  antdRadiusByAppearance: Object.fromEntries(
+    Object.entries(alternateThemesByAppearance).map(([appearance, value]) => [
+      appearance,
+      {
+        card: `${String(value.antd.components?.Card?.borderRadiusLG)}px`,
+        global: `${String(value.antd.token?.borderRadiusLG)}px`,
+      },
+    ]),
+  ) as Record<"light" | "dark", { card: string; global: string }>,
+  antdCssVars: antdCssVarsByAppearance.light,
+  antdCssVarsByAppearance,
 } as const;
 
 // Built-artifact absence of PHASE5D_ALTERNATE_THEME_MARKER remains the single

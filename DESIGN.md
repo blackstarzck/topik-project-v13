@@ -149,6 +149,8 @@ change the production paint.
 | Meaning | Ant Design owner | App bridge | Tailwind alias |
 | --- | --- | --- | --- |
 | Error / weak | `colorError` | `--app-color-status-error` | `status-error` |
+| Error border | `colorErrorBorder` | `--app-color-status-error-border` | None; direct app CSS |
+| Error surface | `colorErrorBg` | `--app-color-status-error-surface` | None; direct app CSS |
 | Warning / fair | `colorWarning` | `--app-color-status-warning` | `status-warning` |
 | Success / good | `colorSuccess` | `--app-color-status-success` | `status-success` |
 | Strong success | `colorSuccessActive` | `--app-color-status-strong-success` | `status-strong-success` |
@@ -157,6 +159,12 @@ change the production paint.
 
 Status color is always paired with a translated strength label, rule text, or
 symbol. These roles are not CTA or decorative palette colors.
+
+The account deletion card uses the error border and surface roles in both its
+loading and ready states. The selected notification channel keeps its existing
+one-pixel primary ring through `--app-shadow-notification-channel-selected`.
+These atomic roles are plain-CSS consumers and do not add foundation Tailwind
+aliases.
 
 ## Tokens — Semantic Radius
 

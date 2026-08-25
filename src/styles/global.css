@@ -3075,7 +3075,7 @@
 
 .notification-settings-channel-option[aria-pressed="true"] {
   border-color: var(--app-color-primary);
-  box-shadow: 0 0 0 1px var(--app-color-primary);
+  box-shadow: var(--app-shadow-notification-channel-selected);
 }
 
 .notification-settings-channel-option:disabled {
@@ -3202,8 +3202,8 @@
 }
 
 .account-delete-card.app-card.app-surface {
-  border: 1px solid var(--ant-color-error-border);
-  background: var(--ant-color-error-bg);
+  border: 1px solid var(--app-color-status-error-border);
+  background: var(--app-color-status-error-surface);
 }
 
 /* 로그인 방법: 각 메서드를 개별 AntD Card(.app-cards-bordered로 외곽선 복원)로

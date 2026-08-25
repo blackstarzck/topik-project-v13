@@ -12,6 +12,8 @@ export const allowedAppBridgeVars = [
   "--app-color-chart-series-primary",
   "--app-color-chart-accent",
   "--app-color-status-error",
+  "--app-color-status-error-border",
+  "--app-color-status-error-surface",
   "--app-color-status-warning",
   "--app-color-status-success",
   "--app-color-status-strong-success",
@@ -100,6 +102,7 @@ export const allowedAppBridgeVars = [
   "--app-shadow-floating-action",
   "--app-shadow-popover",
   "--app-shadow-message",
+  "--app-shadow-notification-channel-selected",
   "--app-shadow-writing-material-tooltip",
   "--app-shadow-writing-blank-focus",
   "--app-shadow-writing-blank-active-inset",
@@ -128,6 +131,8 @@ export type AppBridgeTokenSource = {
   colorChartSeriesPrimary: string;
   colorChartAccent: string;
   colorStatusError: string;
+  colorStatusErrorBorder: string;
+  colorStatusErrorSurface: string;
   colorStatusWarning: string;
   colorStatusSuccess: string;
   colorStatusStrongSuccess: string;
@@ -216,6 +221,7 @@ export type AppBridgeTokenSource = {
   shadowFloatingAction: string;
   shadowPopover: string;
   shadowMessage: string;
+  shadowNotificationChannelSelected: string;
   shadowWritingMaterialTooltip: string;
   shadowWritingBlankFocus: string;
   shadowWritingBlankActiveInset: string;
@@ -244,6 +250,8 @@ export function createAppBridgeVars(
     "--app-color-chart-series-primary": source.colorChartSeriesPrimary,
     "--app-color-chart-accent": source.colorChartAccent,
     "--app-color-status-error": source.colorStatusError,
+    "--app-color-status-error-border": source.colorStatusErrorBorder,
+    "--app-color-status-error-surface": source.colorStatusErrorSurface,
     "--app-color-status-warning": source.colorStatusWarning,
     "--app-color-status-success": source.colorStatusSuccess,
     "--app-color-status-strong-success": source.colorStatusStrongSuccess,
@@ -363,6 +371,8 @@ export function createAppBridgeVars(
     "--app-shadow-floating-action": source.shadowFloatingAction,
     "--app-shadow-popover": source.shadowPopover,
     "--app-shadow-message": source.shadowMessage,
+    "--app-shadow-notification-channel-selected":
+      source.shadowNotificationChannelSelected,
     "--app-shadow-writing-material-tooltip":
       source.shadowWritingMaterialTooltip,
     "--app-shadow-writing-blank-focus": source.shadowWritingBlankFocus,

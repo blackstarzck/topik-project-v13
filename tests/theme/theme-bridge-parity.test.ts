@@ -35,6 +35,14 @@ const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
   "--app-color-chart-series-primary": { token: "blue", format: asString },
   "--app-color-chart-accent": { token: "cyan", format: asString },
   "--app-color-status-error": { token: "colorError", format: asString },
+  "--app-color-status-error-border": {
+    token: "colorErrorBorder",
+    format: asString,
+  },
+  "--app-color-status-error-surface": {
+    token: "colorErrorBg",
+    format: asString,
+  },
   "--app-color-status-warning": { token: "colorWarning", format: asString },
   "--app-color-status-success": { token: "colorSuccess", format: asString },
   "--app-color-status-strong-success": {
@@ -55,6 +63,8 @@ const APPEARANCE_DEPENDENT_BRIDGE_TOKEN_MAP = Object.fromEntries(
   Object.entries(ANT_D_BACKED_BRIDGE_TOKEN_MAP).filter(([varName]) =>
     [
       "--app-color-status-error",
+      "--app-color-status-error-border",
+      "--app-color-status-error-surface",
       "--app-color-status-warning",
       "--app-color-status-success",
       "--app-color-status-strong-success",

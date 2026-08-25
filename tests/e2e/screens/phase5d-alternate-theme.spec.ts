@@ -96,9 +96,14 @@ async function readFontScale(page: Page) {
 }
 
 async function injectAlternateTheme(page: Page) {
+  const appearance = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).colorScheme === "dark"
+      ? "dark"
+      : "light",
+  );
   const variables = {
-    ...phase5dAlternateTheme.appBridgeVars,
-    ...phase5dAlternateTheme.antdCssVars,
+    ...phase5dAlternateTheme.appBridgeVarsByAppearance[appearance],
+    ...phase5dAlternateTheme.antdCssVarsByAppearance[appearance],
   };
 
   await page.evaluate(
