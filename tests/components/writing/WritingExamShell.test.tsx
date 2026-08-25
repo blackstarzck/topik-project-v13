@@ -147,9 +147,7 @@ describe("WritingExamShell", () => {
       'className={["writing-exam-main", styles.main].join(" ")}',
     );
     expect(globalCss).not.toMatch(/\.writing-exam-(?:shell|main)\s*\{/);
-    expect(globalCss).not.toContain(
-      ".writing-exam-main .writing-workspace {",
-    );
+    expect(globalCss).not.toContain(".writing-exam-main .writing-workspace {");
   });
 
   it("labels the header save action as draft save and delegates it", () => {

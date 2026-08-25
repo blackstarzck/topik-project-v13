@@ -341,9 +341,7 @@ export function ShortAnswerWriting52Workspace({
             />
 
             <section
-              className={["writing-answer-panel", styles.answerPanel].join(
-                " ",
-              )}
+              className={["writing-answer-panel", styles.answerPanel].join(" ")}
             >
               <div
                 className={["writing-blank-tabs", styles.blankTabs].join(" ")}

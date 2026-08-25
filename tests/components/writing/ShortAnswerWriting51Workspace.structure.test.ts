@@ -61,9 +61,7 @@ describe("ShortAnswerWriting51Workspace structure", () => {
       expect(compactSource).toContain(
         '"writing-answer-panel", styles.answerPanel',
       );
-      expect(compactSource).toContain(
-        '"writing-blank-tabs", styles.blankTabs',
-      );
+      expect(compactSource).toContain('"writing-blank-tabs", styles.blankTabs');
     }
   });
 
