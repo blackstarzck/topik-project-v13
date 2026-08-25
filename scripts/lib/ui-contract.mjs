@@ -534,6 +534,27 @@ export const UI_CONTRACT_RULE_IDS = Object.freeze([
   "workspace.missing-body-recipe",
 ]);
 const UI_CONTRACT_RULE_ID_SET = new Set(UI_CONTRACT_RULE_IDS);
+export const UI_CONTRACT_STRUCTURAL_RULE_IDS = Object.freeze([
+  "global-css.selector-freeze",
+  "global-css.declaration-freeze",
+]);
+const UI_CONTRACT_STRUCTURAL_RULE_ID_SET = new Set(UI_CONTRACT_STRUCTURAL_RULE_IDS);
+
+export function partitionUiContractViolations(violations) {
+  const structuralViolations = [];
+  const actionableViolations = [];
+  for (const violation of violations) {
+    if (UI_CONTRACT_STRUCTURAL_RULE_ID_SET.has(violation.ruleId)) {
+      structuralViolations.push(violation);
+    } else {
+      actionableViolations.push(violation);
+    }
+  }
+  return Object.freeze({
+    structuralViolations: Object.freeze(structuralViolations),
+    actionableViolations: Object.freeze(actionableViolations),
+  });
+}
 
 function collectConstInitializers(ast) {
   const initializers = new Map();
