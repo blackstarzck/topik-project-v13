@@ -51,6 +51,12 @@ describe("app theme contract", () => {
     expect(vars["--app-color-border-secondary"]).toBe(
       awesomicThemeTokens.border.secondary.light,
     );
+    expect(vars["--app-color-chart-accent"]).toBe(
+      awesomicThemeTokens.chart.accent,
+    );
+    expect(vars["--app-color-chart-series-primary"]).toBe(
+      awesomicThemeTokens.chart.seriesPrimary,
+    );
     expect(vars["--app-radius"]).toBe(`${awesomicThemeTokens.radius.base}px`);
     expect(vars["--app-color-text"]).toBe(awesomicThemeTokens.color.ink);
     expect(vars["--app-color-text-secondary"]).toBe(
@@ -70,6 +76,8 @@ describe("app theme contract", () => {
     expect(defaultVars["--app-color-primary"]).toBe("#1677ff");
     expect(defaultVars["--app-color-border"]).toBe("#d9d9d9");
     expect(defaultVars["--app-color-border-secondary"]).toBe("#f0f0f0");
+    expect(defaultVars["--app-color-chart-series-primary"]).toBe("#1677ff");
+    expect(defaultVars["--app-color-chart-accent"]).toBe("#13c2c2");
     expect(defaultVars["--app-radius"]).toBe("6px");
   });
 
@@ -124,6 +132,8 @@ describe("app theme contract", () => {
       "--app-color-link-secondary",
       "--app-color-border",
       "--app-color-border-secondary",
+      "--app-color-chart-series-primary",
+      "--app-color-chart-accent",
       "--app-radius",
       "--app-font-family",
       "--app-shadow-elevated",

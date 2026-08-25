@@ -47,6 +47,7 @@ icon.
 - Ant Design은 component adapter다. 전역 값과 component state 값은 `ConfigProvider`, `theme.token`, `theme.components` 또는 scoped provider가 소유한다.
 - Tailwind는 layout·responsive와 앱이 직접 소유한 표면의 제한된 시각 보조 adapter다. 시각 utility는 `src/theme/tailwind-bridge.ts`와 `src/styles/foundation.css`의 `@theme inline`을 통해 계산된 L2 의미 토큰(`--app-*`)만 사용한다. `src/styles/global.css`는 이 foundation을 import한다. 별도의 palette, font, radius, shadow scale을 만들거나 AntD 내부 상태를 다시 그리지 않는다.
 - 새 `--app-*` 변수에는 source token, 실제 Tailwind/plain-CSS consumer, theme contract test가 모두 필요하다. 계산된 값은 first render에 존재해야 하고 `var(--ant-*)`를 다시 가리키면 안 된다.
+- 쓰기 자료 차트의 첫 번째와 네 번째 범주색은 AntD blue·cyan seed를 정규화한 차트 계열색(`--app-color-chart-series-primary`, `--app-color-chart-accent`)을 사용한다. 나머지 범주색과 격자선은 기존 status·border 의미 토큰을 재사용한다.
 - 기존 project wrapper와 AntD props를 우선한다. 프로젝트가 작성한 visual inline style, 광범위한 `.ant-*` override, 생성된 AntD class selector, page-specific global CSS를 추가하지 않는다.
 
 ### 공통 layout과 card 진입점

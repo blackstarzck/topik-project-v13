@@ -20,6 +20,12 @@ export const awesomicThemeTokens = {
       dark: "#303030",
     },
   },
+  chart: {
+    // AntD's blue and cyan seeds preserve the existing categorical chart
+    // paints. The remaining chart colors reuse status roles exposed by the app.
+    seriesPrimary: "#1677ff",
+    accent: "#13c2c2",
+  },
   radius: {
     // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
@@ -89,6 +95,8 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
     "--app-color-border": awesomicThemeTokens.color.pebble,
     "--app-color-border-secondary":
       awesomicThemeTokens.border.secondary[appearance],
+    "--app-color-chart-series-primary": awesomicThemeTokens.chart.seriesPrimary,
+    "--app-color-chart-accent": awesomicThemeTokens.chart.accent,
     "--app-color-status-error": status.error,
     "--app-color-status-warning": status.warning,
     "--app-color-status-success": status.success,

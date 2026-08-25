@@ -40,8 +40,7 @@ const EMPTY_SAVED_PROBLEM_IDS: ReadonlySet<string> = new Set<string>();
 const PROBLEM_TABLE_THEME = {
   components: {
     Table: {
-      borderColor:
-        "color-mix(in srgb, var(--app-color-border) 35%, transparent)",
+      borderColor: "var(--app-color-border-secondary)",
       headerBg: "var(--app-color-bg-container)",
       headerColor: "var(--app-color-text-secondary)",
       headerSplitColor: "transparent",

@@ -102,6 +102,8 @@
   --color-text-secondary: var(--app-color-text-secondary);
   --color-link-secondary: var(--app-color-link-secondary);
   --color-border: var(--app-color-border);
+  --color-chart-series-primary: var(--app-color-chart-series-primary);
+  --color-chart-accent: var(--app-color-chart-accent);
   --color-status-error: var(--app-color-status-error);
   --color-status-warning: var(--app-color-status-warning);
   --color-status-success: var(--app-color-status-success);

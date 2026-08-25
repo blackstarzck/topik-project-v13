@@ -20,6 +20,8 @@ const awesomicToken = {
   colorError: awesomicThemeTokens.status.light.error,
   colorWarning: awesomicThemeTokens.status.light.warning,
   colorSuccess: awesomicThemeTokens.status.light.success,
+  blue: awesomicThemeTokens.chart.seriesPrimary,
+  cyan: awesomicThemeTokens.chart.accent,
   borderRadius: awesomicThemeTokens.radius.base,
   borderRadiusSM: awesomicThemeTokens.radius.badge,
   borderRadiusLG: awesomicThemeTokens.radius.base,

@@ -32,6 +32,8 @@ const ANT_D_BACKED_BRIDGE_TOKEN_MAP: Partial<
     token: "colorBorderSecondary",
     format: asString,
   },
+  "--app-color-chart-series-primary": { token: "blue", format: asString },
+  "--app-color-chart-accent": { token: "cyan", format: asString },
   "--app-color-status-error": { token: "colorError", format: asString },
   "--app-color-status-warning": { token: "colorWarning", format: asString },
   "--app-color-status-success": { token: "colorSuccess", format: asString },

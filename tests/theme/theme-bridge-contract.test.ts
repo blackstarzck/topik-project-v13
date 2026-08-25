@@ -33,6 +33,8 @@ const testAlternateSource = {
   colorLinkSecondary: "#405de6",
   colorBorder: "#90a0b0",
   colorBorderSecondary: "#718293",
+  colorChartSeriesPrimary: "#9c36b5",
+  colorChartAccent: "#1971c2",
   colorStatusError: "#c21f52",
   colorStatusWarning: "#9a6700",
   colorStatusSuccess: "#087f5b",
@@ -118,6 +120,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-link-secondary": "#405de6",
       "--app-color-border": "#90a0b0",
       "--app-color-border-secondary": "#718293",
+      "--app-color-chart-series-primary": "#9c36b5",
+      "--app-color-chart-accent": "#1971c2",
       "--app-color-status-error": "#c21f52",
       "--app-color-status-warning": "#9a6700",
       "--app-color-status-success": "#087f5b",
@@ -154,6 +158,8 @@ describe("generic app theme bridge contract", () => {
             colorTextSecondary: testAlternateSource.colorTextSecondary,
             colorBorder: testAlternateSource.colorBorder,
             colorBorderSecondary: testAlternateSource.colorBorderSecondary,
+            blue: testAlternateSource.colorChartSeriesPrimary,
+            cyan: testAlternateSource.colorChartAccent,
             colorError: testAlternateSource.colorStatusError,
             colorWarning: testAlternateSource.colorStatusWarning,
             colorSuccess: testAlternateSource.colorStatusSuccess,
@@ -175,6 +181,8 @@ describe("generic app theme bridge contract", () => {
             colorTextSecondary: testAlternateSource.colorTextSecondary,
             colorBorder: testAlternateSource.colorBorder,
             colorBorderSecondary: testAlternateSource.colorBorderSecondary,
+            blue: testAlternateSource.colorChartSeriesPrimary,
+            cyan: testAlternateSource.colorChartAccent,
             colorError: testAlternateSource.colorStatusError,
             colorWarning: testAlternateSource.colorStatusWarning,
             colorSuccess: testAlternateSource.colorStatusSuccess,
@@ -201,6 +209,8 @@ describe("generic app theme bridge contract", () => {
       colorTextSecondary: testAlternateSource.colorTextSecondary,
       colorBorder: testAlternateSource.colorBorder,
       colorBorderSecondary: testAlternateSource.colorBorderSecondary,
+      blue: testAlternateSource.colorChartSeriesPrimary,
+      cyan: testAlternateSource.colorChartAccent,
       colorError: testAlternateSource.colorStatusError,
       colorWarning: testAlternateSource.colorStatusWarning,
       colorSuccess: testAlternateSource.colorStatusSuccess,
@@ -233,6 +243,12 @@ describe("generic app theme bridge contract", () => {
     expect(
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
     ).not.toBe(awesomicThemeTokens.border.secondary.light);
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
+    ).not.toBe(awesomicThemeTokens.chart.accent);
+    expect(
+      phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
+    ).not.toBe(awesomicThemeTokens.chart.seriesPrimary);
   });
 
   test("enforces the alternate fixture production-source and dependency boundary", () => {
@@ -261,9 +277,13 @@ describe("generic app theme bridge contract", () => {
       testAlternateSource.colorFillSecondary,
       testAlternateSource.colorMaskSubtle,
       testAlternateSource.colorBorderSecondary,
+      testAlternateSource.colorChartSeriesPrimary,
+      testAlternateSource.colorChartAccent,
       PHASE5D_ALTERNATE_THEME_MARKER,
       phase5dAlternateTheme.appBridgeVars["--app-color-mask-subtle"],
       phase5dAlternateTheme.appBridgeVars["--app-color-border-secondary"],
+      phase5dAlternateTheme.appBridgeVars["--app-color-chart-series-primary"],
+      phase5dAlternateTheme.appBridgeVars["--app-color-chart-accent"],
     ];
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
@@ -297,6 +317,8 @@ describe("generic app theme bridge contract", () => {
         colorLinkSecondary: awesomicThemeTokens.color.linkSecondary,
         colorBorder: awesomicThemeTokens.color.pebble,
         colorBorderSecondary: awesomicThemeTokens.border.secondary.light,
+        colorChartSeriesPrimary: awesomicThemeTokens.chart.seriesPrimary,
+        colorChartAccent: awesomicThemeTokens.chart.accent,
         colorStatusError: awesomicThemeTokens.status.light.error,
         colorStatusWarning: awesomicThemeTokens.status.light.warning,
         colorStatusSuccess: awesomicThemeTokens.status.light.success,
@@ -330,6 +352,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-fill-secondary": "rgba(0, 0, 0, 0.06)",
       "--app-color-mask-subtle": "rgba(244, 244, 245, 0.18)",
       "--app-color-border-secondary": "#f0f0f0",
+      "--app-color-chart-series-primary": "#1677ff",
+      "--app-color-chart-accent": "#13c2c2",
       "--app-radius-indicator": "2px",
     });
     expect(getResolvedBridgeVars("default", "dark")).toMatchObject({
@@ -341,6 +365,8 @@ describe("generic app theme bridge contract", () => {
       "--app-color-fill-secondary": "rgba(255, 255, 255, 0.12)",
       "--app-color-mask-subtle": "rgba(0, 0, 0, 0.18)",
       "--app-color-border-secondary": "#303030",
+      "--app-color-chart-series-primary": "#1677ff",
+      "--app-color-chart-accent": "#13c2c2",
       "--app-radius-indicator": "2px",
     });
   });

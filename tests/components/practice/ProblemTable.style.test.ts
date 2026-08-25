@@ -191,6 +191,15 @@ describe("ProblemTable styles", () => {
     expect(fontSize(".problem-table__type-index--number")).toBe("36px");
   });
 
+  test("sources the table border from the shared secondary border token", () => {
+    expect(problemTableSource).toContain(
+      'borderColor: "var(--app-color-border-secondary)"',
+    );
+    expect(problemTableSource).not.toContain(
+      'borderColor:\n        "color-mix(in srgb, var(--app-color-border) 35%, transparent)"',
+    );
+  });
+
   test("maps writing question numbers to their neon background assets", () => {
     for (const [questionNo, assetName] of questionNeonAssets) {
       expect(

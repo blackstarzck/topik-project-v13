@@ -5145,26 +5145,6 @@
   border-radius: 999px;
 }
 
-.writing-material-value-bullet--color-0 {
-  background: #1677ff;
-}
-
-.writing-material-value-bullet--color-1 {
-  background: #52c41a;
-}
-
-.writing-material-value-bullet--color-2 {
-  background: #faad14;
-}
-
-.writing-material-value-bullet--color-3 {
-  background: #13c2c2;
-}
-
-.writing-material-value-bullet--color-4 {
-  background: #ff4d4f;
-}
-
 .writing-inline-prompt {
   color: var(--app-color-text-secondary);
   font-size: 16px;

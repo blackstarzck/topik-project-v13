@@ -12,3 +12,23 @@
 .radialChart {
   min-height: 156px;
 }
+
+.valueBulletColor0 {
+  background: var(--app-color-chart-series-primary);
+}
+
+.valueBulletColor1 {
+  background: var(--app-color-status-success);
+}
+
+.valueBulletColor2 {
+  background: var(--app-color-status-warning);
+}
+
+.valueBulletColor3 {
+  background: var(--app-color-chart-accent);
+}
+
+.valueBulletColor4 {
+  background: var(--app-color-status-error);
+}

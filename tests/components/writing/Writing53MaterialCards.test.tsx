@@ -98,13 +98,81 @@ describe("Writing53MaterialCards", () => {
     );
     expect(source.match(/styles\.chart\b/gu)).toHaveLength(3);
     expect(source).toContain("styles.radialChart");
+    expect(source).toContain('"var(--app-color-border-secondary)"');
+    expect(source).toContain('"var(--app-color-chart-series-primary)"');
+    expect(source).toContain('"var(--app-color-status-success)"');
+    expect(source).toContain('"var(--app-color-status-warning)"');
+    expect(source).toContain('"var(--app-color-chart-accent)"');
+    expect(source).toContain('"var(--app-color-status-error)"');
+    expect(source).not.toMatch(/#[0-9a-f]{3,8}/iu);
+    for (const [selector, token] of [
+      [".valueBulletColor0", "--app-color-chart-series-primary"],
+      [".valueBulletColor1", "--app-color-status-success"],
+      [".valueBulletColor2", "--app-color-status-warning"],
+      [".valueBulletColor3", "--app-color-chart-accent"],
+      [".valueBulletColor4", "--app-color-status-error"],
+    ] as const) {
+      expect(
+        hasExactCssRule(moduleCss, selector, `background: var(${token});`),
+      ).toBe(true);
+    }
     expect(
       findGlobalCssOwners([
         "writing-material-chart-stack",
         "writing-material-chart",
         "writing-material-chart--radial",
+        "writing-material-value-bullet--color-0",
+        "writing-material-value-bullet--color-1",
+        "writing-material-value-bullet--color-2",
+        "writing-material-value-bullet--color-3",
+        "writing-material-value-bullet--color-4",
       ]),
     ).toEqual([]);
+  });
+
+  it("keeps every chart series paint paired with its bullet class", () => {
+    renderWithIntl(
+      <Writing53MaterialCards
+        cards={[
+          {
+            id: "five_series",
+            kind: "chart",
+            title: "Five series",
+            subtitle: null,
+            chart: {
+              id: "five_series",
+              title: "Five series",
+              chartType: "bar",
+              unit: "count",
+              surveyOrg: null,
+              yearRange: [2024],
+              series: Array.from({ length: 5 }, (_, index) => ({
+                label: `Series ${index + 1}`,
+                values: [index + 1],
+              })),
+            },
+          },
+        ]}
+      />,
+    );
+
+    const expectedRoles = [
+      [
+        "var(--app-color-chart-series-primary)",
+        materialStyles.valueBulletColor0,
+      ],
+      ["var(--app-color-status-success)", materialStyles.valueBulletColor1],
+      ["var(--app-color-status-warning)", materialStyles.valueBulletColor2],
+      ["var(--app-color-chart-accent)", materialStyles.valueBulletColor3],
+      ["var(--app-color-status-error)", materialStyles.valueBulletColor4],
+    ] as const;
+    const bullets = screen.getAllByTestId("q53-material-value-bullet");
+
+    expect(bullets).toHaveLength(expectedRoles.length);
+    expectedRoles.forEach(([paint, className], index) => {
+      expect(bullets[index].getAttribute("data-color")).toBe(paint);
+      expect(bullets[index].classList.contains(className)).toBe(true);
+    });
   });
 
   it("renders chart materials and expands the cause descriptions across an empty row slot", () => {
@@ -280,6 +348,14 @@ describe("Writing53MaterialCards", () => {
     expect(screen.getByText("Math")).toBeTruthy();
     expect(screen.getByText("19")).toBeTruthy();
     expect(screen.getAllByTestId("q53-material-value-bullet").length).toBe(4);
+    for (const bullet of screen.getAllByTestId("q53-material-value-bullet")) {
+      expect(
+        [
+          materialStyles.valueBulletColor0,
+          materialStyles.valueBulletColor1,
+        ].some((className) => bullet.classList.contains(className)),
+      ).toBe(true);
+    }
     const radialChart = screen
       .getAllByTestId("q53-material-chart")
       .find((chart) =>

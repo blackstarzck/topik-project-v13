@@ -33,8 +33,29 @@ const RADIAL_OUTER_RADIUS = 54;
 const DONUT_INNER_RADIUS = 32;
 const CARTESIAN_CHART_MARGIN = { top: 8, right: 8, bottom: 0, left: 0 };
 const CARTESIAN_Y_AXIS_WIDTH = 42;
-const CHART_GRID_COLOR = "#f0f0f0";
-const CHART_COLORS = ["#1677ff", "#52c41a", "#faad14", "#13c2c2", "#ff4d4f"];
+const CHART_GRID_COLOR = "var(--app-color-border-secondary)";
+const CHART_COLOR_ROLES = [
+  {
+    paint: "var(--app-color-chart-series-primary)",
+    bulletClass: styles.valueBulletColor0,
+  },
+  {
+    paint: "var(--app-color-status-success)",
+    bulletClass: styles.valueBulletColor1,
+  },
+  {
+    paint: "var(--app-color-status-warning)",
+    bulletClass: styles.valueBulletColor2,
+  },
+  {
+    paint: "var(--app-color-chart-accent)",
+    bulletClass: styles.valueBulletColor3,
+  },
+  {
+    paint: "var(--app-color-status-error)",
+    bulletClass: styles.valueBulletColor4,
+  },
+];
 const TOOLTIP_MARK_OFFSET = 8;
 const TOOLTIP_MAX_WIDTH = 184;
 const TOOLTIP_BASE_HEIGHT = 54;
@@ -90,11 +111,11 @@ function pieData(chart: NormalizedChart) {
 }
 
 function chartColor(index: number): string {
-  return CHART_COLORS[index % CHART_COLORS.length];
+  return CHART_COLOR_ROLES[index % CHART_COLOR_ROLES.length].paint;
 }
 
 function chartColorClass(index: number): string {
-  return `writing-material-value-bullet--color-${index % CHART_COLORS.length}`;
+  return CHART_COLOR_ROLES[index % CHART_COLOR_ROLES.length].bulletClass;
 }
 
 function boundedTooltipIndex(index: number, labels: string[]) {

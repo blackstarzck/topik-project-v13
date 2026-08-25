@@ -99,6 +99,10 @@ describe("Awesomic token source contract", () => {
       light: "#f0f0f0",
       dark: "#303030",
     });
+    expect(awesomicThemeTokens.chart).toEqual({
+      seriesPrimary: "#1677ff",
+      accent: "#13c2c2",
+    });
     expect(awesomicThemeTokens.fontSize).toEqual({
       caption: typographyFontSize("typography.xs"),
       body: typographyFontSize("typography.sm-9"),
