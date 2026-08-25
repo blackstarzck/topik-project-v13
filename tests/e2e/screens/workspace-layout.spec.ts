@@ -303,23 +303,29 @@ async function getShellMetrics(page: Page) {
     const content = document.querySelector<HTMLElement>(
       ".app-workspace-content",
     );
+    const main = document.querySelector<HTMLElement>(".app-workspace-main");
     const sider = document.querySelector<HTMLElement>(".app-workspace-sider");
     const mobileBar = document.querySelector<HTMLElement>(
       ".app-workspace-mobile-bar",
     );
 
-    if (!content) throw new Error("Missing workspace content");
+    if (!content || !main) throw new Error("Missing workspace shell content");
 
     const contentRect = content.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
     const siderRect = sider?.getBoundingClientRect() ?? null;
     const siderStyle = sider ? window.getComputedStyle(sider) : null;
     const mobileBarRect = mobileBar?.getBoundingClientRect() ?? null;
 
     return {
       contentHeight: contentRect.height,
+      contentLeft: contentRect.left,
+      mainLeft: mainRect.left,
       mobileBarHeight: mobileBarRect?.height ?? 0,
       siderDisplay: siderStyle?.display ?? null,
       siderHeight: siderRect?.height ?? null,
+      siderRight: siderRect?.right ?? null,
+      siderWidth: siderRect?.width ?? null,
       siderPosition: siderStyle?.position ?? null,
       siderTop: siderRect?.top ?? null,
       viewportHeight: window.innerHeight,
@@ -408,11 +414,24 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
 
   if (isDesktop) {
     expect(metrics.siderDisplay).not.toBe("none");
+    expect(
+      Math.abs((metrics.siderWidth ?? Number.NaN) - 300),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(
+        (metrics.mainLeft ?? Number.NaN) - (metrics.siderRight ?? Number.NaN),
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(metrics.contentLeft).toBeGreaterThanOrEqual(
+      (metrics.siderRight ?? Number.POSITIVE_INFINITY) - 1,
+    );
     expect(metrics.siderPosition).toBe("sticky");
     expect(Math.abs(metrics.siderTop ?? Number.NaN)).toBeLessThanOrEqual(1);
     expect(metrics.siderHeight ?? 0).toBeGreaterThanOrEqual(
       metrics.viewportHeight - 1,
     );
+  } else {
+    expect(metrics.siderDisplay).toBe("none");
   }
 
   await page.getByTestId("workspace-page-body").evaluate((body) => {

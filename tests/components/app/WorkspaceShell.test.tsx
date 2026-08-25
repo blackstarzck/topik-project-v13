@@ -240,7 +240,7 @@ describe("WorkspaceShell", () => {
     expect(navMock.routerReplace).not.toHaveBeenCalled();
   });
 
-  it("renders the workspace sidebar while keeping AppHeader unused", () => {
+  it("renders an app-owned workspace aside while keeping AppHeader unused", () => {
     const { container } = renderWithIntl(
       <WorkspaceShell
         role="learner"
@@ -252,8 +252,16 @@ describe("WorkspaceShell", () => {
       </WorkspaceShell>,
     );
 
-    expect(container.querySelector(".app-workspace-layout")).toBeTruthy();
-    expect(container.querySelector(".app-workspace-sider")).toBeTruthy();
+    const workspaceLayout = container.querySelector(".app-workspace-layout");
+    const workspaceSider = container.querySelector("aside.app-workspace-sider");
+
+    expect(workspaceLayout).toBeTruthy();
+    expect(workspaceLayout?.classList.contains("ant-layout-has-sider")).toBe(
+      true,
+    );
+    expect(workspaceSider).toBeTruthy();
+    expect(container.querySelector(".ant-layout-sider")).toBeNull();
+    expect(container.querySelector(".ant-layout-sider-children")).toBeNull();
     expect(container.querySelector(".app-sidebar-shell")).toBeTruthy();
     expect(container.querySelector(".app-sidebar-menu-scroll")).toBeTruthy();
     expect(container.querySelector(".app-sidebar-menu")).toBeTruthy();
@@ -709,6 +717,11 @@ describe("WorkspaceShell", () => {
     );
 
     expect(container.querySelector(".app-workspace-sider")).toBeNull();
+    expect(
+      container
+        .querySelector(".app-workspace-layout")
+        ?.classList.contains("ant-layout-has-sider"),
+    ).toBe(false);
     expect(container.querySelector(".app-sidebar-shell")).toBeNull();
     expect(
       container.querySelector(
@@ -900,7 +913,7 @@ describe("WorkspaceShell", () => {
     expect(GLOBAL_CSS).not.toContain("@keyframes app-sidebar-icon-hover");
   });
 
-  it("sets the workspace sidebar width contract to 300px", () => {
+  it("owns the workspace sidebar layout without Ant Design Sider selectors", () => {
     const source = readFileSync(
       join(process.cwd(), "src/components/app/WorkspaceShell.tsx"),
       "utf8",
@@ -908,10 +921,35 @@ describe("WorkspaceShell", () => {
     const layoutRule = workspaceLayoutCssRule(
       ".app-workspace-layout.ant-layout",
     );
+    const siderRule = workspaceLayoutCssRule(".app-workspace-sider");
+    const desktopSiderRule = workspaceLayoutCssRules(
+      ".app-workspace-sider",
+    ).find((body) => body.includes("position: sticky;"));
+    const mobileSiderRule = workspaceLayoutCssRules(
+      ".app-workspace-sider",
+    ).find((body) => body.includes("display: none;"));
 
-    expect(source).toContain("width={300}");
+    expect(source).toContain("hasSider={!hidesWorkspaceChrome}");
+    expect(source).toContain('<aside className="app-workspace-sider">');
     expect(source).toContain("size={300}");
     expect(layoutRule).toContain("--workspace-sider-width: 300px;");
+    expect(siderRule).toContain("flex: 0 0 var(--workspace-sider-width);");
+    expect(siderRule).toContain("width: var(--workspace-sider-width);");
+    expect(siderRule).toContain("min-width: var(--workspace-sider-width);");
+    expect(siderRule).toContain("max-width: var(--workspace-sider-width);");
+    expect(siderRule).toContain("overflow: hidden;");
+    expect(siderRule).toContain(
+      "border-inline-end: 1px solid var(--app-color-border);",
+    );
+    expect(siderRule).toContain("background: var(--app-color-bg-container);");
+    expect(desktopSiderRule).toContain("top: 0;");
+    expect(desktopSiderRule).toContain("align-self: flex-start;");
+    expect(desktopSiderRule).toContain("height: max(100vh, 100dvh);");
+    expect(desktopSiderRule).toContain("max-height: max(100vh, 100dvh);");
+    expect(mobileSiderRule).toContain("display: none;");
+    expect(WORKSPACE_LAYOUT_CSS).not.toContain("ant-layout-sider");
+    expect(GLOBAL_CSS).not.toContain("ant-layout-sider");
+    expect(GLOBAL_CSS).not.toMatch(/\.app-workspace-sider\s*\{/u);
   });
 
   it("uses the drawer public body style API without an internal DOM override", () => {

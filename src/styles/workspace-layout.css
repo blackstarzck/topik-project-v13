@@ -7,8 +7,14 @@
   background: var(--app-color-bg-layout);
 }
 
-.app-workspace-sider .ant-layout-sider-children {
-  height: 100%;
+.app-workspace-sider {
+  flex: 0 0 var(--workspace-sider-width);
+  width: var(--workspace-sider-width);
+  min-width: var(--workspace-sider-width);
+  max-width: var(--workspace-sider-width);
+  overflow: hidden;
+  border-inline-end: 1px solid var(--app-color-border);
+  background: var(--app-color-bg-container);
 }
 
 .app-workspace-main.ant-layout {
@@ -114,6 +120,10 @@
     --workspace-content-padding-block: 16px;
   }
 
+  .app-workspace-sider {
+    display: none;
+  }
+
   .app-workspace-content.ant-layout-content {
     min-height: calc(100vh - var(--workspace-mobile-bar-height));
     min-height: max(
@@ -163,7 +173,7 @@
 }
 
 @media (min-width: 768px) {
-  .app-workspace-sider.ant-layout-sider {
+  .app-workspace-sider {
     position: sticky;
     top: 0;
     align-self: flex-start;

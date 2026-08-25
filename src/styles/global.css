@@ -4035,16 +4035,6 @@
   background: var(--app-color-bg-layout);
 }
 
-.app-workspace-sider {
-  overflow: hidden;
-  border-inline-end: 1px solid var(--app-color-border);
-  background: var(--app-color-bg-container) !important;
-}
-
-.app-workspace-sider .ant-layout-sider-children {
-  overflow: hidden;
-}
-
 .app-workspace-main {
   min-width: 0;
   background: var(--app-color-bg-layout);
@@ -4123,10 +4113,6 @@
 }
 
 @media (max-width: 767.98px) {
-  .app-workspace-sider {
-    display: none;
-  }
-
   .app-workspace-content {
     padding: 16px;
   }

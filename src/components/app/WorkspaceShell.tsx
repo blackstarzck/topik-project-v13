@@ -25,7 +25,7 @@ import { clearClientRecoveryForLogout } from "@/lib/writing/client-recovery-clea
 import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
 
-const { Header, Sider, Content } = Layout;
+const { Header, Content } = Layout;
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
@@ -285,6 +285,7 @@ export function WorkspaceShell({
 
   return (
     <Layout
+      hasSider={!hidesWorkspaceChrome}
       className={[
         "app-workspace-layout",
         hidesWorkspaceChrome ? "app-workspace-layout--chrome-hidden" : null,
@@ -296,15 +297,9 @@ export function WorkspaceShell({
         .join(" ")}
     >
       {hidesWorkspaceChrome ? null : (
-        <Sider
-          className="app-workspace-sider"
-          breakpoint="md"
-          collapsedWidth={0}
-          width={300}
-          trigger={null}
-        >
+        <aside className="app-workspace-sider">
           <SidebarNav role={role} planLabel={planLabel} />
-        </Sider>
+        </aside>
       )}
       <Layout className="app-workspace-main">
         {hidesWorkspaceChrome ? null : isMobile ? (

@@ -164,10 +164,20 @@ test("sidebar brand keeps 68px geometry and keyboard navigation", async ({
   await expect(page).toHaveURL(/\/library(?:[/?#]|$)/);
   await closeSessionOnlyReminder(page);
 
-  await openMobileDrawerIfNeeded(page);
-
   const menuDialog = page.locator('.app-workspace-drawer [role="dialog"]');
   if (isMobile) {
+    const menuButton = page.locator(".app-workspace-mobile-bar button").first();
+
+    await menuButton.focus();
+    await expect(menuButton).toBeFocused();
+    await menuButton.press("Enter");
+    await expect(menuDialog).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(menuDialog).toBeHidden();
+    await expect(menuButton).toBeFocused();
+
+    await menuButton.press("Enter");
     await expect(menuDialog).toBeVisible();
   }
 
@@ -219,5 +229,38 @@ test("sidebar brand keeps 68px geometry and keyboard navigation", async ({
     );
   });
   expect(horizontalOverflow).toBe(0);
+  expect(errors, errors.join("\n")).toEqual([]);
+});
+
+test("focus route omits workspace navigation chrome without browser data writes", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const restWrites: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.url().includes("/rest/v1/") &&
+      ["POST", "PUT", "PATCH", "DELETE"].includes(request.method())
+    ) {
+      restWrites.push(`${request.method()} ${request.url()}`);
+    }
+  });
+
+  await page.goto("/practice/next", { waitUntil: "networkidle" });
+  await expect(page, "bounced to /login — storageState stale?").not.toHaveURL(
+    /\/login/,
+  );
+  await expect(page.getByTestId("workspace-page-body")).toBeVisible();
+
+  const workspaceLayout = page.locator(".app-workspace-layout");
+  await expect(workspaceLayout).not.toHaveClass(/ant-layout-has-sider/);
+  await expect(page.locator(".app-workspace-sider")).toHaveCount(0);
+  await expect(page.locator(".app-workspace-mobile-bar")).toHaveCount(0);
+  await expect(page.locator(".app-workspace-drawer")).toHaveCount(0);
+  await expect(
+    page.locator(".app-notification-corner, .app-workspace-mobile-actions"),
+  ).toHaveCount(0);
+
+  expect(restWrites).toEqual([]);
   expect(errors, errors.join("\n")).toEqual([]);
 });
