@@ -456,13 +456,10 @@
   aspect-ratio: 550 / 400;
 }
 
-.signup-prompt-character-wrap .signup-character-stage__ground,
-.signup-prompt-character-wrap .signup-character-stage__paper {
-  display: none;
-}
-
 .signup-prompt-character-wrap .signup-character {
   bottom: 0;
+  border-bottom-right-radius: var(--app-radius-auth-character-base-edge);
+  border-bottom-left-radius: var(--app-radius-auth-character-base-edge);
 }
 
 .signup-prompt-character-wrap .signup-character__eyes--white i {
@@ -487,8 +484,9 @@
   z-index: 1;
   width: 32.72%;
   height: 100%;
-  border-radius: 10px 10px 0 0;
-  background: #6c3ff5;
+  border-top-left-radius: var(--app-radius-auth-character-body-top);
+  border-top-right-radius: var(--app-radius-auth-character-body-top);
+  background: var(--app-color-auth-character-purple);
 }
 
 .signup-prompt-character-wrap .signup-character--charcoal {
@@ -496,8 +494,9 @@
   z-index: 2;
   width: 21.81%;
   height: 77.5%;
-  border-radius: 8px 8px 0 0;
-  background: #2d2d2d;
+  border-top-left-radius: var(--app-radius-card);
+  border-top-right-radius: var(--app-radius-card);
+  background: var(--app-color-auth-character-charcoal);
 }
 
 .signup-prompt-character-wrap .signup-character--coral {
@@ -505,8 +504,9 @@
   z-index: 3;
   width: 43.63%;
   height: 50%;
-  border-radius: 999px 999px 0 0;
-  background: #ff9b6b;
+  border-top-left-radius: var(--app-radius-auth-character-pill);
+  border-top-right-radius: var(--app-radius-auth-character-pill);
+  background: var(--app-color-auth-character-coral);
 }
 
 .signup-prompt-character-wrap .signup-character--yellow {
@@ -514,8 +514,9 @@
   z-index: 4;
   width: 25.45%;
   height: 57.5%;
-  border-radius: 999px 999px 0 0;
-  background: #e8d754;
+  border-top-left-radius: var(--app-radius-auth-character-pill);
+  border-top-right-radius: var(--app-radius-auth-character-pill);
+  background: var(--app-color-auth-character-yellow);
 }
 
 .signup-prompt-character-wrap
@@ -883,47 +884,6 @@
   min-height: 224px;
 }
 
-.signup-character-stage__ground {
-  position: absolute;
-  right: 4%;
-  bottom: 4%;
-  left: 4%;
-  height: 12%;
-  border-radius: 999px;
-  background: rgba(47, 84, 235, 0.08);
-}
-
-.signup-character-stage__paper {
-  position: absolute;
-  top: 7%;
-  right: 7%;
-  display: grid;
-  gap: 7px;
-  width: 31%;
-  padding: 12px;
-  border: 1px solid rgba(47, 84, 235, 0.14);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 16px 36px rgba(42, 55, 89, 0.1);
-  transform: rotate(4deg);
-}
-
-.signup-character-stage__paper span {
-  display: block;
-  height: 8px;
-  border-radius: 999px;
-  background: #d9e4ff;
-}
-
-.signup-character-stage__paper span:nth-child(2) {
-  width: 78%;
-}
-
-.signup-character-stage__paper span:nth-child(3) {
-  width: 56%;
-  background: #dff7ea;
-}
-
 .signup-character {
   position: absolute;
   bottom: 9%;
@@ -936,8 +896,6 @@
   z-index: 1;
   width: 32%;
   height: 81%;
-  border-radius: 14px 14px 6px 6px;
-  background: #5b4fe8;
   transform: skewX(var(--lean));
 }
 
@@ -946,8 +904,6 @@
   z-index: 2;
   width: 23%;
   height: 60%;
-  border-radius: 12px 12px 5px 5px;
-  background: #25262d;
   transform: skewX(var(--lean));
 }
 
@@ -956,8 +912,6 @@
   z-index: 3;
   width: 43%;
   height: 43%;
-  border-radius: 999px 999px 8px 8px;
-  background: #ff9b6b;
 }
 
 .signup-character--yellow {
@@ -965,8 +919,6 @@
   z-index: 4;
   width: 26%;
   height: 53%;
-  border-radius: 999px 999px 8px 8px;
-  background: #e9d954;
 }
 
 .signup-character__eyes {
@@ -1012,8 +964,8 @@
   width: 17px;
   height: 17px;
   overflow: hidden;
-  border-radius: 999px;
-  background: #ffffff;
+  border-radius: var(--app-radius-auth-character-pill);
+  background: var(--app-color-auth-character-eye);
   transition:
     height 120ms ease-out,
     margin-top 120ms ease-out;
@@ -1025,8 +977,8 @@
   left: 5px;
   width: 7px;
   height: 7px;
-  border-radius: 999px;
-  background: #25262d;
+  border-radius: var(--app-radius-auth-character-pill);
+  background: var(--app-color-auth-character-ink);
   content: "";
   transform: translate(var(--look-x), var(--look-y));
   transition:
@@ -1046,8 +998,8 @@
 .signup-character__eyes--dots i {
   width: 11px;
   height: 11px;
-  border-radius: 999px;
-  background: #25262d;
+  border-radius: var(--app-radius-auth-character-pill);
+  background: var(--app-color-auth-character-ink);
   transform: translate(var(--look-x), var(--look-y));
   transition: transform 100ms ease-out;
 }
@@ -1058,8 +1010,8 @@
   left: 20%;
   width: 58%;
   height: 4px;
-  border-radius: 999px;
-  background: #25262d;
+  border-radius: var(--app-radius-auth-character-pill);
+  background: var(--app-color-auth-character-ink);
 }
 
 .signup-form-surface {

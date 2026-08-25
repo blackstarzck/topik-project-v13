@@ -134,25 +134,118 @@ const removedStateSelectors = [
 const preservedDeclarations = [
   [".signup-prompt-layout", "background", "#ffffff"],
   [".signup-prompt-hero", "color", "#ffffff"],
+] as const;
+
+const authCharacterTokenizedDeclarations = [
+  [
+    ".signup-prompt-character-wrap .signup-character",
+    "border-bottom-right-radius",
+    "var(--app-radius-auth-character-base-edge)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character",
+    "border-bottom-left-radius",
+    "var(--app-radius-auth-character-base-edge)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--purple",
+    "border-top-left-radius",
+    "var(--app-radius-auth-character-body-top)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--purple",
+    "border-top-right-radius",
+    "var(--app-radius-auth-character-body-top)",
+  ],
   [
     ".signup-prompt-character-wrap .signup-character--purple",
     "background",
-    "#6c3ff5",
+    "var(--app-color-auth-character-purple)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--charcoal",
+    "border-top-left-radius",
+    "var(--app-radius-card)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--charcoal",
+    "border-top-right-radius",
+    "var(--app-radius-card)",
   ],
   [
     ".signup-prompt-character-wrap .signup-character--charcoal",
     "background",
-    "#2d2d2d",
+    "var(--app-color-auth-character-charcoal)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--coral",
+    "border-top-left-radius",
+    "var(--app-radius-auth-character-pill)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--coral",
+    "border-top-right-radius",
+    "var(--app-radius-auth-character-pill)",
   ],
   [
     ".signup-prompt-character-wrap .signup-character--coral",
     "background",
-    "#ff9b6b",
+    "var(--app-color-auth-character-coral)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--yellow",
+    "border-top-left-radius",
+    "var(--app-radius-auth-character-pill)",
+  ],
+  [
+    ".signup-prompt-character-wrap .signup-character--yellow",
+    "border-top-right-radius",
+    "var(--app-radius-auth-character-pill)",
   ],
   [
     ".signup-prompt-character-wrap .signup-character--yellow",
     "background",
-    "#e8d754",
+    "var(--app-color-auth-character-yellow)",
+  ],
+  [
+    ".signup-character__eyes--white i",
+    "border-radius",
+    "var(--app-radius-auth-character-pill)",
+  ],
+  [
+    ".signup-character__eyes--white i",
+    "background",
+    "var(--app-color-auth-character-eye)",
+  ],
+  [
+    ".signup-character__eyes--white i::after",
+    "border-radius",
+    "var(--app-radius-auth-character-pill)",
+  ],
+  [
+    ".signup-character__eyes--white i::after",
+    "background",
+    "var(--app-color-auth-character-ink)",
+  ],
+  [
+    ".signup-character__eyes--dots i",
+    "border-radius",
+    "var(--app-radius-auth-character-pill)",
+  ],
+  [
+    ".signup-character__eyes--dots i",
+    "background",
+    "var(--app-color-auth-character-ink)",
+  ],
+  [
+    ".signup-character__mouth",
+    "border-radius",
+    "var(--app-radius-auth-character-pill)",
+  ],
+  [
+    ".signup-character__mouth",
+    "background",
+    "var(--app-color-auth-character-ink)",
   ],
 ] as const;
 
@@ -180,6 +273,93 @@ const removedLegacyControlRules = [
 ] as const;
 
 describe("AuthPromptExperience visual tokens", () => {
+  it("maps the visible auth character paint and geometry to semantic token consumers", () => {
+    expect(authCharacterTokenizedDeclarations).toHaveLength(22);
+
+    for (const [
+      selector,
+      property,
+      value,
+    ] of authCharacterTokenizedDeclarations) {
+      expect(
+        normalize(declarationValue(selector, property) ?? ""),
+        `${selector} { ${property} }`,
+      ).toBe(normalize(value));
+    }
+  });
+
+  it("clears the exact 16 visible auth character raw color and geometry scanner violations", () => {
+    const promptStart = globalCss.indexOf(".signup-prompt-character-wrap {");
+    const promptEnd = globalCss.indexOf(
+      ".signup-character-stage.is-typing",
+      promptStart,
+    );
+    const faceStart = globalCss.indexOf(
+      ".signup-character__eyes--white i {",
+      promptEnd,
+    );
+    const faceEnd = globalCss.indexOf(".signup-form-surface {", faceStart);
+    const actionableRules = new Set([
+      "visual.raw-color",
+      "visual.raw-radius-shadow-font",
+    ]);
+    const actionableViolations = scanUiContract([
+      {
+        path: "auth-character.css",
+        content: `${globalCss.slice(promptStart, promptEnd)}\n${globalCss.slice(faceStart, faceEnd)}`,
+      },
+    ]).violations.filter(({ ruleId }: { ruleId: string }) =>
+      actionableRules.has(ruleId),
+    );
+
+    expect(promptStart).toBeGreaterThanOrEqual(0);
+    expect(promptEnd).toBeGreaterThan(promptStart);
+    expect(faceStart).toBeGreaterThan(promptEnd);
+    expect(faceEnd).toBeGreaterThan(faceStart);
+    expect(actionableViolations).toEqual([]);
+  });
+
+  it("removes hidden paper and ground rules plus overridden base body paint", () => {
+    for (const selector of [
+      ".signup-character-stage__ground",
+      ".signup-character-stage__paper",
+      ".signup-character-stage__paper span",
+      ".signup-character-stage__paper span:nth-child(2)",
+      ".signup-character-stage__paper span:nth-child(3)",
+    ]) {
+      expect(rulesFor(selector), selector).toEqual([]);
+    }
+
+    for (const selector of [
+      ".signup-character--purple",
+      ".signup-character--charcoal",
+      ".signup-character--coral",
+      ".signup-character--yellow",
+    ]) {
+      expect(declarationValues(selector, "background"), selector).toEqual([]);
+      expect(
+        declarationValues(selector, "border-top-left-radius"),
+        selector,
+      ).toEqual([]);
+      expect(
+        declarationValues(selector, "border-top-right-radius"),
+        selector,
+      ).toEqual([]);
+      expect(declarationValues(selector, "position"), selector).toEqual([]);
+      expect(declarationValue(selector, "left"), selector).toBeTruthy();
+      expect(declarationValue(selector, "width"), selector).toBeTruthy();
+      expect(declarationValue(selector, "height"), selector).toBeTruthy();
+    }
+
+    expect(declarationValue(".signup-character", "position")).toBe("absolute");
+    expect(declarationValue(".signup-character--purple", "transform")).toBe(
+      "skewX(var(--lean))",
+    );
+    expect(declarationValue(".signup-character--charcoal", "transform")).toBe(
+      "skewX(var(--lean))",
+    );
+  });
+
   it("maps or removes each of the 24 audited auth prompt colors", () => {
     expect(tokenizedDeclarations).toHaveLength(11);
     expect(removedStateDeclarations).toHaveLength(8);
@@ -280,7 +460,7 @@ describe("AuthPromptExperience visual tokens", () => {
     expect(actionableViolations).toEqual([]);
   });
 
-  it("preserves hero, character, and outer colors outside the control cluster", () => {
+  it("preserves hero and outer colors outside the control cluster", () => {
     for (const [selector, property, value] of preservedDeclarations) {
       expect(
         declarationValue(selector, property),

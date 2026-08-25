@@ -85,6 +85,50 @@ describe("app theme contract", () => {
     );
   });
 
+  test("owns the auth character palette and preserves its current art in every production theme", () => {
+    expect(awesomicThemeTokens).toHaveProperty("authCharacter", {
+      color: {
+        purple: "#6c3ff5",
+        charcoal: "#2d2d2d",
+        coral: "#ff9b6b",
+        yellow: "#e8d754",
+        ink: "#25262d",
+        eye: "#ffffff",
+      },
+      radius: {
+        baseEdge: 0,
+        bodyTop: 10,
+        pill: 999,
+      },
+    });
+
+    const expectedBridge = {
+      "--app-color-auth-character-purple":
+        awesomicThemeTokens.authCharacter.color.purple,
+      "--app-color-auth-character-charcoal":
+        awesomicThemeTokens.authCharacter.color.charcoal,
+      "--app-color-auth-character-coral":
+        awesomicThemeTokens.authCharacter.color.coral,
+      "--app-color-auth-character-yellow":
+        awesomicThemeTokens.authCharacter.color.yellow,
+      "--app-color-auth-character-ink":
+        awesomicThemeTokens.authCharacter.color.ink,
+      "--app-color-auth-character-eye":
+        awesomicThemeTokens.authCharacter.color.eye,
+      "--app-radius-auth-character-base-edge": `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
+      "--app-radius-auth-character-body-top": `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
+      "--app-radius-auth-character-pill": `${awesomicThemeTokens.authCharacter.radius.pill}px`,
+    };
+
+    for (const themeName of ["default", defaultThemeName] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        expect(getResolvedBridgeVars(themeName, appearance)).toMatchObject(
+          expectedBridge,
+        );
+      }
+    }
+  });
+
   test("getResolvedBridgeVars can resolve the stock AntD fallback theme", () => {
     const defaultVars = getResolvedBridgeVars("default", "light");
 

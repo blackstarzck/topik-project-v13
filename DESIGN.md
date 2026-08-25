@@ -213,6 +213,33 @@ value through the same source contract.
 | Control corner | `8px` | `--app-radius-auth-prompt-control` |
 | Control height | `50px` | `--app-size-auth-prompt-control` |
 
+## Tokens — Auth Character Illustration
+
+로그인·회원가입 프롬프트의 네 캐릭터는 인터페이스 상태색이 아니라 제품 삽화다.
+따라서 Ant Design의 primary/status 색을 빌려 쓰지 않고
+`src/theme/tokens/awesomic.ts`의 `authCharacter`가 L1 palette·shape를
+소유한다. `AnimatedAuthCharacters`의 전역 CSS는 아래 L2 변수만 소비하며,
+레이아웃·애니메이션·입력 상태에 따른 움직임은 이 토큰 계약 밖에서 유지한다.
+항상 숨겨져 있던 종이와 바닥 장식은 DOM과 CSS에서 제거했다.
+
+| 삽화 역할 | 현재 값 | App bridge |
+| --- | --- | --- |
+| 보라 몸체 | `#6c3ff5` | `--app-color-auth-character-purple` |
+| 짙은 몸체 | `#2d2d2d` | `--app-color-auth-character-charcoal` |
+| 코랄 몸체 | `#ff9b6b` | `--app-color-auth-character-coral` |
+| 노랑 몸체 | `#e8d754` | `--app-color-auth-character-yellow` |
+| 얼굴 선 | `#25262d` | `--app-color-auth-character-ink` |
+| 흰 눈 | `#ffffff` | `--app-color-auth-character-eye` |
+| 몸체 아래 기준 모서리 | `0px` | `--app-radius-auth-character-base-edge` |
+| 보라 몸체 위 모서리 | `10px` | `--app-radius-auth-character-body-top` |
+| 눈·입·둥근 몸체 | `999px` | `--app-radius-auth-character-pill` |
+
+짙은 몸체의 8px 위 모서리는 기존 `--app-radius-card`를 재사용한다. 서로 다른
+위·아래 모서리는 원자적 radius 변수를 조합하며 selector별 토큰을 만들지 않는다.
+기본·dark 제품 테마는 현재 삽화 값을 보존할 수 있지만, Phase 5D alternate test
+fixture는 위의 모든 삽화 역할을 서로 다른 값으로 제공해야 한다. 테스트 전용 테마는
+production registry 또는 `src/**`에서 import하지 않는다.
+
 ## Tokens — Semantic Overlay
 
 App-owned overlay paint keeps alpha inside the color value so Ant Design can

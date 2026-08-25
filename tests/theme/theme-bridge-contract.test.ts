@@ -48,6 +48,12 @@ const testAlternateSource = {
   colorLandingCtaGhostBorder: "#51b9ad",
   colorAuthPromptFocusOutline: "rgba(91, 43, 196, 0.23)",
   colorAuthPromptLoginFocusBorder: "#e03f9f",
+  colorAuthCharacterPurple: "#7416a8",
+  colorAuthCharacterCharcoal: "#17343c",
+  colorAuthCharacterCoral: "#f94f78",
+  colorAuthCharacterYellow: "#c98b00",
+  colorAuthCharacterInk: "#221142",
+  colorAuthCharacterEye: "#ecffff",
   radius: "12px",
   radiusNumber: 12,
   radiusCard: "18px",
@@ -57,6 +63,9 @@ const testAlternateSource = {
   radiusIndicatorNumber: 3,
   radiusLandingHeroCta: "13px",
   radiusAuthPromptControl: "20px",
+  radiusAuthCharacterBaseEdge: "2px",
+  radiusAuthCharacterBodyTop: "11px",
+  radiusAuthCharacterPill: "777px",
   sizeAuthPromptControl: "57px",
   fontFamily: '"Test Alternate Sans", sans-serif',
   fontSizeCaption: "11px",
@@ -72,6 +81,18 @@ const testAlternateSource = {
   shadowAuthPromptFocus: "0 0 0 3px rgba(91, 43, 196, 0.23)",
   shadowAuthPromptLoginFocus: "0 0 0 4px rgba(224, 63, 159, 0.27)",
 } as const;
+
+const authCharacterBridgeVars = [
+  "--app-color-auth-character-purple",
+  "--app-color-auth-character-charcoal",
+  "--app-color-auth-character-coral",
+  "--app-color-auth-character-yellow",
+  "--app-color-auth-character-ink",
+  "--app-color-auth-character-eye",
+  "--app-radius-auth-character-base-edge",
+  "--app-radius-auth-character-body-top",
+  "--app-radius-auth-character-pill",
+] as const;
 
 const productionSourceExtensions = new Set([
   ".ts",
@@ -151,12 +172,21 @@ describe("generic app theme bridge contract", () => {
       "--app-color-landing-cta-ghost-border": "#51b9ad",
       "--app-color-auth-prompt-focus-outline": "rgba(91, 43, 196, 0.23)",
       "--app-color-auth-prompt-login-focus-border": "#e03f9f",
+      "--app-color-auth-character-purple": "#7416a8",
+      "--app-color-auth-character-charcoal": "#17343c",
+      "--app-color-auth-character-coral": "#f94f78",
+      "--app-color-auth-character-yellow": "#c98b00",
+      "--app-color-auth-character-ink": "#221142",
+      "--app-color-auth-character-eye": "#ecffff",
       "--app-radius": "12px",
       "--app-radius-card": "18px",
       "--app-radius-pill": "10000px",
       "--app-radius-indicator": "3px",
       "--app-radius-landing-hero-cta": "13px",
       "--app-radius-auth-prompt-control": "20px",
+      "--app-radius-auth-character-base-edge": "2px",
+      "--app-radius-auth-character-body-top": "11px",
+      "--app-radius-auth-character-pill": "777px",
       "--app-size-auth-prompt-control": "57px",
       "--app-font-family": '"Test Alternate Sans", sans-serif',
       "--app-font-size-caption": "11px",
@@ -338,6 +368,28 @@ describe("generic app theme bridge contract", () => {
       light: { card: "23px", global: "23px" },
       dark: { card: "23px", global: "23px" },
     });
+
+    const productionAuthCharacterValues = [
+      ["--app-color-auth-character-purple", "#6c3ff5"],
+      ["--app-color-auth-character-charcoal", "#2d2d2d"],
+      ["--app-color-auth-character-coral", "#ff9b6b"],
+      ["--app-color-auth-character-yellow", "#e8d754"],
+      ["--app-color-auth-character-ink", "#25262d"],
+      ["--app-color-auth-character-eye", "#ffffff"],
+      ["--app-radius-auth-character-base-edge", "0px"],
+      ["--app-radius-auth-character-body-top", "10px"],
+      ["--app-radius-auth-character-pill", "999px"],
+    ] as const;
+
+    expect(productionAuthCharacterValues).toHaveLength(
+      authCharacterBridgeVars.length,
+    );
+    for (const [varName, productionValue] of productionAuthCharacterValues) {
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).toBeTruthy();
+      expect(phase5dAlternateTheme.appBridgeVars[varName]).not.toBe(
+        productionValue,
+      );
+    }
   });
 
   test("enforces the alternate fixture production-source and dependency boundary", () => {
@@ -395,12 +447,15 @@ describe("generic app theme bridge contract", () => {
       phase5dAlternateTheme.appBridgeVars[
         "--app-shadow-auth-prompt-login-focus"
       ],
+      ...authCharacterBridgeVars.map(
+        (varName) => phase5dAlternateTheme.appBridgeVars[varName],
+      ),
       'radiusCard: "23px"',
       'radiusPill: "12000px"',
       'radiusLandingHeroCta: "17px"',
       'radiusAuthPromptControl: "25px"',
       'sizeAuthPromptControl: "58px"',
-    ];
+    ].filter((value): value is string => typeof value === "string");
     const sourceValueViolations = productionSourceFiles.flatMap(
       ({ relativePath, source }) =>
         testOnlyValues
@@ -453,12 +508,24 @@ describe("generic app theme bridge contract", () => {
           awesomicThemeTokens.authPrompt.focusOutline,
         colorAuthPromptLoginFocusBorder:
           awesomicThemeTokens.authPrompt.loginFocusBorder,
+        colorAuthCharacterPurple:
+          awesomicThemeTokens.authCharacter.color.purple,
+        colorAuthCharacterCharcoal:
+          awesomicThemeTokens.authCharacter.color.charcoal,
+        colorAuthCharacterCoral: awesomicThemeTokens.authCharacter.color.coral,
+        colorAuthCharacterYellow:
+          awesomicThemeTokens.authCharacter.color.yellow,
+        colorAuthCharacterInk: awesomicThemeTokens.authCharacter.color.ink,
+        colorAuthCharacterEye: awesomicThemeTokens.authCharacter.color.eye,
         radius: `${awesomicThemeTokens.radius.base}px`,
         radiusCard: `${awesomicThemeTokens.radius.card}px`,
         radiusPill: `${awesomicThemeTokens.radius.pill}px`,
         radiusIndicator: `${awesomicThemeTokens.radius.indicator}px`,
         radiusLandingHeroCta: `${awesomicThemeTokens.radius.landingHeroCta}px`,
         radiusAuthPromptControl: `${awesomicThemeTokens.authPrompt.radius}px`,
+        radiusAuthCharacterBaseEdge: `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
+        radiusAuthCharacterBodyTop: `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
+        radiusAuthCharacterPill: `${awesomicThemeTokens.authCharacter.radius.pill}px`,
         sizeAuthPromptControl: `${awesomicThemeTokens.authPrompt.controlHeight}px`,
         fontFamily: awesomicThemeTokens.font.runtimeFamily,
         fontSizeCaption: awesomicThemeTokens.fontSize.caption,

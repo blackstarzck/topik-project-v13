@@ -67,6 +67,12 @@ describe("retired auth CSS contract", () => {
     expect(globalCss).toContain(".signup-prompt-form-panel {");
     expect(globalCss).toContain(".signup-character-stage {");
     expect(globalCss).toContain(".signup-character--purple {");
+    expect(globalCss).toContain("var(--app-color-auth-character-purple)");
+    expect(globalCss).toContain("var(--app-radius-auth-character-body-top)");
+    expect(globalCss).toContain("var(--app-radius-auth-character-pill)");
+    expect(globalCss).toContain("var(--app-radius-auth-character-base-edge)");
+    expect(globalCss).not.toContain(".signup-character-stage__paper");
+    expect(globalCss).not.toContain(".signup-character-stage__ground");
     expect(globalCss).toContain(".signup-form-surface {");
     expect(globalCss).not.toContain(".signup-social-button.ant-btn {");
     expect(globalCss).not.toContain(".signup-form-surface .ant-btn-primary {");

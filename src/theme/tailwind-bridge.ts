@@ -25,6 +25,21 @@ const DEFAULT_FONT_SIZE_BRIDGE_VARS = {
   "--app-font-size-display": "64px",
 } as const;
 
+const DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS = {
+  "--app-color-auth-character-purple": "#6c3ff5",
+  "--app-color-auth-character-charcoal": "#2d2d2d",
+  "--app-color-auth-character-coral": "#ff9b6b",
+  "--app-color-auth-character-yellow": "#e8d754",
+  "--app-color-auth-character-ink": "#25262d",
+  "--app-color-auth-character-eye": "#ffffff",
+} as const;
+
+const DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS = {
+  "--app-radius-auth-character-base-edge": "0px",
+  "--app-radius-auth-character-body-top": "10px",
+  "--app-radius-auth-character-pill": "999px",
+} as const;
+
 const DEFAULT_BRIDGE_VARS = {
   light: {
     "--app-color-primary": "#1677ff",
@@ -51,12 +66,14 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-landing-cta-ghost-border": "#e7e7e6",
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
+    ...DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS,
     "--app-radius": "6px",
     "--app-radius-card": "8px",
     "--app-radius-pill": "10000px",
     "--app-radius-indicator": "2px",
     "--app-radius-landing-hero-cta": "0px",
     "--app-radius-auth-prompt-control": "8px",
+    ...DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS,
     "--app-size-auth-prompt-control": "50px",
     "--app-font-family": appFontFamily,
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,
@@ -89,12 +106,14 @@ const DEFAULT_BRIDGE_VARS = {
     "--app-color-landing-cta-ghost-border": "#e7e7e6",
     "--app-color-auth-prompt-focus-outline": "rgba(24, 24, 24, 0.08)",
     "--app-color-auth-prompt-login-focus-border": "#aab5ff",
+    ...DEFAULT_AUTH_CHARACTER_COLOR_BRIDGE_VARS,
     "--app-radius": "6px",
     "--app-radius-card": "8px",
     "--app-radius-pill": "10000px",
     "--app-radius-indicator": "2px",
     "--app-radius-landing-hero-cta": "0px",
     "--app-radius-auth-prompt-control": "8px",
+    ...DEFAULT_AUTH_CHARACTER_RADIUS_BRIDGE_VARS,
     "--app-size-auth-prompt-control": "50px",
     "--app-font-family": appFontFamily,
     ...DEFAULT_FONT_SIZE_BRIDGE_VARS,

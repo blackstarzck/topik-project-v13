@@ -45,6 +45,21 @@ export const awesomicThemeTokens = {
     loginFocusShadow: "0 0 0 2px rgba(82, 102, 255, 0.1)",
     radius: 8,
   },
+  authCharacter: {
+    color: {
+      purple: "#6c3ff5",
+      charcoal: "#2d2d2d",
+      coral: "#ff9b6b",
+      yellow: "#e8d754",
+      ink: "#25262d",
+      eye: "#ffffff",
+    },
+    radius: {
+      baseEdge: 0,
+      bodyTop: 10,
+      pill: 999,
+    },
+  },
   radius: {
     // The raw Awesomic reference uses very soft 28-36px surfaces. DOTORE TOPIK's
     // workspace is denser, so runtime radii are intentionally toned down.
@@ -138,12 +153,27 @@ function createAwesomicBridgeVars(appearance: "light" | "dark") {
       awesomicThemeTokens.authPrompt.focusOutline,
     "--app-color-auth-prompt-login-focus-border":
       awesomicThemeTokens.authPrompt.loginFocusBorder,
+    "--app-color-auth-character-purple":
+      awesomicThemeTokens.authCharacter.color.purple,
+    "--app-color-auth-character-charcoal":
+      awesomicThemeTokens.authCharacter.color.charcoal,
+    "--app-color-auth-character-coral":
+      awesomicThemeTokens.authCharacter.color.coral,
+    "--app-color-auth-character-yellow":
+      awesomicThemeTokens.authCharacter.color.yellow,
+    "--app-color-auth-character-ink":
+      awesomicThemeTokens.authCharacter.color.ink,
+    "--app-color-auth-character-eye":
+      awesomicThemeTokens.authCharacter.color.eye,
     "--app-radius": `${awesomicThemeTokens.radius.base}px`,
     "--app-radius-card": `${awesomicThemeTokens.radius.card}px`,
     "--app-radius-pill": `${awesomicThemeTokens.radius.pill}px`,
     "--app-radius-indicator": `${awesomicThemeTokens.radius.indicator}px`,
     "--app-radius-landing-hero-cta": `${awesomicThemeTokens.radius.landingHeroCta}px`,
     "--app-radius-auth-prompt-control": `${awesomicThemeTokens.authPrompt.radius}px`,
+    "--app-radius-auth-character-base-edge": `${awesomicThemeTokens.authCharacter.radius.baseEdge}px`,
+    "--app-radius-auth-character-body-top": `${awesomicThemeTokens.authCharacter.radius.bodyTop}px`,
+    "--app-radius-auth-character-pill": `${awesomicThemeTokens.authCharacter.radius.pill}px`,
     "--app-size-auth-prompt-control": `${awesomicThemeTokens.authPrompt.controlHeight}px`,
     "--app-font-family": awesomicThemeTokens.font.runtimeFamily,
     "--app-font-size-caption": awesomicThemeTokens.fontSize.caption,

@@ -320,6 +320,18 @@ describe("AuthPromptExperience", () => {
     ]);
   });
 
+  it("renders only the four visible auth characters", () => {
+    const { container } = renderLoginPrompt();
+
+    expect(container.querySelectorAll(".signup-character")).toHaveLength(4);
+    expect(
+      container.querySelector(".signup-character-stage__paper"),
+    ).toBeNull();
+    expect(
+      container.querySelector(".signup-character-stage__ground"),
+    ).toBeNull();
+  });
+
   it("keeps the desktop hero panel viewport-bound independently from the form column", () => {
     const heroRule = getCssRule(".signup-prompt-hero");
 

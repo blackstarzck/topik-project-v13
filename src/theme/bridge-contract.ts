@@ -23,12 +23,21 @@ export const allowedAppBridgeVars = [
   "--app-color-landing-cta-ghost-border",
   "--app-color-auth-prompt-focus-outline",
   "--app-color-auth-prompt-login-focus-border",
+  "--app-color-auth-character-purple",
+  "--app-color-auth-character-charcoal",
+  "--app-color-auth-character-coral",
+  "--app-color-auth-character-yellow",
+  "--app-color-auth-character-ink",
+  "--app-color-auth-character-eye",
   "--app-radius",
   "--app-radius-card",
   "--app-radius-pill",
   "--app-radius-indicator",
   "--app-radius-landing-hero-cta",
   "--app-radius-auth-prompt-control",
+  "--app-radius-auth-character-base-edge",
+  "--app-radius-auth-character-body-top",
+  "--app-radius-auth-character-pill",
   "--app-size-auth-prompt-control",
   "--app-font-family",
   "--app-font-size-caption",
@@ -73,12 +82,21 @@ export type AppBridgeTokenSource = {
   colorLandingCtaGhostBorder: string;
   colorAuthPromptFocusOutline: string;
   colorAuthPromptLoginFocusBorder: string;
+  colorAuthCharacterPurple: string;
+  colorAuthCharacterCharcoal: string;
+  colorAuthCharacterCoral: string;
+  colorAuthCharacterYellow: string;
+  colorAuthCharacterInk: string;
+  colorAuthCharacterEye: string;
   radius: string;
   radiusCard: string;
   radiusPill: string;
   radiusIndicator: string;
   radiusLandingHeroCta: string;
   radiusAuthPromptControl: string;
+  radiusAuthCharacterBaseEdge: string;
+  radiusAuthCharacterBodyTop: string;
+  radiusAuthCharacterPill: string;
   sizeAuthPromptControl: string;
   fontFamily: string;
   fontSizeCaption: string;
@@ -124,12 +142,21 @@ export function createAppBridgeVars(
     "--app-color-auth-prompt-focus-outline": source.colorAuthPromptFocusOutline,
     "--app-color-auth-prompt-login-focus-border":
       source.colorAuthPromptLoginFocusBorder,
+    "--app-color-auth-character-purple": source.colorAuthCharacterPurple,
+    "--app-color-auth-character-charcoal": source.colorAuthCharacterCharcoal,
+    "--app-color-auth-character-coral": source.colorAuthCharacterCoral,
+    "--app-color-auth-character-yellow": source.colorAuthCharacterYellow,
+    "--app-color-auth-character-ink": source.colorAuthCharacterInk,
+    "--app-color-auth-character-eye": source.colorAuthCharacterEye,
     "--app-radius": source.radius,
     "--app-radius-card": source.radiusCard,
     "--app-radius-pill": source.radiusPill,
     "--app-radius-indicator": source.radiusIndicator,
     "--app-radius-landing-hero-cta": source.radiusLandingHeroCta,
     "--app-radius-auth-prompt-control": source.radiusAuthPromptControl,
+    "--app-radius-auth-character-base-edge": source.radiusAuthCharacterBaseEdge,
+    "--app-radius-auth-character-body-top": source.radiusAuthCharacterBodyTop,
+    "--app-radius-auth-character-pill": source.radiusAuthCharacterPill,
     "--app-size-auth-prompt-control": source.sizeAuthPromptControl,
     "--app-font-family": source.fontFamily,
     "--app-font-size-caption": source.fontSizeCaption,
