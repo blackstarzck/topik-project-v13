@@ -595,7 +595,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 48px;
-  background: #ffffff;
+  background: var(--app-color-bg-container);
 }
 
 .signup-prompt-topbar {
@@ -621,26 +621,26 @@
   gap: 10px;
   width: fit-content;
   margin: 0 auto 44px;
-  color: #172033;
+  color: var(--app-color-text);
   font-size: 18px;
   font-weight: 800;
   text-decoration: none;
 }
 
 .signup-prompt-mobile-brand strong {
-  color: #172033;
+  color: var(--app-color-text);
 }
 
 .signup-prompt-form-heading .signup-prompt-form-title.ant-typography {
   margin: 0;
-  color: #030712;
+  color: var(--app-color-text);
   font-size: 32px;
   line-height: 1.22;
 }
 
 .signup-prompt-form-heading .signup-prompt-form-subtitle.ant-typography {
   margin: 10px 0 0;
-  color: #667085;
+  color: var(--app-color-text-secondary);
   font-size: 14px;
   line-height: 1.55;
 }
@@ -712,7 +712,7 @@
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-form-item-label > label {
-  color: #030712;
+  color: var(--app-color-text);
   font-size: 14px;
   font-weight: 500;
 }
@@ -725,22 +725,9 @@
 .signup-prompt-form-panel .signup-social-button.ant-btn {
   height: var(--auth-control-height);
   min-height: var(--auth-control-height);
-  border-color: #e5e7eb;
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--app-color-bg-container);
   box-shadow: none;
-}
-
-.signup-prompt-form-panel .signup-form-surface .ant-input:hover,
-.signup-prompt-form-panel .signup-form-surface .ant-input-affix-wrapper:hover,
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-select:not(.ant-select-disabled):hover,
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-select:not(.ant-select-disabled):hover
-  .ant-select-selector {
-  border-color: #cfd4dc;
 }
 
 .signup-prompt-form-panel .signup-form-surface .ant-input:focus,
@@ -750,7 +737,7 @@
   .signup-form-surface
   .ant-select-focused
   .ant-select-selector {
-  border-color: #181818;
+  border-color: var(--app-color-primary);
   box-shadow: 0 0 0 2px rgba(24, 24, 24, 0.08);
 }
 
@@ -758,9 +745,8 @@
   height: var(--auth-control-height) !important;
   min-height: var(--auth-control-height) !important;
   align-items: center;
-  border-color: #e5e7eb;
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--app-color-bg-container);
   box-shadow: none;
 }
 
@@ -801,9 +787,8 @@
   .ant-select-single
   .ant-select-selector {
   min-height: var(--auth-control-height);
-  border-color: #e5e7eb;
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--app-color-bg-container);
   box-shadow: none;
 }
 
@@ -839,23 +824,6 @@
   font-weight: 600;
 }
 
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled) {
-  border-color: #191919;
-  background: #191919;
-}
-
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover,
-.signup-prompt-form-panel
-  .signup-form-surface
-  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):focus-visible {
-  border-color: #000000;
-  background: #000000;
-}
-
 .signup-prompt-form-panel .signup-form-surface .ant-btn-primary:disabled,
 .signup-prompt-form-panel
   .signup-form-surface
@@ -876,12 +844,12 @@
 }
 
 .signup-prompt-form-panel .signup-social-button.ant-btn {
-  color: #172033;
+  color: var(--app-color-text);
 }
 
 .signup-prompt-form-panel .auth-input-icon {
   display: inline-flex;
-  color: #8a96ad;
+  color: var(--app-color-text-secondary);
 }
 
 .signup-prompt-form-panel .auth-form-options-row {
@@ -894,7 +862,7 @@
 
 .signup-prompt-form-panel .auth-form-remember.ant-checkbox-wrapper {
   margin: 0;
-  color: #58677f;
+  color: var(--app-color-text-secondary);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -915,7 +883,7 @@
   .signup-form-surface
   .ant-form-item-label
   > label {
-  color: #4f5f7a;
+  color: var(--app-color-text-secondary);
 }
 
 .signup-prompt-layout--login
@@ -932,7 +900,7 @@
 
 .signup-prompt-form-panel .auth-form-divider.ant-divider {
   margin: 0;
-  color: #667085;
+  color: var(--app-color-text-secondary);
   font-size: 13px;
 }
 
@@ -956,7 +924,7 @@
 }
 
 .signup-prompt-account-link .signup-prompt-account-link__link {
-  color: #111827;
+  color: var(--app-color-text);
   font-weight: 600;
   text-decoration: none;
 }
