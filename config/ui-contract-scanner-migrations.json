@@ -15,7 +15,7 @@
         "global-css.selector-freeze"
       ],
       "approvedBy": "@blackstarzck",
-    "reason": "Approve the reviewed foundation split and global CSS reduction using the final v6 feature baseline."
+    "reason": "Approve the reviewed foundation split and global CSS reduction using the final v6 feature baseline; the root theme bridge is emitted as a stylesheet rather than a static inline style."
     }
   ],
   "migrations": [
