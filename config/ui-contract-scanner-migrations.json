@@ -18,6 +18,15 @@
       "toBaselineDigest": "0f1f52ac099a265802e72a9dae2949d8c8e9a836d42e4ce0537c0cc883006073",
       "approvedBy": "@blackstarzck",
       "reason": "Approve the reviewed UI contract scanner v5 and the exact unchanged-main v5 baseline before activation."
+    },
+    {
+      "fromVersion": 4,
+      "fromDigest": "3c6d2c16f7361d661638920294529fb58f1ce9dfd338f9a637a79331f2bf4c59",
+      "toVersion": 6,
+      "toDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
+      "toBaselineDigest": "bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1",
+      "approvedBy": "@blackstarzck",
+      "reason": "Approve the reviewed UI contract scanner v6 and the exact unchanged-main v6 baseline before activation."
     }
   ]
 }
