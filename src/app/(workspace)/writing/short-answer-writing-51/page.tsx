@@ -3,13 +3,18 @@ import {
   renderWritingQuestionPage,
   type WritingQuestionSearchParams,
 } from "../_components/WritingQuestionRoute";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 
 export { generateWritingQuestionMetadata as generateMetadata };
 
-export default function ShortAnswerWriting51Page({
+export default async function ShortAnswerWriting51Page({
   searchParams,
 }: {
   searchParams: WritingQuestionSearchParams;
 }) {
-  return renderWritingQuestionPage(51, searchParams);
+  return (
+    <WorkspaceBody size="full">
+      {await renderWritingQuestionPage(51, searchParams)}
+    </WorkspaceBody>
+  );
 }

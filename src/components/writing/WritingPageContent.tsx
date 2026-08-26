@@ -1,6 +1,7 @@
 import { Button, Empty, Space } from "antd";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import styles from "./WritingPageContent.module.css";
 import { EssayWriting54Workspace } from "./EssayWriting54Workspace";
 import { LongFormWriting53Workspace } from "./LongFormWriting53Workspace";
 import { ShortAnswerWriting51Workspace } from "./ShortAnswerWriting51Workspace";
@@ -45,10 +46,12 @@ export async function WritingPageContent({
     const showUnavailableTitle = hasPreservedDraft || !canRetryProblemLoad;
     return (
       <Empty
-        className="writing-empty-state"
+        className={["writing-empty-state", styles.emptyState].join(" ")}
         description={
           <div className="flex flex-col gap-2">
-            <h1 className="writing-empty-state__title">
+            <h1
+              className={["writing-empty-state__title", styles.title].join(" ")}
+            >
               {showUnavailableTitle
                 ? t("problemUnavailableTitle", { questionNo })
                 : problemLoadFailed}

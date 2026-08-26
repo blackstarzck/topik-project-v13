@@ -45,6 +45,8 @@ import {
   type SidebarLockMap,
 } from "@/lib/routes";
 
+import styles from "./SidebarNav.module.css";
+
 type Props = {
   role: AppRole;
   planLabel?: string | null;
@@ -203,14 +205,18 @@ function SidebarIcon({
   icon: Icon,
   iconName,
   props,
+  className,
 }: {
   icon: IconsaxIcon;
   iconName: string;
   props: IconsaxIconProps;
+  className?: string;
 }) {
   return (
     <span
-      className="app-sidebar-icon"
+      className={["app-sidebar-icon", styles.icon, className]
+        .filter(Boolean)
+        .join(" ")}
       data-sidebar-icon-kind="svg"
       data-sidebar-icon-library="iconsax"
       data-sidebar-icon-name={iconName}
@@ -285,13 +291,14 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
         Menu: {
           activeBarBorderWidth: 0,
           activeBarWidth: 0,
+          iconMarginInlineEnd: 8,
           itemActiveBg: token.colorFillSecondary,
-          itemBorderRadius: 8,
+          itemBorderRadius: token.borderRadiusLG,
           itemHoverBg: token.colorFillTertiary,
           itemHoverColor: token.colorText,
           itemSelectedBg: token.colorPrimary,
           itemSelectedColor: token.colorWhite,
-          subMenuItemBorderRadius: 8,
+          subMenuItemBorderRadius: token.borderRadiusLG,
         },
       },
     }),
@@ -301,14 +308,15 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
       token.colorPrimary,
       token.colorText,
       token.colorWhite,
+      token.borderRadiusLG,
     ],
   );
 
   return (
-    <div className="app-sidebar-shell">
+    <div className={["app-sidebar-shell", styles.shell].join(" ")}>
       <button
         type="button"
-        className="app-sidebar-brand"
+        className={["app-sidebar-brand", styles.brand].join(" ")}
         aria-label={tApp("brand")}
         onClick={() => {
           router.push(APP_ROUTES.dashboard);
@@ -317,11 +325,12 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
       >
         <BrandLogo
           className="app-sidebar-brand__logo"
+          imageClassName={[styles.logoImage].join(" ")}
           height={68}
           loading="eager"
         />
       </button>
-      <div className="app-sidebar-menu-scroll">
+      <div className={["app-sidebar-menu-scroll", styles.menuScroll].join(" ")}>
         <ConfigProvider theme={sidebarMenuTheme}>
           <Menu
             mode="inline"
@@ -337,7 +346,7 @@ export function SidebarNav({ role, planLabel, onNavigate }: Props) {
               }
             }}
             items={items}
-            className="app-sidebar-menu"
+            className={["app-sidebar-menu", styles.menu].join(" ")}
           />
         </ConfigProvider>
       </div>

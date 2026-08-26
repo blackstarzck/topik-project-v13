@@ -2,7 +2,8 @@
 
 import { Drawer } from "antd";
 import type { DrawerProps } from "antd";
-import type { CSSProperties } from "react";
+
+import drawerStyles from "./AppDrawer.module.css";
 
 /**
  * Shared user-facing Drawer surface.
@@ -16,43 +17,13 @@ import type { CSSProperties } from "react";
  *
  * "use client": Drawer is interactive (portal + open state + focus management).
  */
-const appDrawerBodyStyle = {
-  display: "flex",
-  flexDirection: "column",
-  minHeight: "calc(100dvh - 56px)",
-} satisfies CSSProperties;
-
-function mergeDrawerStyles(
-  styles: DrawerProps["styles"],
-): DrawerProps["styles"] {
-  if (typeof styles === "function") {
-    return (info) => {
-      const resolved = styles(info);
-      return {
-        ...resolved,
-        body: {
-          ...appDrawerBodyStyle,
-          ...resolved?.body,
-        },
-      };
-    };
-  }
-
-  return {
-    ...styles,
-    body: {
-      ...appDrawerBodyStyle,
-      ...styles?.body,
-    },
-  };
-}
-
-export function AppDrawer({ rootClassName, styles, ...props }: DrawerProps) {
+export function AppDrawer({ rootClassName, ...props }: DrawerProps) {
   return (
     <Drawer
       {...props}
-      styles={mergeDrawerStyles(styles)}
-      rootClassName={["app-drawer", rootClassName].filter(Boolean).join(" ")}
+      rootClassName={["app-drawer", drawerStyles.root, rootClassName]
+        .filter(Boolean)
+        .join(" ")}
     />
   );
 }

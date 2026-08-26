@@ -23,6 +23,7 @@ const STRINGS = {
   continueProblem: "이어 풀기",
   loadErrorTitle: "추천을 불러오지 못했어요",
   retry: "다시 시도",
+  phoneReminderTitle: "전화번호를 등록해 주세요",
   primaryTitle: "51번 규칙 추천 검증 문제",
   secondaryTitle: "52번 규칙 추천 검증 문제",
 } as const;
@@ -79,6 +80,16 @@ async function quietNotifications(page: Page) {
   await page.route("**/rest/v1/user_notifications?**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
+}
+
+async function closeSessionOnlyReminder(page: Page) {
+  const reminderDialog = page.getByRole("dialog", {
+    name: STRINGS.phoneReminderTitle,
+  });
+  if (await reminderDialog.isVisible().catch(() => false)) {
+    await reminderDialog.locator(".ant-modal-close").click();
+    await expect(reminderDialog).toBeHidden();
+  }
 }
 
 test("C-01 computed bundle renders an honest rule-based recommendation", async ({
@@ -208,6 +219,7 @@ test("C-01 surfaces the error state on a 500 and recovers via retry", async ({
   });
 
   await page.goto("/practice/recommendations", { waitUntil: "networkidle" });
+  await closeSessionOnlyReminder(page);
 
   await expect(page.getByText(STRINGS.loadErrorTitle)).toBeVisible();
   await expect(page.getByText(STRINGS.primaryBadge)).toHaveCount(0);

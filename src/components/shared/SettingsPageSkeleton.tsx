@@ -7,12 +7,12 @@
 import { Skeleton } from "antd";
 import type { ReactNode } from "react";
 
-import { WorkspaceBody } from "@/components/app/WorkspaceBody";
+import { SettingsPageFrame } from "@/components/shared/SettingsPageFrame";
 
 /**
  * 설정 그룹(프로필 · 계정 · 언어 · 학습 목표 · 알림) route loading 스켈레톤의 공유 셸.
  *
- * 각 페이지와 동일한 `WorkspaceBody` + `max-w-[640px]` + 헤더 영역을 그대로 그려
+ * 각 페이지와 동일한 `SettingsPageFrame` + 헤더 영역을 그대로 그려
  * route 전환 시 AppLoading 스피너 대신 레이아웃 매칭 스켈레톤으로 통일한다
  * (dashboard/loading.tsx와 같은 패턴). 본문 스켈레톤은 children으로 주입한다.
  */
@@ -25,20 +25,18 @@ export function SettingsPageSkeleton({
   children: ReactNode;
 }) {
   return (
-    <WorkspaceBody>
-      <div className="w-full max-w-[640px]">
-        <div className="app-page-header">
-          <div className="app-page-header__titles flex-1">
-            <Skeleton
-              active
-              title={{ width: 160 }}
-              paragraph={subtitle ? { rows: 1, width: "72%" } : false}
-            />
-          </div>
+    <SettingsPageFrame>
+      <div className="app-page-header">
+        <div className="app-page-header__titles flex-1">
+          <Skeleton
+            active
+            title={{ width: 160 }}
+            paragraph={subtitle ? { rows: 1, width: "72%" } : false}
+          />
         </div>
-        {children}
       </div>
-    </WorkspaceBody>
+      {children}
+    </SettingsPageFrame>
   );
 }
 

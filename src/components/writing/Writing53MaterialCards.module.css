@@ -1,0 +1,51 @@
+.chartStack {
+  display: grid;
+  gap: 12px;
+}
+
+.chart {
+  margin-inline-start: 0;
+  width: 100%;
+  min-height: 180px;
+}
+
+.radialChart {
+  min-height: 156px;
+}
+
+.tooltip {
+  border-radius: var(--app-radius-writing-material-compact-surface);
+  box-shadow: var(--app-shadow-writing-material-tooltip);
+}
+
+.tooltipValue {
+  color: var(--app-color-primary);
+}
+
+.valueRow {
+  border-radius: var(--app-radius-writing-material-compact-surface);
+}
+
+.valueRow:is(:hover, :focus-visible, .valueRowActive) {
+  background: var(--app-color-writing-material-row-active-surface);
+}
+
+.valueBulletColor0 {
+  background: var(--app-color-chart-series-primary);
+}
+
+.valueBulletColor1 {
+  background: var(--app-color-status-success);
+}
+
+.valueBulletColor2 {
+  background: var(--app-color-status-warning);
+}
+
+.valueBulletColor3 {
+  background: var(--app-color-chart-accent);
+}
+
+.valueBulletColor4 {
+  background: var(--app-color-status-error);
+}

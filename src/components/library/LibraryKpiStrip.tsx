@@ -11,6 +11,7 @@ import {
   formatDashboardInactiveDuration,
   formatDashboardMonthDay,
 } from "./library-dashboard-format";
+import typographyStyles from "./LibraryTypography.module.css";
 
 const { Text } = Typography;
 
@@ -90,7 +91,7 @@ export function LibraryKpiStrip({ kpis, feedbackWaitingRefresh }: Props) {
               <Text
                 strong
                 data-testid="library-kpi-value"
-                className="block !text-[24px] !leading-tight"
+                className={`block !leading-tight ${typographyStyles.kpiValue}`}
               >
                 {item.value}
               </Text>
@@ -112,13 +113,16 @@ export function LibraryKpiStrip({ kpis, feedbackWaitingRefresh }: Props) {
                 <Text
                   strong
                   data-testid="library-kpi-recent-inactive-duration"
-                  className="block !text-[24px] !leading-tight"
+                  className={`block !leading-tight ${typographyStyles.kpiValue}`}
                 >
                   {t("kpi.inactiveSince", { duration: inactiveDuration })}
                 </Text>
               </>
             ) : (
-              <Text strong className="block !text-[24px] !leading-tight">
+              <Text
+                strong
+                className={`block !leading-tight ${typographyStyles.kpiValue}`}
+              >
                 {t("kpi.noRecentStudy")}
               </Text>
             )}

@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button, Spin, Steps, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  ConfigProvider,
+  Spin,
+  Steps,
+  theme as antdTheme,
+  Typography,
+} from "antd";
 import {
   Clock3,
   LayoutDashboard,
@@ -14,6 +21,8 @@ import { useRouter } from "next/navigation";
 import { MANUAL_RETRY_COOLDOWN_MS } from "@/lib/request-control/policies";
 import { useSingleFlightAction } from "@/lib/request-control/useSingleFlightAction";
 import { APP_ROUTES } from "@/lib/routes";
+
+import { createAnalysisStepsTheme } from "./analysis-loading-theme";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -81,6 +90,11 @@ export function AnalysisLoadingPage({
   const router = useRouter();
   const reduced = useReducedMotion(reduceMotion);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const { token } = antdTheme.useToken();
+  const analysisStepsTheme = useMemo(
+    () => createAnalysisStepsTheme(token.colorBgContainer),
+    [token.colorBgContainer],
+  );
 
   const active = status === "pending" || status === "analyzing";
   const exhausted = active && pollingExhausted;
@@ -207,20 +221,22 @@ export function AnalysisLoadingPage({
                   </Text>
                 </div>
 
-                <Steps
-                  className={`analysis-loading__steps${
-                    onLastStep ? " analysis-loading__steps--calculating" : ""
-                  }`}
-                  current={step}
-                  percent={displayedRingPercent}
-                  titlePlacement="vertical"
-                  variant="outlined"
-                  responsive={false}
-                  aria-label={t("progressLabel")}
-                  items={STEP_KEYS.map((key) => ({
-                    title: t(`steps.${key}Title`),
-                  }))}
-                />
+                <ConfigProvider theme={analysisStepsTheme}>
+                  <Steps
+                    className={`analysis-loading__steps${
+                      onLastStep ? " analysis-loading__steps--calculating" : ""
+                    }`}
+                    current={step}
+                    percent={displayedRingPercent}
+                    titlePlacement="vertical"
+                    variant="outlined"
+                    responsive={false}
+                    aria-label={t("progressLabel")}
+                    items={STEP_KEYS.map((key) => ({
+                      title: t(`steps.${key}Title`),
+                    }))}
+                  />
+                </ConfigProvider>
               </div>
             ) : null}
           </div>

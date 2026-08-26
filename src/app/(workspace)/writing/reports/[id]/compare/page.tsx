@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { ComparisonReportView } from "@/components/reports/ComparisonReportView";
 import { requireUser } from "@/lib/auth/session";
 import { getComparisonReportViewModel } from "@/lib/writing/comparison-report-view-model";
@@ -20,5 +21,9 @@ export default async function CompareReportPage({
   const viewModel = await getComparisonReportViewModel(id);
   if (!viewModel) notFound();
 
-  return <ComparisonReportView key={viewModel.reportId} {...viewModel} />;
+  return (
+    <WorkspaceBody size="full">
+      <ComparisonReportView key={viewModel.reportId} {...viewModel} />
+    </WorkspaceBody>
+  );
 }

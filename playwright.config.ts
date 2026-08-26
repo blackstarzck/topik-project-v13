@@ -1,7 +1,9 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 import {
+  SUPABASE_DEV_PROJECT_REF,
+  assertLiveDevProjectTarget,
   resolvePublicPlaywrightSafety,
   resolveStandardPlaywrightSafety,
 } from "./scripts/lib/supabase-target-safety.mjs";
@@ -40,12 +42,34 @@ function loadEnvLocal() {
 }
 loadEnvLocal();
 const publicReadOnly = process.env.PLAYWRIGHT_PUBLIC_READ_ONLY === "1";
-const standardSafety = publicReadOnly
-  ? resolvePublicPlaywrightSafety(process.env)
-  : resolveStandardPlaywrightSafety(process.env);
+const authReadOnly = process.env.PLAYWRIGHT_AUTH_READ_ONLY === "1";
+
+if (publicReadOnly && authReadOnly) {
+  throw new Error(
+    "PLAYWRIGHT_AUTH_READ_ONLY=1 and PLAYWRIGHT_PUBLIC_READ_ONLY=1 are mutually exclusive.",
+  );
+}
+
+const playwrightSafety =
+  publicReadOnly || authReadOnly
+    ? resolvePublicPlaywrightSafety(process.env)
+    : resolveStandardPlaywrightSafety(process.env);
+
+if (authReadOnly) {
+  assertLiveDevProjectTarget({
+    projectRef: SUPABASE_DEV_PROJECT_REF,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  });
+}
 
 const STUDENT_STATE = "tests/e2e/auth-state/student.json";
-const viewportProjects = publicReadOnly
+if (authReadOnly && !existsSync(path.resolve(process.cwd(), STUDENT_STATE))) {
+  throw new Error(
+    `PLAYWRIGHT_AUTH_READ_ONLY=1 requires the saved auth state at ${STUDENT_STATE}.`,
+  );
+}
+
+const standardViewportProjects = publicReadOnly
   ? [
       {
         name: "public-mobile-360",
@@ -107,20 +131,43 @@ const viewportProjects = publicReadOnly
       },
     ];
 
+const viewportProjects = authReadOnly
+  ? [
+      {
+        name: "auth-read-only-mobile-360",
+        testMatch: /screens\/phase5d-alternate-theme\.spec\.ts$/,
+        use: {
+          ...devices["Desktop Chrome"],
+          viewport: { width: 360, height: 720 },
+          storageState: STUDENT_STATE,
+        },
+      },
+      {
+        name: "auth-read-only-desktop-1280",
+        testMatch: /screens\/phase5d-alternate-theme\.spec\.ts$/,
+        use: {
+          ...devices["Desktop Chrome"],
+          viewport: { width: 1280, height: 800 },
+          storageState: STUDENT_STATE,
+        },
+      },
+    ]
+  : standardViewportProjects;
+
 export default defineConfig({
   testDir: "tests/e2e",
   // phase-6-smoke.spec.mjs is a standalone node script (no test() calls, calls
   // process.exit) — exclude it from the Playwright runner so it can't abort the run.
   // The live remote suites are topik-ai-owned provider/canonical acceptance
   // and never run in default v13. Phase smoke remains a standalone Node script.
-  testIgnore: standardSafety.testIgnore,
+  testIgnore: playwrightSafety.testIgnore,
   fullyParallel: false, // serialize for coverage matrix correctness
   workers: 1,
   retries: 1, // R-8 Windows mitigation: 1 retry on screenshot/nav failure
   timeout: 30_000,
   expect: { timeout: 5_000 },
   use: {
-    baseURL: standardSafety.baseUrl,
+    baseURL: playwrightSafety.baseUrl,
     actionTimeout: 10_000,
     navigationTimeout: 15_000,
     screenshot: "only-on-failure",

@@ -616,8 +616,17 @@ describe("SignUpForm", () => {
   it("starts Google OAuth without requiring the email sign-up form", async () => {
     renderInApp(<SignUpForm />);
 
+    const googleButton = screen.getByRole("button", {
+      name: "Google로 계속",
+    }) as HTMLButtonElement;
+    expect(googleButton.className).toContain("signup-social-button");
+    expect(googleButton.className).toContain("ant-btn-default");
+    expect(googleButton.className).not.toContain("ant-btn-primary");
+    expect(googleButton.className).not.toContain("ant-btn-dangerous");
+    expect(googleButton.disabled).toBe(false);
+
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Google로 계속" }));
+      fireEvent.click(googleButton);
     });
 
     await waitFor(() => {
@@ -631,6 +640,9 @@ describe("SignUpForm", () => {
       },
     });
     expect(signUpMock).not.toHaveBeenCalled();
+    expect(googleButton.className).toContain("ant-btn-default");
+    expect(googleButton.className).toContain("ant-btn-loading");
+    expect(googleButton.className).not.toContain("ant-btn-dangerous");
   });
 
   it("shows external-browser guidance instead of starting Google OAuth in KakaoTalk", async () => {

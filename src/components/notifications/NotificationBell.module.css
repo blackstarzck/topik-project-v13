@@ -1,0 +1,40 @@
+.panel {
+  width: 320px;
+  max-width: 78vw;
+  font-size: 14px;
+}
+
+.panel :global(.ant-typography) {
+  font-size: 14px;
+}
+
+.panel :global(.ant-btn) {
+  font-size: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.markAll:global(.ant-btn) {
+  font-size: 14px;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+@media (max-width: 767.98px) {
+  .panel {
+    max-width: calc(100vw - 48px);
+  }
+}

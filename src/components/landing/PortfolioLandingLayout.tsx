@@ -349,15 +349,6 @@ function CoreValueSection() {
                   sizes="(max-width: 768px) 100vw, 33vw"
                   draggable={false}
                 />
-                <div
-                  className="landing-layout-service__strip"
-                  aria-hidden="true"
-                >
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
               </div>
               <h3>{title}</h3>
               <p>{description}</p>

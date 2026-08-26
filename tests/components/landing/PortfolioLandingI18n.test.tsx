@@ -94,4 +94,13 @@ describe("PortfolioLandingLayout locale catalog", () => {
       expect(screen.queryByText("학습 현황부터", { exact: false })).toBeNull();
     },
   );
+
+  it("does not render retired placeholder-only artwork", () => {
+    const { container } = renderLanding("ko");
+
+    expect(
+      container.querySelector(".landing-layout-service__strip"),
+    ).toBeNull();
+    expect(container.querySelector(".landing-layout-visual > em")).toBeNull();
+  });
 });

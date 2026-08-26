@@ -3,6 +3,7 @@
 import { Alert, Statistic, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { AppCard } from "@/components/shared/AppCard";
+import styles from "./FeedbackSummary.module.css";
 import type {
   QuestionNo,
   WritingFeedbackRow,
@@ -89,7 +90,7 @@ export function FeedbackSummary({
           title={t("scoreTitle")}
           value={score}
           suffix={`/ ${max}`}
-          className="[&_.ant-statistic-content-value]:text-[46px] [&_.ant-statistic-content-value]:font-bold [&_.ant-statistic-content-value]:leading-none"
+          className={styles.score}
         />
       )}
       {submission ? (

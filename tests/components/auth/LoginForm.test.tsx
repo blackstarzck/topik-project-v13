@@ -269,8 +269,17 @@ describe("LoginForm", () => {
   it("starts Google OAuth with post-auth redirect", async () => {
     renderInApp(<LoginForm />);
 
+    const googleButton = screen.getByRole("button", {
+      name: "Google로 로그인",
+    }) as HTMLButtonElement;
+    expect(googleButton.className).toContain("signup-social-button");
+    expect(googleButton.className).toContain("ant-btn-default");
+    expect(googleButton.className).not.toContain("ant-btn-primary");
+    expect(googleButton.className).not.toContain("ant-btn-dangerous");
+    expect(googleButton.disabled).toBe(false);
+
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Google로 로그인" }));
+      fireEvent.click(googleButton);
     });
 
     await waitFor(() => {
@@ -283,6 +292,9 @@ describe("LoginForm", () => {
           "http://localhost:3000/auth/callback?next=%2Fauth%2Fpost-auth%3Fintent%3Dlogin",
       },
     });
+    expect(googleButton.className).toContain("ant-btn-default");
+    expect(googleButton.className).toContain("ant-btn-loading");
+    expect(googleButton.className).not.toContain("ant-btn-dangerous");
   });
 
   it("starts Google OAuth with an internal next target when present", async () => {

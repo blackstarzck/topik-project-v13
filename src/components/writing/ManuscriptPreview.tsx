@@ -2,11 +2,18 @@
 
 import { Typography } from "antd";
 import { useTranslations } from "next-intl";
+import styles from "./ManuscriptPreview.module.css";
 
 const { Text, Title } = Typography;
 const MIN_VISIBLE_LINES = 20;
 
 export type ManuscriptSectionKey = "intro" | "body" | "conclusion";
+
+const SECTION_STYLE_BY_KEY = {
+  intro: styles.intro,
+  body: styles.body,
+  conclusion: styles.conclusion,
+} satisfies Record<ManuscriptSectionKey, string>;
 
 type ManuscriptCell = {
   char: string;
@@ -56,7 +63,9 @@ export function ManuscriptPreview({
       aria-label={t("manuscriptTitle")}
       className={[
         "writing-manuscript-preview",
+        styles.preview,
         !showHeader ? "writing-manuscript-preview--compact" : "",
+        !showHeader ? styles.compact : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -64,16 +73,26 @@ export function ManuscriptPreview({
     >
       {showHeader ? (
         <>
-          <Title level={5} className="writing-manuscript-preview__title">
+          <Title
+            level={5}
+            className={["writing-manuscript-preview__title", styles.title].join(
+              " ",
+            )}
+          >
             {t("manuscriptTitle")}
           </Title>
-          <Text type="secondary" className="writing-manuscript-preview__meta">
+          <Text
+            type="secondary"
+            className={["writing-manuscript-preview__meta", styles.meta].join(
+              " ",
+            )}
+          >
             {t("manuscriptPerLine", { charsPerLine })}
           </Text>
         </>
       ) : null}
       <div
-        className="writing-manuscript-preview__grid"
+        className={["writing-manuscript-preview__grid", styles.grid].join(" ")}
         data-testid="manuscript-preview-grid"
       >
         {lines.map((row, rowIdx) => (
@@ -85,6 +104,9 @@ export function ManuscriptPreview({
               );
               const sectionClass = cell?.section
                 ? `writing-manuscript-preview__cell--${cell.section}`
+                : "";
+              const sectionStyle = cell?.section
+                ? SECTION_STYLE_BY_KEY[cell.section]
                 : "";
               const sectionLabel = cell?.section
                 ? (sectionLabels?.[cell.section] ?? cell.section)
@@ -100,10 +122,13 @@ export function ManuscriptPreview({
                   }
                   className={[
                     "writing-manuscript-preview__cell",
+                    styles.cell,
                     sectionClass,
+                    sectionStyle,
                     highlighted
                       ? "writing-manuscript-preview__cell--highlighted"
                       : "",
+                    highlighted ? styles.highlighted : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}

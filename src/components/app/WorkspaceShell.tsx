@@ -24,8 +24,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { clearClientRecoveryForLogout } from "@/lib/writing/client-recovery-cleanup";
 import { PhoneNumberReminderModal } from "./PhoneNumberReminderModal";
 import { SidebarNav } from "./SidebarNav";
+import styles from "./WorkspaceShell.module.css";
 
-const { Header, Sider, Content } = Layout;
+const { Content } = Layout;
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
@@ -200,14 +201,26 @@ export function WorkspaceShell({
     void clearClientRecoveryForLogout(userId).finally(() => form.submit());
   };
   const profilePopoverContent = profileName ? (
-    <div className="app-profile-popover-panel">
+    <div
+      className={["app-profile-popover-panel", styles.profilePopoverPanel].join(
+        " ",
+      )}
+    >
       <ul
-        className="app-profile-popover-list"
+        className={["app-profile-popover-list", styles.profilePopoverList].join(
+          " ",
+        )}
         role="menu"
         aria-label={t("userSummary")}
       >
         {profileActions.map((item) => (
-          <li key={item.key} className="app-profile-popover-item">
+          <li
+            key={item.key}
+            className={[
+              "app-profile-popover-item",
+              styles.profilePopoverItem,
+            ].join(" ")}
+          >
             <button
               type="button"
               role="menuitem"
@@ -230,7 +243,13 @@ export function WorkspaceShell({
       placement="bottomRight"
       trigger="click"
       content={profilePopoverContent}
-      classNames={{ root: "app-notification-popover app-profile-popover" }}
+      classNames={{
+        root: [
+          "app-notification-popover",
+          "app-profile-popover",
+          styles.profilePopover,
+        ].join(" "),
+      }}
     >
       <button
         type="button"
@@ -285,6 +304,7 @@ export function WorkspaceShell({
 
   return (
     <Layout
+      hasSider={!hidesWorkspaceChrome}
       className={[
         "app-workspace-layout",
         hidesWorkspaceChrome ? "app-workspace-layout--chrome-hidden" : null,
@@ -296,19 +316,13 @@ export function WorkspaceShell({
         .join(" ")}
     >
       {hidesWorkspaceChrome ? null : (
-        <Sider
-          className="app-workspace-sider"
-          breakpoint="md"
-          collapsedWidth={0}
-          width={300}
-          trigger={null}
-        >
+        <aside className="app-workspace-sider">
           <SidebarNav role={role} planLabel={planLabel} />
-        </Sider>
+        </aside>
       )}
       <Layout className="app-workspace-main">
         {hidesWorkspaceChrome ? null : isMobile ? (
-          <Header className="app-workspace-mobile-bar">
+          <header className="app-workspace-mobile-bar">
             <Button
               type="text"
               aria-label={t("openMenu")}
@@ -318,15 +332,22 @@ export function WorkspaceShell({
             {/* Absolutely centered in the bar so it stays put regardless of the
                 menu/bell widths (e.g. an unread badge on the bell). */}
             <span
-              className="app-workspace-mobile-brand"
+              className={[
+                "app-workspace-mobile-brand",
+                styles.mobileBrand,
+              ].join(" ")}
               aria-label={t("brand")}
             >
-              <BrandLogo height={48} loading="eager" />
+              <BrandLogo
+                height={48}
+                loading="eager"
+                imageClassName={[styles.mobileBrandImage].join(" ")}
+              />
             </span>
             {hidesGlobalFloatingActions ? null : (
               <div className="app-workspace-mobile-actions">{userActions}</div>
             )}
-          </Header>
+          </header>
         ) : hidesGlobalFloatingActions ? null : (
           /* No desktop header exists, so global user actions float fixed at
              the top-right corner on regular workspace pages. */
@@ -353,12 +374,13 @@ export function WorkspaceShell({
 
       {hidesWorkspaceChrome ? null : (
         <AppDrawer
-          rootClassName="app-workspace-drawer"
+          rootClassName={["app-workspace-drawer", styles.workspaceDrawer].join(
+            " ",
+          )}
           placement="left"
           size={300}
           open={showDrawer}
           onClose={() => setDrawerOpen(false)}
-          styles={{ body: { padding: 0 } }}
           title={t("menu")}
         >
           <SidebarNav

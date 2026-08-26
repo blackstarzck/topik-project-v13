@@ -10,9 +10,11 @@ import {
   difficultyLabelKey,
 } from "@/components/practice/DifficultyMeter";
 import type { LibraryReviewCandidate } from "@/lib/library/types";
-import { writingQuestionNeonClass } from "@/lib/writing/question-number-neon";
 
 import { formatDashboardDate } from "./library-dashboard-format";
+import { LibraryReviewQuestionNumber } from "./LibraryReviewQuestionNumber";
+import styles from "./LibraryReviewCandidateCard.module.css";
+import typographyStyles from "./LibraryTypography.module.css";
 
 const { Text } = Typography;
 
@@ -49,19 +51,16 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
           max: candidate.scoreMax,
         })
       : t("meta.totalScoreUnavailable");
-  const questionNoLabel = candidate.questionNo
-    ? t("questionNo", { questionNo: candidate.questionNo })
-    : t("questionUnknown");
-
   return (
     <AppCard
       size="small"
       data-testid="library-review-candidate-card"
-      className="library-review-candidate-card h-full"
+      className="library-review-candidate-card flex h-full"
+      classNames={{ body: "flex h-full w-full" }}
     >
       <article
         data-testid="library-review-candidate-shell"
-        className="flex h-[300px] min-h-[300px] flex-col"
+        className="flex h-[300px] min-h-[300px] w-full flex-col"
       >
         <section
           data-testid="library-review-candidate-top"
@@ -75,24 +74,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
               data-testid="library-review-candidate-question-row"
               className="flex justify-end"
             >
-              {candidate.questionNo ? (
-                <span
-                  aria-label={questionNoLabel}
-                  className={[
-                    "writing-question-number library-review-candidate-question-number font-['Space_Grotesk'] leading-none",
-                    writingQuestionNeonClass(
-                      "writing-question-number",
-                      candidate.questionNo,
-                    ),
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  {candidate.questionNo}
-                </span>
-              ) : (
-                <Tag className="m-0 text-sm">{questionNoLabel}</Tag>
-              )}
+              <LibraryReviewQuestionNumber questionNo={candidate.questionNo} />
             </div>
 
             <div
@@ -122,7 +104,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
             <Text
               type="secondary"
               data-testid="library-review-candidate-summary"
-              className="block !text-[14px] !leading-[22px]"
+              className={`block ${typographyStyles.metadata}`}
             >
               {primaryReason}
               {" \u00b7 "}
@@ -131,7 +113,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
             <Text
               type="secondary"
               data-testid="library-review-candidate-total-score"
-              className="block !text-[14px] !leading-[22px]"
+              className={`block ${typographyStyles.metadata}`}
             >
               {totalScore}
             </Text>
@@ -139,7 +121,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
               <Text
                 type="secondary"
                 data-testid="library-review-candidate-estimated-time"
-                className="inline-flex items-center gap-2 !text-[14px] !leading-[22px]"
+                className={`inline-flex items-center gap-2 ${typographyStyles.metadata}`}
               >
                 <Clock3 size={16} aria-hidden="true" />
                 <span>{estimatedTime}</span>
@@ -149,7 +131,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
               <Text
                 type="secondary"
                 data-testid="library-review-candidate-difficulty"
-                className="inline-flex items-center gap-2 !text-[14px] !leading-[22px]"
+                className={`inline-flex items-center gap-2 ${typographyStyles.metadata}`}
               >
                 <DifficultyStateIcon
                   level={candidate.difficultyLevel}
@@ -165,7 +147,7 @@ export function LibraryReviewCandidateCard({ candidate }: Props) {
           <Tooltip title={scoreTooltip}>
             <progress
               data-testid="library-review-candidate-progress"
-              className="library-review-candidate-score-progress block h-[3px] w-full"
+              className={`library-review-candidate-score-progress block h-[3px] w-full ${styles.scoreProgress}`}
               value={candidate.scorePercent ?? 0}
               max={100}
               aria-label={scoreTooltip}

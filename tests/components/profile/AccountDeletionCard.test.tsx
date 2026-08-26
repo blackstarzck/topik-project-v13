@@ -23,6 +23,7 @@ vi.mock("@/lib/writing/client-recovery-cleanup", () => ({
 }));
 
 import { AccountDeletionCard } from "../../../src/components/profile/AccountDeletionCard";
+import AccountSettingsLoading from "../../../src/app/(workspace)/settings/account/loading";
 import { ACCOUNT_DELETION_CONFIRMATION_TEXT } from "../../../src/lib/auth/account-deletion";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -52,9 +53,20 @@ describe("AccountDeletionCard", () => {
     expect(openButton.classList.contains("ant-btn-primary")).toBe(true);
     expect(openButton.classList.contains("ant-btn-dangerous")).toBe(true);
     expect(container.querySelector(".account-delete-section")).toBeTruthy();
+    expect(
+      container.querySelector(".account-delete-card.app-card.app-surface"),
+    ).toBeTruthy();
     expect(container.querySelector(".account-delete-actions")).toBeTruthy();
     // ko 카탈로그의 settings.account.dangerZone.title
     expect(screen.getAllByText("회원 탈퇴").length).toBeGreaterThan(0);
+  });
+
+  it("keeps the loading danger-zone card on the same stable class", () => {
+    const { container } = renderWithIntl(<AccountSettingsLoading />);
+
+    expect(
+      container.querySelector(".account-delete-card.app-card.app-surface"),
+    ).toBeTruthy();
   });
 
   it("keeps the account deletion area visually separated and right-aligns its action", () => {
@@ -67,7 +79,7 @@ describe("AccountDeletionCard", () => {
       /\.account-delete-actions\s*\{[\s\S]*?display:\s*flex;[\s\S]*?justify-content:\s*flex-end;/,
     );
     expect(css).toMatch(
-      /\.account-delete-card\.app-card\.app-surface\s*\{[\s\S]*?border:\s*1px solid var\(--ant-color-error-border\);[\s\S]*?background:\s*var\(--ant-color-error-bg\);/,
+      /\.account-delete-card\.app-card\.app-surface\s*\{[\s\S]*?border:\s*1px solid var\(--app-color-status-error-border\);[\s\S]*?background:\s*var\(--app-color-status-error-surface\);/,
     );
   });
 

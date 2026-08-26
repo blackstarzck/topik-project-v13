@@ -1,6 +1,7 @@
 "use client";
 
 import { Typography } from "antd";
+import styles from "./InteractiveBlankPrompt.module.css";
 import { AppCard } from "@/components/shared/AppCard";
 import { tokenizeQ51Prompt } from "@/lib/writing/q51-prompt";
 
@@ -60,8 +61,11 @@ export function InteractiveBlankPrompt({
               type="button"
               className={[
                 "writing-inline-blank",
+                styles.blank,
                 isActive ? "writing-inline-blank--active" : "",
+                isActive ? styles.active : "",
                 isFilled ? "writing-inline-blank--filled" : "",
+                isFilled ? styles.filled : "",
               ]
                 .filter(Boolean)
                 .join(" ")}

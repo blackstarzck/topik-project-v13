@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import NextLink from "next/link";
-import { Flex, Typography } from "antd";
+import { ConfigProvider, Flex, theme as antdTheme, Typography } from "antd";
 
 import { AnimatedAuthCharacters } from "@/components/auth/AnimatedAuthCharacters";
 import { AuthEntrySessionGuard } from "@/components/auth/AuthEntrySessionGuard";
@@ -10,10 +10,13 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { getAuthEntryRedirectPath } from "@/lib/auth/completion-routes";
+import {
+  createAuthPromptTheme,
+  type AuthPromptMode,
+} from "./auth-prompt-theme";
+import styles from "./AuthPromptExperience.module.css";
 
 const { Link: AntLink, Paragraph, Text, Title } = Typography;
-
-type AuthPromptMode = "login" | "sign-up";
 
 type AuthPromptExperienceProps = {
   mode: AuthPromptMode;
@@ -40,6 +43,11 @@ export function AuthPromptExperience({
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSignUpCoolingDown, setIsSignUpCoolingDown] = useState(false);
+  const { token } = antdTheme.useToken();
+  const authPromptTheme = useMemo(
+    () => createAuthPromptTheme(mode, token),
+    [mode, token],
+  );
   const titleId = `${mode}-title`;
   const isSwitchDisabled = mode === "sign-up" && isSignUpCoolingDown;
   const guardRedirectTo = getAuthEntryRedirectPath(`/${mode}`);
@@ -62,7 +70,10 @@ export function AuthPromptExperience({
         </div>
       </aside>
 
-      <main className="signup-prompt-form-panel" aria-labelledby={titleId}>
+      <main
+        className={["signup-prompt-form-panel", styles.formPanel].join(" ")}
+        aria-labelledby={titleId}
+      >
         <div className="signup-prompt-topbar">
           <NextLink
             href="/"
@@ -73,8 +84,17 @@ export function AuthPromptExperience({
           </NextLink>
         </div>
 
-        <Flex vertical className="signup-prompt-form-inner">
-          <Flex vertical align="center" className="signup-prompt-form-heading">
+        <Flex
+          vertical
+          className={["signup-prompt-form-inner", styles.formInner].join(" ")}
+        >
+          <Flex
+            vertical
+            align="center"
+            className={["signup-prompt-form-heading", styles.formHeading].join(
+              " ",
+            )}
+          >
             <Title id={titleId} level={1} className="signup-prompt-form-title">
               {pageHeading}
             </Title>
@@ -83,24 +103,28 @@ export function AuthPromptExperience({
             </Paragraph>
           </Flex>
 
-          <div className="signup-form-surface">
-            {mode === "login" ? (
-              <Suspense fallback={null}>
-                <LoginForm
+          <ConfigProvider theme={authPromptTheme}>
+            <div
+              className={["signup-form-surface", styles.formSurface].join(" ")}
+            >
+              {mode === "login" ? (
+                <Suspense fallback={null}>
+                  <LoginForm
+                    onTypingChange={setIsTyping}
+                    onPasswordChange={setPassword}
+                    onPasswordVisibilityChange={setPasswordVisible}
+                  />
+                </Suspense>
+              ) : (
+                <SignUpForm
                   onTypingChange={setIsTyping}
                   onPasswordChange={setPassword}
                   onPasswordVisibilityChange={setPasswordVisible}
+                  onCooldownChange={setIsSignUpCoolingDown}
                 />
-              </Suspense>
-            ) : (
-              <SignUpForm
-                onTypingChange={setIsTyping}
-                onPasswordChange={setPassword}
-                onPasswordVisibilityChange={setPasswordVisible}
-                onCooldownChange={setIsSignUpCoolingDown}
-              />
-            )}
-          </div>
+              )}
+            </div>
+          </ConfigProvider>
 
           <Flex
             justify="center"

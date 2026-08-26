@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { cleanup, screen } from "@testing-library/react";
 import { afterEach } from "vitest";
 import { describe, expect, it } from "vitest";
@@ -9,6 +11,11 @@ import {
   type WorkspaceBodySize,
 } from "../../../src/components/app/WorkspaceBody";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
+
+const WORKSPACE_LAYOUT_CSS = readFileSync(
+  join(process.cwd(), "src/styles/workspace-layout.css"),
+  "utf8",
+);
 
 const SIZES: WorkspaceBodySize[] = [
   "form",
@@ -35,8 +42,35 @@ describe("WorkspaceBody", () => {
     expect(body.getAttribute("data-workspace-body-size")).toBe("workspace");
     expect(body.classList.contains("app-workspace-body")).toBe(true);
     expect(body.classList.contains("app-workspace-body--workspace")).toBe(true);
+    expect(body.classList.contains("app-workspace-body--page")).toBe(true);
     expect(body.classList.contains("custom-body-class")).toBe(true);
     expect(container.querySelector("main")).toBeNull();
+  });
+
+  it("preserves a caller test id and only defaults it when omitted", () => {
+    const { rerender } = renderWithIntl(
+      <WorkspaceBody data-testid="custom-workspace-body">
+        <span>custom id</span>
+      </WorkspaceBody>,
+    );
+
+    expect(screen.getByTestId("custom-workspace-body")).toBeTruthy();
+    expect(screen.queryByTestId("workspace-page-body")).toBeNull();
+
+    rerender(
+      <WorkspaceBody>
+        <span>default id</span>
+      </WorkspaceBody>,
+    );
+
+    expect(screen.getByTestId("workspace-page-body")).toBeTruthy();
+  });
+
+  it("keeps page layout styles on the semantic hook instead of the test id", () => {
+    expect(WORKSPACE_LAYOUT_CSS).not.toContain("workspace-page-body");
+    expect(
+      WORKSPACE_LAYOUT_CSS.match(/\.app-workspace-body--page(?=[\s{])/gu),
+    ).toHaveLength(3);
   });
 
   it.each(SIZES)("applies the %s size contract", (size) => {
@@ -79,5 +113,7 @@ describe("WorkspaceFixedActionBar", () => {
     expect(inner?.classList.contains("app-workspace-body")).toBe(true);
     expect(inner?.classList.contains("app-workspace-body--task")).toBe(true);
     expect(inner?.classList.contains("custom-fixed-inner")).toBe(true);
+    expect(root.classList.contains("app-workspace-body--page")).toBe(false);
+    expect(inner?.classList.contains("app-workspace-body--page")).toBe(false);
   });
 });
