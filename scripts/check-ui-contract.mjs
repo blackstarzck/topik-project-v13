@@ -18,6 +18,7 @@ import {
   createUiContractBaseline,
   formatUiContractReport,
   normalizeRepoPath,
+  partitionUiContractViolations,
   scanUiContract,
   validateApprovalManifest,
   validateExceptionManifest,
@@ -144,7 +145,7 @@ export function resolveBaseRef(cliBaseRef, env, mode) {
     throw new UiContractError("UI_BASE_REF_MISMATCH");
   }
   const resolved = cliValue ?? envValue;
-  if (env.CI === "true" && mode === "diff-block" && !resolved) {
+  if (env.CI === "true" && (mode === "diff-block" || mode === "error") && !resolved) {
     throw new UiContractError("UI_BASE_REF_REQUIRED");
   }
   return resolved;
@@ -249,7 +250,7 @@ function parseCliOptions(argv) {
     if (argument === "--base-ref") options.baseRef = value;
     if (argument === "--write-baseline") options.writeBaseline = value;
   }
-  if (!new Set(["report", "diff-block"]).has(options.mode)) {
+  if (!new Set(["report", "diff-block", "error"]).has(options.mode)) {
     throw new UiContractError("UI_CLI_ARGUMENT_INVALID");
   }
   if (!new Set(["text", "json"]).has(options.format)) {
@@ -345,7 +346,8 @@ export async function runUiContractCli(
       throw new UiContractError("UI_SCANNER_MIGRATION_INVALID");
     }
     const baseRef = resolveBaseRef(options.baseRef, env, options.mode);
-    const useCiAuthority = options.mode === "diff-block" && Boolean(baseRef);
+    const useCiAuthority =
+      (options.mode === "diff-block" || options.mode === "error") && Boolean(baseRef);
     const trustedMigrationBaseScan = env.UI_TRUSTED_MIGRATION_BASE_SCAN === "1";
     if (trustedMigrationBaseScan && !useCiAuthority) {
       throw new UiContractError("UI_TRUSTED_MIGRATION_MODE_INVALID");
@@ -443,24 +445,37 @@ export async function runUiContractCli(
     } else {
       assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
     }
-    const comparison =
+    const canCompareAgainstBase =
       baseTuple &&
       !baseTuple.bootstrap &&
-      (scannerAuthority !== "candidate" || trustedMigrationBaseScan)
-        ? compareAgainstBase(applied.violations, baseTuple.baseline)
-        : { newViolations: [] };
+      (scannerAuthority !== "candidate" || trustedMigrationBaseScan);
+    let blockingViolations;
+    if (options.mode === "error") {
+      const { structuralViolations, actionableViolations } =
+        partitionUiContractViolations(applied.violations);
+      const newStructuralViolations = canCompareAgainstBase
+        ? compareAgainstBase(structuralViolations, baseTuple.baseline).newViolations
+        : baseTuple?.bootstrap
+          ? structuralViolations
+          : [];
+      blockingViolations = [...actionableViolations, ...newStructuralViolations];
+    } else {
+      blockingViolations = canCompareAgainstBase
+        ? compareAgainstBase(applied.violations, baseTuple.baseline).newViolations
+        : [];
+    }
     const marker = baseTuple?.bootstrap
       ? "BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF"
       : applied.marker;
     const report = {
       marker,
-      violations: comparison.newViolations,
+      violations: blockingViolations,
       suppressedViolations: applied.suppressedViolations,
       policyErrors: applied.policyErrors,
     };
     return {
       exitCode:
-        comparison.newViolations.length > 0 || applied.policyErrors.length > 0 ? 1 : 0,
+        blockingViolations.length > 0 || applied.policyErrors.length > 0 ? 1 : 0,
       stdout: formatUiContractReport(report, { format: options.format }),
       stderr: "",
     };
