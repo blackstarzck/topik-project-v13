@@ -597,6 +597,7 @@ operation lock이 남아 있으면 다른 lifecycle 명령은 `TASK_OPERATION_IN
 ## 산출물 정책
 
 - 작업 중 plan, log, PID, 임시 script, 중간 screenshot은 ignored 경로 `.codex/work/<slug>/`에 둔다. Git에 추가하면 실패한다.
+- 주기적인 리팩터링의 최종 승인 계획과 최종 결과 Markdown만 `docs/refactoring/`에 보관한다. 검토 중 초안과 중간 결과는 계속 `.codex/work/<slug>/`에 둔다. 앱 검증 기준을 설명하는 `TESTING.md`는 pipeline 구현 변경과 무관하게 바뀔 수 있으므로 pipeline 구현·운영 문서 결합 검사에는 포함하지 않는다.
 - `.tmp/`, `artifacts/`, `.scratch/`, `output/`의 기존 tracked 경로는 legacy baseline이다. 기존 파일은 삭제만 허용하며 내용 수정과 새 경로 추가는 금지한다.
 - 저장소 root는 `config/artifact-hygiene-policy.json`의 allowlist만 허용한다. Windows 대소문자 변형, symlink·junction·reparse, 경로 탈출은 실패한다.
 - 앱에 실제로 배포하는 이진 이미지 자산은 `approvedProductionPaths`에 정확한 파일 경로로만 등록한다. 폴더 전체나 wildcard 승인은 허용하지 않는다.
