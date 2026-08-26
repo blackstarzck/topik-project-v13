@@ -1022,6 +1022,9 @@ describe("artifact hygiene package contract", () => {
     expect(policy.approvedProductionPaths).toContain(
       "public/assets/brands/google-g.png",
     );
+    expect(policy.approvedProductionPaths).not.toContain(
+      "public/assets/brands/*",
+    );
   });
 
   it("exposes report and blocking check commands", () => {
