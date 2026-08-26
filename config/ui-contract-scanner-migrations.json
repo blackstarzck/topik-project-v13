@@ -1,5 +1,23 @@
 {
   "schemaVersion": 1,
+  "baselineTransitions": [
+    {
+      "fromScannerDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
+      "fromBaselineDigest": "bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1",
+      "toScannerDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
+      "toBaselineDigest": "3cde5812ac8ccc90dda38b984741379d597cb9b3b9cd824fbf9fb75ed1edf451",
+      "paths": [
+        "src/styles/foundation.css",
+        "src/styles/global.css"
+      ],
+      "ruleIds": [
+        "global-css.declaration-freeze",
+        "global-css.selector-freeze"
+      ],
+      "approvedBy": "@blackstarzck",
+      "reason": "Approve the reviewed foundation split and global CSS reduction using the exact v6 feature baseline."
+    }
+  ],
   "migrations": [
     {
       "fromVersion": 3,
