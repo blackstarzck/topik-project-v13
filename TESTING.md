@@ -38,6 +38,8 @@ route, component, layout, theme, global style 또는 interaction을 바꾸면 �
 
 MCP 확인에는 고유 loopback port, isolated browser session, desktop/mobile viewport, 주요 interaction과 관련 loading/empty/success/error/disabled 상태, console/network 오류 확인이 포함된다. Playwright CLI 통과만으로 직접 확인을 대신하지 않는다. UI에 영향이 없는 정책·문서·server-only 변경은 그 경계를 diff로 확인한 뒤 브라우저 검증을 생략할 수 있다.
 
+UI contract scanner v5의 정책·문서·baseline만 활성화하는 변경은 사용자 runtime과 DB를 바꾸지 않으므로 브라우저·DB 검증이 필요하지 않다. v4→v5 사전 승인이 trusted base에 먼저 병합된 뒤, 범위를 좁힌 scanner trust/transition test와 trusted base 비교로 정확한 scanner·baseline 전환을 검증한다.
+
 하나의 development server를 대상으로 하는 Playwright 검증은 `workers: 1`로 순차 실행한다. 병렬 검증은 각 worker의 loopback port, runtime, test data가 모두 분리된 경우에만 허용한다. development server의 최초 compile은 read-only GET과 응답 상태로 명시적으로 준비할 수 있지만, hydration이나 interaction 준비 상태를 임의의 `waitForTimeout` 또는 retry로 대신하지 않는다. 전환 결과, 선택 상태, 표시된 panel처럼 사용자가 관찰할 수 있는 조건을 기다린다.
 
 `.codex/work/` 아래의 임시 spec·config·결과는 진단 자료일 뿐 최종 합격 증거가 아니다. merge-ready 증거는 repository의 `playwright.config.ts`와 `tests/e2e/`에 포함된 test로 재현되어야 한다.
