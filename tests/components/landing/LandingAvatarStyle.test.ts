@@ -16,7 +16,7 @@ function blockFor(css: string, selector: string): string {
 }
 
 describe("landing learner goal avatar styles", () => {
-  it("renders avatar images inside a padded white circle", () => {
+  it("renders avatar images inside a token-backed padded circle", () => {
     const css = readFileSync(cssPath, "utf8");
     const avatarBlock = blockFor(css, ".landing-layout-testimonials__avatar");
     const imageBlock = blockFor(
@@ -28,11 +28,17 @@ describe("landing learner goal avatar styles", () => {
     expect(avatarBlock).toContain("height: 54px;");
     expect(avatarBlock).toContain("flex: 0 0 54px;");
     expect(avatarBlock).toContain("box-sizing: border-box;");
-    expect(avatarBlock).toContain("border-radius: 50%;");
-    expect(avatarBlock).toContain("background: #ffffff;");
+    expect(avatarBlock).toContain(
+      "border-radius: var(--app-radius-landing-portfolio-round);",
+    );
+    expect(avatarBlock).toContain(
+      "background: var(--app-color-landing-portfolio-canvas);",
+    );
     expect(avatarBlock).toContain("padding: 5px;");
 
-    expect(imageBlock).toContain("border-radius: 50%;");
+    expect(imageBlock).toContain(
+      "border-radius: var(--app-radius-landing-portfolio-round);",
+    );
     expect(imageBlock).toContain("object-fit: contain;");
   });
 });

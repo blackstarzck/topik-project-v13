@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
@@ -184,8 +185,19 @@ describe("AnimatedAuthCharacters", () => {
         path: "src/components/auth/AnimatedAuthCharacters.tsx",
         ruleId: "react.static-inline-style",
         fingerprint:
-          "336b99d84ad3aa6b3fdd2a81c50231f68017fdb6bfee99db47f238ff7ea3a67f",
+          "3945ee5a7a11f33f22e53cd39fc7623924028163ea07669cee53c851b13a5a7e",
       },
     ]);
+
+    const approvals = JSON.parse(
+      readFileSync("config/ui-contract-exception-approvals.json", "utf8"),
+    ) as {
+      approvals: Array<{ id: string; fingerprint: string }>;
+    };
+    const motionApproval = approvals.approvals.find(
+      ({ id }) => id === "auth-character-runtime-motion-vars",
+    );
+
+    expect(motionApproval?.fingerprint).toBe(inlineStyles[0]?.fingerprint);
   });
 });

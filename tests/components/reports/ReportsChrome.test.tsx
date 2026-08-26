@@ -238,7 +238,7 @@ describe("DimensionComparisonCards i18n chrome", () => {
     expect(section?.className).toContain("comparison-diff-panel");
     expect(section?.className).toContain("pb-[62px]");
   });
-  it("renders current score values without tag backgrounds at 36px", () => {
+  it("renders current score values without tag backgrounds using heading typography", () => {
     renderReports(
       <DimensionComparisonCards
         deltas={{}}
@@ -253,7 +253,7 @@ describe("DimensionComparisonCards i18n chrome", () => {
     expect(scoreValues).toHaveLength(3);
     scoreValues.forEach((scoreValue) => {
       expect(scoreValue.closest(".ant-tag")).toBeNull();
-      expect(scoreValue.className).toContain("text-[36px]");
+      expect(scoreValue.className).toContain("text-heading");
       expect(scoreValue.className).not.toContain("bg-");
     });
 
@@ -261,9 +261,7 @@ describe("DimensionComparisonCards i18n chrome", () => {
     expect(labels).toHaveLength(3);
     labels.forEach((label) => {
       expect(label.className).toContain("font-normal");
-      expect(label.className).toContain(
-        "!text-[var(--ant-color-text-description)]",
-      );
+      expect(label.className).toContain("ant-typography-secondary");
       expect(label.querySelector("strong")).toBeNull();
     });
   });
@@ -356,22 +354,15 @@ describe("SubmissionDiffPanel i18n chrome", () => {
     expect(previousAnswerHeader).toBeTruthy();
     [currentAnswerHeader, previousAnswerHeader].forEach((header) => {
       expect(header.className).toContain("font-medium");
-      expect(header.className).toContain(
-        "!text-[var(--ant-color-text-description)]",
-      );
+      expect(header.className).toContain("ant-typography-secondary");
       expect(header.closest("th")?.className).toContain("!font-medium");
-      expect(header.closest("th")?.className).toContain(
-        "!text-[var(--ant-color-text-description)]",
-      );
     });
     const sectionHeadings = ["서론", "본론", "결론"].map((label) =>
       within(table).getByText(label),
     );
     sectionHeadings.forEach((heading) => {
       expect(heading.className).toContain("font-medium");
-      expect(heading.className).toContain(
-        "!text-[var(--ant-color-text-description)]",
-      );
+      expect(heading.className).toContain("ant-typography-secondary");
     });
     expect(within(table).getByText("이번 서론")).toBeTruthy();
     expect(within(table).getByText("이전 결론")).toBeTruthy();
@@ -757,8 +748,7 @@ describe("ComparisonReportView next action chrome", () => {
     );
     expect(summaryLabels).toHaveLength(2);
     summaryLabels.forEach((label) => {
-      expect(label.className).toContain("!text-[16px]");
-      expect(label.className).not.toContain("!text-[14px]");
+      expect(label.className).toContain("!text-body-lg");
       expect(label.className).not.toContain("text-sm");
       expect(label.className).not.toContain("text-xs");
     });
@@ -768,7 +758,7 @@ describe("ComparisonReportView next action chrome", () => {
     expect(summaryScores).toHaveLength(2);
     summaryScores.forEach((score) => {
       const scoreClasses = Array.from(score.classList);
-      expect(scoreClasses).toContain("!text-[46px]");
+      expect(scoreClasses).toContain("!text-heading-lg");
       expect(scoreClasses).not.toContain("text-[46px]");
       expect(score.className).toContain("leading-none");
       expect(score.className).not.toContain("ml-auto");
@@ -778,7 +768,7 @@ describe("ComparisonReportView next action chrome", () => {
     );
     expect(summarySubmittedDates).toHaveLength(2);
     summarySubmittedDates.forEach((submittedAt) => {
-      expect(submittedAt.className).toContain("!text-[14px]");
+      expect(submittedAt.className).toContain("!text-body");
       expect(submittedAt.className).not.toContain("text-sm");
       expect(submittedAt.className).not.toContain("text-xs");
     });
@@ -911,7 +901,7 @@ describe("ComparisonReportView next action chrome", () => {
       ),
     ).toBe(false);
     expect(narrativeSummary.className).toContain("!mb-[10px]");
-    expect(narrativeSummary.className).toContain("!text-[20px]");
+    expect(narrativeSummary.className).toContain("!text-heading-sm");
     expect(narrativeSummary.className).not.toContain("text-[26px]");
     expect(narrativeSummary.className).toContain("min-w-0");
     expect(narrativeSummary.className).toContain("font-semibold");
@@ -1373,7 +1363,7 @@ describe("ComparisonReportView next action chrome", () => {
       within(firstBlankCurrent).getByTestId(
         "comparison-blank-answer-feedback-current-answer-label",
       ).className,
-    ).toContain("!text-[14px]");
+    ).toContain("!text-body");
     expect(
       within(firstBlankCurrent).getByTestId(
         "comparison-blank-answer-feedback-current-answer-label",
@@ -1398,7 +1388,7 @@ describe("ComparisonReportView next action chrome", () => {
       within(firstBlankCurrent).getByTestId(
         "comparison-blank-answer-feedback-current-feedback-label",
       ).className,
-    ).toContain("!text-[14px]");
+    ).toContain("!text-body");
     expect(
       within(firstBlankCurrent).getByTestId(
         "comparison-blank-answer-feedback-current-feedback-label",
@@ -1435,7 +1425,7 @@ describe("ComparisonReportView next action chrome", () => {
       within(firstBlankPrevious).getByTestId(
         "comparison-blank-answer-feedback-previous-answer-label",
       ).className,
-    ).toContain("!text-[14px]");
+    ).toContain("!text-body");
     expect(
       within(firstBlankPrevious)
         .getByTestId("comparison-blank-answer-feedback-previous-feedback")
@@ -1445,7 +1435,7 @@ describe("ComparisonReportView next action chrome", () => {
       within(firstBlankPrevious).getByTestId(
         "comparison-blank-answer-feedback-previous-feedback-label",
       ).className,
-    ).toContain("!text-[14px]");
+    ).toContain("!text-body");
     expect(firstBlankCurrent.textContent).toContain("현재 답안");
     expect(firstBlankCurrent.textContent).toContain("이번 답안 피드백");
     expect(firstBlankCurrent.textContent?.indexOf("현재 답안")).toBeLessThan(
@@ -1515,7 +1505,7 @@ describe("ComparisonReportView next action chrome", () => {
       within(firstBlankCard).getAllByTestId(
         "comparison-blank-score-normalized",
       )[1].className,
-    ).toContain("!text-[14px]");
+    ).toContain("!text-body");
     expect(within(firstBlankCard).queryByText("→")).toBeNull();
     expect(screen.queryByTestId("comparison-chart")).toBeNull();
     expect(screen.queryByTestId("comparison-dimension-cards")).toBeNull();

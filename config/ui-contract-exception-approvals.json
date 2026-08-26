@@ -5,7 +5,7 @@
       "id": "auth-character-runtime-motion-vars",
       "path": "src/components/auth/AnimatedAuthCharacters.tsx",
       "ruleId": "react.static-inline-style",
-      "fingerprint": "336b99d84ad3aa6b3fdd2a81c50231f68017fdb6bfee99db47f238ff7ea3a67f",
+      "fingerprint": "3945ee5a7a11f33f22e53cd39fc7623924028163ea07669cee53c851b13a5a7e",
       "owner": "design-system",
       "reason": "The inline values carry live pointer and viewport motion coordinates through CSS custom properties while all visual values remain theme-owned.",
       "createdDate": "2026-08-26",
