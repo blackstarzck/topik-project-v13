@@ -6,9 +6,9 @@
       "fromDigest": "1f4b33047d0fe27d72dd73fd2ee6584a29188a0ee5b323611608980b6e38fcca",
       "toVersion": 4,
       "toDigest": "3c6d2c16f7361d661638920294529fb58f1ce9dfd338f9a637a79331f2bf4c59",
-      "toBaselineDigest": "34710165e09657f6076c1991c26d08665305f48fd68522c91460d40241fd13a3",
+      "toBaselineDigest": "0198e87daed5ec70e317cf2dc95f4b84726a43f583228425bd91dd52bfdd8a5c",
       "approvedBy": "@blackstarzck",
-      "reason": "Approve the reviewed UI contract scanner v4 and its exact generated baseline before the scanner change lands."
+      "reason": "Approve the reviewed UI contract scanner v4 and the exact baseline generated from current main before the scanner change lands."
     }
   ]
 }
