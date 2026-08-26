@@ -48,7 +48,7 @@ icon.
 
 ### 전역 CSS 전환 경계
 
-UI contract scanner v5 전환은 `src/styles/foundation.css`와 `src/styles/global.css`의 기존 선언만을 `global-css.declaration-freeze`와 `global-css.selector-freeze` 기준으로 묶는다. 이 전환은 scanner digest `6d2f61a5fccb8f11e2fc9b29f09f346ec3e59e5b879451f3412252eb813bd785`와 baseline approval digest `0f1f52ac099a265802e72a9dae2949d8c8e9a836d42e4ce0537c0cc883006073`가 정확히 일치할 때만 base owner가 사전 승인할 수 있으며, 같은 PR에서 스스로 승인할 수 없다. 두 경로와 두 규칙 밖에는 적용되지 않는 좁은 전환이며 일반 예외가 아니다. Tailwind는 계속 layout·responsive와 제한된 support 용도로만 사용하고 별도 design token source가 되지 않는다.
+UI contract scanner v6 전환은 `src/styles/foundation.css`와 `src/styles/global.css`의 기존 선언만을 `global-css.declaration-freeze`와 `global-css.selector-freeze` 기준으로 묶는다. 이 전환은 scanner digest `736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621`와 baseline approval digest `bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1`가 정확히 일치할 때만 base owner가 사전 승인할 수 있으며, 같은 PR에서 스스로 승인할 수 없다. 두 경로와 두 규칙 밖에는 적용되지 않는 좁은 전환이며 일반 예외가 아니다. Tailwind는 계속 layout·responsive와 제한된 support 용도로만 사용하고 별도 design token source가 되지 않는다.
 
 ### 공통 layout과 card 진입점
 

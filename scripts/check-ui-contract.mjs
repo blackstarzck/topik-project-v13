@@ -475,12 +475,16 @@ export async function runUiContractCli(
       baseTuple &&
       !baseTuple.bootstrap &&
       (scannerAuthority !== "candidate" || trustedMigrationBaseScan);
+    const comparisonBaseline =
+      trustedMigrationBaseScan && scannerAuthority === "candidate"
+        ? candidateBaseline
+        : baseTuple?.baseline;
     let blockingViolations;
     if (options.mode === "error") {
       const { structuralViolations, actionableViolations } =
         partitionUiContractViolations(applied.violations);
       const comparedStructuralViolations = canCompareAgainstBase
-        ? compareAgainstBase(structuralViolations, baseTuple.baseline).newViolations
+        ? compareAgainstBase(structuralViolations, comparisonBaseline).newViolations
         : baseTuple?.bootstrap
           ? structuralViolations
           : [];
@@ -491,7 +495,7 @@ export async function runUiContractCli(
       blockingViolations = [...actionableViolations, ...newStructuralViolations];
     } else {
       const newViolations = canCompareAgainstBase
-        ? compareAgainstBase(applied.violations, baseTuple.baseline).newViolations
+        ? compareAgainstBase(applied.violations, comparisonBaseline).newViolations
         : [];
       blockingViolations = filterApprovedBaselineTransition(
         newViolations,
