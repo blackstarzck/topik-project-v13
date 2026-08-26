@@ -26,6 +26,7 @@ import {
 } from "./lib/ui-contract.mjs";
 import {
   computeScannerDigest,
+  selectApprovedBaselineTransition,
   selectScannerAuthority,
   validateScannerMigrationManifest,
 } from "./lib/ui-contract-trust.mjs";
@@ -286,6 +287,17 @@ function stableJson(value) {
   return value;
 }
 
+function filterApprovedBaselineTransition(violations, transition) {
+  if (!transition) return violations;
+  return violations.filter(
+    (violation) =>
+      !(
+        transition.paths.includes(violation.path) &&
+        transition.ruleIds.includes(violation.ruleId)
+      ),
+  );
+}
+
 export function serializeStableJson(value) {
   return `${JSON.stringify(stableJson(value), null, 2)}\n`;
 }
@@ -354,6 +366,7 @@ export async function runUiContractCli(
     }
     let baseTuple = null;
     let scannerAuthority = null;
+    let approvedBaselineTransition = null;
     let applied;
 
     if (useCiAuthority) {
@@ -367,7 +380,8 @@ export async function runUiContractCli(
         baseTuple.bootstrap &&
         (candidateApprovals.approvals?.length !== 0 ||
           candidateExceptions.exceptions?.length !== 0 ||
-          candidateMigrations.migrations?.length !== 0)
+          candidateMigrations.migrations?.length !== 0 ||
+          (candidateMigrations.baselineTransitions?.length ?? 0) !== 0)
       ) {
         throw new UiContractError("UI_BOOTSTRAP_STATE_INVALID");
       }
@@ -445,24 +459,48 @@ export async function runUiContractCli(
     } else {
       assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
     }
+    if (baseTuple && !baseTuple.bootstrap) {
+      try {
+        approvedBaselineTransition = selectApprovedBaselineTransition({
+          baseManifest: baseTuple.migrations,
+          baseBaseline: baseTuple.baseline,
+          candidateBaseline,
+          candidateScannerDigest: scannerDigest,
+        });
+      } catch (error) {
+        throw new UiContractError(error?.code ?? "UI_SCANNER_AUTHORITY_INVALID");
+      }
+    }
     const canCompareAgainstBase =
       baseTuple &&
       !baseTuple.bootstrap &&
       (scannerAuthority !== "candidate" || trustedMigrationBaseScan);
+    const comparisonBaseline =
+      trustedMigrationBaseScan && scannerAuthority === "candidate"
+        ? candidateBaseline
+        : baseTuple?.baseline;
     let blockingViolations;
     if (options.mode === "error") {
       const { structuralViolations, actionableViolations } =
         partitionUiContractViolations(applied.violations);
-      const newStructuralViolations = canCompareAgainstBase
-        ? compareAgainstBase(structuralViolations, baseTuple.baseline).newViolations
+      const comparedStructuralViolations = canCompareAgainstBase
+        ? compareAgainstBase(structuralViolations, comparisonBaseline).newViolations
         : baseTuple?.bootstrap
           ? structuralViolations
           : [];
+      const newStructuralViolations = filterApprovedBaselineTransition(
+        comparedStructuralViolations,
+        approvedBaselineTransition,
+      );
       blockingViolations = [...actionableViolations, ...newStructuralViolations];
     } else {
-      blockingViolations = canCompareAgainstBase
-        ? compareAgainstBase(applied.violations, baseTuple.baseline).newViolations
+      const newViolations = canCompareAgainstBase
+        ? compareAgainstBase(applied.violations, comparisonBaseline).newViolations
         : [];
+      blockingViolations = filterApprovedBaselineTransition(
+        newViolations,
+        approvedBaselineTransition,
+      );
     }
     const marker = baseTuple?.bootstrap
       ? "BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF"

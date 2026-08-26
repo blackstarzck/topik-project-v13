@@ -6,7 +6,7 @@ import ts from "typescript";
 
 export const UI_CONTRACT_SCHEMA_VERSION = 1;
 export const UI_CONTRACT_BASELINE_SCHEMA_VERSION = 2;
-export const UI_CONTRACT_SCANNER_VERSION = 4;
+export const UI_CONTRACT_SCANNER_VERSION = 6;
 const TEST_SCANNER_DIGEST = "0".repeat(64);
 
 const SCRIPT_KINDS = new Map([

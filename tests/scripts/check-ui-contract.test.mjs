@@ -165,7 +165,7 @@ describe("UI contract normalization", () => {
       lexeme: "style={{ color: '#fff' }}",
     });
 
-    expect(UI_CONTRACT_SCANNER_VERSION).toBe(4);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(6);
     expect(left.fingerprint).toBe(right.fingerprint);
     expect(left.fingerprint).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -1121,7 +1121,7 @@ describe("UI contract CSS rules", () => {
       "src/styles/foundation.css",
       "src/styles/global.css",
     ]);
-    expect(UI_CONTRACT_SCANNER_VERSION).toBe(4);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(6);
   });
 
   it("canonicalizes comma-selector order and freezes direct at-rule declarations", () => {
@@ -1539,6 +1539,28 @@ describe("UI contract collector, Git base, and CLI", () => {
     ]);
   }
 
+  function baselineTransitionManifest(baseBaseline, candidateBaseline) {
+    return {
+      schemaVersion: 1,
+      migrations: [],
+      baselineTransitions: [
+        {
+          fromScannerDigest: baseBaseline.scannerDigest,
+          fromBaselineDigest: computeBaselineApprovalDigest(baseBaseline),
+          toScannerDigest: candidateBaseline.scannerDigest,
+          toBaselineDigest: computeBaselineApprovalDigest(candidateBaseline),
+          paths: ["src/styles/foundation.css", "src/styles/global.css"],
+          ruleIds: [
+            "global-css.declaration-freeze",
+            "global-css.selector-freeze",
+          ],
+          approvedBy: "@blackstarzck",
+          reason: "Approve the reviewed global CSS foundation split.",
+        },
+      ],
+    };
+  }
+
   function fakeGitTuple(files) {
     return (_command, args) => {
       if (args[0] === "cat-file" && args[1] === "-e" && args[2] === `${baseRef}^{commit}`) {
@@ -1673,6 +1695,156 @@ describe("UI contract collector, Git base, and CLI", () => {
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain("global-css.declaration-freeze");
     expect(JSON.parse(result.stdout)).toMatchObject({ totalViolations: 1 });
+  });
+
+  it.each(["diff-block", "error"])(
+    "allows exact base-owned global CSS baseline transitions in %s mode",
+    async (mode) => {
+      const files = {
+        "src/styles/foundation.css": `.foundation { box-sizing: border-box; }`,
+        "src/styles/global.css": `.global { color: var(--app-color-text); }`,
+      };
+      const root = createProject(files);
+      const current = scanUiContract(
+        Object.entries(files).map(([path, content]) => source(path, content)),
+      );
+      const baseBaseline = createUiContractBaseline([], {
+        generatedAt: "2026-07-10T00:00:00.000Z",
+      });
+      const candidateBaseline = createUiContractBaseline(current.violations, {
+        generatedAt: "2026-07-10T00:00:00.000Z",
+      });
+      const migrations = baselineTransitionManifest(baseBaseline, candidateBaseline);
+      writeCandidateTuple(root, candidateBaseline);
+
+      const result = await runUiContractCli(["--mode", mode, "--format", "json"], {
+        cwd: root,
+        env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+        clock: () => new Date("2026-07-10T12:00:00.000Z"),
+        spawnSyncImpl: fakeGitTuple(baseTupleFiles(baseBaseline, { migrations })),
+      });
+
+      expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+      expect(JSON.parse(result.stdout)).toMatchObject({ totalViolations: 0 });
+    },
+  );
+
+  it("keeps new inline styles blocking during an exact global CSS transition", async () => {
+    const files = {
+      "src/styles/global.css": `.global { color: var(--app-color-text); }`,
+      "src/example.tsx": `export const Example = () => <div style={{ color: "#fff" }} />;`,
+    };
+    const root = createProject(files);
+    const current = scanUiContract(
+      Object.entries(files).map(([path, content]) => source(path, content)),
+    );
+    const baseBaseline = createUiContractBaseline([], {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const candidateBaseline = createUiContractBaseline(current.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const migrations = baselineTransitionManifest(baseBaseline, candidateBaseline);
+    writeCandidateTuple(root, candidateBaseline);
+
+    const result = await runUiContractCli(["--mode", "error", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(baseTupleFiles(baseBaseline, { migrations })),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("react.static-inline-style");
+    expect(result.stdout).not.toContain("global-css.selector-freeze");
+    expect(result.stdout).not.toContain("global-css.declaration-freeze");
+  });
+
+  it("blocks when the candidate baseline digest differs from the base approval", async () => {
+    const approvedContent = `.global { color: var(--app-color-text); }`;
+    const candidateContent = `.global { color: var(--app-color-text); padding: 12px; }`;
+    const root = createProject({ "src/styles/global.css": candidateContent });
+    const approved = scanUiContract([
+      source("src/styles/global.css", approvedContent),
+    ]);
+    const current = scanUiContract([
+      source("src/styles/global.css", candidateContent),
+    ]);
+    const baseBaseline = createUiContractBaseline([], {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const approvedCandidateBaseline = createUiContractBaseline(approved.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const candidateBaseline = createUiContractBaseline(current.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const migrations = baselineTransitionManifest(baseBaseline, approvedCandidateBaseline);
+    writeCandidateTuple(root, candidateBaseline);
+
+    const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(baseTupleFiles(baseBaseline, { migrations })),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("global-css.declaration-freeze");
+  });
+
+  it("does not authorize a global CSS transition added only by the candidate", async () => {
+    const content = `.global { color: var(--app-color-text); }`;
+    const root = createProject({ "src/styles/global.css": content });
+    const current = scanUiContract([source("src/styles/global.css", content)]);
+    const baseBaseline = createUiContractBaseline([], {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const candidateBaseline = createUiContractBaseline(current.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const candidateMigrations = baselineTransitionManifest(baseBaseline, candidateBaseline);
+    writeCandidateTuple(root, candidateBaseline, { migrations: candidateMigrations });
+
+    const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(baseTupleFiles(baseBaseline)),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("global-css.selector-freeze");
+  });
+
+  it("rejects a candidate-only baseline transition during bootstrap", async () => {
+    const content = `.global { color: var(--app-color-text); }`;
+    const root = createProject({ "src/styles/global.css": content });
+    const current = scanUiContract([source("src/styles/global.css", content)]);
+    const hypotheticalBaseBaseline = createUiContractBaseline([], {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const candidateBaseline = createUiContractBaseline(current.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const candidateMigrations = baselineTransitionManifest(
+      hypotheticalBaseBaseline,
+      candidateBaseline,
+    );
+    writeCandidateTuple(root, candidateBaseline, { migrations: candidateMigrations });
+
+    const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(new Map()),
+    });
+
+    expect(result).toMatchObject({
+      exitCode: 2,
+      stdout: "",
+      stderr: "UI_BOOTSTRAP_STATE_INVALID\n",
+    });
   });
 
   it("requires a base ref for error mode in CI", () => {
@@ -1883,7 +2055,7 @@ describe("UI contract collector, Git base, and CLI", () => {
     expect(result).toMatchObject({ exitCode: 0, stderr: "" });
   });
 
-  it("uses base scanner semantics for an approved migration in the trusted runner", async () => {
+  it("uses the base-approved candidate baseline for an unchanged trusted scanner migration", async () => {
     const root = createProject({
       "src/example.tsx": `export const Example = () => <div style={{ color: "#fff" }} />;`,
     });
@@ -1939,7 +2111,64 @@ describe("UI contract collector, Git base, and CLI", () => {
       spawnSyncImpl: fakeGitTuple(files),
     });
 
+    expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+  });
+
+  it("still blocks a new violation during a trusted scanner migration", async () => {
+    const existingSource = `export const Example = () => <div style={{ color: "#fff" }} />;`;
+    const root = createProject({
+      "src/example.tsx": existingSource,
+      "src/new.tsx": `export const NewExample = () => <main style={{ color: "#000" }} />;`,
+    });
+    const existingScan = scanUiContract([source("src/example.tsx", existingSource)]);
+    const candidate = createUiContractBaseline(existingScan.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const baseDigest = "a".repeat(64);
+    const base = {
+      ...createUiContractBaseline([], { generatedAt: "2026-07-10T00:00:00.000Z" }),
+      scannerVersion: UI_CONTRACT_SCANNER_VERSION - 1,
+      scannerDigest: baseDigest,
+    };
+    const approvedMigration = {
+      schemaVersion: 1,
+      migrations: [
+        {
+          fromVersion: base.scannerVersion,
+          fromDigest: baseDigest,
+          toVersion: candidate.scannerVersion,
+          toDigest: candidate.scannerDigest,
+          toBaselineDigest: computeBaselineApprovalDigest(candidate),
+          approvedBy: "@blackstarzck",
+          reason: "Exercise trusted base semantics with a new violation.",
+        },
+      ],
+    };
+    mkdirSync(join(root, "config"), { recursive: true });
+    writeJson(join(root, "config", "ui-contract-baseline.json"), candidate);
+    writeJson(join(root, "config", "ui-contract-exception-approvals.json"), emptyApprovals);
+    writeJson(join(root, "config", "ui-contract-exceptions.json"), emptyExceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), emptyMigrations);
+    const files = new Map([
+      ["config/ui-contract-baseline.json", JSON.stringify(base)],
+      ["config/ui-contract-exception-approvals.json", JSON.stringify(emptyApprovals)],
+      ["config/ui-contract-exceptions.json", JSON.stringify(emptyExceptions)],
+      ["config/ui-contract-scanner-migrations.json", JSON.stringify(approvedMigration)],
+    ]);
+
+    const result = await runUiContractCli(["--mode", "diff-block", "--format", "json"], {
+      cwd: root,
+      env: {
+        CI: "true",
+        UI_CONTRACT_BASE_REF: baseRef,
+        UI_TRUSTED_MIGRATION_BASE_SCAN: "1",
+      },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(files),
+    });
+
     expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("src/new.tsx");
     expect(result.stdout).toContain("react.static-inline-style");
   });
 
