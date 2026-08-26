@@ -6,9 +6,27 @@
       "fromDigest": "1f4b33047d0fe27d72dd73fd2ee6584a29188a0ee5b323611608980b6e38fcca",
       "toVersion": 4,
       "toDigest": "3c6d2c16f7361d661638920294529fb58f1ce9dfd338f9a637a79331f2bf4c59",
-      "toBaselineDigest": "34710165e09657f6076c1991c26d08665305f48fd68522c91460d40241fd13a3",
+      "toBaselineDigest": "0198e87daedfc0b9ae9d2c178299d7c5377f98651192cbe97fd4545b1467ad0e",
       "approvedBy": "@blackstarzck",
-      "reason": "Approve the reviewed UI contract scanner v4 and its exact generated baseline before the scanner change lands."
+      "reason": "Approve the reviewed UI contract scanner v4 and the exact baseline generated from current main before the scanner change lands."
+    },
+    {
+      "fromVersion": 4,
+      "fromDigest": "3c6d2c16f7361d661638920294529fb58f1ce9dfd338f9a637a79331f2bf4c59",
+      "toVersion": 5,
+      "toDigest": "6d2f61a5fccb8f11e2fc9b29f09f346ec3e59e5b879451f3412252eb813bd785",
+      "toBaselineDigest": "0f1f52ac099a265802e72a9dae2949d8c8e9a836d42e4ce0537c0cc883006073",
+      "approvedBy": "@blackstarzck",
+      "reason": "Approve the reviewed UI contract scanner v5 and the exact unchanged-main v5 baseline before activation."
+    },
+    {
+      "fromVersion": 4,
+      "fromDigest": "3c6d2c16f7361d661638920294529fb58f1ce9dfd338f9a637a79331f2bf4c59",
+      "toVersion": 6,
+      "toDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
+      "toBaselineDigest": "bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1",
+      "approvedBy": "@blackstarzck",
+      "reason": "Approve the reviewed UI contract scanner v6 and the exact unchanged-main v6 baseline before activation."
     }
   ]
 }

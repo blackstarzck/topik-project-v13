@@ -50,6 +50,10 @@ icon.
 - 쓰기 자료 차트의 첫 번째와 네 번째 범주색은 AntD blue·cyan seed를 정규화한 차트 계열색(`--app-color-chart-series-primary`, `--app-color-chart-accent`)을 사용한다. 나머지 범주색과 격자선은 기존 status·border 의미 토큰을 재사용한다.
 - 기존 project wrapper와 AntD props를 우선한다. 프로젝트가 작성한 visual inline style, 광범위한 `.ant-*` override, 생성된 AntD class selector, page-specific global CSS를 추가하지 않는다.
 
+### 전역 CSS 전환 경계
+
+UI contract scanner v6 전환은 `src/styles/foundation.css`와 `src/styles/global.css`의 기존 선언만을 `global-css.declaration-freeze`와 `global-css.selector-freeze` 기준으로 묶는다. 이 전환은 scanner digest `736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621`와 baseline approval digest `bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1`가 정확히 일치할 때만 base owner가 사전 승인할 수 있으며, 같은 PR에서 스스로 승인할 수 없다. 두 경로와 두 규칙 밖에는 적용되지 않는 좁은 전환이며 일반 예외가 아니다. Tailwind는 계속 layout·responsive와 제한된 support 용도로만 사용하고 별도 design token source가 되지 않는다.
+
 ### 공통 layout과 card 진입점
 
 - 인증 workspace의 전역 chrome은 `src/components/app/WorkspaceShell.tsx`가 소유하고, 안쪽 content 폭은 `src/components/app/WorkspaceBody.tsx`의 실제 `size` 값(`form`, `task`, `workspace`, `wide`, `full`)으로 정한다. `src/components/shared/PageContainer.tsx`는 `narrow`, `default`, `wide` 폭과 단일 `<main>` landmark가 필요한 일반 page용이므로 다른 `<main>` 안에 중첩하지 않는다.
