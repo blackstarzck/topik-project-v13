@@ -1014,6 +1014,19 @@ describe("artifact hygiene package contract", () => {
     expect(result.stderr).toContain("TRUSTED_SURFACE_CHANGED");
   });
 
+  it("approves the production Google brand mark path", () => {
+    const policy = JSON.parse(
+      readFileSync("config/artifact-hygiene-policy.json", "utf8"),
+    );
+
+    expect(policy.approvedProductionPaths).toContain(
+      "public/assets/brands/google-g.png",
+    );
+    expect(policy.approvedProductionPaths).not.toContain(
+      "public/assets/brands/*",
+    );
+  });
+
   it("exposes report and blocking check commands", () => {
     const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
     expect(packageJson.scripts["report:artifact-hygiene"]).toBe(
