@@ -1,12 +1,14 @@
 "use client";
 
-import { App, Button, Empty, Radio, Select, Typography } from "antd";
+import { App, Button, Divider, Empty, Radio, Select, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { AppDrawer } from "@/components/shared/AppDrawer";
 import type { ComparisonReportViewModel } from "@/lib/writing/comparison-report-view-model";
 import { useCreateComparisonReportWithView } from "@/lib/writing/mutations";
 import type { ComparisonTargetCandidate } from "@/lib/writing/server";
+
+import styles from "./ComparisonTargetDrawer.module.css";
 
 const { Text } = Typography;
 
@@ -155,41 +157,15 @@ export function ComparisonTargetDrawer({
       placement="right"
       size={376}
       title={t("targetDrawerTitle")}
-      rootClassName="comparison-target-drawer"
+      rootClassName={["comparison-target-drawer", styles.root].join(" ")}
       getContainer={false}
-      rootStyle={{ position: "fixed", inset: 0 }}
-      styles={{
-        body: {
-          flex: "1 1 0%",
-          minHeight: 0,
-          overflow: "hidden",
-          padding: 0,
-        },
-        header: {
-          padding: "24px 24px 14px",
-          borderBottom: "0",
-        },
-        footer: {
-          position: "sticky",
-          bottom: 0,
-          zIndex: 1,
-          flexShrink: 0,
-          borderTop: "1px solid var(--app-color-border)",
-          background: "var(--app-color-bg-container)",
-          padding: "18px 24px 20px",
-        },
-        mask: {
-          background: "rgba(244, 244, 245, 0.18)",
-        },
-        section: {
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          overflow: "hidden",
-        },
-        wrapper: {
-          height: "100dvh",
-        },
+      classNames={{
+        body: styles.body,
+        header: styles.header,
+        footer: styles.footer,
+        mask: styles.mask,
+        section: styles.section,
+        wrapper: styles.wrapper,
       }}
       footer={
         <div
@@ -266,7 +242,7 @@ export function ComparisonTargetDrawer({
             />
           ) : (
             <div className="flex flex-col">
-              {visibleCandidates.map((candidate) => {
+              {visibleCandidates.map((candidate, visibleIndex) => {
                 const score = normalizedScore(
                   candidate.score,
                   candidate.scoreMax,
@@ -280,54 +256,56 @@ export function ComparisonTargetDrawer({
                     ? candidates.length - candidateIndex
                     : null;
                 return (
-                  <label
-                    key={candidate.submissionId}
-                    data-testid="comparison-target-option"
-                    data-submission-id={candidate.submissionId}
-                    data-feedback-status={candidate.feedbackStatus}
-                    data-selected={selected ? "true" : "false"}
-                    className={[
-                      "flex cursor-pointer gap-3 border-b border-[var(--ant-color-border-secondary)] px-3 py-4 transition-colors last:border-b-0 hover:bg-[var(--app-color-bg-layout)]",
-                      selected ? "bg-[var(--app-color-bg-layout)]" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <Radio
-                      checked={selected}
-                      onChange={() =>
-                        setDraftSelectedId(candidate.submissionId)
-                      }
-                    />
-                    <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                      <span
-                        className="flex min-w-0 flex-col gap-1"
-                        data-testid="comparison-target-option-meta"
-                      >
-                        <Text strong className="block truncate text-base">
-                          {attemptNo
-                            ? t("targetDrawerAttempt", { count: attemptNo })
-                            : t("targetDrawerQuestion", {
-                                questionNo: candidate.questionNo,
-                              })}
-                        </Text>
-                        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                          <Text type="secondary">
-                            {formatSubmittedAt(candidate.submittedAt)}
+                  <Fragment key={candidate.submissionId}>
+                    <label
+                      data-testid="comparison-target-option"
+                      data-submission-id={candidate.submissionId}
+                      data-feedback-status={candidate.feedbackStatus}
+                      data-selected={selected ? "true" : "false"}
+                      className={[
+                        "flex cursor-pointer gap-3 px-3 py-4 transition-colors",
+                        styles.option,
+                      ].join(" ")}
+                    >
+                      <Radio
+                        checked={selected}
+                        onChange={() =>
+                          setDraftSelectedId(candidate.submissionId)
+                        }
+                      />
+                      <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                        <span
+                          className="flex min-w-0 flex-col gap-1"
+                          data-testid="comparison-target-option-meta"
+                        >
+                          <Text strong className="block truncate text-base">
+                            {attemptNo
+                              ? t("targetDrawerAttempt", { count: attemptNo })
+                              : t("targetDrawerQuestion", {
+                                  questionNo: candidate.questionNo,
+                                })}
                           </Text>
+                          <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                            <Text type="secondary">
+                              {formatSubmittedAt(candidate.submittedAt)}
+                            </Text>
+                          </span>
                         </span>
+                        <Text
+                          strong
+                          className="shrink-0 self-center text-xl"
+                          data-testid="comparison-target-option-score"
+                        >
+                          {score === null
+                            ? t("targetDrawerNoScore")
+                            : t("targetDrawerScore", { score })}
+                        </Text>
                       </span>
-                      <Text
-                        strong
-                        className="shrink-0 self-center text-xl"
-                        data-testid="comparison-target-option-score"
-                      >
-                        {score === null
-                          ? t("targetDrawerNoScore")
-                          : t("targetDrawerScore", { score })}
-                      </Text>
-                    </span>
-                  </label>
+                    </label>
+                    {visibleIndex < visibleCandidates.length - 1 ? (
+                      <Divider className={styles.divider} />
+                    ) : null}
+                  </Fragment>
                 );
               })}
             </div>

@@ -43,7 +43,18 @@ export function WritingGuideAccordion({
       bordered={false}
       defaultActiveKey={activeKeys}
       expandIconPlacement="end"
-      expandIcon={() => <Plus aria-hidden size={16} />}
+      expandIcon={({ isActive }) => (
+        <Plus
+          aria-hidden
+          size={16}
+          className={[
+            "writing-guide-accordion__expand-icon",
+            isActive ? "writing-guide-accordion__expand-icon--active" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
+      )}
       items={items.map((item) => {
         const disabled = loadFailed && Boolean(item.disabledOnLoadFailed);
 

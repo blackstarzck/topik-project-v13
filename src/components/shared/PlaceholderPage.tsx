@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, Space, Tag, Typography } from "antd";
+import { Space, Tag, Typography } from "antd";
+import { AppCard } from "./AppCard";
 
 const { Title, Paragraph } = Typography;
 
@@ -12,7 +13,7 @@ type Props = {
 
 export function PlaceholderPage({ iaCode, title, phaseHint }: Props) {
   return (
-    <Card>
+    <AppCard>
       <Space orientation="vertical" size="small" className="w-full">
         <Space>
           <Tag>{iaCode}</Tag>
@@ -22,6 +23,6 @@ export function PlaceholderPage({ iaCode, title, phaseHint }: Props) {
         </Space>
         <Paragraph type="secondary">{phaseHint}</Paragraph>
       </Space>
-    </Card>
+    </AppCard>
   );
 }

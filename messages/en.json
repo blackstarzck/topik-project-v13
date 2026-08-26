@@ -78,20 +78,6 @@
     "heroCtaLearningGoal": "Set learning goal",
     "heroCtaContinueSetup": "Continue setup",
     "heroCtaRetry": "Try again",
-    "preview": {
-      "sectionTitle": "Take a look before you start",
-      "sectionBody": "See the real dashboard, feedback, and report screens just as they are.",
-      "imageAlt": "{title} screen preview",
-      "dashboardBadge": "📊 Dashboard",
-      "dashboardTitle": "Your learning status at a glance",
-      "dashboardSummary": "Check today's goal, recent submissions, and recommended questions right on the home screen.",
-      "feedbackBadge": "✍️ AI feedback",
-      "feedbackTitle": "Feedback by dimension",
-      "feedbackSummary": "Get scores by content, structure, vocabulary, and grammar, plus comments on each sentence.",
-      "reportBadge": "📈 Growth report",
-      "reportTitle": "Compare score changes",
-      "reportSummary": "Compare with your previous answers to view score changes and weak areas as a graph."
-    },
     "features": {
       "correctionTitle": "AI feedback",
       "correctionDescription": "The exact TOPIK questions 51-54 writing environment. AI provides scores and feedback by dimension.",
@@ -584,9 +570,6 @@
       "heroPracticeBody": "Study TOPIK writing 51-54 systematically",
       "socialDivider": "or",
       "socialGoogle": "Continue with Google"
-    },
-    "languageSelect": {
-      "ariaLabel": "Choose display language"
     },
     "oauth": {
       "browser": {

@@ -211,6 +211,27 @@ describe("SystemReportLauncher visibility", () => {
     ).toBe("계속 작성할 제목");
   });
 
+  it("restores focus to the current launcher after opening and closing", async () => {
+    renderWithIntl(<SystemReportLauncher />);
+
+    const openLauncher = screen.getByRole("button", {
+      name: koMessages.systemReport.launcherAria,
+    });
+    openLauncher.focus();
+    fireEvent.click(openLauncher);
+
+    const closeLauncher = screen.getByRole("button", {
+      name: koMessages.systemReport.close,
+    });
+    await waitFor(() => expect(document.activeElement).toBe(closeLauncher));
+    fireEvent.click(closeLauncher);
+
+    const currentLauncher = screen.getByRole("button", {
+      name: koMessages.systemReport.launcherAria,
+    });
+    await waitFor(() => expect(document.activeElement).toBe(currentLauncher));
+  });
+
   it("does not close from Escape or outside interaction", () => {
     renderWithIntl(<SystemReportLauncher />);
     openPanel();

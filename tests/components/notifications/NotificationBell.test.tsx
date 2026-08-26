@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import koMessages from "../../../messages/ko.json";
 import { InstitutionInvitationModal } from "../../../src/components/notifications/InstitutionInvitationModal";
 import { NotificationBell } from "../../../src/components/notifications/NotificationBell";
+import notificationBellStyles from "../../../src/components/notifications/NotificationBell.module.css";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
 const routerPushMock = vi.hoisted(() => vi.fn());
@@ -247,6 +248,39 @@ afterEach(() => {
 });
 
 describe("NotificationBell", () => {
+  it("connects the stable notification panel hooks to component-scoped layout styles", async () => {
+    renderWithIntl(<NotificationBell userId="user-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+    await screen.findByText("First notice");
+
+    const panel = document.querySelector(".app-notification-panel");
+    const header = document.querySelector(".app-notification-panel__header");
+    const markAll = screen.getByRole("button", { name: t.markAllRead });
+
+    expect(panel?.classList.contains(notificationBellStyles.panel)).toBe(true);
+    expect(header?.classList.contains(notificationBellStyles.header)).toBe(
+      true,
+    );
+    expect(markAll.classList.contains(notificationBellStyles.markAll)).toBe(
+      true,
+    );
+  });
+
+  it("connects the notification load error to its component-scoped layout style", async () => {
+    fetchNotificationsMock.mockRejectedValueOnce(new Error("load failed"));
+    renderWithIntl(<NotificationBell userId="user-1" />);
+
+    fireEvent.click(screen.getByRole("button", { name: t.bellAria }));
+    const errorMessage = await screen.findByText(t.loadError);
+    const error = errorMessage.closest(".app-notification-panel__error");
+
+    expect(error?.classList.contains(notificationBellStyles.error)).toBe(true);
+    expect(
+      within(error as HTMLElement).getByRole("button", { name: t.retry }),
+    ).toBeTruthy();
+  });
+
   it("opens the inbox from the email CTA query and removes only that query", async () => {
     navigationState.pathname = "/settings/notifications";
     navigationState.searchParams = new URLSearchParams(

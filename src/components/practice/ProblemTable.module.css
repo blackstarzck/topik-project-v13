@@ -1,0 +1,52 @@
+.columnTitle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.columnTitleCenter {
+  justify-content: center;
+}
+
+.columnTitleProblem {
+  justify-content: flex-start;
+  padding-left: 66px;
+}
+
+.columnTitleIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--app-color-text-secondary);
+}
+
+.columnTitleIcon svg {
+  stroke-width: 1.8;
+}
+
+.actionButton {
+  min-width: 82px;
+  height: 32px;
+  padding-inline: 16px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.newBadge {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  border-radius: var(--app-radius-problem-new-badge);
+  background: var(--app-color-problem-new-badge-surface);
+  padding: 0 9px;
+  color: var(--app-color-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}

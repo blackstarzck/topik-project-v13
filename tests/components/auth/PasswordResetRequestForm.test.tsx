@@ -125,6 +125,39 @@ describe("PasswordResetRequestForm", () => {
     });
   });
 
+  it("keeps the same owned login-return link before and after a successful send", async () => {
+    renderInApp(<PasswordResetRequestForm />);
+
+    const requestLink = screen.getByRole("link", {
+      name: "로그인으로 돌아가기",
+    });
+    const requestLinkClass = requestLink.className;
+    const requestParagraphClass =
+      requestLink.closest(".ant-typography")?.className;
+
+    expect(requestLink.getAttribute("href")).toBe("/login");
+    expect(requestLinkClass).toMatch(/loginReturnLink/u);
+    expect(requestParagraphClass).toMatch(/loginReturn/u);
+
+    fireEvent.change(screen.getByLabelText("이메일"), {
+      target: { value: "u@example.com" },
+    });
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "재설정 링크 보내기" }),
+      );
+    });
+
+    const sentLink = await screen.findByRole("link", {
+      name: "로그인으로 돌아가기",
+    });
+    expect(sentLink.getAttribute("href")).toBe("/login");
+    expect(sentLink.className).toBe(requestLinkClass);
+    expect(sentLink.closest(".ant-typography")?.className).toBe(
+      requestParagraphClass,
+    );
+  });
+
   it("shows the same confirmation message for unknown accounts", async () => {
     resetPasswordForEmailMock.mockResolvedValueOnce({
       error: { code: "user_not_found" },

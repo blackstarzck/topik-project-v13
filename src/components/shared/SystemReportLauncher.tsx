@@ -64,6 +64,8 @@ export function SystemReportLauncher() {
   const format = useFormatter();
   const pathname = usePathname();
   const [form] = Form.useForm<ReportFormValues>();
+  const launcherRef = useRef<HTMLButtonElement | null>(null);
+  const restoreLauncherFocusRef = useRef(false);
   const successTitleRef = useRef<HTMLElement>(null);
   const emailManuallyEditedRef = useRef(false);
   const idempotencyKeyRef = useRef<string | null>(null);
@@ -111,6 +113,13 @@ export function SystemReportLauncher() {
     }
   }, [open, succeeded]);
 
+  useEffect(() => {
+    if (!restoreLauncherFocusRef.current) return;
+
+    restoreLauncherFocusRef.current = false;
+    launcherRef.current?.focus();
+  }, [open]);
+
   function resetReport() {
     form.resetFields();
     emailManuallyEditedRef.current = false;
@@ -124,6 +133,7 @@ export function SystemReportLauncher() {
     if (open && succeeded) {
       resetReport();
     }
+    restoreLauncherFocusRef.current = true;
     setOpen((current) => !current);
   }
 
@@ -418,6 +428,9 @@ export function SystemReportLauncher() {
       }
     >
       <FloatButton
+        ref={(element) => {
+          launcherRef.current = element;
+        }}
         className={mergeClassNames(
           "app-system-report-launcher",
           styles.launcher,

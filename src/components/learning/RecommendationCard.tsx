@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Button, Card, Tag, Typography } from "antd";
+import { Button, Tag, Typography } from "antd";
+import { AppCard } from "@/components/shared/AppCard";
 
 const { Paragraph } = Typography;
 
@@ -19,7 +20,7 @@ export function RecommendationCard({
   ctaHref,
 }: Props) {
   return (
-    <Card
+    <AppCard
       title={title.length > 28 ? `${title.slice(0, 28)}…` : title}
       extra={
         estimatedMinutes ? <Tag color="blue">{estimatedMinutes}분</Tag> : null
@@ -35,6 +36,6 @@ export function RecommendationCard({
           이어 풀기
         </Button>
       </Link>
-    </Card>
+    </AppCard>
   );
 }

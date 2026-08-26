@@ -36,7 +36,7 @@ const MASCOT_TEXT_SIZE_CLASS: Record<
   string
 > = {
   48: "text-5xl",
-  56: "text-[56px]",
+  56: "text-display-sm",
 };
 
 export function AuthMascot({
@@ -75,7 +75,7 @@ export function AuthMascot({
       )}
       {caption ? (
         <div className="mt-2">
-          <Text type="secondary" className="text-[13px]">
+          <Text type="secondary" className="!text-body">
             {caption}
           </Text>
         </div>

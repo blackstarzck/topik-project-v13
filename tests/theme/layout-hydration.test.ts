@@ -11,6 +11,20 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import React from "react";
 
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
+import { collectUiSources } from "../../scripts/check-ui-contract.mjs";
+// @ts-expect-error The executable UI contract scanner is intentionally plain ESM.
+import { scanUiContract } from "../../scripts/lib/ui-contract.mjs";
+import { themeSettings } from "../../src/theme/config";
+import { getResolvedBridgeVars } from "../../src/theme/tailwind-bridge";
+import type { ThemeAppearance } from "../../src/theme/types";
+
+type ScannerViolation = {
+  path: string;
+  ruleId: string;
+  fingerprint: string;
+};
+
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
@@ -89,7 +103,8 @@ describe("RootLayout hydration consistency", () => {
     })) as AnyElement;
 
     // Structure:
-    // <html lang style>
+    // <html lang>
+    //   <head><style /></head>
     //   <body>
     //     <NextIntlClientProvider>
     //       <AntdRegistry>
@@ -98,18 +113,28 @@ describe("RootLayout hydration consistency", () => {
     //     </NextIntlClientProvider>
     //   </body>
     // </html>
-    const htmlStyle = element.props.style as Record<string, string>;
-    const colorScheme = htmlStyle.colorScheme as string;
-    const bgContainer = htmlStyle["--app-color-bg-container"] as string;
+    const htmlStyle = element.props.style;
     const lang = element.props.lang as string;
     const translate = element.props.translate as string | undefined;
+
+    const [head, body] = React.Children.toArray(
+      element.props.children as React.ReactNode,
+    ) as AnyElement[];
+    const rootThemeCss = (head.props.children as AnyElement).props
+      .children as string;
+    const detectedColorScheme = rootThemeCss.match(
+      /color-scheme:([^;}]+)/u,
+    )?.[1];
+    if (detectedColorScheme !== "light" && detectedColorScheme !== "dark") {
+      throw new Error("Root theme CSS must declare a supported color scheme.");
+    }
+    const colorScheme: ThemeAppearance = detectedColorScheme;
 
     // Navigate: <html> → <body> → <NextIntlClientProvider> →
     // <AntdRegistry> → <AppProviders>
     // Components are NOT rendered when calling RootLayout directly, so each
     // child remains a JSX element. We read props.initialAppearance / locale
     // straight off the JSX elements (mocks only matter on render).
-    const body = element.props.children as AnyElement;
     const bodyChildren = React.Children.toArray(
       body.props.children as React.ReactNode,
     ) as AnyElement[];
@@ -125,8 +150,9 @@ describe("RootLayout hydration consistency", () => {
     const initialAppearance = appProvidersEl.props.initialAppearance as string;
 
     return {
+      htmlStyle,
+      rootThemeCss,
       colorScheme,
-      bgContainer,
       initialAppearance,
       lang,
       translate,
@@ -136,31 +162,57 @@ describe("RootLayout hydration consistency", () => {
     };
   }
 
+  function expectedRootThemeCss(colorScheme: ThemeAppearance) {
+    const cssVars = getResolvedBridgeVars(themeSettings.main, colorScheme);
+    return `:root{${Object.entries(cssVars)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(";")};color-scheme:${colorScheme}}`;
+  }
+
   test("dark cookie is ignored while DESIGN/Awesomic is light-fixed", async () => {
-    const { colorScheme, bgContainer, initialAppearance } =
+    const { htmlStyle, rootThemeCss, colorScheme, initialAppearance } =
       await getLayoutAndProviderProps("dark");
 
     expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(htmlStyle).toBeUndefined();
+    expect(rootThemeCss).toBe(expectedRootThemeCss(colorScheme));
+    expect(initialAppearance).toBe(colorScheme);
   });
 
   test("light cookie → html colorScheme=light AND AppProviders initialAppearance=light", async () => {
-    const { colorScheme, bgContainer, initialAppearance } =
+    const { htmlStyle, rootThemeCss, colorScheme, initialAppearance } =
       await getLayoutAndProviderProps("light");
 
     expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(htmlStyle).toBeUndefined();
+    expect(rootThemeCss).toBe(expectedRootThemeCss(colorScheme));
+    expect(initialAppearance).toBe(colorScheme);
   });
 
   test("no cookie → defaults to light for both html and AppProviders", async () => {
-    const { colorScheme, bgContainer, initialAppearance } =
+    const { htmlStyle, rootThemeCss, colorScheme, initialAppearance } =
       await getLayoutAndProviderProps(undefined);
 
     expect(colorScheme).toBe("light");
-    expect(bgContainer).toBe("#ffffff");
-    expect(initialAppearance).toBe("light");
+    expect(htmlStyle).toBeUndefined();
+    expect(rootThemeCss).toBe(expectedRootThemeCss(colorScheme));
+    expect(initialAppearance).toBe(colorScheme);
+  });
+
+  test("emits the SSR theme bridge without a static inline style", async () => {
+    const sources = await collectUiSources(process.cwd());
+    const inlineStyles = scanUiContract(sources).violations.filter(
+      ({ path, ruleId }: ScannerViolation) =>
+        path === "src/app/layout.tsx" && ruleId === "react.static-inline-style",
+    );
+
+    expect(
+      inlineStyles.map(({ path, ruleId, fingerprint }: ScannerViolation) => ({
+        path,
+        ruleId,
+        fingerprint,
+      })),
+    ).toEqual([]);
   });
 
   // i18n (G-01): the resolved locale must drive BOTH <html lang> and the

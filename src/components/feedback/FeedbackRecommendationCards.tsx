@@ -146,7 +146,7 @@ export function FeedbackRecommendationCards({
                   aria-hidden
                   size={20}
                   strokeWidth={1.8}
-                  className="absolute right-0 top-0 text-[color:var(--ant-color-text-tertiary)] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary"
+                  className="absolute right-0 top-0 text-text-secondary opacity-70 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary group-hover:opacity-100"
                   data-testid={`feedback-recommendation-arrow-${action.key}`}
                 />
                 <span

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { SettingsPageFrame } from "@/components/shared/SettingsPageFrame";
 import { requireUser } from "@/lib/auth/session";
 import { getProfileSettings } from "@/lib/settings/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,24 +27,22 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <WorkspaceBody>
-      <div className="w-full max-w-[640px]">
-        <PageHeader title={t("heading")} subtitle={t("subtitle")} />
-        <ProfileForm
-          userId={user.id}
-          accountEmail={user.email ?? null}
-          initialAvatarPath={profileMeta?.avatar_path ?? null}
-          initialProfile={{
-            display_name: settings.display_name,
-            nickname: settings.nickname,
-            nationality_country_code: settings.nationality_country_code,
-            phone_country_code: settings.phone_country_code,
-            phone_number: settings.phone_number,
-            bio: settings.bio,
-          }}
-          showAccountEmail={false}
-        />
-      </div>
-    </WorkspaceBody>
+    <SettingsPageFrame>
+      <PageHeader title={t("heading")} subtitle={t("subtitle")} />
+      <ProfileForm
+        userId={user.id}
+        accountEmail={user.email ?? null}
+        initialAvatarPath={profileMeta?.avatar_path ?? null}
+        initialProfile={{
+          display_name: settings.display_name,
+          nickname: settings.nickname,
+          nationality_country_code: settings.nationality_country_code,
+          phone_country_code: settings.phone_country_code,
+          phone_number: settings.phone_number,
+          bio: settings.bio,
+        }}
+        showAccountEmail={false}
+      />
+    </SettingsPageFrame>
   );
 }

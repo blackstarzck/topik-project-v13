@@ -1,14 +1,8 @@
 "use client";
 
 /**
- * 난이도(1~5)를 오름차순 막대 5개 + 단계별 은은한 색으로 표현하는 공용 미니 미터.
- *
- * 색 결정을 한 곳에서만 정의해 난이도를 보여주는 모든 화면(문제 목록 `ProblemTable`,
- * 유형 선택 카드 `TypeSelectCards`)이 같은 색 언어를 공유하도록 한다 —
- * 추천 사유 태그의 `reason-tag-colors.ts`와 동일한 규칙.
- *
- * 색은 텍스트가 아니라 막대(장식)에만 입힌다. 의미는 항상 옆의 글자 라벨이
- * 전달하므로(색만으로 정보를 주지 않음) 대비/접근성 기준을 만족한다.
+ * 난이도(1~5)의 색, 라벨, 상태 아이콘 결정을 한 곳에서 관리한다.
+ * 색은 상태 아이콘에만 입히고 의미는 항상 함께 표시되는 글자 라벨이 전달한다.
  */
 
 export type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
@@ -59,8 +53,6 @@ const DIFFICULTY_ICON_MASK_CLASS: Record<DifficultyIconBand, string> = {
     "[mask:url(/assets/state/difficulty-middle.svg)_center/contain_no-repeat] [-webkit-mask:url(/assets/state/difficulty-middle.svg)_center/contain_no-repeat]",
   high: "[mask:url(/assets/state/difficulty-high.svg)_center/contain_no-repeat] [-webkit-mask:url(/assets/state/difficulty-high.svg)_center/contain_no-repeat]",
 };
-
-const BAR_HEIGHTS = ["h-1.5", "h-2", "h-2.5", "h-3", "h-3.5"] as const;
 
 /** 임의의 숫자를 1~5 정수 난이도로 보정한다. */
 export function clampDifficultyLevel(value: number): DifficultyLevel {
@@ -125,34 +117,5 @@ export function DifficultyStateIcon({
         className ?? "",
       ].join(" ")}
     />
-  );
-}
-
-type Props = {
-  /** 1~5. 범위 밖 값은 보정한다. */
-  level: number;
-  className?: string;
-};
-
-/**
- * 난이도 막대 5개. 채워진 막대는 단계 색, 빈 막대는 토큰 테두리색(`bg-border`).
- * 의미 전달은 옆 글자 라벨이 하므로 미터 자체는 `aria-hidden`.
- */
-export function DifficultyMeter({ level, className }: Props) {
-  const filled = clampDifficultyLevel(level);
-  const color = DIFFICULTY_FILL_COLOR[filled];
-  return (
-    <span
-      className={["inline-flex items-end gap-0.5", className ?? ""].join(" ")}
-      aria-hidden="true"
-    >
-      {BAR_HEIGHTS.map((height, index) => (
-        <span
-          key={height}
-          className={["w-1 rounded-sm bg-border", height].join(" ")}
-          style={index < filled ? { backgroundColor: color } : undefined}
-        />
-      ))}
-    </span>
   );
 }

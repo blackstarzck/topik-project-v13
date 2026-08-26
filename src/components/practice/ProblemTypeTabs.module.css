@@ -1,0 +1,47 @@
+.root > :global(.ant-tabs-nav) {
+  margin: 0;
+}
+
+.root :global(.ant-tabs-content-holder) {
+  display: none;
+}
+
+.label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.text {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activeText {
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 20px;
+  border-radius: var(--app-radius-pill);
+  background: var(--app-color-bg-layout);
+  padding: 0 8px;
+  color: var(--app-color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}

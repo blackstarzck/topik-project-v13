@@ -15,6 +15,13 @@ const awesomicToken = {
   colorLink: awesomicThemeTokens.color.graphite,
   colorLinkHover: awesomicThemeTokens.color.obsidian,
   colorLinkActive: awesomicThemeTokens.color.obsidian,
+  // Status seed values stay appearance-neutral. AntD's active algorithm owns
+  // the resolved light/dark status, fill, and compact-radius aliases.
+  colorError: awesomicThemeTokens.status.light.error,
+  colorWarning: awesomicThemeTokens.status.light.warning,
+  colorSuccess: awesomicThemeTokens.status.light.success,
+  blue: awesomicThemeTokens.chart.seriesPrimary,
+  cyan: awesomicThemeTokens.chart.accent,
   borderRadius: awesomicThemeTokens.radius.base,
   borderRadiusSM: awesomicThemeTokens.radius.badge,
   borderRadiusLG: awesomicThemeTokens.radius.base,
@@ -63,11 +70,17 @@ export const awesomicThemePreset = {
     "DESIGN/Awesomic light theme bound through AntD tokens and the Tailwind bridge.",
   appearances: {
     light: {
-      token: awesomicToken,
+      token: {
+        ...awesomicToken,
+        colorBorderSecondary: awesomicThemeTokens.border.secondary.light,
+      },
       components: awesomicComponents,
     },
     dark: {
-      token: awesomicToken,
+      token: {
+        ...awesomicToken,
+        colorBorderSecondary: awesomicThemeTokens.border.secondary.dark,
+      },
       components: awesomicComponents,
     },
   },

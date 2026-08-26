@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import type { DrawerProps, ModalProps } from "antd";
 
 import { AppCard } from "../../../src/components/shared/AppCard";
 import { AppDrawer } from "../../../src/components/shared/AppDrawer";
@@ -10,6 +13,27 @@ import { PageHeader } from "../../../src/components/shared/PageHeader";
 import { PublicShell } from "../../../src/components/shared/PublicShell";
 import { SelectableAppCard } from "../../../src/components/shared/SelectableAppCard";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
+
+const APP_DRAWER_SOURCE = readFileSync(
+  join(process.cwd(), "src/components/shared/AppDrawer.tsx"),
+  "utf8",
+);
+const APP_DRAWER_CSS_PATH = join(
+  process.cwd(),
+  "src/components/shared/AppDrawer.module.css",
+);
+const APP_DRAWER_CSS = existsSync(APP_DRAWER_CSS_PATH)
+  ? readFileSync(APP_DRAWER_CSS_PATH, "utf8")
+  : "";
+
+function appDrawerCssRule(selector: string) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = APP_DRAWER_CSS.match(
+    new RegExp(`${escapedSelector}\\s*\\{(?<body>[^}]*)\\}`, "m"),
+  );
+
+  return match?.groups?.body ?? "";
+}
 
 const routerReplaceMock = vi.hoisted(() => vi.fn());
 
@@ -229,22 +253,80 @@ describe("AppDrawer (overlay sentinel)", () => {
     expect(document.querySelector(".app-drawer")).toBeTruthy();
   });
 
-  it("expands the body height baseline while preserving caller body styles", () => {
+  it("owns the shared body baseline in CSS while preserving caller body styles", () => {
     renderWithIntl(
       <AppDrawer
         open
         title="t"
         onClose={() => undefined}
-        styles={{ body: { padding: 0 } }}
+        styles={{
+          body: { display: "grid", padding: 0 },
+          header: { paddingTop: 7 },
+        }}
       >
         <span>menu</span>
       </AppDrawer>,
     );
-    const body = document.querySelector(".ant-drawer-body");
-    const style = body?.getAttribute("style") ?? "";
-    expect(style).toContain("display: flex");
-    expect(style).toContain("min-height: calc(100dvh - 56px)");
-    expect(style).toContain("padding: 0px");
+    const body = document.querySelector<HTMLElement>(".ant-drawer-body");
+    const baselineRule = appDrawerCssRule(".root :global(.ant-drawer-body)");
+
+    expect(APP_DRAWER_SOURCE).toContain(
+      'import drawerStyles from "./AppDrawer.module.css";',
+    );
+    expect(baselineRule).toContain("display: flex;");
+    expect(baselineRule).toContain("flex-direction: column;");
+    expect(baselineRule).toContain("min-height: calc(100dvh - 56px);");
+    expect(body?.style.display).toBe("grid");
+    expect(body?.style.padding).toBe("0px");
+    expect(body?.style.minHeight).toBe("");
+    expect(
+      document.querySelector<HTMLElement>(".ant-drawer-header")?.style
+        .paddingTop,
+    ).toBe("7px");
+  });
+
+  it("preserves callback semantic styles while retaining the shared body baseline", () => {
+    const styles = vi.fn((info: { props: DrawerProps }) => {
+      expect(info.props.title).toBe("drawer-title");
+      return {
+        body: { display: "grid", minHeight: "42px", paddingBottom: 13 },
+        footer: { borderTopWidth: 4 },
+      };
+    });
+
+    renderWithIntl(
+      <AppDrawer
+        open
+        title="drawer-title"
+        footer="drawer-footer"
+        styles={styles}
+        onClose={() => undefined}
+      >
+        <span>menu</span>
+      </AppDrawer>,
+    );
+
+    const body = document.querySelector<HTMLElement>(".ant-drawer-body");
+    const footer = document.querySelector<HTMLElement>(".ant-drawer-footer");
+
+    expect(styles).toHaveBeenCalled();
+    expect(body?.style.display).toBe("grid");
+    expect(body?.style.flexDirection).toBe("");
+    expect(body?.style.minHeight).toBe("42px");
+    expect(body?.style.paddingBottom).toBe("13px");
+    expect(footer?.style.borderTopWidth).toBe("4px");
+  });
+
+  it("merges a caller root class without dropping the shared hook", () => {
+    renderWithIntl(
+      <AppDrawer open rootClassName="caller-drawer" onClose={() => undefined}>
+        <span>menu</span>
+      </AppDrawer>,
+    );
+
+    const root = document.querySelector(".app-drawer");
+    expect(root).toBeTruthy();
+    expect(root?.classList.contains("caller-drawer")).toBe(true);
   });
 
   it("calls onClose when the mask (overlay) is clicked", () => {
@@ -300,6 +382,65 @@ describe("AppModal (overlay sentinel — first modal cluster)", () => {
         .querySelector(".app-modal")
         ?.classList.contains("app-modal--center-origin"),
     ).toBe(true);
+  });
+
+  it("keeps caller-provided modal styles without adding a visual inline override", () => {
+    renderWithIntl(
+      <AppModal
+        open
+        style={{ top: 24, transformOrigin: "bottom left" }}
+        styles={{
+          body: { padding: 12 },
+          container: { borderWidth: 3, transformOrigin: "top right" },
+        }}
+        onCancel={() => undefined}
+      >
+        <span>body</span>
+      </AppModal>,
+    );
+
+    const dialog = document.querySelector<HTMLElement>(".ant-modal");
+    const container = document.querySelector<HTMLElement>(
+      ".ant-modal-container",
+    );
+    const body = document.querySelector<HTMLElement>(".ant-modal-body");
+
+    expect(dialog?.style.top).toBe("24px");
+    expect(dialog?.style.transformOrigin).toBe("bottom left");
+    expect(container?.style.borderWidth).toBe("3px");
+    expect(container?.style.transformOrigin).toBe("top right");
+    expect(body?.style.padding).toBe("12px");
+  });
+
+  it("preserves callback semantic styles without adding a container override", () => {
+    const styles = vi.fn((info: { props: ModalProps }) => {
+      expect(info.props.title).toBe("modal-title");
+      return {
+        header: { paddingTop: 9 },
+        container: { borderRadius: 7, transformOrigin: "bottom right" },
+      };
+    });
+
+    renderWithIntl(
+      <AppModal
+        open
+        title="modal-title"
+        styles={styles}
+        onCancel={() => undefined}
+      >
+        <span>body</span>
+      </AppModal>,
+    );
+
+    const header = document.querySelector<HTMLElement>(".ant-modal-header");
+    const container = document.querySelector<HTMLElement>(
+      ".ant-modal-container",
+    );
+
+    expect(styles).toHaveBeenCalled();
+    expect(header?.style.paddingTop).toBe("9px");
+    expect(container?.style.borderRadius).toBe("7px");
+    expect(container?.style.transformOrigin).toBe("bottom right");
   });
 
   it("merges a caller rootClassName without dropping the hook", () => {

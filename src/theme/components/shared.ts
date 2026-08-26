@@ -18,9 +18,9 @@ export const sharedComponentTokens = {
   },
   Select: {
     optionActiveBg:
-      "color-mix(in srgb, var(--app-color-bg-layout) 70%, var(--app-color-bg-container))",
-    optionSelectedBg: "var(--app-color-bg-layout)",
-    optionSelectedColor: "var(--app-color-text)",
+      "color-mix(in srgb, var(--ant-color-bg-layout) 70%, var(--ant-color-bg-container))",
+    optionSelectedBg: "var(--ant-color-bg-layout)",
+    optionSelectedColor: "var(--ant-color-text)",
     optionSelectedFontWeight: 500,
   },
 } satisfies ThemeConfig["components"];

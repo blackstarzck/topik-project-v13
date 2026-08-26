@@ -1,0 +1,5 @@
+.score :global(.ant-statistic-content-value) {
+  font-size: calc(var(--app-font-size-heading-lg) * 23 / 20) !important;
+  font-weight: 700;
+  line-height: 1;
+}

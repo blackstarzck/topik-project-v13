@@ -11,7 +11,6 @@ import {
   Statistic,
   Tag,
   Typography,
-  theme,
 } from "antd";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -112,7 +111,6 @@ export function GrowthDashboard({
 }: GrowthDashboardProps) {
   const t = useTranslations("growth.dashboard");
   const tInsights = useTranslations("growth.insights");
-  const { token } = theme.useToken();
   const router = useRouter();
 
   // dimension 코드를 카탈로그 라벨로. 동적 키라 캐스트가 필요하다.
@@ -121,23 +119,23 @@ export function GrowthDashboard({
       ? t(`dimension.${dimension}` as Parameters<DashboardTranslate>[0])
       : dimension;
 
-  // 개선률 KPI 표시 텍스트 + 색상. ICU 리프로 부호/퍼센트를 해석한다.
+  // 개선률 KPI 표시 텍스트 + 의미 상태. ICU 리프로 부호/퍼센트를 해석한다.
   const deltaSuffix = (
     pct: number | null,
-  ): { text: string; color: string | undefined } => {
+  ): { text: string; type: "success" | "danger" | undefined } => {
     if (pct == null)
-      return { text: t("kpi.improvementNoData"), color: undefined };
+      return { text: t("kpi.improvementNoData"), type: undefined };
     if (pct > 0)
       return {
         text: t("kpi.improvementUp", { pct: Math.round(pct) }),
-        color: token.colorSuccess,
+        type: "success",
       };
     if (pct < 0)
       return {
         text: t("kpi.improvementDown", { pct: Math.abs(Math.round(pct)) }),
-        color: token.colorError,
+        type: "danger",
       };
-    return { text: t("kpi.improvementNone"), color: undefined };
+    return { text: t("kpi.improvementNone"), type: undefined };
   };
 
   const sortedWeak = [...weakDimensions].sort(
@@ -171,9 +169,9 @@ export function GrowthDashboard({
             }
             suffix={kpi.averageScore != null ? t("kpi.pointSuffix") : undefined}
           />
-          <Text type="secondary" className="!text-xs">
+          <span className="text-sm leading-[1.5715] text-text-secondary">
             {t("kpi.averageScoreHint")}
-          </Text>
+          </span>
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
@@ -187,9 +185,9 @@ export function GrowthDashboard({
             value={kpi.totalAttempts}
             suffix={t("kpi.attemptsSuffix")}
           />
-          <Text type="secondary" className="!text-xs">
+          <span className="text-sm leading-[1.5715] text-text-secondary">
             {t("kpi.attemptsHint")}
-          </Text>
+          </span>
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
@@ -201,15 +199,11 @@ export function GrowthDashboard({
           <Statistic
             title={t("kpi.improvement")}
             value={improvement.text}
-            styles={{
-              content: improvement.color
-                ? { color: improvement.color }
-                : undefined,
-            }}
+            valueRender={(node) => <Text type={improvement.type}>{node}</Text>}
           />
-          <Text type="secondary" className="!text-xs">
+          <span className="text-sm leading-[1.5715] text-text-secondary">
             {t("kpi.improvementHint")}
-          </Text>
+          </span>
         </AppCard>
       </Col>
       <Col xs={12} md={6}>
@@ -221,9 +215,9 @@ export function GrowthDashboard({
             }
             suffix={kpi.goalAchievementPct != null ? "%" : undefined}
           />
-          <Text type="secondary" className="!text-xs">
+          <span className="text-sm leading-[1.5715] text-text-secondary">
             {t("kpi.goalLabel", { goal: kpi.goalLabel })}
-          </Text>
+          </span>
         </AppCard>
       </Col>
     </Row>
@@ -297,9 +291,9 @@ export function GrowthDashboard({
               )}
             />
           ))}
-          <Text type="secondary" className="!text-xs">
+          <span className="text-sm leading-[1.5715] text-text-secondary">
             {t("insights.disclaimer")}
-          </Text>
+          </span>
         </div>
       </AppCard>
 
@@ -335,9 +329,9 @@ export function GrowthDashboard({
                             : t("recent.scorePending")}
                         </strong>
                       </span>
-                      <Text type="secondary" className="!text-xs">
+                      <span className="text-sm leading-[1.5715] text-text-secondary">
                         {new Date(item.generatedAt).toLocaleDateString("ko-KR")}
-                      </Text>
+                      </span>
                     </Flex>
                     <span>
                       <Link

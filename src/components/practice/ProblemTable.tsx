@@ -24,6 +24,7 @@ import { ProblemTagIcon } from "./problem-tag-icons";
 import { getProblemRowDisplayMeta } from "./problem-list-display";
 import type { UserProblemRow } from "./problem-list-data";
 import { ProblemBookmarkToggle } from "./ProblemBookmarkToggle";
+import styles from "./ProblemTable.module.css";
 
 type Props = {
   rows: UserProblemRow[];
@@ -39,8 +40,7 @@ const EMPTY_SAVED_PROBLEM_IDS: ReadonlySet<string> = new Set<string>();
 const PROBLEM_TABLE_THEME = {
   components: {
     Table: {
-      borderColor:
-        "color-mix(in srgb, var(--app-color-border) 35%, transparent)",
+      borderColor: "var(--app-color-border-secondary)",
       headerBg: "var(--app-color-bg-container)",
       headerColor: "var(--app-color-text-secondary)",
       headerSplitColor: "transparent",
@@ -64,9 +64,19 @@ function ColumnTitle({
       className={[
         "problem-table__column-title",
         `problem-table__column-title--${variant}`,
+        styles.columnTitle,
+        variant === "problem"
+          ? styles.columnTitleProblem
+          : styles.columnTitleCenter,
       ].join(" ")}
     >
-      <span className="problem-table__column-title-icon" aria-hidden="true">
+      <span
+        className={[
+          "problem-table__column-title-icon",
+          styles.columnTitleIcon,
+        ].join(" ")}
+        aria-hidden="true"
+      >
         {icon}
       </span>
       {children}
@@ -215,7 +225,12 @@ export function ProblemTable({
               <div className="problem-table__title-line">
                 <strong className="problem-table__title">{row.title}</strong>
                 {displayMeta.isNew ? (
-                  <span className="problem-table__new-badge">
+                  <span
+                    className={[
+                      "problem-table__new-badge",
+                      styles.newBadge,
+                    ].join(" ")}
+                  >
                     {t("newBadge")}
                   </span>
                 ) : null}
@@ -342,16 +357,22 @@ export function ProblemTable({
 
         const solveButton = analysisHandoff ? (
           <Button
-            className="problem-table__action-button problem-table__action-button--secondary"
-            variant="outlined"
+            className={[
+              "problem-table__action-button problem-table__action-button--secondary",
+              styles.actionButton,
+            ].join(" ")}
+            type="default"
             disabled
           >
             {t("analysisStatusAction")}
           </Button>
         ) : rowHasPriorWork ? (
           <Button
-            className="problem-table__action-button problem-table__action-button--secondary"
-            variant="outlined"
+            className={[
+              "problem-table__action-button problem-table__action-button--secondary",
+              styles.actionButton,
+            ].join(" ")}
+            type="default"
             onClick={() => onRetryClick(row)}
             disabled={disabled}
           >
@@ -359,7 +380,11 @@ export function ProblemTable({
           </Button>
         ) : (
           <Button
-            className="problem-table__action-button problem-table__action-button--primary"
+            className={[
+              "problem-table__action-button problem-table__action-button--primary",
+              styles.actionButton,
+            ].join(" ")}
+            type="primary"
             disabled={disabled}
           >
             {t("startProblem")}

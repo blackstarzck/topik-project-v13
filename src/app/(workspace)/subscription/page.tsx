@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { WorkspaceBody } from "@/components/app/WorkspaceBody";
 import { SubscriptionComingSoon } from "@/components/settings/SubscriptionComingSoon";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,5 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
 // "준비중" 안내를 중앙에 표시한다(사이드바에서는 이미 숨김). 정식 빌링 재오픈 시
 // SubscriptionComingSoon을 SubscriptionShell로 되돌린다.
 export default function SubscriptionPage() {
-  return <SubscriptionComingSoon />;
+  return (
+    <WorkspaceBody size="workspace">
+      <SubscriptionComingSoon />
+    </WorkspaceBody>
+  );
 }

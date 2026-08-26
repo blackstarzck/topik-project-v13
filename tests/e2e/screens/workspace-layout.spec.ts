@@ -59,13 +59,12 @@ type BodyMetrics = Rect & {
   size: WorkspaceBodySize;
 };
 
-// Settings/profile pages were unified to the dashboard `workspace` (1152px)
-// container width (2026-06-21). Their forms keep a readable max-width via an
-// inner left-aligned wrapper, but the WorkspaceBody container itself now
-// matches every other workspace page.
+// Settings/profile pages use the dashboard `workspace` (1152px) container.
+// Their forms keep a readable max-width via an inner left-aligned wrapper,
+// while the library dashboard intentionally uses the wider dashboard canvas.
 const LAYOUT_ROUTES = [
   { route: "/practice/weakness", size: null },
-  { route: "/library", size: "workspace" },
+  { route: "/library", size: "wide" },
   { route: "/profile", size: "workspace" },
   { route: "/settings/account", size: "workspace" },
   { route: "/settings/learning", size: "workspace" },
@@ -304,23 +303,82 @@ async function getShellMetrics(page: Page) {
     const content = document.querySelector<HTMLElement>(
       ".app-workspace-content",
     );
+    const main = document.querySelector<HTMLElement>(".app-workspace-main");
     const sider = document.querySelector<HTMLElement>(".app-workspace-sider");
+    const sidebarShell =
+      document.querySelector<HTMLElement>(".app-sidebar-shell");
+    const sidebarMenuScroll = document.querySelector<HTMLElement>(
+      ".app-sidebar-menu-scroll",
+    );
     const mobileBar = document.querySelector<HTMLElement>(
       ".app-workspace-mobile-bar",
     );
+    const mobileBrand = document.querySelector<HTMLElement>(
+      ".app-workspace-mobile-brand",
+    );
+    const mobileBrandImage =
+      mobileBrand?.querySelector<HTMLElement>(".brand-logo__image");
 
-    if (!content) throw new Error("Missing workspace content");
+    if (!content || !main) throw new Error("Missing workspace shell content");
 
     const contentRect = content.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
     const siderRect = sider?.getBoundingClientRect() ?? null;
     const siderStyle = sider ? window.getComputedStyle(sider) : null;
+    const sidebarShellStyle = sidebarShell
+      ? window.getComputedStyle(sidebarShell)
+      : null;
+    const sidebarMenuScrollStyle = sidebarMenuScroll
+      ? window.getComputedStyle(sidebarMenuScroll)
+      : null;
     const mobileBarRect = mobileBar?.getBoundingClientRect() ?? null;
+    const mobileBrandRect = mobileBrand?.getBoundingClientRect() ?? null;
+    const mobileBrandImageRect =
+      mobileBrandImage?.getBoundingClientRect() ?? null;
+    const mobileBarStyle = mobileBar
+      ? window.getComputedStyle(mobileBar)
+      : null;
 
     return {
       contentHeight: contentRect.height,
+      contentLeft: contentRect.left,
+      mainLeft: mainRect.left,
+      mobileBrandCenterDelta:
+        mobileBarRect && mobileBrandRect
+          ? Math.abs(
+              mobileBrandRect.left +
+                mobileBrandRect.width / 2 -
+                (mobileBarRect.left + mobileBarRect.width / 2),
+            )
+          : null,
+      mobileBrandHeight: mobileBrandRect?.height ?? null,
+      mobileBrandImageHeight: mobileBrandImageRect?.height ?? null,
+      mobileBrandTagName: mobileBrand?.tagName ?? null,
+      mobileBarDisplay: mobileBarStyle?.display ?? null,
+      mobileBarFlex: mobileBarStyle?.flex ?? null,
       mobileBarHeight: mobileBarRect?.height ?? 0,
+      mobileBarIsAntHeader:
+        mobileBar?.classList.contains("ant-layout-header") ?? false,
+      mobileBarLineHeight: mobileBarStyle?.lineHeight ?? null,
+      mobileBarPaddingInlineEnd: mobileBarStyle?.paddingInlineEnd ?? null,
+      mobileBarPaddingInlineStart: mobileBarStyle?.paddingInlineStart ?? null,
+      mobileBarPosition: mobileBarStyle?.position ?? null,
+      mobileBarTagName: mobileBar?.tagName ?? null,
+      mobileBarTop: mobileBarStyle?.top ?? null,
+      mobileBarZIndex: mobileBarStyle?.zIndex ?? null,
+      sidebarMenuScrollFlex: sidebarMenuScrollStyle?.flex ?? null,
+      sidebarMenuScrollMinHeight: sidebarMenuScrollStyle?.minHeight ?? null,
+      sidebarMenuScrollOverflowX: sidebarMenuScrollStyle?.overflowX ?? null,
+      sidebarMenuScrollOverflowY: sidebarMenuScrollStyle?.overflowY ?? null,
+      sidebarShellDisplay: sidebarShellStyle?.display ?? null,
+      sidebarShellFlexDirection: sidebarShellStyle?.flexDirection ?? null,
+      sidebarShellOverflow: sidebarShellStyle?.overflow ?? null,
+      sidebarShellPaddingBottom: sidebarShellStyle?.paddingBottom ?? null,
+      sidebarShellPaddingTop: sidebarShellStyle?.paddingTop ?? null,
       siderDisplay: siderStyle?.display ?? null,
       siderHeight: siderRect?.height ?? null,
+      siderRight: siderRect?.right ?? null,
+      siderWidth: siderRect?.width ?? null,
       siderPosition: siderStyle?.position ?? null,
       siderTop: siderRect?.top ?? null,
       viewportHeight: window.innerHeight,
@@ -406,14 +464,55 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
   expect(metrics.contentHeight).toBeGreaterThanOrEqual(
     expectedContentHeight - 1,
   );
+  expect(metrics.sidebarShellDisplay).toBe("flex");
+  expect(metrics.sidebarShellFlexDirection).toBe("column");
+  expect(metrics.sidebarShellOverflow).toBe("hidden");
+  expect(metrics.sidebarShellPaddingTop).toBe("18px");
+  expect(metrics.sidebarShellPaddingBottom).toBe("18px");
+  expect(metrics.sidebarMenuScrollFlex).toBe("1 1 auto");
+  expect(metrics.sidebarMenuScrollMinHeight).toBe("0px");
+  expect(metrics.sidebarMenuScrollOverflowX).toBe("hidden");
+  expect(metrics.sidebarMenuScrollOverflowY).toBe("auto");
 
   if (isDesktop) {
+    expect(metrics.mobileBarTagName).toBeNull();
+    expect(metrics.mobileBrandTagName).toBeNull();
     expect(metrics.siderDisplay).not.toBe("none");
+    expect(
+      Math.abs((metrics.siderWidth ?? Number.NaN) - 300),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(
+        (metrics.mainLeft ?? Number.NaN) - (metrics.siderRight ?? Number.NaN),
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(metrics.contentLeft).toBeGreaterThanOrEqual(
+      (metrics.siderRight ?? Number.POSITIVE_INFINITY) - 1,
+    );
     expect(metrics.siderPosition).toBe("sticky");
     expect(Math.abs(metrics.siderTop ?? Number.NaN)).toBeLessThanOrEqual(1);
     expect(metrics.siderHeight ?? 0).toBeGreaterThanOrEqual(
       metrics.viewportHeight - 1,
     );
+  } else {
+    expect(metrics.mobileBarTagName).toBe("HEADER");
+    expect(metrics.mobileBarIsAntHeader).toBe(false);
+    expect(metrics.mobileBarDisplay).toBe("flex");
+    expect(metrics.mobileBarFlex).toBe("0 0 auto");
+    expect(metrics.mobileBarHeight).toBe(68);
+    expect(metrics.mobileBarPaddingInlineStart).toBe("6px");
+    expect(metrics.mobileBarPaddingInlineEnd).toBe("6px");
+    expect(metrics.mobileBarLineHeight).toBe("normal");
+    expect(metrics.mobileBarPosition).toBe("sticky");
+    expect(metrics.mobileBarTop).toBe("0px");
+    expect(metrics.mobileBarZIndex).toBe("100");
+    expect(metrics.mobileBrandTagName).toBe("SPAN");
+    expect(metrics.mobileBrandHeight).toBe(48);
+    expect(metrics.mobileBrandImageHeight).toBe(48);
+    expect(metrics.mobileBrandCenterDelta ?? Number.NaN).toBeLessThanOrEqual(
+      0.5,
+    );
+    expect(metrics.siderDisplay).toBe("none");
   }
 
   await page.getByTestId("workspace-page-body").evaluate((body) => {
@@ -428,6 +527,11 @@ test("workspace shell keeps sidebar pinned and short content full-height", async
   if (isDesktop) {
     const scrolledTop = await page
       .locator(".app-workspace-sider")
+      .evaluate((node) => node.getBoundingClientRect().top);
+    expect(Math.abs(scrolledTop)).toBeLessThanOrEqual(1);
+  } else {
+    const scrolledTop = await page
+      .locator("header.app-workspace-mobile-bar")
       .evaluate((node) => node.getBoundingClientRect().top);
     expect(Math.abs(scrolledTop)).toBeLessThanOrEqual(1);
   }

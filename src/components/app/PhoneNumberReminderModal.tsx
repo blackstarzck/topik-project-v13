@@ -1,10 +1,11 @@
 "use client";
 
-import { App, Button, Modal } from "antd";
+import { App, Button } from "antd";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState, useSyncExternalStore } from "react";
 
+import { AppModal } from "@/components/shared/AppModal";
 import { APP_ROUTES } from "@/lib/routes";
 import { dismissPhoneNumberPrompt } from "@/lib/settings/mutations";
 
@@ -168,9 +169,8 @@ export function PhoneNumberReminderModal({
   }
 
   return (
-    <Modal
+    <AppModal
       open={modalOpen}
-      centered
       title={t("title")}
       classNames={{ body: "break-keep" }}
       onCancel={handleClose}
@@ -186,6 +186,6 @@ export function PhoneNumberReminderModal({
       }
     >
       {t("description")}
-    </Modal>
+    </AppModal>
   );
 }

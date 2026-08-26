@@ -10,6 +10,7 @@ import {
 } from "@testing-library/react";
 import { App as AntdApp } from "antd";
 import { NextIntlClientProvider } from "next-intl";
+import { readFileSync } from "node:fs";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -159,6 +160,13 @@ vi.mock("@/lib/supabase/browser", () => ({
 }));
 
 import { ProblemListView } from "../../../src/components/practice/ProblemListView";
+import problemTypeTabsStyles from "../../../src/components/practice/ProblemTypeTabs.module.css";
+
+const globalCss = readFileSync("src/styles/global.css", "utf8");
+const problemTypeTabsCss = readFileSync(
+  "src/components/practice/ProblemTypeTabs.module.css",
+  "utf8",
+);
 
 type RpcProblemRow = {
   problem_id: string;
@@ -246,12 +254,20 @@ describe("ProblemListView", () => {
       .closest(".ant-tabs");
     expect(allTabRoot?.className).toContain("problem-type-tabs");
     expect(allTabRoot?.className).toContain("problem-type-tabs--with-all");
+    expect(allTabRoot?.className).toContain(problemTypeTabsStyles.root);
     expect(allTabRoot?.className).toContain("ant-tabs-card");
     expect(
       screen
         .getByText(enMessages.practice.common.typeTabAll)
         .closest(".ant-tabs-tab")?.className,
     ).toContain("ant-tabs-tab-active");
+    expect(
+      screen.getByText(enMessages.practice.common.typeTabAll).className,
+    ).toContain(problemTypeTabsStyles.activeText);
+    expect(
+      screen.getByText(enMessages.practice.recommendations.typeButtonLabel51)
+        .className,
+    ).not.toContain(problemTypeTabsStyles.activeText);
     expect(
       screen.queryByText(
         enMessages.practice.recommendations.typeRecommendedBadge,
@@ -276,6 +292,22 @@ describe("ProblemListView", () => {
         container.querySelector(`[data-app-icon-name="${iconName}"]`),
       ).toBeTruthy();
     }
+  });
+
+  it("keeps problem type tab structure in its owner module", () => {
+    expect(globalCss).not.toContain(".problem-type-tabs");
+    expect(problemTypeTabsCss).toContain(".root > :global(.ant-tabs-nav)");
+    expect(problemTypeTabsCss).toContain(
+      ".root :global(.ant-tabs-content-holder)",
+    );
+    expect(problemTypeTabsCss).toContain(".label");
+    expect(problemTypeTabsCss).toContain(".icon");
+    expect(problemTypeTabsCss).toContain(".text");
+    expect(problemTypeTabsCss).toContain(".activeText");
+    expect(problemTypeTabsCss).toContain(".badge");
+    expect(problemTypeTabsCss).toContain(
+      "border-radius: var(--app-radius-pill);",
+    );
   });
 
   it("updates the recommended-only control immediately while URL navigation is still pending", async () => {
