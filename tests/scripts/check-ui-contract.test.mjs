@@ -165,7 +165,7 @@ describe("UI contract normalization", () => {
       lexeme: "style={{ color: '#fff' }}",
     });
 
-    expect(UI_CONTRACT_SCANNER_VERSION).toBe(3);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(4);
     expect(left.fingerprint).toBe(right.fingerprint);
     expect(left.fingerprint).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -575,6 +575,35 @@ describe("UI contract TSX rules", () => {
     );
   });
 
+  it("ignores CSS module bindings while preserving local TypeScript style resolution", () => {
+    const scan = (padding) =>
+      scanUiContract([
+        source(
+          "src/components/example/CssModuleConsumer.tsx",
+          `
+            import styles from "./CssModuleConsumer.module.css";
+            import { visual } from "./visual";
+            export function CssModuleConsumer() {
+              return <div className={styles.frame} style={visual} />;
+            }
+          `,
+        ),
+        source(
+          "src/components/example/CssModuleConsumer.module.css",
+          `.frame { color: var(--app-text-primary); }`,
+        ),
+        source(
+          "src/components/example/visual.ts",
+          `export const visual = { padding: ${padding} };`,
+        ),
+      ]);
+
+    expect(() => scan(8)).not.toThrow();
+    expect(fingerprintsFor(scan(8), "react.static-inline-style")).not.toEqual(
+      fingerprintsFor(scan(80), "react.static-inline-style"),
+    );
+  });
+
   it("resolves inline-style bindings from the nearest lexical scope", () => {
     const scan = (padding) =>
       scanUiContract([
@@ -911,6 +940,36 @@ describe("UI contract CSS rules", () => {
     ).toHaveLength(3);
   });
 
+  it("trusts only the font-family descriptor inside @font-face", () => {
+    const result = scanUiContract([
+      source(
+        "src/styles/fonts.css",
+        `
+          @font-face {
+            font-family: "Project Sans";
+            src: url("/fonts/project-sans.woff2") format("woff2");
+            font-weight: 400;
+            font-style: normal;
+          }
+          @media (min-width: 640px) {
+            font-family: "Raw At Rule Font";
+          }
+          .consumer {
+            font-family: "Raw Consumer Font";
+          }
+        `,
+      ),
+    ]);
+
+    const fontViolations = result.violations.filter(
+      (violation) => violation.ruleId === "visual.raw-radius-shadow-font",
+    );
+    expect(fontViolations).toHaveLength(2);
+    expect(fontViolations.map((violation) => violation.line).sort((a, b) => a - b)).toEqual([
+      9, 12,
+    ]);
+  });
+
   it("detects named CSS colors while allowing semantic color keywords", () => {
     const result = scanUiContract([
       source(
@@ -1039,6 +1098,30 @@ describe("UI contract CSS rules", () => {
     expect(fingerprintsFor(left, "global-css.declaration-freeze")).toEqual(
       fingerprintsFor(right, "global-css.declaration-freeze"),
     );
+  });
+
+  it("freezes selectors and declarations in the two global CSS owners only", () => {
+    const css = `.card { color: var(--app-color-text); }`;
+    const result = scanUiContract([
+      source("src/styles/global.css", css),
+      source("src/styles/foundation.css", css),
+      source("src/styles/component.css", css),
+    ]);
+    const freezePaths = (ruleId) =>
+      result.violations
+        .filter((violation) => violation.ruleId === ruleId)
+        .map((violation) => violation.path)
+        .sort();
+
+    expect(freezePaths("global-css.selector-freeze")).toEqual([
+      "src/styles/foundation.css",
+      "src/styles/global.css",
+    ]);
+    expect(freezePaths("global-css.declaration-freeze")).toEqual([
+      "src/styles/foundation.css",
+      "src/styles/global.css",
+    ]);
+    expect(UI_CONTRACT_SCANNER_VERSION).toBe(4);
   });
 
   it("canonicalizes comma-selector order and freezes direct at-rule declarations", () => {
@@ -1424,6 +1507,38 @@ describe("UI contract collector, Git base, and CLI", () => {
     return root;
   }
 
+  function writeCandidateTuple(
+    root,
+    baseline,
+    {
+      approvals = emptyApprovals,
+      exceptions = emptyExceptions,
+      migrations = emptyMigrations,
+    } = {},
+  ) {
+    mkdirSync(join(root, "config"), { recursive: true });
+    writeJson(join(root, "config", "ui-contract-baseline.json"), baseline);
+    writeJson(join(root, "config", "ui-contract-exception-approvals.json"), approvals);
+    writeJson(join(root, "config", "ui-contract-exceptions.json"), exceptions);
+    writeJson(join(root, "config", "ui-contract-scanner-migrations.json"), migrations);
+  }
+
+  function baseTupleFiles(
+    baseline,
+    {
+      approvals = emptyApprovals,
+      exceptions = emptyExceptions,
+      migrations = emptyMigrations,
+    } = {},
+  ) {
+    return new Map([
+      ["config/ui-contract-baseline.json", JSON.stringify(baseline)],
+      ["config/ui-contract-exception-approvals.json", JSON.stringify(approvals)],
+      ["config/ui-contract-exceptions.json", JSON.stringify(exceptions)],
+      ["config/ui-contract-scanner-migrations.json", JSON.stringify(migrations)],
+    ]);
+  }
+
   function fakeGitTuple(files) {
     return (_command, args) => {
       if (args[0] === "cat-file" && args[1] === "-e" && args[2] === `${baseRef}^{commit}`) {
@@ -1489,6 +1604,139 @@ describe("UI contract collector, Git base, and CLI", () => {
       expect.objectContaining({ code: "UI_BASE_REF_REQUIRED" }),
     );
     expect(resolveBaseRef(null, {}, "diff-block")).toBe(null);
+  });
+
+  it("accepts error mode and fails on existing actionable violations despite an exact baseline", async () => {
+    const content = `export const Example = () => <div style={{ color: "#fff" }} />;`;
+    const root = createProject({ "src/example.tsx": content });
+    const current = scanUiContract([source("src/example.tsx", content)]);
+    writeCandidateTuple(
+      root,
+      createUiContractBaseline(current.violations, {
+        generatedAt: "2026-07-10T00:00:00.000Z",
+      }),
+    );
+
+    const result = await runUiContractCli(["--mode", "error", "--format", "json"], {
+      cwd: root,
+      env: {},
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("react.static-inline-style");
+  });
+
+  it("allows exact-baseline structural freeze fingerprints in local error mode", async () => {
+    const content = `.card { color: var(--app-color-text); }`;
+    const root = createProject({ "src/styles/global.css": content });
+    const current = scanUiContract([source("src/styles/global.css", content)]);
+    writeCandidateTuple(
+      root,
+      createUiContractBaseline(current.violations, {
+        generatedAt: "2026-07-10T00:00:00.000Z",
+      }),
+    );
+
+    const result = await runUiContractCli(["--mode", "error", "--format", "json"], {
+      cwd: root,
+      env: {},
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+    });
+
+    expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+    expect(JSON.parse(result.stdout)).toMatchObject({ totalViolations: 0 });
+  });
+
+  it("blocks structural freeze fingerprints added relative to the CI base", async () => {
+    const baseContent = `.card { color: var(--app-color-text); }`;
+    const candidateContent = `.card { color: var(--app-color-text); padding: 12px; }`;
+    const root = createProject({ "src/styles/global.css": candidateContent });
+    const current = scanUiContract([source("src/styles/global.css", candidateContent)]);
+    const base = scanUiContract([source("src/styles/global.css", baseContent)]);
+    const candidateBaseline = createUiContractBaseline(current.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    const baseBaseline = createUiContractBaseline(base.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    writeCandidateTuple(root, candidateBaseline);
+
+    const result = await runUiContractCli(["--mode", "error", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(baseTupleFiles(baseBaseline)),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("global-css.declaration-freeze");
+    expect(JSON.parse(result.stdout)).toMatchObject({ totalViolations: 1 });
+  });
+
+  it("requires a base ref for error mode in CI", () => {
+    expect(() => resolveBaseRef(null, { CI: "true" }, "error")).toThrow(
+      expect.objectContaining({ code: "UI_BASE_REF_REQUIRED" }),
+    );
+  });
+
+  it.each([
+    {
+      name: "same-PR approval",
+      baseApprovals: emptyApprovals,
+      candidateHasApproval: true,
+    },
+    {
+      name: "removed candidate approval",
+      baseApprovals: null,
+      candidateHasApproval: false,
+    },
+  ])("keeps $name unauthorized in CI error mode", async ({ baseApprovals, candidateHasApproval }) => {
+    const content = `export const Example = () => <div style={{ color: "#fff" }} />;`;
+    const root = createProject({ "src/example.tsx": content });
+    const current = scanUiContract([source("src/example.tsx", content)]);
+    const target = current.violations.find(
+      (violation) => violation.ruleId === "react.static-inline-style",
+    );
+    const approval = {
+      id: "existing-inline-style",
+      path: target.path,
+      ruleId: target.ruleId,
+      fingerprint: target.fingerprint,
+      owner: "test-owner",
+      reason: "Exercise existing exception authority in error mode.",
+      createdDate: "2026-07-10",
+      expiresDate: "2026-08-01",
+      removalCondition: "Remove with this focused fixture.",
+      regressionEvidence: "tests/scripts/check-ui-contract.test.mjs",
+    };
+    const approvedManifest = { schemaVersion: 1, approvals: [approval] };
+    const candidateApprovals = candidateHasApproval ? approvedManifest : emptyApprovals;
+    const candidateExceptions = {
+      schemaVersion: 1,
+      exceptions: [{ id: approval.id, approvalId: approval.id }],
+    };
+    const baseline = createUiContractBaseline(current.violations, {
+      generatedAt: "2026-07-10T00:00:00.000Z",
+    });
+    writeCandidateTuple(root, baseline, {
+      approvals: candidateApprovals,
+      exceptions: candidateExceptions,
+    });
+    const authoritativeBaseApprovals = baseApprovals ?? approvedManifest;
+
+    const result = await runUiContractCli(["--mode", "error", "--format", "json"], {
+      cwd: root,
+      env: { CI: "true", UI_CONTRACT_BASE_REF: baseRef },
+      clock: () => new Date("2026-07-10T12:00:00.000Z"),
+      spawnSyncImpl: fakeGitTuple(
+        baseTupleFiles(baseline, { approvals: authoritativeBaseApprovals }),
+      ),
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("UI_EXCEPTION_UNAUTHORIZED");
   });
 
   it("classifies all-absent bootstrap, rejects partial tuples, and reads all-present tuples", () => {
