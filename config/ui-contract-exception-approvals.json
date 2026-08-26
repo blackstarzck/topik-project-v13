@@ -1,4 +1,29 @@
 {
   "schemaVersion": 1,
-  "approvals": []
+  "approvals": [
+    {
+      "id": "auth-character-runtime-motion-vars",
+      "path": "src/components/auth/AnimatedAuthCharacters.tsx",
+      "ruleId": "react.static-inline-style",
+      "fingerprint": "336b99d84ad3aa6b3fdd2a81c50231f68017fdb6bfee99db47f238ff7ea3a67f",
+      "owner": "design-system",
+      "reason": "The inline values carry live pointer and viewport motion coordinates through CSS custom properties while all visual values remain theme-owned.",
+      "createdDate": "2026-08-26",
+      "expiresDate": "2026-11-24",
+      "removalCondition": "Remove when the live motion coordinates can be represented without a React inline style while preserving pointer, typing, and reduced-motion behavior.",
+      "regressionEvidence": "tests/components/auth/AnimatedAuthCharacters.test.tsx"
+    },
+    {
+      "id": "root-layout-ssr-theme-bridge",
+      "path": "src/app/layout.tsx",
+      "ruleId": "react.static-inline-style",
+      "fingerprint": "81b7d6f9316068a3dbab42f493957a376492121c916758edde08c55c5fe98edd",
+      "owner": "design-system",
+      "reason": "The root inline style emits the selected theme variables during server rendering so the first paint and hydration use the same theme.",
+      "createdDate": "2026-08-26",
+      "expiresDate": "2026-11-24",
+      "removalCondition": "Remove when the framework provides an equally early server-rendered theme bridge that prevents first-paint mismatch without an inline style.",
+      "regressionEvidence": "tests/theme/layout-hydration.test.ts"
+    }
+  ]
 }
