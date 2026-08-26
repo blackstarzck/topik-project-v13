@@ -7,6 +7,12 @@ import {
 
 const AUTH_READ_ONLY = process.env.PLAYWRIGHT_AUTH_READ_ONLY === "1";
 const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const GOOGLE_TELEMETRY_HOSTS = [
+  "google-analytics.com",
+  "googletagmanager.com",
+] as const;
+const ALTERNATE_THEME_SCOPE =
+  ":root, body, .css-var-talkpik, .ant-select-css-var";
 const FONT_SIZE_VARS = [
   "--app-font-size-caption",
   "--app-font-size-body",
@@ -30,6 +36,21 @@ function safeRequestLabel(method: string, rawUrl: string): string {
     return `${method} ${url.origin}${url.pathname}`;
   } catch {
     return `${method} [unparseable-url]`;
+  }
+}
+
+function isGoogleTelemetryUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return (
+      url.protocol === "https:" &&
+      GOOGLE_TELEMETRY_HOSTS.some(
+        (hostname) =>
+          url.hostname === hostname || url.hostname.endsWith(`.${hostname}`),
+      )
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -62,12 +83,17 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 async function closeSessionOnlyReminder(page: Page) {
-  const sessionOnlyReminderClose = page.locator(
-    ".ant-modal:visible .ant-modal-close",
-  );
-  if (await sessionOnlyReminderClose.isVisible().catch(() => false)) {
-    await sessionOnlyReminderClose.click();
-    await expect(sessionOnlyReminderClose).toBeHidden();
+  const reminderDialog = page.getByRole("dialog", {
+    name: "전화번호를 등록해 주세요",
+    exact: true,
+  });
+  await reminderDialog
+    .waitFor({ state: "visible", timeout: 2_000 })
+    .catch(() => undefined);
+
+  if (await reminderDialog.isVisible().catch(() => false)) {
+    await reminderDialog.locator(".ant-modal-close").click();
+    await expect(reminderDialog).toBeHidden();
   }
 }
 
@@ -107,16 +133,20 @@ async function injectAlternateTheme(page: Page) {
   };
 
   await page.evaluate(
-    ({ marker, vars }) => {
+    ({ marker, scope, vars }) => {
       const declaration = Object.entries(vars)
         .map(([name, value]) => `${name}: ${value} !important;`)
         .join("\n");
       const style = document.createElement("style");
       style.id = marker;
-      style.textContent = `:root, body, .css-var-talkpik {\n${declaration}\n}`;
+      style.textContent = `${scope} {\n${declaration}\n}`;
       document.head.append(style);
     },
-    { marker: PHASE5D_ALTERNATE_THEME_MARKER, vars: variables },
+    {
+      marker: PHASE5D_ALTERNATE_THEME_MARKER,
+      scope: ALTERNATE_THEME_SCOPE,
+      vars: variables,
+    },
   );
 }
 
@@ -155,6 +185,11 @@ test("authenticated read-only UI survives a browser-only alternate theme", async
     const request = route.request();
     const method = request.method().toUpperCase();
     const url = new URL(request.url());
+
+    if (isGoogleTelemetryUrl(request.url())) {
+      await route.fulfill({ status: 204, body: "" });
+      return;
+    }
 
     if (!READ_ONLY_METHODS.has(method)) {
       unexpectedWrites.push(safeRequestLabel(method, request.url()));
@@ -220,9 +255,9 @@ test("authenticated read-only UI survives a browser-only alternate theme", async
   const timezoneRow = page.getByTestId("notification-routine-row-timezone");
   const timezoneSelect = timezoneRow.locator(".ant-select");
   const timezoneCombobox = timezoneRow.getByRole("combobox");
-  const timezoneSelection = timezoneSelect.locator(
-    ".ant-select-selection-item",
-  );
+  const timezoneSelection = timezoneSelect.getByText("Asia/Seoul", {
+    exact: true,
+  });
 
   await expect(form).toBeVisible();
   await closeSessionOnlyReminder(page);
@@ -390,6 +425,11 @@ test.describe("public password-strength theme bridge", () => {
     await page.route("**/*", async (route) => {
       const request = route.request();
       const method = request.method().toUpperCase();
+
+      if (isGoogleTelemetryUrl(request.url())) {
+        await route.fulfill({ status: 204, body: "" });
+        return;
+      }
 
       if (!READ_ONLY_METHODS.has(method)) {
         unexpectedWrites.push(safeRequestLabel(method, request.url()));
