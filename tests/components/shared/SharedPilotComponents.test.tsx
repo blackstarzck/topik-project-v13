@@ -384,7 +384,7 @@ describe("AppModal (overlay sentinel — first modal cluster)", () => {
     ).toBe(true);
   });
 
-  it("applies center-origin inline styles while preserving caller object styles", () => {
+  it("keeps caller-provided modal styles without adding a visual inline override", () => {
     renderWithIntl(
       <AppModal
         open
@@ -406,13 +406,13 @@ describe("AppModal (overlay sentinel — first modal cluster)", () => {
     const body = document.querySelector<HTMLElement>(".ant-modal-body");
 
     expect(dialog?.style.top).toBe("24px");
-    expect(dialog?.style.transformOrigin).toBe("center center");
+    expect(dialog?.style.transformOrigin).toBe("bottom left");
     expect(container?.style.borderWidth).toBe("3px");
-    expect(container?.style.transformOrigin).toBe("center center");
+    expect(container?.style.transformOrigin).toBe("top right");
     expect(body?.style.padding).toBe("12px");
   });
 
-  it("preserves callback semantic styles while enforcing the container center origin", () => {
+  it("preserves callback semantic styles without adding a container override", () => {
     const styles = vi.fn((info: { props: ModalProps }) => {
       expect(info.props.title).toBe("modal-title");
       return {
@@ -440,7 +440,7 @@ describe("AppModal (overlay sentinel — first modal cluster)", () => {
     expect(styles).toHaveBeenCalled();
     expect(header?.style.paddingTop).toBe("9px");
     expect(container?.style.borderRadius).toBe("7px");
-    expect(container?.style.transformOrigin).toBe("center center");
+    expect(container?.style.transformOrigin).toBe("bottom right");
   });
 
   it("merges a caller rootClassName without dropping the hook", () => {

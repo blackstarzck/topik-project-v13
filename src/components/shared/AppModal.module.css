@@ -1,0 +1,4 @@
+.root :global(.ant-modal),
+.root :global(.ant-modal-container) {
+  transform-origin: center center;
+}
