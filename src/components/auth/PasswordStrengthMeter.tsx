@@ -89,7 +89,7 @@ export function PasswordStrengthMeter({
             <div
               key={index}
               className={[
-                "h-1 flex-1 rounded-indicator transition-colors duration-200",
+                "h-1 flex-1 rounded-indicator",
                 filled ? LEVEL_BAR_CLASS[strength.level] : "bg-fill-secondary",
               ].join(" ")}
             />
