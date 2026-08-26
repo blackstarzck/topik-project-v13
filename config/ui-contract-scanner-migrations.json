@@ -5,7 +5,7 @@
       "fromScannerDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
       "fromBaselineDigest": "bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1",
       "toScannerDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
-      "toBaselineDigest": "3cde5812ac8ccc90dda38b984741379d597cb9b3b9cd824fbf9fb75ed1edf451",
+    "toBaselineDigest": "ce9a273bc7330437d096ea99eb960d4d9d5658edd6978730b93ea8566d5e4034",
       "paths": [
         "src/styles/foundation.css",
         "src/styles/global.css"
@@ -15,7 +15,7 @@
         "global-css.selector-freeze"
       ],
       "approvedBy": "@blackstarzck",
-      "reason": "Approve the reviewed foundation split and global CSS reduction using the exact v6 feature baseline."
+    "reason": "Approve the reviewed foundation split and global CSS reduction using the final v6 feature baseline; the root theme bridge is emitted as a stylesheet rather than a static inline style."
     }
   ],
   "migrations": [
