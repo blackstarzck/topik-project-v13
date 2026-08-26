@@ -12,6 +12,7 @@ import {
 } from "@testing-library/react";
 import { App as AntdApp } from "antd";
 import { NextIntlClientProvider } from "next-intl";
+import postcss, { type Declaration, type Rule } from "postcss";
 import type { ReactNode } from "react";
 
 import koMessages from "../../../messages/ko.json";
@@ -166,18 +167,66 @@ function submitForm(container: HTMLElement) {
   fireEvent.submit(form);
 }
 
-describe("NotificationPrefsForm", () => {
-  it("defines notification description text styles at 14px", () => {
-    const css = readFileSync("src/styles/global.css", "utf8")
-      .replace(/\s+/g, " ")
-      .replace(/\s*>\s*/g, ">");
+const notificationDescriptionSelectors = [
+  ".notification-settings-redesign .notification-settings-section-description.ant-typography",
+  ".notification-settings-redesign .notification-settings-row-hint.ant-typography",
+  ".notification-settings-redesign .notification-settings-type-description.ant-typography",
+  ".notification-settings-redesign .notification-settings-channel-copy .ant-typography-secondary.ant-typography",
+  ".notification-settings-redesign .ant-alert .ant-alert-description",
+  ".notification-settings-redesign .notification-settings-detail-panel>section>.ant-typography-secondary.ant-typography",
+];
 
-    expect(css).toContain(
-      ".notification-settings-section-description.ant-typography, .notification-settings-row-hint.ant-typography, .notification-settings-type-description.ant-typography, .notification-settings-channel-copy .ant-typography-secondary.ant-typography, .notification-settings-redesign .ant-alert .ant-alert-description, .notification-settings-detail-panel>section>.ant-typography-secondary.ant-typography {",
+function normalizeCssSelector(selector: string) {
+  return selector
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/\s*([>+~])\s*/gu, "$1");
+}
+
+function findNotificationDescriptionRules(source: string) {
+  const matches: Rule[] = [];
+
+  postcss.parse(source, { from: "src/styles/global.css" }).walkRules((rule) => {
+    const selectors = rule.selectors.map(normalizeCssSelector);
+    if (
+      selectors.length === notificationDescriptionSelectors.length &&
+      selectors.every(
+        (selector, index) =>
+          selector === notificationDescriptionSelectors[index],
+      )
+    ) {
+      matches.push(rule);
+    }
+  });
+
+  return matches;
+}
+
+function finalDeclarations(rule: Rule) {
+  const declarations = new Map<string, string>();
+
+  for (const node of rule.nodes ?? []) {
+    if (node.type !== "decl") continue;
+    const declaration = node as Declaration;
+    declarations.set(
+      declaration.prop.toLowerCase(),
+      declaration.value.replace(/\s+/gu, " ").trim(),
     );
-    expect(css).toMatch(
-      /\.notification-settings-section-description\.ant-typography, .*?font-size: 14px;/,
-    );
+  }
+
+  return declarations;
+}
+
+describe("NotificationPrefsForm", () => {
+  it("defines notification description text styles with the secondary text token", () => {
+    const css = readFileSync("src/styles/global.css", "utf8");
+    const descriptionRules = findNotificationDescriptionRules(css);
+
+    expect(descriptionRules).toHaveLength(1);
+    const declarations = finalDeclarations(descriptionRules[0]);
+
+    expect(declarations.get("font-size")).toBe("14px");
+    expect(declarations.get("color")).toBe("var(--app-color-text-secondary)");
   });
 
   it("submits an empty diff when the user submits without toggling anything", async () => {

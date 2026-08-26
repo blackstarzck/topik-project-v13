@@ -79,6 +79,8 @@ describe("Awesomic token source contract", () => {
     expect(awesomicThemeTokens.status).toEqual({
       light: {
         error: "#ff4d4f",
+        errorBorder: "#ffccc7",
+        errorSurface: "#fff2f0",
         warning: "#faad14",
         success: "#52c41a",
         strongSuccess: "#389e0d",
@@ -86,6 +88,8 @@ describe("Awesomic token source contract", () => {
       },
       dark: {
         error: "#dc4446",
+        errorBorder: "#5b2526",
+        errorSurface: "#2c1618",
         warning: "#d89614",
         success: "#49aa19",
         strongSuccess: "#3c8618",
@@ -112,6 +116,9 @@ describe("Awesomic token source contract", () => {
       ghostBorder: "#e7e7e6",
     });
     expect(awesomicThemeTokens.authPrompt).toEqual({
+      canvas: "#ffffff",
+      heroBackground:
+        "radial-gradient(circle at 48% 55%, rgba(255, 255, 255, 0.08), transparent 36%), radial-gradient(circle at 28% 78%, rgba(255, 255, 255, 0.05), transparent 30%), linear-gradient(145deg, #202020 0%, #191919 62%, #242424 100%)",
       controlHeight: 50,
       focusOutline: "rgba(24, 24, 24, 0.08)",
       focusShadow: "0 0 0 2px rgba(24, 24, 24, 0.08)",
@@ -160,6 +167,7 @@ describe("Awesomic token source contract", () => {
     expect(headingRule).toContain(
       "font-size: var(--app-font-size-heading-sm);",
     );
+    expect(headingRule).toContain("font-family: var(--app-font-family);");
     expect(headingRule).toContain("line-height: 1.35;");
   });
 

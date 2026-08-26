@@ -195,6 +195,20 @@ describe("account and notification atomic theme contract", () => {
     );
   });
 
+  test("does not animate channel option paint or elevation while the theme changes", () => {
+    const channelOptionRule = findRule(".notification-settings-channel-option");
+    const transitionProperties: string[] = [];
+
+    expect(channelOptionRule).toBeDefined();
+    channelOptionRule?.walkDecls((item) => {
+      if (item.prop === "transition" || item.prop.startsWith("transition-")) {
+        transitionProperties.push(item.prop);
+      }
+    });
+
+    expect(transitionProperties).toEqual([]);
+  });
+
   test("consumes the semantic roles without changing selector specificity", () => {
     const accountRule = findRule(".account-delete-card.app-card.app-surface");
     const selectedChannelRule = findRule(

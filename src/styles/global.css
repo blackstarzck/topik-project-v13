@@ -2857,6 +2857,7 @@
 .notification-settings-section-heading {
   margin: 0;
   font-size: var(--app-font-size-heading-sm);
+  font-family: var(--app-font-family);
   line-height: 1.35;
   font-weight: 600;
   color: var(--app-color-text);
@@ -2906,15 +2907,21 @@
   min-width: 0;
 }
 
-.notification-settings-section-description.ant-typography,
-.notification-settings-row-hint.ant-typography,
-.notification-settings-type-description.ant-typography,
-.notification-settings-channel-copy .ant-typography-secondary.ant-typography,
+.notification-settings-redesign
+  .notification-settings-section-description.ant-typography,
+.notification-settings-redesign .notification-settings-row-hint.ant-typography,
+.notification-settings-redesign
+  .notification-settings-type-description.ant-typography,
+.notification-settings-redesign
+  .notification-settings-channel-copy
+  .ant-typography-secondary.ant-typography,
 .notification-settings-redesign .ant-alert .ant-alert-description,
-.notification-settings-detail-panel
+.notification-settings-redesign
+  .notification-settings-detail-panel
   > section
   > .ant-typography-secondary.ant-typography {
   display: block;
+  color: var(--app-color-text-secondary);
   font-size: 14px;
   line-height: 1.45;
 }
@@ -3008,9 +3015,6 @@
   border-radius: var(--app-radius);
   background: var(--app-color-bg-container);
   cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
 }
 
 .notification-settings-channel-option[aria-pressed="true"] {
