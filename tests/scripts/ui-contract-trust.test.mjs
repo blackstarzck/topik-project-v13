@@ -10,12 +10,35 @@ import {
   UI_SCANNER_SOURCE_PATHS,
   computeBaselineApprovalDigest,
   computeScannerDigest,
+  selectApprovedBaselineTransition,
   selectScannerAuthority,
   validateScannerMigrationManifest,
 } from "../../scripts/lib/ui-contract-trust.mjs";
 import { runTrustedUiContract } from "../../scripts/run-trusted-ui-contract.mjs";
 
 const digest = (character) => character.repeat(64);
+const baseline = (scannerDigest, fingerprints = []) => ({
+  schemaVersion: 5,
+  scannerVersion: 4,
+  scannerDigest,
+  fingerprints,
+  summaryByRule: {},
+  summaryByPath: {},
+});
+const baselineTransition = (overrides = {}) => ({
+  fromScannerDigest: digest("a"),
+  fromBaselineDigest: digest("b"),
+  toScannerDigest: digest("a"),
+  toBaselineDigest: digest("c"),
+  paths: ["src/styles/foundation.css", "src/styles/global.css"],
+  ruleIds: [
+    "global-css.declaration-freeze",
+    "global-css.selector-freeze",
+  ],
+  approvedBy: "@blackstarzck",
+  reason: "Approve the reviewed foundation split.",
+  ...overrides,
+});
 
 describe("trusted UI scanner authority", () => {
   it("covers the runner and isolated runtime in the scanner digest", () => {
@@ -259,5 +282,145 @@ describe("trusted UI scanner authority", () => {
         },
       }),
     ).toThrow(expect.objectContaining({ code: "UI_SCANNER_MIGRATION_NOT_APPROVED" }));
+  });
+
+  it("keeps manifests without baseline transitions valid", () => {
+    const manifest = { schemaVersion: 1, migrations: [], futureMetadata: true };
+
+    expect(validateScannerMigrationManifest(manifest)).toBe(manifest);
+  });
+
+  it("rejects non-array baseline transitions", () => {
+    expect(() =>
+      validateScannerMigrationManifest({
+        schemaVersion: 1,
+        migrations: [],
+        baselineTransitions: {},
+      }),
+    ).toThrow(expect.objectContaining({ code: "UI_SCANNER_MIGRATION_INVALID" }));
+  });
+
+  it("selects an exact base-approved same-scanner baseline transition", () => {
+    const baseBaseline = baseline(digest("a"));
+    const candidateBaseline = baseline(digest("a"), [{ path: "src/styles/global.css" }]);
+    const transition = baselineTransition({
+      fromBaselineDigest: computeBaselineApprovalDigest(baseBaseline),
+      toBaselineDigest: computeBaselineApprovalDigest(candidateBaseline),
+    });
+    const baseManifest = {
+      schemaVersion: 1,
+      migrations: [],
+      baselineTransitions: [transition],
+    };
+
+    expect(validateScannerMigrationManifest(baseManifest)).toBe(baseManifest);
+    expect(
+      selectApprovedBaselineTransition({
+        baseManifest,
+        baseBaseline,
+        candidateBaseline,
+        candidateScannerDigest: digest("a"),
+      }),
+    ).toBe(transition);
+  });
+
+  it.each([
+    ["malformed digest", { fromScannerDigest: digest("A") }],
+    ["scanner digest change", { toScannerDigest: digest("d") }],
+    [
+      "non-canonical paths",
+      { paths: ["src/styles/global.css", "src/styles/foundation.css"] },
+    ],
+    [
+      "additional path",
+      {
+        paths: [
+          "src/styles/foundation.css",
+          "src/styles/global.css",
+          "src/styles/legacy.css",
+        ],
+      },
+    ],
+    ["sparse paths", { paths: new Array(2) }],
+    [
+      "non-canonical rules",
+      {
+        ruleIds: [
+          "global-css.selector-freeze",
+          "global-css.declaration-freeze",
+        ],
+      },
+    ],
+    [
+      "unexpected rule",
+      {
+        ruleIds: [
+          "global-css.declaration-freeze",
+          "global-css.unapproved-freeze",
+        ],
+      },
+    ],
+    [
+      "additional rule",
+      {
+        ruleIds: [
+          "global-css.declaration-freeze",
+          "global-css.selector-freeze",
+          "global-css.unapproved-freeze",
+        ],
+      },
+    ],
+    ["sparse rules", { ruleIds: new Array(2) }],
+    ["blank approval", { approvedBy: "  " }],
+    ["short reason", { reason: "too short" }],
+  ])("rejects a baseline transition with %s", (_label, overrides) => {
+    expect(() =>
+      validateScannerMigrationManifest({
+        schemaVersion: 1,
+        migrations: [],
+        baselineTransitions: [baselineTransition(overrides)],
+      }),
+    ).toThrow(expect.objectContaining({ code: "UI_SCANNER_MIGRATION_INVALID" }));
+  });
+
+  it("rejects duplicate baseline transition tuples", () => {
+    const transition = baselineTransition();
+
+    expect(() =>
+      validateScannerMigrationManifest({
+        schemaVersion: 1,
+        migrations: [],
+        baselineTransitions: [transition, { ...transition }],
+      }),
+    ).toThrow(expect.objectContaining({ code: "UI_SCANNER_MIGRATION_INVALID" }));
+  });
+
+  it("returns null when the candidate baseline differs from the preapproval", () => {
+    const baseBaseline = baseline(digest("a"));
+    const approvedCandidate = baseline(digest("a"), [
+      { path: "src/styles/global.css" },
+    ]);
+    const substitutedCandidate = baseline(digest("a"), [
+      { path: "src/styles/foundation.css" },
+    ]);
+    const baseManifest = {
+      schemaVersion: 1,
+      migrations: [],
+      baselineTransitions: [
+        baselineTransition({
+          fromBaselineDigest: computeBaselineApprovalDigest(baseBaseline),
+          toBaselineDigest: computeBaselineApprovalDigest(approvedCandidate),
+        }),
+      ],
+    };
+
+    expect(
+      selectApprovedBaselineTransition({
+        baseManifest,
+        baseBaseline,
+        candidateBaseline: substitutedCandidate,
+        candidateScannerDigest: digest("a"),
+      }),
+    ).toBeNull();
   });
 });

@@ -176,6 +176,25 @@ function isDigest(value) {
   return typeof value === "string" && /^[a-f0-9]{64}$/u.test(value);
 }
 
+const BASELINE_TRANSITION_PATHS = Object.freeze([
+  "src/styles/foundation.css",
+  "src/styles/global.css",
+]);
+const BASELINE_TRANSITION_RULE_IDS = Object.freeze([
+  "global-css.declaration-freeze",
+  "global-css.selector-freeze",
+]);
+
+function hasExactValues(value, expected) {
+  return (
+    Array.isArray(value) &&
+    value.length === expected.length &&
+    expected.every(
+      (item, index) => Object.hasOwn(value, index) && value[index] === item,
+    )
+  );
+}
+
 function stableJson(value) {
   if (Array.isArray(value)) return value.map(stableJson);
   if (value && typeof value === "object") {
@@ -220,7 +239,9 @@ export function validateScannerMigrationManifest(manifest) {
     typeof manifest !== "object" ||
     Array.isArray(manifest) ||
     manifest.schemaVersion !== 1 ||
-    !Array.isArray(manifest.migrations)
+    !Array.isArray(manifest.migrations) ||
+    (manifest.baselineTransitions !== undefined &&
+      !Array.isArray(manifest.baselineTransitions))
   ) {
     throw new ScannerTrustError("UI_SCANNER_MIGRATION_INVALID");
   }
@@ -247,7 +268,67 @@ export function validateScannerMigrationManifest(manifest) {
     if (keys.has(key)) throw new ScannerTrustError("UI_SCANNER_MIGRATION_INVALID");
     keys.add(key);
   }
+
+  const transitionKeys = new Set();
+  for (const transition of manifest.baselineTransitions ?? []) {
+    if (
+      !transition ||
+      typeof transition !== "object" ||
+      Array.isArray(transition) ||
+      !isDigest(transition.fromScannerDigest) ||
+      !isDigest(transition.fromBaselineDigest) ||
+      !isDigest(transition.toScannerDigest) ||
+      !isDigest(transition.toBaselineDigest) ||
+      transition.fromScannerDigest !== transition.toScannerDigest ||
+      !hasExactValues(transition.paths, BASELINE_TRANSITION_PATHS) ||
+      !hasExactValues(transition.ruleIds, BASELINE_TRANSITION_RULE_IDS) ||
+      typeof transition.approvedBy !== "string" ||
+      transition.approvedBy.trim().length === 0 ||
+      typeof transition.reason !== "string" ||
+      transition.reason.trim().length < 12
+    ) {
+      throw new ScannerTrustError("UI_SCANNER_MIGRATION_INVALID");
+    }
+    const key = [
+      transition.fromScannerDigest,
+      transition.fromBaselineDigest,
+      transition.toScannerDigest,
+      transition.toBaselineDigest,
+    ].join(":");
+    if (transitionKeys.has(key)) {
+      throw new ScannerTrustError("UI_SCANNER_MIGRATION_INVALID");
+    }
+    transitionKeys.add(key);
+  }
   return manifest;
+}
+
+export function selectApprovedBaselineTransition({
+  baseManifest,
+  baseBaseline,
+  candidateBaseline,
+  candidateScannerDigest,
+}) {
+  validateScannerMigrationManifest(baseManifest);
+  if (
+    !isDigest(candidateScannerDigest) ||
+    baseBaseline?.scannerDigest !== candidateScannerDigest ||
+    candidateBaseline?.scannerDigest !== candidateScannerDigest
+  ) {
+    return null;
+  }
+
+  const baseBaselineDigest = computeBaselineApprovalDigest(baseBaseline);
+  const candidateBaselineDigest = computeBaselineApprovalDigest(candidateBaseline);
+  return (
+    baseManifest.baselineTransitions?.find(
+      (transition) =>
+        transition.fromScannerDigest === candidateScannerDigest &&
+        transition.fromBaselineDigest === baseBaselineDigest &&
+        transition.toScannerDigest === candidateScannerDigest &&
+        transition.toBaselineDigest === candidateBaselineDigest,
+    ) ?? null
+  );
 }
 
 export function selectScannerAuthority({
