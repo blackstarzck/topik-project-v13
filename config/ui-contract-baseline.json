@@ -753,7 +753,6 @@
     "3c7e5f2eaa929e013a1d37e50ec5c85cda77dde8d9afeda3c9b8b30c39dab6d7": 1,
     "3c875c6962ff75109d43192107634a1e9bb34f8697217e13aa1957d980a757c7": 1,
     "3c8c126dc7a7274e13a60ddd750bd0ded29a18e8043e9d1023f5cd81c18d93f2": 1,
-    "3ce73c8dfaf0a594270c3d9f6b9127739cba697cefe183504abf043ef6bfafd2": 1,
     "3ceb0606217fe6c3f4ca049c8ec134800f8fce53442abd33408c299c46d31a66": 1,
     "3cf65322aef30f82d333128634bcf26ff00d1df349b00d8d6527942774505570": 1,
     "3cf746e163a2ab2592408e169882bceea29a2caa2dfbc198b07a171c8e071ce1": 1,
@@ -3216,12 +3215,11 @@
     "ffd3d99ae62cbd3d18378e45f192fc88964ae87c7785f91d73b3db75bd910761": 1,
     "ffef7be3a9d218d7ea3a42c2dcbcf9138468fa4229fe9f8f759f4cac01e405d9": 1
   },
-  "generatedAt": "2026-08-26T14:37:34.264Z",
+  "generatedAt": "2026-08-26T15:17:31.473Z",
   "scannerDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
   "scannerVersion": 6,
   "schemaVersion": 2,
   "summaryByPath": {
-    "src/app/layout.tsx": 1,
     "src/components/auth/AnimatedAuthCharacters.tsx": 1,
     "src/styles/foundation.css": 115,
     "src/styles/global.css": 3232
@@ -3229,6 +3227,6 @@
   "summaryByRule": {
     "global-css.declaration-freeze": 2563,
     "global-css.selector-freeze": 784,
-    "react.static-inline-style": 2
+    "react.static-inline-style": 1
   }
 }
