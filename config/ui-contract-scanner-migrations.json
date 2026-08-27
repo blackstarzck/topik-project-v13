@@ -33,9 +33,9 @@
       "fromDigest": "1f4b33047d0fe27d72dd73fd2ee6584a29188a0ee5b323611608980b6e38fcca",
       "toVersion": 6,
       "toDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
-      "toBaselineDigest": "bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1",
+      "toBaselineDigest": "ce9a273bc7330437d096ea99eb960d4d9d5658edd6978730b93ea8566d5e4034",
       "approvedBy": "@blackstarzck",
-      "reason": "Approve the reviewed final UI contract scanner v6 and its exact unchanged-main baseline before the staged refactor lands on Keduall main."
+      "reason": "Approve the reviewed final UI contract scanner v6 and its exact staged-refactor baseline before the staged refactor lands on Keduall main."
     },
     {
       "fromVersion": 4,
