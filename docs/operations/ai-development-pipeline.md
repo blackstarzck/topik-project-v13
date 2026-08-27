@@ -312,7 +312,7 @@ executor는 단계를 계정이 필요한 하위 작업으로 쪼개 계정을 �
 | --- | --- | --- |
 | candidate 생성 | 원격에 candidate branch가 있는지, 없으면 로컬에 있는지 | 병합을 다시 하지 않고 그 SHA를 그대로 쓴다. 원격에 이미 있으면 push도 하지 않고, 로컬만 있으면 parent를 먼저 확인한 뒤에만 push한다 |
 | `stg`·`main` PR 생성 | 같은 base·head의 열린 PR이 있는지 | 새 PR을 만들지 않고 기존 PR 번호와 head SHA를 쓴다 |
-| `stg`·`main` PR 병합 | 원격 branch 끝 커밋의 parent가 기대한 기준·head 순서인지 | 병합을 다시 요청하지 않고 그 병합 커밋을 그대로 쓴다 |
+| `stg`·`main` PR 병합 | 현재 PR head의 `CI required`가 실제로 생성되어 완료·성공했는지와 원격 branch 끝 커밋의 parent가 기대한 기준·head 순서인지 | 검사가 없거나 진행 중이면 안전하게 재시도 대기하고, 실패하면 병합하지 않는다. 이미 기대한 병합 커밋이면 병합을 다시 요청하지 않는다 |
 | alias rollback | 현재 alias가 이미 이전 `READY` 배포를 가리키는지 | alias를 다시 지정하지 않는다 |
 | 정리 | `stg`가 이미 `main`과 같은지, candidate branch가 남아 있는지 | 동기화와 삭제를 건너뛴다 |
 
@@ -320,7 +320,7 @@ executor는 단계를 계정이 필요한 하위 작업으로 쪼개 계정을 �
 
 1. Keduall `stg`에서 `chore/promote-<date>-<source-sha>` candidate를 만든다.
 2. 정확한 Black source SHA를 `--no-ff`로 병합하고 candidate parent가 현재 `stg`, Black source 순서인지 검사한다.
-3. candidate → `stg` PR을 `guestkeduall-design`으로 처리한다.
+3. candidate → `stg` PR의 정확한 head에서 `CI required` 완료·성공을 확인한 뒤 `guestkeduall-design`으로 처리한다.
 4. `stg` Vercel Preview가 정확한 SHA이고 branch 전용 `topik-dev` 환경 범위인지 확인한다.
 5. DB gate를 통과한다.
 6. `stg` → `main` PR을 merge commit으로 처리한다.
@@ -334,7 +334,7 @@ executor가 Git과 GitHub를 만지는 경로는 `scripts/lib/ai-release-git.mjs
 | 어댑터 | 하는 일 | 코드 수준에서 막는 것 |
 | --- | --- | --- |
 | Git 어댑터 | remote 갱신, 정확한 SHA 조회, 병합 parent 실측, candidate 병합, branch push, 조상 관계 확인, `stg` fast-forward 동기화, candidate branch 삭제 | `--force`·`-f`·`--force-with-lease`·`--force-if-includes`와 `+`로 시작하는 refspec, `--squash`·`--rebase`·`--hard`, `stg` 외 branch의 동기화 |
-| GitHub 어댑터 | 열린 PR 탐지, PR 생성, PR 상태 조회, PR 병합 | `gh auth` 하위 명령 전체, `--squash`·`--rebase`·`--admin` |
+| GitHub 어댑터 | 열린 PR 탐지, PR 생성, 현재 head의 `CI required` 완료·성공 확인, PR 상태 조회, PR 병합 | 검사가 없거나 진행·실패한 PR의 조기 병합, `gh auth` 하위 명령 전체, `--squash`·`--rebase`·`--admin` |
 | Vercel 어댑터 | 정확한 commit의 배포 조회, `READY` 대기, alias 대상 조회, alias 재지정, 이전 `READY` production 조회, Preview 환경 범위 확인 | `assignAlias` 외 모든 경로의 쓰기 동작, 응답 원문 보관, 환경 변수 값 요청 |
 | 관측값 사상 함수 | candidate·`stg` PR·`stg` ready·`main` PR·`main` merge·정리·사전 점검·Preview·Production·rollback 관측값을 조립기가 요구하는 모양으로 만든다 | 측정하지 않은 값, SHA 형식이 아닌 값, boolean이 아닌 판정 |
 
@@ -343,7 +343,7 @@ executor가 Git과 GitHub를 만지는 경로는 `scripts/lib/ai-release-git.mjs
 - branch push는 원격 branch 삭제와 같은 범위로 `chore/promote-<날짜>-<source8>` 형식의 candidate branch만 허용한다. `stg`, `main`, `master`, `develop`, `production`, `staging`은 `EXECUTOR_PROTECTED_BRANCH`, 그 밖의 형식은 `EXECUTOR_CANDIDATE_BRANCH_INVALID`로 거부하며 어떤 명령도 실행하지 않는다. `stg`를 `main`으로 맞추는 동기화는 별도 fast-forward 경로만 담당한다.
 - candidate를 원격에 올리기 전에 로컬 candidate 커밋의 parent가 기록의 `stg` 기준·Black source 순서인지 먼저 확인한다. 이전 실행이 남긴 로컬 branch가 다른 커밋을 가리키면 push하지 않고 `EXECUTOR_LINEAGE_MISMATCH`로 중단하므로, 검사에 실패할 커밋이 원격에 먼저 올라가는 순서가 생기지 않는다.
 - 원격 branch 끝 커밋 조회는 조회 성공과 branch 부재를 구분한다. 명령이 성공하고 결과가 비어 있을 때만 branch가 없는 것으로 보고, 명령 실패나 예상과 다른 출력은 `EXECUTOR_REF_LOOKUP_FAILED`로 중단한다. 인증·네트워크 실패가 branch 삭제 성공이나 미발행 candidate로 잘못 기록되지 않는다.
-- PR 병합은 병합 커밋 방식과 기대 head commit 고정을 함께 요구한다. squash 병합은 병합 커밋의 조상 관계를 끊어 이후 `stg` 동기화와 자동 정리 판정을 망치므로 허용하지 않는다.
+- PR 병합은 기대 head의 `CI required`가 실제로 생성되어 `COMPLETED/SUCCESS`인지 먼저 확인하고, 병합 커밋 방식과 기대 head commit 고정을 함께 요구한다. 검사 미생성·진행 중은 `EXECUTOR_PR_CHECKS_NOT_READY`, 실패는 `EXECUTOR_PR_CHECKS_FAILED`로 병합 전에 중단한다. squash 병합은 병합 커밋의 조상 관계를 끊어 이후 `stg` 동기화와 자동 정리 판정을 망치므로 허용하지 않는다.
 - 원격 branch 삭제는 `chore/promote-<날짜>-<source8>` 형식의 candidate branch만 허용한다. `stg`, `main`, `master`, `develop`, `production`, `staging`은 `EXECUTOR_PROTECTED_BRANCH`로 거부한다.
 - 어댑터는 계정을 스스로 바꾸지 않고 현재 로그인 계정을 그대로 쓴다. 계정 고정은 호출자가 repository 단위 auth lock 안에서 감싸며, `blackstarzck` 계정으로 Keduall 저장소에 접근하는 조합은 `collabSource` profile로만 승인한다.
 - 모든 자식 프로세스는 shell 없이, 유한 timeout과 제한된 출력 buffer로 실행한다. 실패는 대문자 코드 하나로만 보고하고 자식 프로세스의 출력 원문은 오류·반환값·기록에 담지 않는다.

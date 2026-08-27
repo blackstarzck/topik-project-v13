@@ -448,6 +448,42 @@ export function createGitHubAdapter({
     };
   };
 
+  const requireRequiredCiCheck = ({ ownerRepo, number, expectedHeadSha }) => {
+    assertOwnerRepo(ownerRepo);
+    assertPullRequestNumber(number);
+    const expected = assertSha(expectedHeadSha);
+    const result = gh([
+      "pr",
+      "view",
+      String(number),
+      "--repo",
+      ownerRepo,
+      "--json",
+      "state,headRefOid,statusCheckRollup",
+    ]);
+    if (!result.ok) fail("EXECUTOR_PR_LOOKUP_FAILED");
+    const parsed = parseJson(result.stdout, "EXECUTOR_PR_LOOKUP_FAILED");
+    if (!isPlainObject(parsed) || !Array.isArray(parsed.statusCheckRollup)) {
+      fail("EXECUTOR_PR_CHECKS_INVALID");
+    }
+    const state = assertText(parsed.state, "EXECUTOR_PR_CHECKS_INVALID");
+    const headSha = pullRequestSha(parsed.headRefOid, "EXECUTOR_PR_CHECKS_INVALID");
+    if (state !== "OPEN" || headSha !== expected) fail("EXECUTOR_PR_CHECKS_INVALID");
+    const required = parsed.statusCheckRollup.filter(
+      (entry) =>
+        isPlainObject(entry) &&
+        entry.__typename === "CheckRun" &&
+        entry.name === "CI required",
+    );
+    if (required.length === 0) fail("EXECUTOR_PR_CHECKS_NOT_READY");
+    if (required.length !== 1) fail("EXECUTOR_PR_CHECKS_INVALID");
+    const [check] = required;
+    const status = assertText(check.status, "EXECUTOR_PR_CHECKS_INVALID");
+    if (status !== "COMPLETED") fail("EXECUTOR_PR_CHECKS_NOT_READY");
+    const conclusion = assertText(check.conclusion, "EXECUTOR_PR_CHECKS_INVALID");
+    if (conclusion !== "SUCCESS") fail("EXECUTOR_PR_CHECKS_FAILED");
+  };
+
   return Object.freeze({
     findPullRequest,
 
@@ -486,6 +522,7 @@ export function createGitHubAdapter({
       assertOwnerRepo(ownerRepo);
       assertPullRequestNumber(number);
       const expected = assertSha(expectedHeadSha);
+      requireRequiredCiCheck({ ownerRepo, number, expectedHeadSha: expected });
       const merged = gh([
         "pr",
         "merge",
