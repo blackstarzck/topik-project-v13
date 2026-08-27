@@ -44,6 +44,15 @@ MCP 확인에는 고유 loopback port, isolated browser session, desktop/mobile 
 
 DB 변경이 필요 없는 공개 화면은 app profile의 승인된 원격 읽기 대상과 고유 loopback runtime을 사용해 `PLAYWRIGHT_PUBLIC_READ_ONLY=1`로 실행할 수 있다. 이 모드는 `landing-locales.spec.ts`, `screens-public.spec.ts`, `system-reporting.spec.ts`만 모바일·데스크톱에서 선택하며 인증 setup과 DB 변경 suite를 구성하지 않는다. 시스템 신고 테스트의 제출 요청은 모두 브라우저에서 가로채고, 인증이 필요한 고정 action bar 사례는 local Supabase stack 전용으로 skip한다.
 
+Phase 5D의 인증 화면 테마 검증은 저장된 학생 로그인 상태(`tests/e2e/auth-state/student.json`), 승인된 `topik-dev` 공개 키 설정, 현재 worktree의 고유 loopback runtime이 준비된 경우에만 아래의 지속 가능한 읽기 전용 모드로 실행한다.
+
+```powershell
+$env:PLAYWRIGHT_AUTH_READ_ONLY="1"
+pnpm test:e2e
+```
+
+이 모드는 `phase5d-alternate-theme.spec.ts` 하나만 360×720 모바일과 1280×800 데스크톱에서 선택하고 인증 setup에는 의존하지 않는다. 저장된 로그인 상태만 재사용해 `topik-dev` 데이터를 읽으며, 브라우저의 예상하지 않은 `GET`·`HEAD`·`OPTIONS` 이외 요청은 로컬에서 차단하고 테스트를 실패시킨다. 로컬 DB나 높은 권한 자격 설정은 사용하지 않으며 production 대상은 허용하지 않는다. `PLAYWRIGHT_PUBLIC_READ_ONLY=1`과 동시에 켤 수 없고, 로그인 상태 파일이 없으면 내용을 읽지 않은 채 명확한 오류로 중단한다.
+
 최종 승인된 screenshot 같은 저장 증거는 `docs/qa/reports/<date>-<slug>/`에 두고 `artifact-manifest.json`에 경로·목적·SHA-256을 등록한다. 그 밖의 중간 산출물은 `.codex/work/<slug>/`에서만 관리한다. 자세한 기준은 [`docs/operations/ai-development-pipeline.md`](./docs/operations/ai-development-pipeline.md)를 따른다.
 
 ## Supabase local integration

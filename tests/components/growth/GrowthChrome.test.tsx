@@ -36,6 +36,20 @@ function renderGrowth(ui: ReactElement) {
   );
 }
 
+function expectSemanticHelper(element: HTMLElement) {
+  const classes = element.className.split(/\s+/);
+  expect(classes).toEqual(
+    expect.arrayContaining([
+      "text-sm",
+      "leading-[1.5715]",
+      "text-text-secondary",
+    ]),
+  );
+  expect(classes).not.toContain("ant-typography-secondary");
+  expect(classes).not.toContain("!text-xs");
+  expect(classes).not.toContain("text-xs");
+}
+
 beforeEach(() => {
   // Ant Design / recharts touch ResizeObserver + matchMedia, which jsdom omits.
   if (!(globalThis as Record<string, unknown>).ResizeObserver) {
@@ -95,6 +109,104 @@ const baseProps: GrowthDashboardProps = {
 };
 
 describe("GrowthDashboard (i18n chrome)", () => {
+  it("keeps helper copy on the token-backed 14px secondary recipe", () => {
+    renderGrowth(<GrowthDashboard {...baseProps} />);
+
+    [
+      "100점 만점 기준",
+      "누적 기준",
+      "최근 vs 이전",
+      "목표 3급",
+      "실제 점수·풀이 기록에서 계산한 요약이에요. 약점은 다음 연습 결과에 따라 달라질 수 있습니다.",
+    ].forEach((copy) => {
+      const helper = screen.getByText(copy);
+      expectSemanticHelper(helper);
+    });
+  });
+
+  it("renders a positive improvement with Ant Design success semantics", () => {
+    renderGrowth(<GrowthDashboard {...baseProps} />);
+
+    const improvement = screen.getByText("▲ 5%");
+    const content = screen
+      .getByTestId("growth-kpi-improvement")
+      .querySelector<HTMLElement>(".ant-statistic-content");
+
+    expect(improvement.closest(".ant-typography-success")).not.toBeNull();
+    expect(content?.style.color).toBe("");
+  });
+
+  it("renders a negative improvement with Ant Design danger semantics", () => {
+    renderGrowth(
+      <GrowthDashboard
+        {...baseProps}
+        kpi={{ ...baseProps.kpi, improvementPct: -4 }}
+      />,
+    );
+
+    const improvement = screen.getByText("▼ 4%");
+    const content = screen
+      .getByTestId("growth-kpi-improvement")
+      .querySelector<HTMLElement>(".ant-statistic-content");
+
+    expect(improvement.closest(".ant-typography-danger")).not.toBeNull();
+    expect(content?.style.color).toBe("");
+  });
+
+  it("keeps an unavailable improvement neutral without inline color", () => {
+    renderGrowth(
+      <GrowthDashboard
+        {...baseProps}
+        kpi={{ ...baseProps.kpi, improvementPct: null }}
+      />,
+    );
+
+    const improvement = screen.getByText("비교 데이터 부족");
+    const content = screen
+      .getByTestId("growth-kpi-improvement")
+      .querySelector<HTMLElement>(".ant-statistic-content");
+
+    expect(improvement.closest(".ant-typography-success")).toBeNull();
+    expect(improvement.closest(".ant-typography-danger")).toBeNull();
+    expect(content?.style.color).toBe("");
+  });
+
+  it("keeps an unchanged improvement neutral without inline color", () => {
+    renderGrowth(
+      <GrowthDashboard
+        {...baseProps}
+        kpi={{ ...baseProps.kpi, improvementPct: 0 }}
+      />,
+    );
+
+    const improvement = screen.getByText("변화 없음");
+    const content = screen
+      .getByTestId("growth-kpi-improvement")
+      .querySelector<HTMLElement>(".ant-statistic-content");
+
+    expect(improvement.closest(".ant-typography-success")).toBeNull();
+    expect(improvement.closest(".ant-typography-danger")).toBeNull();
+    expect(content?.style.color).toBe("");
+  });
+
+  it("keeps the recent completion date on the token-backed 14px secondary recipe", () => {
+    renderGrowth(<GrowthDashboard {...baseProps} />);
+
+    const recentCard = screen
+      .getByText("최근 완료 문제")
+      .closest<HTMLElement>(".ant-card");
+    const date = Array.from(
+      recentCard?.querySelectorAll<HTMLElement>("span, small") ?? [],
+    ).find(
+      (element) =>
+        !element.children.length && element.textContent?.includes("2026"),
+    );
+
+    expect(date).toBeDefined();
+    expect(date?.textContent).toContain("2026");
+    expectSemanticHelper(date!);
+  });
+
   it("renders the heading, KPI labels, and a localized dimension label", () => {
     renderGrowth(<GrowthDashboard {...baseProps} />);
     expect(screen.getByText("성장 대시보드")).toBeTruthy();
@@ -149,6 +261,30 @@ describe("GrowthDashboard (i18n chrome)", () => {
 });
 
 describe("GrowthTrendChart (i18n chrome)", () => {
+  it("keeps the chart helper on the token-backed 14px secondary recipe", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      bottom: 288,
+      height: 288,
+      left: 0,
+      right: 800,
+      top: 0,
+      width: 800,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    renderGrowth(
+      <GrowthTrendChart
+        points={[{ date: "2099-01-01", score: 80, volume: 1 }]}
+      />,
+    );
+
+    const helper = screen.getByText(
+      "파란선은 평균 점수(왼쪽 축, 100점 만점), 초록선은 풀이 수(오른쪽 축)예요. 점수가 없는 날은 선이 이어지고, 학습 기록이 있는 날만 차트에 표시됩니다.",
+    );
+    expectSemanticHelper(helper);
+  });
+
   it("renders the localized title and period filter labels", () => {
     renderGrowth(<GrowthTrendChart points={[]} />);
     expect(screen.getByText("성장 추세 차트")).toBeTruthy();

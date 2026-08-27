@@ -2,6 +2,7 @@
 
 import { Modal } from "antd";
 import type { ModalProps } from "antd";
+import styles from "./AppModal.module.css";
 
 /**
  * Shared user-facing Modal surface.
@@ -23,7 +24,7 @@ export function AppModal({ rootClassName, ...props }: ModalProps) {
     <Modal
       {...props}
       centered
-      rootClassName={["app-modal", "app-modal--center-origin", rootClassName]
+      rootClassName={[styles.root, "app-modal", "app-modal--center-origin", rootClassName]
         .filter(Boolean)
         .join(" ")}
     />

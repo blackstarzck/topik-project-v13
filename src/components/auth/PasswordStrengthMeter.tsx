@@ -43,17 +43,17 @@ const RULE_LABEL_KEY: Record<
 };
 
 const LEVEL_BAR_CLASS: Record<PasswordStrengthLevel, string> = {
-  weak: "bg-[var(--ant-color-error)]",
-  fair: "bg-[var(--ant-color-warning)]",
-  good: "bg-[var(--ant-color-success)]",
-  strong: "bg-[var(--ant-color-success-active)]",
+  weak: "bg-status-error",
+  fair: "bg-status-warning",
+  good: "bg-status-success",
+  strong: "bg-status-strong-success",
 };
 
 const LEVEL_TEXT_CLASS: Record<PasswordStrengthLevel, string> = {
-  weak: "!text-[var(--ant-color-error)]",
-  fair: "!text-[var(--ant-color-warning)]",
-  good: "!text-[var(--ant-color-success)]",
-  strong: "!text-[var(--ant-color-success-active)]",
+  weak: "!text-status-error",
+  fair: "!text-status-warning",
+  good: "!text-status-success",
+  strong: "!text-status-strong-success",
 };
 
 type Props = {
@@ -89,10 +89,8 @@ export function PasswordStrengthMeter({
             <div
               key={index}
               className={[
-                "h-1 flex-1 rounded-[2px] transition-colors duration-200",
-                filled
-                  ? LEVEL_BAR_CLASS[strength.level]
-                  : "bg-[var(--ant-color-fill-secondary)]",
+                "h-1 flex-1 rounded-indicator",
+                filled ? LEVEL_BAR_CLASS[strength.level] : "bg-fill-secondary",
               ].join(" ")}
             />
           );
@@ -112,9 +110,7 @@ export function PasswordStrengthMeter({
               key={rule.key}
               className={[
                 "text-xs",
-                rule.met
-                  ? "text-[var(--ant-color-success)]"
-                  : "text-text-secondary",
+                rule.met ? "text-status-success" : "text-text-secondary",
               ].join(" ")}
             >
               {rule.met ? "✓" : "○"} {t(RULE_LABEL_KEY[rule.key])}

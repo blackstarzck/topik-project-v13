@@ -205,9 +205,8 @@ test("writing 52 flow: write, submit, analyze, and route to short feedback", asy
   await expect(page).not.toHaveURL(/\/login/);
 
   const workspace = page.locator(".writing-workspace--q52");
-  await expect(
-    workspace.locator(".writing-expression-accordion"),
-  ).toBeVisible();
+  await expect(workspace).toBeVisible();
+  await expect(workspace.locator(".writing-guide-accordion")).toBeVisible();
   const textarea = workspace.locator("textarea").first();
   await textarea.fill(firstBlankAnswer);
   await workspace.getByRole("tab").nth(1).click();

@@ -61,6 +61,22 @@ function lsRemoteLine(sha, branch) {
   return `${sha}\trefs/heads/${branch}\n`;
 }
 
+function pullRequestChecks({
+  state = "OPEN",
+  headSha = SHA.candidate,
+  status = "COMPLETED",
+  conclusion = "SUCCESS",
+  includeRequired = true,
+} = {}) {
+  return JSON.stringify({
+    state,
+    headRefOid: headSha,
+    statusCheckRollup: includeRequired
+      ? [{ __typename: "CheckRun", name: "CI required", status, conclusion }]
+      : [],
+  });
+}
+
 function git(cwd, args) {
   const result = spawnSync("git", args, {
     cwd,
@@ -103,6 +119,7 @@ describe("release GitHub adapter merge safety", () => {
       mergeCommit: { oid: SHA.stgMerged },
     });
     const recorded = recorder([
+      { status: 0, stdout: pullRequestChecks(), stderr: "" },
       { status: 0, stdout: "", stderr: "" },
       { status: 0, stdout: view, stderr: "" },
     ]);
@@ -112,8 +129,17 @@ describe("release GitHub adapter merge safety", () => {
       github.mergePullRequest({ ownerRepo: OWNER_REPO, number: 42, expectedHeadSha: SHA.candidate }),
     ).toEqual({ mergeCommitSha: SHA.stgMerged });
 
-    expect(recorded.calls[0].command).toBe("gh");
     expect(recorded.calls[0].args).toEqual([
+      "pr",
+      "view",
+      "42",
+      "--repo",
+      OWNER_REPO,
+      "--json",
+      "state,headRefOid,statusCheckRollup",
+    ]);
+    expect(recorded.calls[1].command).toBe("gh");
+    expect(recorded.calls[1].args).toEqual([
       "pr",
       "merge",
       "42",
@@ -135,9 +161,29 @@ describe("release GitHub adapter merge safety", () => {
     }
   });
 
+  it.each([
+    ["missing", pullRequestChecks({ includeRequired: false }), "EXECUTOR_PR_CHECKS_NOT_READY"],
+    ["pending", pullRequestChecks({ status: "IN_PROGRESS", conclusion: "" }), "EXECUTOR_PR_CHECKS_NOT_READY"],
+    ["failed", pullRequestChecks({ conclusion: "FAILURE" }), "EXECUTOR_PR_CHECKS_FAILED"],
+  ])("refuses to merge when the required CI check is %s", async (_label, checks, error) => {
+    const { createGitHubAdapter } = await adapters();
+    const recorded = recorder([{ status: 0, stdout: checks, stderr: "" }]);
+
+    expect(() =>
+      createGitHubAdapter({ commandRunner: recorded.runner }).mergePullRequest({
+        ownerRepo: OWNER_REPO,
+        number: 42,
+        expectedHeadSha: SHA.candidate,
+      }),
+    ).toThrowError(error);
+    expect(recorded.calls).toHaveLength(1);
+    expect(recorded.calls[0].args).not.toContain("merge");
+  });
+
   it("fails verification when the merged pull request state or head moves", async () => {
     const { createGitHubAdapter } = await adapters();
     const notMerged = recorder([
+      { status: 0, stdout: pullRequestChecks(), stderr: "" },
       { status: 0, stdout: "", stderr: "" },
       {
         status: 0,
@@ -159,7 +205,10 @@ describe("release GitHub adapter merge safety", () => {
       }),
     ).toThrowError("EXECUTOR_PR_MERGE_VERIFY_FAILED");
 
-    const failedMerge = recorder([{ status: 1, stdout: "", stderr: SENTINEL }]);
+    const failedMerge = recorder([
+      { status: 0, stdout: pullRequestChecks(), stderr: "" },
+      { status: 1, stdout: "", stderr: SENTINEL },
+    ]);
     expect(() =>
       createGitHubAdapter({ commandRunner: failedMerge.runner }).mergePullRequest({
         ownerRepo: OWNER_REPO,

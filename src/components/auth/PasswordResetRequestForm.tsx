@@ -12,6 +12,7 @@ import {
   DEFAULT_COOLDOWN_SECONDS,
   useEmailCooldown,
 } from "@/lib/auth/use-email-cooldown";
+import styles from "./PasswordResetRequestForm.module.css";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -148,8 +149,10 @@ export function PasswordResetRequestForm({
             {countdownLabel}
           </Text>
         )}
-        <Paragraph className="password-reset-login-return">
-          <Link href="/login">{t("backToLogin")}</Link>
+        <Paragraph className={styles.loginReturn}>
+          <Link className={styles.loginReturnLink} href="/login">
+            {t("backToLogin")}
+          </Link>
         </Paragraph>
       </div>
     );
@@ -207,8 +210,10 @@ export function PasswordResetRequestForm({
           {t("submit")}
         </Button>
       </Form.Item>
-      <Paragraph className="password-reset-login-return">
-        <Link href="/login">{t("backToLogin")}</Link>
+      <Paragraph className={styles.loginReturn}>
+        <Link className={styles.loginReturnLink} href="/login">
+          {t("backToLogin")}
+        </Link>
       </Paragraph>
     </Form>
   );

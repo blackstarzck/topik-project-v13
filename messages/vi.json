@@ -78,20 +78,6 @@
     "heroCtaLearningGoal": "Thiết lập mục tiêu học tập",
     "heroCtaContinueSetup": "Tiếp tục thiết lập",
     "heroCtaRetry": "Thử lại",
-    "preview": {
-      "sectionTitle": "Xem trước khi bắt đầu",
-      "sectionBody": "Xem màn hình bảng điều khiển, phản hồi và báo cáo thực tế đúng như khi sử dụng.",
-      "imageAlt": "Xem trước màn hình {title}",
-      "dashboardBadge": "📊 Bảng điều khiển",
-      "dashboardTitle": "Toàn cảnh tình hình học tập",
-      "dashboardSummary": "Xem ngay mục tiêu hôm nay, bài nộp gần đây và câu hỏi gợi ý tại trang chủ.",
-      "feedbackBadge": "✍️ Phản hồi AI",
-      "feedbackTitle": "Nhận xét theo từng tiêu chí",
-      "feedbackSummary": "Nhận điểm theo từng tiêu chí nội dung, triển khai, từ vựng, ngữ pháp và nhận xét cho từng câu.",
-      "reportBadge": "📈 Báo cáo tiến bộ",
-      "reportTitle": "So sánh thay đổi điểm số",
-      "reportSummary": "So sánh với bài làm trước để xem thay đổi điểm và điểm yếu qua biểu đồ."
-    },
     "features": {
       "correctionTitle": "Nhận xét AI",
       "correctionDescription": "Môi trường viết câu 51–54 của TOPIK đúng như thật. AI cung cấp điểm và nhận xét theo từng tiêu chí.",
@@ -584,9 +570,6 @@
       "heroPracticeBody": "Học có hệ thống các dạng 51-54",
       "socialDivider": "hoặc",
       "socialGoogle": "Tiếp tục với Google"
-    },
-    "languageSelect": {
-      "ariaLabel": "Chọn ngôn ngữ hiển thị"
     },
     "oauth": {
       "browser": {

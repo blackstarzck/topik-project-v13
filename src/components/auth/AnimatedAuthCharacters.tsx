@@ -82,13 +82,6 @@ export function AnimatedAuthCharacters({
       onPointerLeave={() => setLook({ x: 0, y: 0 })}
       style={characterStyle}
     >
-      <div className="signup-character-stage__paper" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className="signup-character-stage__ground" aria-hidden="true" />
-
       <div
         className={`signup-character signup-character--purple ${
           isBlinking ? "is-blinking" : ""

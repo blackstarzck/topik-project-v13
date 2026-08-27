@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 
 import { LibraryDashboard } from "../../../src/components/library/LibraryDashboard";
+import typographyStyles from "../../../src/components/library/LibraryTypography.module.css";
 import type { LibraryDashboardView } from "../../../src/lib/library/types";
 import { renderWithIntl } from "../../test-utils/renderWithIntl";
 
@@ -287,10 +288,11 @@ describe("LibraryDashboard", () => {
       "library-kpi-card-feedbackWaiting",
       "library-kpi-card-comparison",
     ]) {
-      expect(
-        within(screen.getByTestId(testId)).getByTestId("library-kpi-value")
-          .className,
-      ).toContain("!text-[24px]");
+      const value = within(screen.getByTestId(testId)).getByTestId(
+        "library-kpi-value",
+      );
+      expect(value.className).not.toContain("!text-[24px]");
+      expect(value.className.split(" ")).toContain(typographyStyles.kpiValue);
     }
     expect(
       screen.getByTestId("library-kpi-card-recentStudy").textContent,
@@ -305,6 +307,11 @@ describe("LibraryDashboard", () => {
         "마지막 학습 후 5일",
       ),
     ).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("library-kpi-recent-inactive-duration")
+        .className.split(" "),
+    ).toContain(typographyStyles.kpiValue);
     expect(
       within(screen.getByTestId("library-kpi-card-recentStudy")).queryByText(
         "최근 학습",

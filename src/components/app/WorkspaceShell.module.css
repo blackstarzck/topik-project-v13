@@ -1,0 +1,53 @@
+.profilePopoverPanel {
+  width: 240px;
+  max-width: 72vw;
+  font-size: 14px;
+}
+
+.profilePopover.profilePopover :global(.ant-popover-container) {
+  padding: 0;
+}
+
+.profilePopoverPanel :global(.ant-typography) {
+  font-size: 14px;
+}
+
+.profilePopoverList {
+  display: grid;
+  margin: 0;
+  padding: 8px;
+}
+
+.profilePopoverList .profilePopoverItem {
+  list-style: none;
+}
+
+.workspaceDrawer :global(.ant-drawer-body) {
+  padding: 0;
+}
+
+.mobileBrand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 48px;
+  max-width: 48vw;
+  line-height: 0;
+}
+
+.mobileBrand .mobileBrandImage {
+  width: auto;
+  height: 48px;
+}
+
+@media (max-width: 767.98px) {
+  .mobileBrand {
+    overflow: hidden;
+    max-width: 48vw;
+  }
+}

@@ -335,7 +335,7 @@ export function ComparisonReportView(initialReport: Props) {
                   className="min-w-0"
                 >
                   <Paragraph
-                    className="min-w-0 !mb-[10px] !text-[20px] font-semibold leading-8"
+                    className="min-w-0 !mb-[10px] !text-heading-sm font-semibold leading-8"
                     data-testid="comparison-narrative-summary"
                     ellipsis={{ rows: 3 }}
                   >
@@ -420,7 +420,7 @@ function ComparisonReportTitle({
         <span
           data-testid="comparison-title-question-no"
           className={[
-            "writing-question-number font-['Space_Grotesk'] leading-none",
+            "writing-question-number leading-none",
             writingQuestionNeonClass("writing-question-number", questionNo),
           ]
             .filter(Boolean)
@@ -455,7 +455,7 @@ function SummaryAnswerBlock({
       <Text
         type="secondary"
         data-testid="comparison-summary-label"
-        className="block !text-[16px]"
+        className="block !text-body-lg"
       >
         {label}
       </Text>
@@ -466,7 +466,7 @@ function SummaryAnswerBlock({
         <Text
           strong
           data-testid="comparison-summary-score"
-          className="block !text-[46px] leading-none"
+          className="block !text-heading-lg leading-none"
         >
           {score}
         </Text>
@@ -475,7 +475,7 @@ function SummaryAnswerBlock({
       <Text
         type="secondary"
         data-testid="comparison-summary-submitted-at"
-        className="mt-2 block !text-[14px]"
+        className="mt-2 block !text-body"
       >
         {submittedAt}
       </Text>

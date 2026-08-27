@@ -52,6 +52,7 @@
   "legacyOnlyRoots": [".scratch", ".tmp", "artifacts", "output"],
   "approvedProductionPaths": [
     "config/artifact-hygiene-policy.json",
+    "public/assets/brands/google-g.png",
     "scripts/ai-pipeline-executor.mjs",
     "scripts/ai-release.mjs",
     "scripts/ai-task.mjs",

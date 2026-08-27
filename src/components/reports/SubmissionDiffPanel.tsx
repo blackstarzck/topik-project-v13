@@ -8,9 +8,7 @@ const EMPTY_ANSWER = "-";
 const SECTION_KEYS = ["intro", "body", "conclusion"] as const;
 const SECTION_COLUMN_WIDTH = 112;
 const ANSWER_COLUMN_WIDTH = `calc((100% - ${SECTION_COLUMN_WIDTH}px) / 2)`;
-const TABLE_HEADING_TEXT_CLASS_NAME =
-  "!text-[var(--ant-color-text-description)]";
-const TABLE_HEADER_CLASS_NAME = `!font-medium ${TABLE_HEADING_TEXT_CLASS_NAME}`;
+const TABLE_HEADER_CLASS_NAME = "!font-medium";
 
 type Props = {
   currentText: string;
@@ -66,7 +64,7 @@ export function SubmissionDiffPanel({
             dataIndex: "section",
             width: SECTION_COLUMN_WIDTH,
             render: (value: string) => (
-              <Text className={`font-medium ${TABLE_HEADING_TEXT_CLASS_NAME}`}>
+              <Text type="secondary" className="font-medium">
                 {value}
               </Text>
             ),
@@ -99,9 +97,9 @@ export function SubmissionDiffPanel({
 
 function renderTableHeader(label: string) {
   return (
-    <span className={`font-medium ${TABLE_HEADING_TEXT_CLASS_NAME}`}>
+    <Text type="secondary" className="font-medium">
       {label}
-    </span>
+    </Text>
   );
 }
 

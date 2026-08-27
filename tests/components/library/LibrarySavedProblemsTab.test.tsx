@@ -65,9 +65,15 @@ describe("LibrarySavedProblemsTab hidden problem UX", () => {
     ).toBe(
       "/writing/long-form-writing-53?problem=p-available&returnTo=%2Flibrary",
     );
-    expect(screen.getByTestId("library-item-row").className).toContain(
+    expect(screen.getByTestId("library-item-row").className).not.toContain(
       "border-[var(--ant-color-border-secondary)]",
     );
+    expect(screen.getByTestId("library-item-row").className).not.toContain(
+      "border-transparent",
+    );
+    expect(
+      screen.getByTestId("library-item-row").querySelector(".ant-divider"),
+    ).toBeNull();
     expect(screen.getByTestId("library-item-row").className).not.toContain(
       "border-border",
     );

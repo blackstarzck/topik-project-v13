@@ -11,6 +11,7 @@ import {
   useDeleteProblemLibraryItem,
   useSaveLibraryItem,
 } from "@/lib/library/mutations";
+import styles from "./ProblemBookmarkToggle.module.css";
 
 type Props = {
   userId: string;
@@ -89,11 +90,7 @@ export function ProblemBookmarkToggle({
   }
 
   const label = saved ? t("savedProblem") : t("saveProblem");
-  const buttonClassName = [
-    "problem-bookmark-toggle",
-    className,
-    saved ? "problem-bookmark-toggle--saved" : "",
-  ]
+  const buttonClassName = ["problem-bookmark-toggle", styles.button, className]
     .filter(Boolean)
     .join(" ");
 

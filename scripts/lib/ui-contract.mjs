@@ -6,7 +6,7 @@ import ts from "typescript";
 
 export const UI_CONTRACT_SCHEMA_VERSION = 1;
 export const UI_CONTRACT_BASELINE_SCHEMA_VERSION = 2;
-export const UI_CONTRACT_SCANNER_VERSION = 3;
+export const UI_CONTRACT_SCANNER_VERSION = 6;
 const TEST_SCANNER_DIGEST = "0".repeat(64);
 
 const SCRIPT_KINDS = new Map([
@@ -534,6 +534,27 @@ export const UI_CONTRACT_RULE_IDS = Object.freeze([
   "workspace.missing-body-recipe",
 ]);
 const UI_CONTRACT_RULE_ID_SET = new Set(UI_CONTRACT_RULE_IDS);
+export const UI_CONTRACT_STRUCTURAL_RULE_IDS = Object.freeze([
+  "global-css.selector-freeze",
+  "global-css.declaration-freeze",
+]);
+const UI_CONTRACT_STRUCTURAL_RULE_ID_SET = new Set(UI_CONTRACT_STRUCTURAL_RULE_IDS);
+
+export function partitionUiContractViolations(violations) {
+  const structuralViolations = [];
+  const actionableViolations = [];
+  for (const violation of violations) {
+    if (UI_CONTRACT_STRUCTURAL_RULE_ID_SET.has(violation.ruleId)) {
+      structuralViolations.push(violation);
+    } else {
+      actionableViolations.push(violation);
+    }
+  }
+  return Object.freeze({
+    structuralViolations: Object.freeze(structuralViolations),
+    actionableViolations: Object.freeze(actionableViolations),
+  });
+}
 
 function collectConstInitializers(ast) {
   const initializers = new Map();
@@ -1528,7 +1549,11 @@ function resolveLocalModule(fromPath, moduleName, sourceEntries) {
         `${basePath}/index.jsx`,
         `${basePath}/index.js`,
       ];
-  return candidates.find((candidate) => sourceEntries.has(candidate)) ?? null;
+  return (
+    candidates.find(
+      (candidate) => sourceEntries.get(candidate)?.parsed.kind === "typescript",
+    ) ?? null
+  );
 }
 
 function isCanonicalWorkspaceBodyImport(binding) {
@@ -1802,6 +1827,10 @@ function scanCssVisualValues(source, root) {
   root.walkDecls((declaration) => {
     const isCustomProperty = declaration.prop.startsWith("--");
     const normalizedProperty = declaration.prop.toLowerCase().replaceAll("-", "");
+    const isFontFaceFamilyDescriptor =
+      normalizedProperty === "fontfamily" &&
+      declaration.parent?.type === "atrule" &&
+      declaration.parent.name.toLowerCase() === "font-face";
     const value = normalizeCssSyntax(declaration.value);
     const colorScanText = cssColorScanText(value);
     const ownsColor =
@@ -1833,6 +1862,7 @@ function scanCssVisualValues(source, root) {
     if (
       (RADIUS_SHADOW_FONT_PROPERTIES.test(normalizedProperty) ||
         (isCustomProperty && /(?:radius|shadow|font)/iu.test(normalizedProperty))) &&
+      !isFontFaceFamilyDescriptor &&
       !/^var\(--app-[^)]+\)$/u.test(value)
     ) {
       violations.push(
@@ -1872,8 +1902,13 @@ function scanBroadAntdStates(source, root) {
   return violations;
 }
 
+const GLOBAL_CSS_FREEZE_PATHS = new Set([
+  "src/styles/foundation.css",
+  "src/styles/global.css",
+]);
+
 function scanGlobalCssFreeze(source, root) {
-  if (normalizeRepoPath(source.path) !== "src/styles/global.css") return [];
+  if (!GLOBAL_CSS_FREEZE_PATHS.has(normalizeRepoPath(source.path))) return [];
   const violations = [];
   root.walkRules((rule) => {
     const selector = normalizeCssSelector(rule.selector);

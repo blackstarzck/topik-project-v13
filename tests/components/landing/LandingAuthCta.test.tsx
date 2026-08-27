@@ -96,9 +96,11 @@ describe("landing auth CTA", () => {
   it("keeps only the anonymous login CTA in the global nav", () => {
     renderWithIntl(<LandingHeader authStatus="anonymous" />);
 
-    expect(
-      screen.getByRole("link", { name: "로그인" }).getAttribute("href"),
-    ).toBe("/login");
+    const loginLink = screen.getByRole("link", { name: "로그인" });
+    expect(loginLink.getAttribute("href")).toBe("/login");
+    expect(loginLink.querySelector("button")?.className).toContain(
+      "landing-header-button--ghost",
+    );
     expect(screen.queryByRole("link", { name: "무료 시작" })).toBeNull();
     expect(
       screen.getByRole("link", { name: "기능" }).getAttribute("href"),
@@ -133,7 +135,9 @@ describe("landing auth CTA", () => {
   it("keeps anonymous hero focused on free start without a login CTA", () => {
     renderWithIntl(<Hero authStatus="anonymous" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "무료 시작" }));
+    const startButton = screen.getByRole("button", { name: "무료 시작" });
+    expect(startButton.className).toContain("landing-hero-button--primary");
+    fireEvent.click(startButton);
 
     expect(screen.queryByRole("button", { name: "로그인" })).toBeNull();
     expect(pushMock).toHaveBeenCalledWith("/sign-up");
@@ -173,6 +177,9 @@ describe("landing auth CTA", () => {
 
     const dashboardLink = screen.getByRole("link", { name: "대시보드로 이동" });
     expect(dashboardLink.getAttribute("href")).toBe("/dashboard");
+    expect(dashboardLink.querySelector("button")?.className).toContain(
+      "landing-header-button--primary",
+    );
   });
 
   it("offers a retry without restarting setup for landing recovery users", () => {

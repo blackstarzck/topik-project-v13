@@ -18,6 +18,7 @@ import {
   YAxis,
 } from "recharts";
 
+import styles from "./Writing53MaterialCards.module.css";
 import { AppCard } from "@/components/shared/AppCard";
 import type {
   NormalizedChart,
@@ -32,8 +33,29 @@ const RADIAL_OUTER_RADIUS = 54;
 const DONUT_INNER_RADIUS = 32;
 const CARTESIAN_CHART_MARGIN = { top: 8, right: 8, bottom: 0, left: 0 };
 const CARTESIAN_Y_AXIS_WIDTH = 42;
-const CHART_GRID_COLOR = "#f0f0f0";
-const CHART_COLORS = ["#1677ff", "#52c41a", "#faad14", "#13c2c2", "#ff4d4f"];
+const CHART_GRID_COLOR = "var(--app-color-border-secondary)";
+const CHART_COLOR_ROLES = [
+  {
+    paint: "var(--app-color-chart-series-primary)",
+    bulletClass: styles.valueBulletColor0,
+  },
+  {
+    paint: "var(--app-color-status-success)",
+    bulletClass: styles.valueBulletColor1,
+  },
+  {
+    paint: "var(--app-color-status-warning)",
+    bulletClass: styles.valueBulletColor2,
+  },
+  {
+    paint: "var(--app-color-chart-accent)",
+    bulletClass: styles.valueBulletColor3,
+  },
+  {
+    paint: "var(--app-color-status-error)",
+    bulletClass: styles.valueBulletColor4,
+  },
+];
 const TOOLTIP_MARK_OFFSET = 8;
 const TOOLTIP_MAX_WIDTH = 184;
 const TOOLTIP_BASE_HEIGHT = 54;
@@ -89,11 +111,11 @@ function pieData(chart: NormalizedChart) {
 }
 
 function chartColor(index: number): string {
-  return CHART_COLORS[index % CHART_COLORS.length];
+  return CHART_COLOR_ROLES[index % CHART_COLOR_ROLES.length].paint;
 }
 
 function chartColorClass(index: number): string {
-  return `writing-material-value-bullet--color-${index % CHART_COLORS.length}`;
+  return CHART_COLOR_ROLES[index % CHART_COLOR_ROLES.length].bulletClass;
 }
 
 function boundedTooltipIndex(index: number, labels: string[]) {
@@ -245,7 +267,9 @@ function ChartValueList({
               aria-label={`${row.label} ${row.value}`}
               className={[
                 "writing-material-value-list__row",
+                styles.valueRow,
                 isActive ? "writing-material-value-list__row--active" : "",
+                isActive ? styles.valueRowActive : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -292,9 +316,16 @@ function ChartValueTooltipContent({
   if (!active) return null;
 
   return (
-    <div className="writing-material-chart-tooltip">
+    <div
+      className={["writing-material-chart-tooltip", styles.tooltip].join(" ")}
+    >
       <p className="writing-material-chart-tooltip__label">{target.label}</p>
-      <p className="writing-material-chart-tooltip__value">
+      <p
+        className={[
+          "writing-material-chart-tooltip__value",
+          styles.tooltipValue,
+        ].join(" ")}
+      >
         {target.colorIndex !== null ? (
           <span
             aria-hidden
@@ -353,7 +384,12 @@ function ChartVisual({
     if (data.length === 0) return null;
     return (
       <div
-        className="writing-material-chart writing-material-chart--radial"
+        className={[
+          "writing-material-chart",
+          "writing-material-chart--radial",
+          styles.chart,
+          styles.radialChart,
+        ].join(" ")}
         aria-label={chart.title}
         data-testid="q53-material-chart"
         ref={chartRef}
@@ -393,7 +429,11 @@ function ChartVisual({
   if (chart.chartType === "line") {
     return (
       <div
-        className="writing-material-chart writing-material-chart--cartesian"
+        className={[
+          "writing-material-chart",
+          "writing-material-chart--cartesian",
+          styles.chart,
+        ].join(" ")}
         aria-label={chart.title}
         data-testid="q53-material-chart"
         ref={chartRef}
@@ -428,7 +468,11 @@ function ChartVisual({
 
   return (
     <div
-      className="writing-material-chart writing-material-chart--cartesian"
+      className={[
+        "writing-material-chart",
+        "writing-material-chart--cartesian",
+        styles.chart,
+      ].join(" ")}
       aria-label={chart.title}
       data-testid="q53-material-chart"
       ref={chartRef}
@@ -493,7 +537,9 @@ function CardBody({ card }: { card: NormalizedMaterialCard }) {
   }
 
   return (
-    <div className="writing-material-chart-stack">
+    <div
+      className={["writing-material-chart-stack", styles.chartStack].join(" ")}
+    >
       {card.warning ? (
         <Alert type="warning" showIcon title={t("materialChartFallback")} />
       ) : null}

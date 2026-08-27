@@ -86,14 +86,15 @@ export function DimensionComparisonCards({
                 data-testid="comparison-dimension-card"
               >
                 <Text
-                  className="font-normal !text-[var(--ant-color-text-description)]"
+                  type="secondary"
+                  className="font-normal"
                   data-testid="comparison-dimension-label"
                 >
                   {dimLabel(dimension)}
                 </Text>
                 <div className="mt-2">
                   <span
-                    className="block text-[36px] font-semibold leading-none text-text"
+                    className="block text-heading font-semibold leading-none text-text"
                     data-testid="comparison-dimension-score-value"
                   >
                     {score === null
@@ -146,7 +147,8 @@ export function DimensionComparisonCards({
                 data-testid="comparison-dimension-card"
               >
                 <Text
-                  className="font-normal !text-[var(--ant-color-text-description)]"
+                  type="secondary"
+                  className="font-normal"
                   data-testid="comparison-dimension-label"
                 >
                   {dimLabel(dimension)}

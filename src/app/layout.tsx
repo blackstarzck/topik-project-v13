@@ -64,6 +64,14 @@ export const metadata: Metadata = {
   },
 };
 
+function serializeRootThemeCss(appearance: "light" | "dark") {
+  const cssVars = getResolvedBridgeVars(themeSettings.main, appearance);
+  const declarations = Object.entries(cssVars)
+    .map(([property, value]) => `${property}:${value}`)
+    .join(";");
+  return `:root{${declarations};color-scheme:${appearance}}`;
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
@@ -76,18 +84,16 @@ export default async function RootLayout({
   const locale = await resolveLocale();
   const messages = await getMessages();
   // antd v6.x 호환성: theme namespace는 client-only ("use client" + transitive
-  // createContext)이므로 server layout에서 import 자체 금지. SSR cssVars는 appearance
-  // 기반 hardcoded fallback만 사용. 동적 token은 client AppProviders → ThemeProvider →
-  // ConfigProvider hierarchy에서 처리 (현재 brand override 없음).
-  const cssVars = getResolvedBridgeVars(themeSettings.main, appearance);
+  // createContext)이므로 server layout에서 import 자체 금지. SSR 토큰은 <head>의
+  // 정적 CSS로 내보내 first paint와 hydration을 맞춘다. 동적 token은 client
+  // AppProviders → ThemeProvider → ConfigProvider hierarchy에서 처리한다.
+  const rootThemeCss = serializeRootThemeCss(appearance);
 
   return (
-    <html
-      lang={locale}
-      translate="no"
-      className={pretendard.variable}
-      style={{ ...cssVars, colorScheme: appearance } as React.CSSProperties}
-    >
+    <html lang={locale} translate="no" className={pretendard.variable}>
+      <head>
+        <style data-root-theme-bridge>{rootThemeCss}</style>
+      </head>
       {/*
        * suppressHydrationWarning (body 1-level 한정): Demoway 같은 브라우저 확장은
        * SSR HTML을 받은 뒤 hydration 직전에 <body>에 data-* 속성

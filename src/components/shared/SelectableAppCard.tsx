@@ -1,15 +1,13 @@
 "use client";
 
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import type { CardProps } from "antd";
-import { Check } from "@/components/shared/AppIcons";
 import { AppCard } from "./AppCard";
 
 type SelectableAppCardProps = Omit<CardProps, "onSelect"> & {
   selected?: boolean;
   disabled?: boolean;
   locked?: boolean;
-  selectedLabel?: ReactNode;
   onSelect?: () => void;
 };
 
@@ -42,7 +40,6 @@ export function SelectableAppCard({
   selected = false,
   disabled = false,
   locked = false,
-  selectedLabel,
   onSelect,
   className,
   classNames,
@@ -91,15 +88,7 @@ export function SelectableAppCard({
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="selectable-app-card__content">
-        {children}
-        {selected && selectedLabel ? (
-          <span className="selectable-app-card__cue">
-            <Check size={14} aria-hidden="true" />
-            <span>{selectedLabel}</span>
-          </span>
-        ) : null}
-      </div>
+      <div className="selectable-app-card__content">{children}</div>
     </AppCard>
   );
 }

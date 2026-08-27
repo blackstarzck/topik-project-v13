@@ -9,8 +9,11 @@
 > - `DESIGN/tokens.json`: machine-readable imported token source.
 > - `src/theme`: runtime owner that normalizes values and projects them into
 >   AntD and Tailwind adapters.
-> - `src/styles/global.css`: Tailwind v4 `@theme inline` bridge and approved
->   global runtime styles.
+> - `src/theme/bridge-contract.ts`: theme-neutral L2 token-to-Tailwind bridge
+>   contract. Test-only themes use the same projection without entering the
+>   production theme registry.
+> - `src/styles/foundation.css`: Tailwind v4 `@theme inline` bridge;
+>   `src/styles/global.css` imports it before approved global runtime styles.
 
 > Runtime policy: one project theme source is projected into two adapters. AntD
 > receives values through `ConfigProvider`, `theme.token`, and
@@ -42,9 +45,14 @@ icon.
 - `src/theme/config.ts`가 active preset을 선택한다. 현재 product preset은 `awesomic`이고 stock Ant Design은 fallback이다.
 - `DESIGN/tokens.json`은 가져온 machine-readable source이고 `src/theme/tokens/awesomic.ts`는 이를 정규화한 runtime mapping이다.
 - Ant Design은 component adapter다. 전역 값과 component state 값은 `ConfigProvider`, `theme.token`, `theme.components` 또는 scoped provider가 소유한다.
-- Tailwind는 layout·responsive adapter다. `src/theme/tailwind-bridge.ts`와 `src/styles/global.css`의 `@theme inline`을 통해 계산된 `--app-*` 값을 사용하며, 별도의 palette, font, radius, shadow scale을 소유하지 않는다.
+- Tailwind는 layout·responsive와 앱이 직접 소유한 표면의 제한된 시각 보조 adapter다. 시각 utility는 `src/theme/tailwind-bridge.ts`와 `src/styles/foundation.css`의 `@theme inline`을 통해 계산된 L2 의미 토큰(`--app-*`)만 사용한다. `src/styles/global.css`는 이 foundation을 import한다. 별도의 palette, font, radius, shadow scale을 만들거나 AntD 내부 상태를 다시 그리지 않는다.
 - 새 `--app-*` 변수에는 source token, 실제 Tailwind/plain-CSS consumer, theme contract test가 모두 필요하다. 계산된 값은 first render에 존재해야 하고 `var(--ant-*)`를 다시 가리키면 안 된다.
+- 쓰기 자료 차트의 첫 번째와 네 번째 범주색은 AntD blue·cyan seed를 정규화한 차트 계열색(`--app-color-chart-series-primary`, `--app-color-chart-accent`)을 사용한다. 나머지 범주색과 격자선은 기존 status·border 의미 토큰을 재사용한다.
 - 기존 project wrapper와 AntD props를 우선한다. 프로젝트가 작성한 visual inline style, 광범위한 `.ant-*` override, 생성된 AntD class selector, page-specific global CSS를 추가하지 않는다.
+
+### 전역 CSS 전환 경계
+
+UI contract scanner v6 전환은 `src/styles/foundation.css`와 `src/styles/global.css`의 기존 선언만을 `global-css.declaration-freeze`와 `global-css.selector-freeze` 기준으로 묶는다. 이 전환은 scanner digest `736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621`와 baseline approval digest `bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1`가 정확히 일치할 때만 base owner가 사전 승인할 수 있으며, 같은 PR에서 스스로 승인할 수 없다. 두 경로와 두 규칙 밖에는 적용되지 않는 좁은 전환이며 일반 예외가 아니다. Tailwind는 계속 layout·responsive와 제한된 support 용도로만 사용하고 별도 design token source가 되지 않는다.
 
 ### 공통 layout과 card 진입점
 
@@ -78,6 +86,7 @@ Awesomic operates on a white-and-near-black canvas with maximum roundness — 36
 | Fog | `#ececee` | `--color-fog` | Card backgrounds (mid variant), badge borders, section dividers — the second surface step above the canvas |
 | Mist | `#f4f4f5` | `--color-mist` | Page canvas, light card backgrounds, tag/link hover surface — the dominant background tone |
 | Snow | `#ffffff` | `--color-snow` | White card surfaces, input backgrounds, button fill for outlined variant — the brightest surface in the stack |
+| Link Secondary | `#3254F2` | `--color-link-secondary` | Legal and secondary text links plus secondary progress accents that must remain distinguishable from the near-black primary action color |
 | Ember | `#ff5a00` | `--color-ember` | YC batch badge backgrounds — vivid orange signals startup-ecosystem provenance, appears only on badge-sized labels |
 | Orchid Flash | `#fe45e2` | `--color-orchid-flash` | Decorative card wash accent — single-use vivid pink on a large card background to punctuate the portfolio grid |
 
@@ -118,6 +127,395 @@ difficulty.
   `src/theme` into `--app-*` and update the theme contract tests (per the
   runtime policy above).
 
+## Tokens — Semantic Borders
+
+Ant Design is the L1 owner of border roles. App-owned CSS that needs the
+secondary separator color uses the resolved L2 bridge value instead of reading
+an `--ant-*` runtime variable or inventing another gray. The Awesomic values
+preserve the previously resolved paint: light `#f0f0f0`, dark `#303030`.
+
+| Meaning | Ant Design owner | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Secondary row separator | `colorBorderSecondary` | `--app-color-border-secondary` | Component-local CSS border |
+
+Alternate test themes must provide a visibly distinct resolved value through
+the same bridge. The test-only fixture remains excluded from production source
+and bundles.
+
+## Tokens — Shared Card Outline
+
+Outlined workspace cards use one app-owned subtle outline recipe. The recipe
+preserves the current border-at-25%-over-layout paint while allowing alternate
+themes to replace the resolved result without copying a `color-mix()` into
+global CSS. Selected cards continue to override only `border-color` with the
+primary role, so their state remains visually stronger than the shared outline.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Shared card subtle outline | border at 25% mixed with layout | `--app-color-shared-card-subtle-outline` | `.app-cards-bordered` AppCard outline |
+
+## Tokens — Practice and Review Visual Roles
+
+Practice and review surfaces reserve seven app-owned roles for the bounded
+consumer cleanup that follows this foundation change. The production values
+preserve the existing light and dark paint exactly; alternate themes resolve
+appearance-sensitive color and shadow roles independently. These roles are
+plain-CSS bridge values and must not add Tailwind aliases.
+
+| Meaning | Awesomic source | App bridge |
+| --- | --- | --- |
+| Retry summary corner | 10px | `--app-radius-practice-retry-summary` |
+| Retry mode option corner | 12px | `--app-radius-practice-retry-mode-option` |
+| Library score track | border at 18% mixed with container | `--app-color-library-review-score-track` |
+| Selected card elevation and inset ring | elevated shadow plus 1.5px primary inset | `--app-shadow-selectable-card-selected` |
+| Question number display type | Space Grotesk over the app family | `--app-font-question-number-display` |
+| New-problem badge corner | 12px | `--app-radius-problem-new-badge` |
+| New-problem badge surface | secondary text at 12% over transparent | `--app-color-problem-new-badge-surface` |
+
+## Tokens — Analysis Handoff and Failure Actions
+
+The submitted-analysis handoff overlay and failure actions use two app-owned
+plain-CSS roles. The overlay keeps the existing container-at-62%-over-transparent
+paint, while the failure action corner preserves the current 10px geometry.
+Alternate themes must provide a visibly distinct overlay for each appearance.
+These roles do not add foundation Tailwind aliases.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Completed-analysis handoff overlay | container at 62% over transparent | `--app-color-analysis-handoff-overlay-surface` | `.analysis-state-card__overlay` |
+| Failed-analysis action corner | 10px | `--app-radius-analysis-failure-action` | `.analysis-loading__actions .ant-btn` |
+
+## Tokens — Semantic Status
+
+Ant Design is the L1 owner of interface status meaning. App-owned Tailwind
+consumers use the matching L2 bridge aliases below; they do not read
+`--ant-*` variables directly. The light/dark values are the resolved Ant Design
+status and fill values already used by the product, so promoting them does not
+change the production paint.
+
+| Meaning | Ant Design owner | App bridge | Tailwind alias |
+| --- | --- | --- | --- |
+| Error / weak | `colorError` | `--app-color-status-error` | `status-error` |
+| Error border | `colorErrorBorder` | `--app-color-status-error-border` | None; direct app CSS |
+| Error surface | `colorErrorBg` | `--app-color-status-error-surface` | None; direct app CSS |
+| Warning / fair | `colorWarning` | `--app-color-status-warning` | `status-warning` |
+| Success / good | `colorSuccess` | `--app-color-status-success` | `status-success` |
+| Strong success | `colorSuccessActive` | `--app-color-status-strong-success` | `status-strong-success` |
+| Inactive indicator fill | `colorFillSecondary` | `--app-color-fill-secondary` | `fill-secondary` |
+| Indicator corner | `borderRadiusXS` | `--app-radius-indicator` | `indicator` |
+
+Status color is always paired with a translated strength label, rule text, or
+symbol. These roles are not CTA or decorative palette colors.
+
+The account deletion card uses the error border and surface roles in both its
+loading and ready states. The selected notification channel keeps its existing
+one-pixel primary ring through `--app-shadow-notification-channel-selected`.
+These atomic roles are plain-CSS consumers and do not add foundation Tailwind
+aliases.
+
+## Tokens — Semantic Radius
+
+App-owned CSS uses two shape roles in addition to the default workspace radius.
+The card radius preserves the existing 8px menu and notification-row corners;
+the pill radius comes from the imported Awesomic `radius.full-6` source and is
+used only where the rendered shape must stay fully rounded.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Compact card/action corner | Runtime card radius (8px) | `--app-radius-card` | Menu and notification rows |
+| Fully rounded control | `radius.full-6` (10000px) | `--app-radius-pill` | User/notification action groups and unread dot |
+
+## Tokens — Shared Overlay Shadows
+
+Workspace floating actions, popovers, and Ant Design messages use three
+app-owned elevation roles because their existing depth and placement differ
+from the quieter shared elevated surface. Production light and dark themes keep
+the exact current shadows; alternate themes must replace all three with
+distinct values. These bridge variables are consumed directly by global CSS,
+so no unused Tailwind `--shadow-*` aliases are exposed.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Floating workspace actions | `0 6px 18px rgba(42, 55, 89, 0.1)` | `--app-shadow-floating-action` |
+| Notification/report popovers | `0 16px 42px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1)` | `--app-shadow-popover` |
+| Ant Design message toast | `0 6px 16px 0 rgba(0, 0, 0, 0.1), 0 2px 6px -2px rgba(0, 0, 0, 0.08)` | `--app-shadow-message` |
+
+The existing `--app-shadow-elevated` role remains unchanged and continues to
+own quieter notification/card surfaces.
+
+## Tokens — Writing Exam Header
+
+The writing exam header keeps its translucent container paint as an app-owned
+semantic surface. `WritingExamShell.module.css` is the L2 consumer and owns the
+header paint plus the shared save/submit button corner. The button corner reuses
+`--app-radius-card` because its existing value is exactly 8px.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Sticky writing header surface | `color-mix(in srgb, var(--app-color-bg-container) 92%, transparent)` | `--app-color-writing-exam-header-surface` | `WritingExamShell.module.css` |
+
+Autosave status color remains owned by Ant Design's public `Tag` tones for all
+five states; writing CSS must not replace them with one blanket success paint.
+The shell module retains only the badge's existing zero margin, zero border,
+12px type size, and 700 weight so the visual geometry does not regress.
+
+## Tokens — Writing Material Surfaces
+
+Writing 53 chart tooltips and value rows use a compact visual cluster owned by
+`Writing53MaterialCards.module.css`. The 4px corner is an app-specific compact
+surface role, not the semantic badge radius. Tooltip depth and the shared
+hover/focus/active row surface also have dedicated roles so alternate themes can
+replace the cluster without changing its interaction contract.
+
+| Meaning | Production value | App bridge |
+| --- | --- | --- |
+| Compact tooltip/value-row corner | `4px` | `--app-radius-writing-material-compact-surface` |
+| Chart tooltip depth | `0 4px 12px rgb(0 0 0 / 6%)` | `--app-shadow-writing-material-tooltip` |
+| Hover/focus/active value-row surface | `color-mix(in srgb, var(--app-color-primary) 8%, transparent)` | `--app-color-writing-material-row-active-surface` |
+
+Tooltip emphasis and keyboard focus continue to use `--app-color-primary`
+directly. App bridge availability is guaranteed, so writing CSS does not carry
+a raw `#1677ff` fallback.
+
+## Tokens — Writing Blank Controls
+
+`InteractiveBlankPrompt.module.css` owns inline blank radius and focus/active/
+filled paint. `ShortAnswerWritingWorkspace.module.css` owns the shared Q51/Q52
+tab and answer-card radius, including the mobile answer-card override. Stable
+global class names remain markup hooks but do not own these properties.
+
+| Meaning | Production value | App bridge |
+| --- | --- | --- |
+| Selected tab inverse text | `#ffffff` | `--app-color-text-inverse` |
+| Inline blank active surface | Primary 6% mixed with container | `--app-color-writing-blank-active-surface` |
+| Filled inline blank border | Primary 42% mixed with border | `--app-color-writing-blank-filled-border` |
+| Zero corner | `0px` | `--app-radius-none` |
+| Inline blank keyboard focus ring | Primary 18%, 2px ring | `--app-shadow-writing-blank-focus` |
+| Inline blank active inset | Primary 2px bottom inset | `--app-shadow-writing-blank-active-inset` |
+
+Composite corners are assembled from atomic roles: inline blanks use
+`--app-radius` with `--app-radius-indicator`, tabs use `--app-radius-card` with
+`--app-radius-none`, and answer cards use `--app-radius-none` with
+`--app-radius`. This keeps desktop and mobile geometry themeable without a
+selector-specific composite token.
+
+## Tokens — Writing Manuscript Preview
+
+`ManuscriptPreview.module.css` owns the manuscript grid font and the selected
+intro/body/conclusion paint. Stable global classes remain runtime and E2E hooks;
+global CSS keeps only shared grid geometry and base cell structure. The module
+consumes resolved app variables directly and does not rebuild section paint
+through local custom-property cascades or Ant Design runtime variables.
+
+| Meaning | Production value | App bridge |
+| --- | --- | --- |
+| Manuscript monospace stack | Existing system monospace stack | `--app-font-writing-manuscript-mono` |
+| Intro selected surface | Primary 12% mixed with container | `--app-color-writing-manuscript-intro-surface` |
+| Intro selected border | Primary 48% mixed with border | `--app-color-writing-manuscript-intro-border` |
+| Intro selected inset ring | Primary 30%, 1px inset | `--app-shadow-writing-manuscript-intro-inset` |
+| Body selected surface | Success background: light `#f6ffed`, dark `#162312` | `--app-color-writing-manuscript-body-surface` |
+| Body selected border | Success 48% mixed with border | `--app-color-writing-manuscript-body-border` |
+| Body selected inset ring | Success 30%, 1px inset | `--app-shadow-writing-manuscript-body-inset` |
+| Conclusion selected surface | Warning background: light `#fffbe6`, dark `#2b2111` | `--app-color-writing-manuscript-conclusion-surface` |
+| Conclusion selected border | Warning 48% mixed with border | `--app-color-writing-manuscript-conclusion-border` |
+| Conclusion selected inset ring | Warning 30%, 1px inset | `--app-shadow-writing-manuscript-conclusion-inset` |
+
+Alternate test themes replace all ten roles with mutually distinct values and
+remain outside production source and theme registration.
+
+## Tokens — Landing CTA
+
+The live landing page has two intentional CTA color modes: a dark primary
+action over the hero video and a light ghost action in the translucent header.
+Their current paint is preserved as a semantic L1 source and projected to L2 so
+alternate themes can replace the complete cluster without page-local colors.
+Ant Design continues to own focus, disabled, loading, and active lifecycle;
+app CSS owns only the documented default and enabled-hover paint.
+
+| Meaning | Awesomic value | App bridge |
+| --- | --- | --- |
+| Primary fill and border | `#070203` | `--app-color-landing-cta-primary` |
+| Primary enabled hover | `#21080c` | `--app-color-landing-cta-primary-hover` |
+| Primary foreground | `#ffffff` | `--app-color-landing-cta-foreground` |
+| Header ghost surface | `#ffffff` | `--app-color-landing-cta-ghost-surface` |
+| Header ghost text and hover fill | `#0c0c0d` | `--app-color-landing-cta-ghost-text` |
+| Header ghost border | `#e7e7e6` | `--app-color-landing-cta-ghost-border` |
+| Hero CTA square corner | `0px` | `--app-radius-landing-hero-cta` |
+
+The header CTA uses the existing fully rounded control token
+(`--app-radius-pill`). The retired hero secondary selector is not a supported
+variant; add a real consumer and explicit visual contract before introducing a
+new landing CTA mode.
+
+## Tokens — Landing Hero and Header
+
+The public landing shell, video fallback, translucent header, navigation, and
+hero copy form one opening-scene palette. These roles are independent from CTA
+states and from the portfolio content below the hero, even where current values
+match. Production light and dark appearances preserve the existing paint; the
+Phase 5D alternate fixture replaces all eight roles with distinct values.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Outer page canvas | `#f7f3ef` | `--app-color-landing-hero-outer-canvas` |
+| Video and stage fallback | `#ccc2b7` | `--app-color-landing-hero-media-fallback` |
+| Translucent header surface | `rgba(255, 255, 255, 0.72)` | `--app-color-landing-hero-header-surface` |
+| Header navigation foreground | `#0c0c0d` | `--app-color-landing-hero-header-foreground` |
+| Header navigation hover | `#8b8b8e` | `--app-color-landing-hero-header-hover` |
+| Hero title foreground | `#ffffff` | `--app-color-landing-hero-foreground` |
+| Hero kicker foreground | `rgba(255, 255, 255, 0.72)` | `--app-color-landing-hero-kicker` |
+| Hero body foreground | `rgba(255, 255, 255, 0.82)` | `--app-color-landing-hero-body` |
+
+The brand logo hover changes opacity only; text color is not a logo state. The
+header's no-shadow behavior remains owned by its existing utility class and is
+not duplicated in global CSS.
+
+## Tokens — Portfolio Landing Foreground and Type
+
+The portfolio content below the hero owns a restrained editorial palette and
+two display stacks. These are content foreground and typography roles, not CTA
+states: do not reuse `landingCta` tokens for headings, copy, icons, labels, or
+footer links. Hero and header paint remain outside this token group.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Primary text and icon foreground | `#0c0c0d` | `--app-color-landing-portfolio-foreground` |
+| Muted heading span | `#a5a5aa` | `--app-color-landing-portfolio-heading-accent` |
+| Supporting intro copy | `#77777b` | `--app-color-landing-portfolio-supporting` |
+| Repeated secondary copy | `#8b8b8e` | `--app-color-landing-portfolio-muted` |
+| Faint caption metadata | `#b6b6b8` | `--app-color-landing-portfolio-faint` |
+| Service numeric label | `#1c1c1f` | `--app-color-landing-portfolio-label` |
+| Footer CTA hover foreground | `#3c3c40` | `--app-color-landing-portfolio-footer-hover` |
+| Editorial display stack | `Space Grotesk` + app fallback | `--app-font-landing-portfolio-display` |
+| Numeric marker stack | `Montserrat` + app fallback | `--app-font-landing-portfolio-numeric` |
+
+Production light and dark appearances preserve the current portfolio paint.
+The Phase 5D alternate fixture must replace every portfolio role with a distinct
+value and remain excluded from `src/**`.
+
+### Portfolio surfaces and shapes
+
+The portfolio cards and content sections use their own surface, divider,
+placeholder, and shape roles. These roles must not borrow CTA state tokens.
+Exact common geometry continues to use the shared card radius; the media,
+circular avatar/check, and visual tag shapes remain portfolio-owned.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Page and avatar canvas | `#ffffff` | `--app-color-landing-portfolio-canvas` |
+| Dark media/action surface | `#0c0c0d` | `--app-color-landing-portfolio-dark-surface` |
+| Foreground on dark surfaces | `#ffffff` | `--app-color-landing-portfolio-inverse-foreground` |
+| Visual tag surface | `rgba(255, 255, 255, 0.72)` | `--app-color-landing-portfolio-tag-surface` |
+| Card and footer surface | `#fbfbfb` | `--app-color-landing-portfolio-card-surface` |
+| Step divider | `#b9b9b3` | `--app-color-landing-portfolio-divider` |
+| Subtle path divider | `#dededc` | `--app-color-landing-portfolio-divider-subtle` |
+| Dark action hover | `#1c1c1f` | `--app-color-landing-portfolio-action-hover` |
+| Media placeholder pattern | Existing repeating gradient | `--app-background-landing-portfolio-media-placeholder` |
+| Media overlay | Existing linear gradient | `--app-background-landing-portfolio-media-overlay` |
+| Media corner | `4px` | `--app-radius-landing-portfolio-media` |
+| Avatar/check circle | `50%` | `--app-radius-landing-portfolio-round` |
+| Visual tag pill | `999px` | `--app-radius-landing-portfolio-tag-pill` |
+
+Path cards and footer focus treatment reuse `--app-radius-card` because their
+current `8px` geometry exactly matches the shared card role. The visual tag
+also reuses the existing portfolio muted foreground and display font roles.
+
+## Tokens — Auth Prompt Surfaces
+
+The login and sign-up prompt keeps its white outer canvas and layered desktop
+illustration background independent from the general app and landing palettes.
+Both production appearances preserve the existing paint. Image-only brand links
+do not own inherited text colors: `BrandLogo` renders no `strong` or
+`currentColor` consumer, so those obsolete declarations are not theme roles.
+The official four-color Google mark remains a separate brand asset and is not
+projected through the app theme.
+
+| Meaning | Current value | App bridge |
+| --- | --- | --- |
+| Prompt canvas | `#ffffff` | `--app-color-auth-prompt-canvas` |
+| Desktop illustration background | Existing layered radial and linear gradient | `--app-background-auth-prompt-hero` |
+
+## Tokens — Auth Prompt Controls
+
+The live login and sign-up prompt owns one scoped Ant Design theme for Input and
+Select focus paint only. Button lifecycle, including disabled social and the
+magic-link retry action, remains owned by the outer Ant Design theme. The app
+bridge and the prompt's local stylesheet are the single geometry owner for the
+50px/8px input, select, primary, and social controls; only the primary action
+gets the local 600 font weight. Alternate themes must replace every bridge
+value through the same source contract.
+
+| Meaning | Awesomic value | App bridge |
+| --- | --- | --- |
+| Shared focus outline | `rgba(24, 24, 24, 0.08)` | `--app-color-auth-prompt-focus-outline` |
+| Login focus border | `#aab5ff` | `--app-color-auth-prompt-login-focus-border` |
+| Shared focus ring | `0 0 0 2px rgba(24, 24, 24, 0.08)` | `--app-shadow-auth-prompt-focus` |
+| Login focus ring | `0 0 0 2px rgba(82, 102, 255, 0.1)` | `--app-shadow-auth-prompt-login-focus` |
+| Control corner | `8px` | `--app-radius-auth-prompt-control` |
+| Control height | `50px` | `--app-size-auth-prompt-control` |
+
+## Tokens — Auth Completion Surfaces
+
+The required-document card on `/auth/consent` and the verification card on
+`/auth/verify-email` own semantic surface recipes. The consent role applies only
+to the nested document card; the outer consent card keeps its existing shared
+surface. The verification card uses a compact corner below `479.98px` while its
+shadow remains the same recipe. Light and dark currently preserve the same
+values, but alternate themes must replace all six roles through the bridge.
+
+| Meaning | Awesomic value | App bridge |
+| --- | --- | --- |
+| Consent document surface | container at 94% mixed with layout | `--app-color-auth-consent-document-surface` |
+| Verify card border | border at 72% mixed with transparent | `--app-color-auth-verify-email-card-border` |
+| Verify summary surface | layout at 56% mixed with container | `--app-color-auth-verify-email-summary-surface` |
+| Verify card corner | `28px` | `--app-radius-auth-verify-email-card` |
+| Verify compact corner | `12px` | `--app-radius-auth-verify-email-card-compact` |
+| Verify card shadow | primary-tinted lift plus elevated shadow | `--app-shadow-auth-verify-email-card` |
+
+The global stylesheet consumes these app bridge variables directly. They do not
+have Tailwind foundation aliases, and resend, cooldown, loading, success, and
+error behavior remain outside this visual token contract.
+
+## Tokens — Auth Character Illustration
+
+로그인·회원가입 프롬프트의 네 캐릭터는 인터페이스 상태색이 아니라 제품 삽화다.
+따라서 Ant Design의 primary/status 색을 빌려 쓰지 않고
+`src/theme/tokens/awesomic.ts`의 `authCharacter`가 L1 palette·shape를
+소유한다. `AnimatedAuthCharacters`의 전역 CSS는 아래 L2 변수만 소비하며,
+레이아웃·애니메이션·입력 상태에 따른 움직임은 이 토큰 계약 밖에서 유지한다.
+항상 숨겨져 있던 종이와 바닥 장식은 DOM과 CSS에서 제거했다.
+
+| 삽화 역할 | 현재 값 | App bridge |
+| --- | --- | --- |
+| 보라 몸체 | `#6c3ff5` | `--app-color-auth-character-purple` |
+| 짙은 몸체 | `#2d2d2d` | `--app-color-auth-character-charcoal` |
+| 코랄 몸체 | `#ff9b6b` | `--app-color-auth-character-coral` |
+| 노랑 몸체 | `#e8d754` | `--app-color-auth-character-yellow` |
+| 얼굴 선 | `#25262d` | `--app-color-auth-character-ink` |
+| 흰 눈 | `#ffffff` | `--app-color-auth-character-eye` |
+| 몸체 아래 기준 모서리 | `0px` | `--app-radius-auth-character-base-edge` |
+| 보라 몸체 위 모서리 | `10px` | `--app-radius-auth-character-body-top` |
+| 눈·입·둥근 몸체 | `999px` | `--app-radius-auth-character-pill` |
+
+짙은 몸체의 8px 위 모서리는 기존 `--app-radius-card`를 재사용한다. 서로 다른
+위·아래 모서리는 원자적 radius 변수를 조합하며 selector별 토큰을 만들지 않는다.
+기본·dark 제품 테마는 현재 삽화 값을 보존할 수 있지만, Phase 5D alternate test
+fixture는 위의 모든 삽화 역할을 서로 다른 값으로 제공해야 한다. 테스트 전용 테마는
+production registry 또는 `src/**`에서 import하지 않는다.
+
+## Tokens — Semantic Overlay
+
+App-owned overlay paint keeps alpha inside the color value so Ant Design can
+continue to own component lifecycle opacity and fade animation.
+
+| Meaning | Awesomic source | App bridge | Consumer |
+| --- | --- | --- | --- |
+| Subtle modal mask | Mist at 18% alpha | `--app-color-mask-subtle` | Local Drawer mask CSS |
+
+Do not recreate this role with element `opacity`, `filter`, or a component-local
+raw color. Alternate test themes must provide a distinct resolved value through
+the same L1-to-L2 bridge; they are never registered in production.
+
 ## Tokens — Typography
 
 ### Cosmica — The sole typeface across the entire system — every badge, button, nav link, heading, and body copy uses Cosmica. Its wide weight range means all typographic hierarchy is weight-driven rather than family-switching. At 56–64px the light-to-medium weights feel assertive without shouting; at 10–14px the medium-to-semibold weights keep small labels legible at compact density. · `--font-cosmica`
@@ -141,6 +539,10 @@ difficulty.
 | heading-lg | 40px | 1.25 | — | `--text-heading-lg` |
 | display-sm | 56px | 1.12 | — | `--text-display-sm` |
 | display | 64px | 1 | — | `--text-display` |
+
+기존 Tailwind `--text-*` 별칭은 같은 역할의 L2 `--app-font-size-*` bridge
+변수를 통해 계산된다. 따라서 글자 크기도 color, radius, shadow, font family와
+같이 선택된 theme source에서 first render에 함께 결정된다.
 
 ### Runtime UI Hierarchy Contract
 
@@ -295,7 +697,7 @@ Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor 
 - Put card titles and right-side status/count metadata in Ant Design `Card` `title` and `extra` when the information describes the whole card.
 - Put card-level CTA buttons in the Ant Design `Card.actions` footer area, not in the card body. Keep the footer action area borderless by default.
 - Treat 28-36px radii as raw Awesomic reference values for marketing/reference surfaces; use the documented TALKPIK runtime radius exception (4-8px workspace cards/panels) for study dashboards and operational UI.
-- Use Ant Design components and tokens first; treat Tailwind as a layout utility and `--app-*` bridge consumer.
+- Use Ant Design components and tokens first; use Tailwind for layout/responsive work and limited token-backed visual utilities on app-owned surfaces through the `--app-*` bridge.
 - Keep one clear primary action per task area, and pair every color signal with text or icon.
 - Encode difficulty (1–5) with the muted Difficulty Scale by tinting the difficulty icon only; keep the label text achromatic and source colors from `difficultyFillColor`/`difficultyLabelKey` (see Tokens — Difficulty Scale).
 - Apply the multi-layer button shadow (rgba(255,255,255,0.5) inset + rgba(117,123,133,0.4) inset + rgb(44,46,52) 1.5px ring + rgba(0,0,0,0.14) drop) only on the primary #09090b pill button — it defines the CTA's physicality.
@@ -308,7 +710,7 @@ Large numeral at 40–56px Cosmica weight 700 in #09090b or #18181b. Descriptor 
 ### Don't
 - Don't create custom card header rows inside the card body for whole-card title/status alignment.
 - Don't place card-level CTA buttons inside card body content unless the action is inline with a form field or a sentence-level control.
-- Don't use any color other than #09090b/#222222 for filled button backgrounds — the system has no chromatic CTA color; dark filled + white text is the only primary action pattern.
+- Don't use any color other than #09090b/#222222 for new filled button backgrounds — the system has no chromatic CTA color; dark filled + white text is the only primary action pattern. The live landing CTA values documented in `Tokens — Landing CTA` are a preservation exception, not a reusable palette.
 - Don't apply the raw 28-36px Awesomic radius scale to TALKPIK workspace cards when the runtime contract specifies the smaller app radius.
 - Don't paste raw Tailwind export values into app CSS; normalize through `src/theme` and expose only approved `@theme inline` aliases.
 - Don't create a separate Tailwind palette, radius scale, shadow scale, or font source.
@@ -351,7 +753,8 @@ Max-width approximately 1200px, centered on the canvas (#f4f4f5). The hero is a 
 - card surface: #ffffff
 - border / divider: #ececee / #3f3f46
 - accent (badge only): #ff5a00 (YC), #fe45e2 (decorative card)
-- primary action: #09090b (filled action)
+- primary action: #09090b (filled action; see the preserved live landing CTA exception above)
+- secondary link/accent: #3254F2 (legal links and secondary progress only)
 - difficulty (1–5, icon tint only): #5e9e6f → #8aa04e → #cca63a → #cf833f → #c75d4f (see Tokens — Difficulty Scale)
 
 **Example Component Prompts**
@@ -395,6 +798,7 @@ Awesomic uses animation expressively but purposefully. Three named scrolling loo
   --color-fog: #ececee;
   --color-mist: #f4f4f5;
   --color-snow: #ffffff;
+  --color-link-secondary: #3254F2;
   --color-ember: #ff5a00;
   --color-orchid-flash: #fe45e2;
 
@@ -499,8 +903,8 @@ The block below shows the raw exported Tailwind token shape. In the TALKPIK app,
 equivalent Tailwind utilities must be produced from `src/theme` through
 `@theme inline` aliases that read resolved `--app-*` variables. If a token below
 is promoted into the app bridge, update `src/theme/tokens/*`,
-`src/theme/tailwind-bridge.ts`, `src/styles/global.css`, and `tests/theme/*`
-together.
+`src/theme/tailwind-bridge.ts`, `src/styles/foundation.css`, the real consumer,
+and `tests/theme/*` together.
 
 ```css
 @theme {
@@ -515,6 +919,7 @@ together.
   --color-fog: #ececee;
   --color-mist: #f4f4f5;
   --color-snow: #ffffff;
+  --color-link-secondary: #3254F2;
   --color-ember: #ff5a00;
   --color-orchid-flash: #fe45e2;
 

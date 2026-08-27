@@ -49,6 +49,9 @@ describe("AnalysisLoadingPage state assets", () => {
       ) as HTMLImageElement;
 
       expect(screen.getByTestId("analysis-state-card")).toBeTruthy();
+      expect(screen.getByTestId("analysis-loading-panel").classList).toContain(
+        `analysis-loading--${status}`,
+      );
       expect(stateAsset.getAttribute("src")).toBe(expectedAsset);
     },
   );
@@ -84,6 +87,34 @@ describe("AnalysisLoadingPage state assets", () => {
     fireEvent.click(dashboardButton);
 
     expect(routerMocks.push).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("keeps the failure retry action wired", async () => {
+    const onRetry = vi.fn();
+    renderWithIntl(<AnalysisLoadingPage status="failed" onRetry={onRetry} />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "다시 분석하기" }),
+    );
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the complete handoff overlay and redirects to the result", async () => {
+    renderWithIntl(
+      <AnalysisLoadingPage
+        status="complete"
+        completeHref="/feedback/submission-1"
+      />,
+    );
+
+    expect(await screen.findByTestId("analysis-handoff-overlay")).toBeTruthy();
+    expect(
+      screen
+        .getByTestId("analysis-state-card")
+        .querySelector(".analysis-state-card__inner--blurred"),
+    ).toBeTruthy();
+    expect(routerMocks.replace).toHaveBeenCalledWith("/feedback/submission-1");
   });
 
   it("keeps the slow handoff hidden when analysis stays active", async () => {

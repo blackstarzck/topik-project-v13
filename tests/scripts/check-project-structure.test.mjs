@@ -143,6 +143,22 @@ describe("project structure allowlist", () => {
     expect(
       evaluateProjectStructure({
         rootDir: root,
+        changedPaths: ["TESTING.md"],
+      }).errors,
+    ).toEqual([]);
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
+        changedPaths: ["scripts/check-project-structure.mjs", "TESTING.md"],
+      }).errors,
+    ).toEqual(
+      expect.arrayContaining([
+        "Pipeline v3.1 implementation and owner documentation must change together.",
+      ]),
+    );
+    expect(
+      evaluateProjectStructure({
+        rootDir: root,
         changedPaths: [
           "scripts/lib/ai-task-lifecycle-v3.mjs",
           "docs/operations/ai-development-pipeline.md",
@@ -209,6 +225,13 @@ describe("project structure allowlist", () => {
 
   it("accepts the minimal canonical owner tree", () => {
     const root = createValidTree();
+    expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
+  });
+
+  it("accepts final refactoring documents in docs/refactoring", () => {
+    const root = createValidTree();
+    write(root, "docs/refactoring/2026-08-27-design-system-refactor.md");
+
     expect(evaluateProjectStructure({ rootDir: root }).errors).toEqual([]);
   });
 

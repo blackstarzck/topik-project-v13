@@ -40,6 +40,7 @@ export const requiredOwnerPaths = [
 const docsAllowlist = new Map([
   ["prd.md", "file"],
   ["operations", "directory"],
+  ["refactoring", "directory"],
   ["swagger-api", "directory"],
   ["supabase", "directory"],
   ["qa", "directory"],
@@ -155,7 +156,6 @@ const pipelineContractImplementationPaths = Object.freeze([
 const pipelineContractDocumentationPaths = Object.freeze([
   ".codex/skills/finishing-a-development-branch/SKILL.md",
   "README.md",
-  "TESTING.md",
   "docs/operations/README.md",
   "docs/operations/ai-development-pipeline.md",
 ]);
