@@ -9,7 +9,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const workflow = readFileSync(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
@@ -1511,33 +1511,44 @@ describe("CI trusted UI contract boundary", () => {
   describe("security artifact audit origin identity", () => {
     const stepName = "Prepare security artifact audit refs";
     const guardJobs = ["verify", "main-integrity"];
+    const temporaryRepositories = new Set();
+
+    afterAll(async () => {
+      if (temporaryRepositories.size === 0) return;
+      await new Promise((resolve) => setTimeout(resolve, 1_000));
+      for (const repository of temporaryRepositories) {
+        rmSync(repository, { recursive: true, force: true, maxRetries: 50, retryDelay: 100 });
+      }
+    });
 
     function runGuardWithOrigin(originUrl) {
       const script = jobStepRunScript("verify", stepName);
       expect(script).not.toBe("");
       const repository = mkdtempSync(path.join(os.tmpdir(), "talkpik-audit-origin-"));
-      try {
-        runGit(repository, ["init", "--initial-branch=main"]);
-        runGit(repository, ["remote", "add", "origin", originUrl]);
-        // Refusing the https transport turns the fetch into an instant, offline,
-        // identical failure everywhere. Without it the accepted cases depend on
-        // whether the runner can reach GitHub and what credentials it holds, and
-        // git words those outcomes differently — a missing-credential error names
-        // only the host, not the repository.
-        return runBashScript(
-          script,
-          { GIT_ALLOW_PROTOCOL: "file", GIT_TERMINAL_PROMPT: "0" },
-          { cwd: repository },
-        );
-      } finally {
-        rmSync(repository, { recursive: true, force: true });
-      }
+      temporaryRepositories.add(repository);
+      runGit(repository, ["init", "--initial-branch=main"]);
+      runGit(repository, ["config", "user.name", "CI"]);
+      runGit(repository, ["config", "user.email", "ci@example.invalid"]);
+      const emptyTree = runGitInput(repository, ["mktree", "-z"], "");
+      const baseline = runGit(repository, ["commit-tree", emptyTree, "-m", "baseline"]);
+      runGit(repository, ["update-ref", "refs/heads/main", baseline]);
+      runGit(repository, ["update-ref", "refs/remotes/origin/main", baseline]);
+      runGit(repository, ["remote", "add", "origin", originUrl]);
+      // A fetch-depth: 0 checkout has already authenticated and populated
+      // origin/main before credentials are removed. Refuse network transport so
+      // this contract fails if the guard tries to fetch the private repository
+      // again without credentials instead of using that trusted local ref.
+      return runBashScript(
+        script,
+        { GIT_ALLOW_PROTOCOL: "file", GIT_TERMINAL_PROMPT: "0" },
+        { cwd: repository },
+      );
     }
 
-    // The step is what fetches the audit baseline, so it proves who origin is
-    // before trusting the ref. Pinning that to the development repository alone
-    // made the job die in setup on every Keduall pull request and skip the audit,
-    // structure check, typecheck, test, lint and build with it.
+    // Checkout fetches the audit baseline before credentials are removed. This
+    // guard proves who origin is before trusting that local ref. Pinning origin
+    // to the development repository alone made every Keduall pull request die in
+    // setup and skip the audit, structure check, typecheck, test, lint and build.
     it.each([
       "https://github.com/blackstarzck/topik-project-v13.git",
       "https://github.com/keduall/topik-project-v13.git",
@@ -1545,12 +1556,9 @@ describe("CI trusted UI contract boundary", () => {
       const result = runGuardWithOrigin(originUrl);
       const output = `${result.stdout}${result.stderr}`;
       // Exit 3 and the mismatch line are the only rejection the guard emits.
-      expect(result.status).not.toBe(3);
+      expect(result.status).toBe(0);
       expect(output).not.toContain("SECURITY_AUDIT_ORIGIN_IDENTITY_MISMATCH");
-      // "was not rejected" would also hold if the script died before it ever got
-      // to the fetch, so require evidence that it did. Only the fetch can produce
-      // this refusal, and a rejected origin exits before reaching it.
-      expect(output).toMatch(/transport .https. not allowed/u);
+      expect(output).not.toMatch(/transport .https. not allowed/u);
     });
 
     it.each([
@@ -1572,5 +1580,6 @@ describe("CI trusted UI contract boundary", () => {
       for (const script of scripts) expect(script).not.toBe("");
       expect(new Set(scripts).size).toBe(1);
     });
+
   });
 });

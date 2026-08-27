@@ -371,8 +371,9 @@ jobs:
               exit 3
               ;;
           esac
-          git fetch --no-tags --prune origin \
-            '+refs/heads/main:refs/remotes/origin/main'
+          # fetch-depth: 0 already populated origin/main while checkout had the
+          # private-repository credential. The credential is intentionally not
+          # persisted, so do not fetch the same private origin again here.
           git cat-file -e 'HEAD^{commit}'
           git cat-file -e 'refs/remotes/origin/main^{commit}'
 
@@ -807,8 +808,9 @@ jobs:
               exit 3
               ;;
           esac
-          git fetch --no-tags --prune origin \
-            '+refs/heads/main:refs/remotes/origin/main'
+          # fetch-depth: 0 already populated origin/main while checkout had the
+          # private-repository credential. The credential is intentionally not
+          # persisted, so do not fetch the same private origin again here.
           git cat-file -e 'HEAD^{commit}'
           git cat-file -e 'refs/remotes/origin/main^{commit}'
 
