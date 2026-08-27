@@ -29,6 +29,15 @@
       "reason": "Approve the reviewed UI contract scanner v4 and the exact baseline generated from current main before the scanner change lands."
     },
     {
+      "fromVersion": 3,
+      "fromDigest": "1f4b33047d0fe27d72dd73fd2ee6584a29188a0ee5b323611608980b6e38fcca",
+      "toVersion": 6,
+      "toDigest": "736e92fce2960e3ad16042adc7d9fa5c9047fb5904f375f4064873386f617621",
+      "toBaselineDigest": "bbbea2647033714a2b727cf162bc2879784971c6db42ba2a4ec6751b8cb666d1",
+      "approvedBy": "@blackstarzck",
+      "reason": "Approve the reviewed final UI contract scanner v6 and its exact unchanged-main baseline before the staged refactor lands on Keduall main."
+    },
+    {
       "fromVersion": 4,
       "fromDigest": "3c6d2c16f7361d661638920294529fb58f1ce9dfd338f9a637a79331f2bf4c59",
       "toVersion": 5,
