@@ -26,6 +26,13 @@ const lifecycleTestPaths = [
   "tests/scripts/ai-task-lifecycle-v2.test.mjs",
   "tests/scripts/ai-task-cleanup.test.mjs",
 ];
+const trustedArtifactPaths = [
+  "scripts/run-trusted-artifact-hygiene.mjs",
+  "scripts/check-artifact-hygiene.mjs",
+  "scripts/lib/artifact-hygiene.mjs",
+  "scripts/lib/artifact-manifest-v2.mjs",
+  "config/artifact-hygiene-policy.json",
+];
 
 function checkoutStepBlocks(source) {
   const lines = source.split(/\r?\n/u);
@@ -111,6 +118,43 @@ function runBashScript(source, environment = {}, options = {}) {
     encoding: "utf8",
     cwd: options.cwd,
   });
+}
+
+function runArtifactWorkflowStep({ repository, baseSha, headSha, baseRef }) {
+  const step = jobStepRunScript(
+    "verify",
+    "Check artifact hygiene diff baseline (trusted)",
+  );
+  const source = [
+    'runner_temp="$(mktemp -d)"',
+    'mkdir -p "${runner_temp}/bin"',
+    'printf \'%s\\n\' \'#!/usr/bin/env bash\' \'printf "TEST_TRUSTED_RUNNER_INVOKED\\n"\' > "${runner_temp}/bin/node"',
+    'chmod +x "${runner_temp}/bin/node"',
+    'export PATH="${runner_temp}/bin:${PATH}"',
+    "(",
+    '  export RUNNER_TEMP="${runner_temp}"',
+    '  export GITHUB_WORKSPACE="$(pwd)"',
+    step,
+    ")",
+    "status=$?",
+    'rm -rf "${runner_temp}"',
+    'exit "${status}"',
+  ].join("\n");
+  return runBashScript(
+    source,
+    {
+      GITHUB_EVENT_NAME: "pull_request",
+      ARTIFACT_HYGIENE_BASE_SHA: baseSha,
+      ARTIFACT_HYGIENE_BOOTSTRAP_APPROVED_HEAD_SHA: "",
+      ARTIFACT_HYGIENE_CANDIDATE_HEAD_SHA: headSha,
+      ARTIFACT_HYGIENE_EVENT_CANDIDATE_HEAD_SHA: headSha,
+      ARTIFACT_HYGIENE_TRUSTED_UPDATE_APPROVED_HEAD_SHA: "",
+      ARTIFACT_HYGIENE_WORKSPACE_HEAD_SHA: headSha,
+      ARTIFACT_HYGIENE_PR_BASE_REF: baseRef,
+      ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF: "",
+    },
+    { cwd: repository },
+  );
 }
 
 function runGit(repository, args) {
@@ -1355,6 +1399,65 @@ describe("CI trusted UI contract boundary", () => {
       '[[ "${ARTIFACT_HYGIENE_MERGE_GROUP_BASE_REF}" == "refs/heads/main" ]]',
     );
     expect(workflow).toContain("ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN");
+
+    const trustedBaseCheck = workflow.indexOf(
+      'if git cat-file -e "${ARTIFACT_HYGIENE_BASE_SHA}:scripts/run-trusted-artifact-hygiene.mjs"',
+    );
+    const bootstrapBranch = workflow.indexOf(
+      "# 최초 설치 PR과 그 merge-group/main push만 허용한다.",
+      trustedBaseCheck,
+    );
+    const targetGate = workflow.indexOf(
+      'case "${GITHUB_EVENT_NAME}" in',
+      trustedBaseCheck,
+    );
+    expect(trustedBaseCheck).toBeGreaterThan(-1);
+    expect(bootstrapBranch).toBeGreaterThan(trustedBaseCheck);
+    expect(targetGate).toBeGreaterThan(bootstrapBranch);
+    expect(workflow.indexOf('case "${GITHUB_EVENT_NAME}" in')).toBe(
+      targetGate,
+    );
+  });
+
+  it("allows an established trusted stg PR and rejects a stg bootstrap PR", () => {
+    const trustedBaseFiles = Object.fromEntries(
+      trustedArtifactPaths.map((relativePath) => [
+        relativePath,
+        readFileSync(path.join(root, relativePath), "utf8"),
+      ]),
+    );
+    const established = createDiffRepository(trustedBaseFiles, ({ write }) => {
+      write("src/app/page.tsx", "export default function Page() { return null; }\n");
+    });
+    const bootstrap = createDiffRepository(
+      { "README.md": "bootstrap base\n" },
+      ({ write }) => {
+        for (const relativePath of trustedArtifactPaths) {
+          write(relativePath, readFileSync(path.join(root, relativePath), "utf8"));
+        }
+      },
+    );
+
+    try {
+      const establishedResult = runArtifactWorkflowStep({
+        ...established,
+        baseRef: "stg",
+      });
+      expect(establishedResult.status, establishedResult.stderr).toBe(0);
+      expect(establishedResult.stdout).toContain("TEST_TRUSTED_RUNNER_INVOKED");
+
+      const bootstrapResult = runArtifactWorkflowStep({
+        ...bootstrap,
+        baseRef: "stg",
+      });
+      expect(bootstrapResult.status).toBe(2);
+      expect(bootstrapResult.stderr).toContain(
+        "ARTIFACT_BOOTSTRAP_TARGET_NOT_MAIN",
+      );
+    } finally {
+      cleanupDiffRepository(established.repository);
+      cleanupDiffRepository(bootstrap.repository);
+    }
   });
 
   it("gates trusted artifact updates on an externally approved exact head", () => {
