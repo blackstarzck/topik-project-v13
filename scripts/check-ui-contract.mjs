@@ -18,6 +18,7 @@ import {
   createUiContractBaseline,
   formatUiContractReport,
   normalizeRepoPath,
+  partitionUiContractViolations,
   scanUiContract,
   validateApprovalManifest,
   validateExceptionManifest,
@@ -25,6 +26,7 @@ import {
 } from "./lib/ui-contract.mjs";
 import {
   computeScannerDigest,
+  selectApprovedBaselineTransition,
   selectScannerAuthority,
   validateScannerMigrationManifest,
 } from "./lib/ui-contract-trust.mjs";
@@ -144,7 +146,7 @@ export function resolveBaseRef(cliBaseRef, env, mode) {
     throw new UiContractError("UI_BASE_REF_MISMATCH");
   }
   const resolved = cliValue ?? envValue;
-  if (env.CI === "true" && mode === "diff-block" && !resolved) {
+  if (env.CI === "true" && (mode === "diff-block" || mode === "error") && !resolved) {
     throw new UiContractError("UI_BASE_REF_REQUIRED");
   }
   return resolved;
@@ -249,7 +251,7 @@ function parseCliOptions(argv) {
     if (argument === "--base-ref") options.baseRef = value;
     if (argument === "--write-baseline") options.writeBaseline = value;
   }
-  if (!new Set(["report", "diff-block"]).has(options.mode)) {
+  if (!new Set(["report", "diff-block", "error"]).has(options.mode)) {
     throw new UiContractError("UI_CLI_ARGUMENT_INVALID");
   }
   if (!new Set(["text", "json"]).has(options.format)) {
@@ -283,6 +285,17 @@ function stableJson(value) {
     );
   }
   return value;
+}
+
+function filterApprovedBaselineTransition(violations, transition) {
+  if (!transition) return violations;
+  return violations.filter(
+    (violation) =>
+      !(
+        transition.paths.includes(violation.path) &&
+        transition.ruleIds.includes(violation.ruleId)
+      ),
+  );
 }
 
 export function serializeStableJson(value) {
@@ -345,13 +358,15 @@ export async function runUiContractCli(
       throw new UiContractError("UI_SCANNER_MIGRATION_INVALID");
     }
     const baseRef = resolveBaseRef(options.baseRef, env, options.mode);
-    const useCiAuthority = options.mode === "diff-block" && Boolean(baseRef);
+    const useCiAuthority =
+      (options.mode === "diff-block" || options.mode === "error") && Boolean(baseRef);
     const trustedMigrationBaseScan = env.UI_TRUSTED_MIGRATION_BASE_SCAN === "1";
     if (trustedMigrationBaseScan && !useCiAuthority) {
       throw new UiContractError("UI_TRUSTED_MIGRATION_MODE_INVALID");
     }
     let baseTuple = null;
     let scannerAuthority = null;
+    let approvedBaselineTransition = null;
     let applied;
 
     if (useCiAuthority) {
@@ -365,7 +380,8 @@ export async function runUiContractCli(
         baseTuple.bootstrap &&
         (candidateApprovals.approvals?.length !== 0 ||
           candidateExceptions.exceptions?.length !== 0 ||
-          candidateMigrations.migrations?.length !== 0)
+          candidateMigrations.migrations?.length !== 0 ||
+          (candidateMigrations.baselineTransitions?.length ?? 0) !== 0)
       ) {
         throw new UiContractError("UI_BOOTSTRAP_STATE_INVALID");
       }
@@ -443,24 +459,61 @@ export async function runUiContractCli(
     } else {
       assertCandidateMatchesCurrent(applied.violations, candidateBaseline, { scannerDigest });
     }
-    const comparison =
+    if (baseTuple && !baseTuple.bootstrap) {
+      try {
+        approvedBaselineTransition = selectApprovedBaselineTransition({
+          baseManifest: baseTuple.migrations,
+          baseBaseline: baseTuple.baseline,
+          candidateBaseline,
+          candidateScannerDigest: scannerDigest,
+        });
+      } catch (error) {
+        throw new UiContractError(error?.code ?? "UI_SCANNER_AUTHORITY_INVALID");
+      }
+    }
+    const canCompareAgainstBase =
       baseTuple &&
       !baseTuple.bootstrap &&
-      (scannerAuthority !== "candidate" || trustedMigrationBaseScan)
-        ? compareAgainstBase(applied.violations, baseTuple.baseline)
-        : { newViolations: [] };
+      (scannerAuthority !== "candidate" || trustedMigrationBaseScan);
+    const comparisonBaseline =
+      trustedMigrationBaseScan && scannerAuthority === "candidate"
+        ? candidateBaseline
+        : baseTuple?.baseline;
+    let blockingViolations;
+    if (options.mode === "error") {
+      const { structuralViolations, actionableViolations } =
+        partitionUiContractViolations(applied.violations);
+      const comparedStructuralViolations = canCompareAgainstBase
+        ? compareAgainstBase(structuralViolations, comparisonBaseline).newViolations
+        : baseTuple?.bootstrap
+          ? structuralViolations
+          : [];
+      const newStructuralViolations = filterApprovedBaselineTransition(
+        comparedStructuralViolations,
+        approvedBaselineTransition,
+      );
+      blockingViolations = [...actionableViolations, ...newStructuralViolations];
+    } else {
+      const newViolations = canCompareAgainstBase
+        ? compareAgainstBase(applied.violations, comparisonBaseline).newViolations
+        : [];
+      blockingViolations = filterApprovedBaselineTransition(
+        newViolations,
+        approvedBaselineTransition,
+      );
+    }
     const marker = baseTuple?.bootstrap
       ? "BOOTSTRAP_NOT_INDEPENDENTLY_TAMPER_PROOF"
       : applied.marker;
     const report = {
       marker,
-      violations: comparison.newViolations,
+      violations: blockingViolations,
       suppressedViolations: applied.suppressedViolations,
       policyErrors: applied.policyErrors,
     };
     return {
       exitCode:
-        comparison.newViolations.length > 0 || applied.policyErrors.length > 0 ? 1 : 0,
+        blockingViolations.length > 0 || applied.policyErrors.length > 0 ? 1 : 0,
       stdout: formatUiContractReport(report, { format: options.format }),
       stderr: "",
     };
